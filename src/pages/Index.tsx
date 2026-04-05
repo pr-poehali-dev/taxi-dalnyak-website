@@ -66,11 +66,8 @@ function useInView(threshold = 0.15) {
 
 const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
 
-async function requestAndNotify(title: string, body: string) {
+function sendNotif(title: string, body: string) {
   if (!("Notification" in window)) return;
-  if (Notification.permission === "default") {
-    await Notification.requestPermission();
-  }
   if (Notification.permission === "granted") {
     new Notification(title, { body, icon: LOGO });
   }
@@ -82,30 +79,55 @@ export default function Index() {
   const [inputVal, setInputVal] = useState("");
   const [sending, setSending] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notifAsked, setNotifAsked] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
+    "Notification" in window ? Notification.permission : "denied"
+  );
+  // PWA install prompt
+  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const [installDismissed, setInstallDismissed] = useState(() => localStorage.getItem("pwa_dismissed") === "1");
+  // Floating chat
+  const [chatOpen, setChatOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatFloatEndRef = useRef<HTMLDivElement>(null);
   const sessionId = useRef(getSessionId());
-  const lastMsgCount = useRef(0);
+  // Храним id последнего виденного сообщения (не count!)
+  const lastSeenId = useRef<string | null>(null);
+  const initialized = useRef(false);
 
   const tariffSection = useInView();
   const aboutSection = useInView();
   const contactSection = useInView();
+
+  // Перехватываем PWA-промпт
+  useEffect(() => {
+    const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e); };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
 
   const loadMessages = async () => {
     try {
       const res = await fetch(`${CHAT_URL}?session_id=${sessionId.current}`);
       const data = await res.json();
       if (data.messages) {
-        const msgs = data.messages.map((m: {id: string; from: string; text: string; time: string}) => ({ ...m }));
-        // Уведомление при новом сообщении от оператора
-        if (msgs.length > lastMsgCount.current && lastMsgCount.current > 0) {
-          const newMsgs = msgs.slice(lastMsgCount.current);
-          const operatorNew = newMsgs.filter((m: {from: string}) => m.from === "operator");
+        const msgs: {id: string; from: string; text: string; time: string}[] = data.messages.map(
+          (m: {id: string; from: string; text: string; time: string}) => ({ ...m })
+        );
+
+        if (!initialized.current) {
+          // Первая загрузка — просто запоминаем последний id, не шлём уведомления
+          initialized.current = true;
+          if (msgs.length > 0) lastSeenId.current = msgs[msgs.length - 1].id;
+        } else {
+          // Ищем новые сообщения от оператора после lastSeenId
+          const lastIdx = msgs.findIndex(m => m.id === lastSeenId.current);
+          const newMsgs = lastIdx >= 0 ? msgs.slice(lastIdx + 1) : msgs;
+          const operatorNew = newMsgs.filter(m => m.from === "operator");
           if (operatorNew.length > 0) {
-            requestAndNotify("Такси Дальняк", operatorNew[operatorNew.length - 1].text);
+            sendNotif("Такси Дальняк", operatorNew[operatorNew.length - 1].text);
           }
+          if (msgs.length > 0) lastSeenId.current = msgs[msgs.length - 1].id;
         }
-        lastMsgCount.current = msgs.length;
         setMessages(msgs);
       }
     } catch (e) { console.warn(e); }
@@ -132,9 +154,15 @@ export default function Index() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Скролл внутри контейнера встроенного чата (не страницы)
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = chatEndRef.current;
+    if (el) el.scrollIntoView({ block: "nearest" });
   }, [messages]);
+
+  useEffect(() => {
+    if (chatOpen) chatFloatEndRef.current?.scrollIntoView({ block: "nearest" });
+  }, [messages, chatOpen]);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -158,8 +186,123 @@ export default function Index() {
     setSending(false);
   };
 
+  const askNotif = async () => {
+    const perm = await Notification.requestPermission();
+    setNotifPermission(perm);
+  };
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (installPrompt as any).prompt();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (installPrompt as any).userChoice;
+    setInstallPrompt(null);
+    setInstallDismissed(true);
+    localStorage.setItem("pwa_dismissed", "1");
+  };
+
   return (
     <div className="min-h-screen bg-background font-golos grain-overlay">
+
+      {/* PWA INSTALL BANNER */}
+      {installPrompt && !installDismissed && (
+        <div className="fixed bottom-0 left-0 right-0 z-[60] bg-card border-t border-amber/40 px-4 py-3 flex items-center gap-3 shadow-2xl md:bottom-6 md:left-auto md:right-6 md:rounded-xl md:max-w-sm md:border md:border-amber/40">
+          <img src={LOGO} alt="" className="w-10 h-10 rounded-lg object-contain flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="font-oswald font-semibold text-foreground text-sm">Такси Дальняк</p>
+            <p className="font-golos text-xs text-muted-foreground">Добавьте на главный экран</p>
+          </div>
+          <button
+            onClick={handleInstall}
+            className="bg-amber text-coal font-oswald font-bold text-xs px-3 py-2 rounded whitespace-nowrap hover:bg-amber/90 transition-colors"
+          >
+            Добавить
+          </button>
+          <button
+            onClick={() => { setInstallDismissed(true); localStorage.setItem("pwa_dismissed", "1"); }}
+            className="text-muted-foreground hover:text-foreground p-1"
+          >
+            <Icon name="X" size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* FLOATING CHAT BUTTON */}
+      <div className="fixed bottom-6 right-4 z-50 flex flex-col items-end gap-2">
+        {/* Плавающий чат */}
+        {chatOpen && (
+          <div className="w-[calc(100vw-32px)] max-w-sm bg-card border border-border rounded-xl shadow-2xl overflow-hidden flex flex-col"
+            style={{ height: "420px" }}>
+            <div className="flex items-center gap-3 p-3 border-b border-border bg-card">
+              <div className="relative">
+                <div className="w-9 h-9 bg-amber rounded-sm flex items-center justify-center">
+                  <Icon name="Car" size={16} className="text-coal" />
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-oswald font-semibold text-sm text-foreground">Такси «Дальняк»</div>
+                <div className="text-green-400 text-[11px] font-golos">● Онлайн</div>
+              </div>
+              {notifPermission !== "granted" && "Notification" in window && (
+                <button onClick={askNotif} className="text-amber p-1" title="Включить уведомления">
+                  <Icon name="Bell" size={16} />
+                </button>
+              )}
+              <button onClick={() => setChatOpen(false)} className="text-muted-foreground hover:text-foreground p-1">
+                <Icon name="X" size={16} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3 space-y-3">
+              {messages.length === 0 && (
+                <div className="flex justify-start">
+                  <div className="bg-secondary text-foreground rounded-tr-lg rounded-br-lg rounded-bl-lg px-3 py-2 max-w-[80%]">
+                    <p className="font-golos text-xs leading-relaxed">Добрый день! Такси «Дальняк». Чем могу помочь?</p>
+                  </div>
+                </div>
+              )}
+              {messages.map(msg => (
+                <div key={msg.id} className={`flex ${msg.from === "client" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[80%] px-3 py-2 ${msg.from === "client" ? "bg-amber text-coal rounded-tl-lg rounded-bl-lg rounded-br-lg" : "bg-secondary text-foreground rounded-tr-lg rounded-br-lg rounded-bl-lg"}`}>
+                    <p className="font-golos text-xs leading-relaxed">{msg.text}</p>
+                    <p className={`font-golos text-[9px] mt-1 ${msg.from === "client" ? "text-coal/60 text-right" : "text-muted-foreground"}`}>{msg.time}</p>
+                  </div>
+                </div>
+              ))}
+              <div ref={chatFloatEndRef} />
+            </div>
+
+            <div className="p-3 border-t border-border flex gap-2">
+              <input
+                type="text"
+                value={inputVal}
+                onChange={e => setInputVal(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && sendMessage()}
+                placeholder="Введите сообщение..."
+                className="flex-1 bg-secondary border-none outline-none font-golos text-xs text-foreground placeholder:text-muted-foreground px-3 py-2.5 rounded-sm"
+              />
+              <button
+                onClick={sendMessage}
+                disabled={sending}
+                className="bg-amber text-coal px-4 py-2.5 hover:bg-amber/90 transition-colors flex items-center gap-2 disabled:opacity-50 rounded-sm"
+              >
+                <Icon name="Send" size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Кнопка открытия чата */}
+        <button
+          onClick={() => setChatOpen(prev => !prev)}
+          className="w-14 h-14 bg-amber rounded-full shadow-2xl flex items-center justify-center hover:bg-amber/90 transition-all active:scale-95"
+          aria-label="Открыть чат"
+        >
+          <Icon name={chatOpen ? "X" : "MessageCircle"} size={24} className="text-coal" />
+        </button>
+      </div>
 
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
@@ -360,12 +503,9 @@ export default function Index() {
                   Онлайн · Ответим за 2 минуты
                 </div>
               </div>
-              {!notifAsked && "Notification" in window && Notification.permission !== "granted" && (
+              {notifPermission !== "granted" && "Notification" in window && (
                 <button
-                  onClick={() => {
-                    setNotifAsked(true);
-                    Notification.requestPermission();
-                  }}
+                  onClick={askNotif}
                   className="ml-auto flex items-center gap-1.5 text-[11px] text-amber font-golos border border-amber/40 hover:border-amber hover:bg-amber/10 px-3 py-1.5 transition-all whitespace-nowrap"
                 >
                   <Icon name="Bell" size={13} />
