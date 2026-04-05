@@ -64,14 +64,28 @@ function useInView(threshold = 0.15) {
   return { ref, inView };
 }
 
+const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
+
+async function requestAndNotify(title: string, body: string) {
+  if (!("Notification" in window)) return;
+  if (Notification.permission === "default") {
+    await Notification.requestPermission();
+  }
+  if (Notification.permission === "granted") {
+    new Notification(title, { body, icon: LOGO });
+  }
+}
+
 export default function Index() {
   const [activeSection, setActiveSection] = useState("home");
   const [messages, setMessages] = useState<{id: string; from: string; text: string; time: string}[]>([]);
   const [inputVal, setInputVal] = useState("");
   const [sending, setSending] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notifAsked, setNotifAsked] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const sessionId = useRef(getSessionId());
+  const lastMsgCount = useRef(0);
 
   const tariffSection = useInView();
   const aboutSection = useInView();
@@ -81,13 +95,25 @@ export default function Index() {
     try {
       const res = await fetch(`${CHAT_URL}?session_id=${sessionId.current}`);
       const data = await res.json();
-      if (data.messages) setMessages(data.messages.map((m: {id: string; from: string; text: string; time: string}) => ({ ...m, id: m.id })));
+      if (data.messages) {
+        const msgs = data.messages.map((m: {id: string; from: string; text: string; time: string}) => ({ ...m }));
+        // Уведомление при новом сообщении от оператора
+        if (msgs.length > lastMsgCount.current && lastMsgCount.current > 0) {
+          const newMsgs = msgs.slice(lastMsgCount.current);
+          const operatorNew = newMsgs.filter((m: {from: string}) => m.from === "operator");
+          if (operatorNew.length > 0) {
+            requestAndNotify("Такси Дальняк", operatorNew[operatorNew.length - 1].text);
+          }
+        }
+        lastMsgCount.current = msgs.length;
+        setMessages(msgs);
+      }
     } catch (e) { console.warn(e); }
   };
 
   useEffect(() => {
     loadMessages();
-    const interval = setInterval(loadMessages, 5000);
+    const interval = setInterval(loadMessages, 4000);
     return () => clearInterval(interval);
   }, []);
 
@@ -334,6 +360,18 @@ export default function Index() {
                   Онлайн · Ответим за 2 минуты
                 </div>
               </div>
+              {!notifAsked && "Notification" in window && Notification.permission !== "granted" && (
+                <button
+                  onClick={() => {
+                    setNotifAsked(true);
+                    Notification.requestPermission();
+                  }}
+                  className="ml-auto flex items-center gap-1.5 text-[11px] text-amber font-golos border border-amber/40 hover:border-amber hover:bg-amber/10 px-3 py-1.5 transition-all whitespace-nowrap"
+                >
+                  <Icon name="Bell" size={13} />
+                  Уведомления
+                </button>
+              )}
             </div>
 
             <div className="h-80 overflow-y-auto p-4 space-y-4">
