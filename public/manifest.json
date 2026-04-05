@@ -1,24 +1,38 @@
 {
-  "name": "Такси Дальняк",
+  "name": "Такси Дальняк — межгород",
   "short_name": "Дальняк",
-  "description": "Такси на дальние поездки от 200 км. Межгород, аэропорт, трансфер.",
+  "description": "Межгородное такси от 200 км. Фиксированная цена за км.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#f59e0b",
   "orientation": "portrait-primary",
+  "lang": "ru",
+  "categories": ["travel", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Позвонить",
+      "url": "tel:+79956455125",
+      "description": "Позвонить в Такси Дальняк"
+    },
+    {
+      "name": "Написать в Telegram",
+      "url": "https://t.me/Mezhgorod1816",
+      "description": "Написать оператору в Telegram"
+    }
+  ],
   "icons": [
     {
       "src": "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg",
       "sizes": "192x192",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg",
       "sizes": "512x512",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ]
 }
