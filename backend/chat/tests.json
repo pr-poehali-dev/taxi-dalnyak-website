@@ -7,10 +7,18 @@
       "expectedStatus": 200
     },
     {
-      "name": "POST send client message",
+      "name": "GET all sessions",
+      "method": "GET",
+      "path": "/?all=true",
+      "expectedStatus": 200,
+      "expectedBody": {"sessions": []},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "POST send client text",
       "method": "POST",
       "path": "/",
-      "body": {"session_id": "test-session-001", "text": "Тестовое сообщение", "from_role": "client"},
+      "body": {"session_id": "test-auto-001", "text": "Тест отправки", "from_role": "client"},
       "expectedStatus": 200,
       "expectedBody": {"ok": true},
       "bodyMatcher": "partial"
@@ -18,17 +26,27 @@
     {
       "name": "GET messages by session",
       "method": "GET",
-      "path": "/?session_id=test-session-001",
+      "path": "/?session_id=test-auto-001",
       "expectedStatus": 200,
       "expectedBody": {"messages": []},
       "bodyMatcher": "partial"
     },
     {
-      "name": "GET all sessions for admin",
-      "method": "GET",
-      "path": "/?all=true",
+      "name": "POST mark read",
+      "method": "POST",
+      "path": "/",
+      "body": {"session_id": "test-auto-001", "mark_read": true},
       "expectedStatus": 200,
-      "expectedBody": {"sessions": []},
+      "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "POST empty text returns error",
+      "method": "POST",
+      "path": "/",
+      "body": {"session_id": "test-auto-001", "text": ""},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "text or image required"},
       "bodyMatcher": "partial"
     }
   ]
