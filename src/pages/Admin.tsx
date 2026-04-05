@@ -2,9 +2,17 @@ import { useState, useEffect, useRef } from "react";
 import Icon from "@/components/ui/icon";
 
 const CHAT_URL = "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
+const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
 
 type Message = { id: string; from: string; text: string; time: string; is_read: boolean };
 type Session = { session_id: string; last_message_at: string; unread: number; last_text: string | null };
+
+function sendNotif(title: string, body: string) {
+  if (!("Notification" in window)) return;
+  if (Notification.permission === "granted") {
+    new Notification(title, { body, icon: LOGO });
+  }
+}
 
 export default function Admin() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -12,13 +20,45 @@ export default function Admin() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputVal, setInputVal] = useState("");
   const [sending, setSending] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
+    "Notification" in window ? Notification.permission : "denied"
+  );
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const lastSeenIds = useRef<Record<string, string>>({});
+  const sessionsInitialized = useRef(false);
+
+  const askNotif = async () => {
+    const perm = await Notification.requestPermission();
+    setNotifPermission(perm);
+  };
 
   const loadSessions = async () => {
     try {
       const res = await fetch(`${CHAT_URL}?all=true`);
       const data = await res.json();
-      setSessions(data.sessions || []);
+      const newSessions: Session[] = data.sessions || [];
+
+      if (!sessionsInitialized.current) {
+        sessionsInitialized.current = true;
+        // Запоминаем текущее состояние — без уведомлений
+        newSessions.forEach(s => {
+          if (s.last_text) lastSeenIds.current[s.session_id] = s.last_message_at;
+        });
+      } else {
+        // Ищем новые непрочитанные в не открытых сессиях
+        newSessions.forEach(s => {
+          const prev = sessions.find(p => p.session_id === s.session_id);
+          if (
+            s.unread > 0 &&
+            s.session_id !== activeSession &&
+            (!prev || prev.unread < s.unread)
+          ) {
+            sendNotif("Дальняк — новое сообщение", s.last_text || "Новый клиент");
+          }
+        });
+      }
+
+      setSessions(newSessions);
     } catch (e) { console.warn(e); }
   };
 
@@ -87,11 +127,20 @@ export default function Admin() {
           </div>
           <span className="font-oswald font-bold tracking-widest text-foreground uppercase text-base">Дальняк · Оператор</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {totalUnread > 0 && (
             <span className="bg-amber text-coal font-oswald font-bold text-xs px-2.5 py-1 rounded-sm">
-              {totalUnread} непрочитанных
+              {totalUnread} непрочит.
             </span>
+          )}
+          {notifPermission !== "granted" && "Notification" in window && (
+            <button
+              onClick={askNotif}
+              className="flex items-center gap-1.5 text-xs text-amber font-golos border border-amber/40 hover:border-amber hover:bg-amber/10 px-2.5 py-1.5 rounded-sm transition-all whitespace-nowrap"
+            >
+              <Icon name="Bell" size={13} />
+              Уведомления
+            </button>
           )}
           <a href="/" className="text-muted-foreground hover:text-amber text-xs font-golos transition-colors flex items-center gap-1">
             <Icon name="ExternalLink" size={13} />
