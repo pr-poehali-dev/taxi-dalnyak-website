@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Такси Дальняк — межгород от 200 км</title>
-    <meta name="description" content="Такси на дальние поездки от 200 км. Стандарт от 30₽/км, Комфорт от 40₽/км, Минивэн от 50₽/км."/>
-    <meta name="author" content="poehali.dev"/>
+    <title>Такси Дальняк — межгородное такси от 200 км | Такси межгород</title>
+    <meta name="description" content="Такси межгород и междугороднее такси. Дальние поездки от 200 км по фиксированной цене: Стандарт 30₽/км, Комфорт 40₽/км, Минивэн 50₽/км. Работаем 24/7."/>
+    <meta name="keywords" content="такси межгород, междугороднее такси, междугородное такси, межгородное такси, дальнее такси, такси на дальние расстояния, такси от 200 км, трансфер межгород"/>
+    <meta name="robots" content="index, follow"/>
+    <meta name="author" content="Такси Дальняк"/>
+    <link rel="canonical" href="https://taxi-dalnyak-website.poehali.dev/"/>
     <link rel="icon" type="image/jpg" href="https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/favicon-1775385139095.jpg">
     <link rel="manifest" href="/manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
@@ -14,10 +17,38 @@
     <meta name="apple-mobile-web-app-title" content="Дальняк">
     <link rel="apple-touch-icon" href="https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg">
     <meta name="theme-color" content="#f59e0b">
-    <meta property="og:title" content="Такси Дальняк — межгород от 200 км">
-    <meta property="og:description" content="Специализируемся на дальних поездках от 200 км. Фиксированная цена за километр.">
-    <meta property="og:image" content="https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg">
-    <meta name="twitter:image" content="https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg">
+
+    <!-- Open Graph — для репостов в соцсетях -->
+    <meta property="og:type" content="website"/>
+    <meta property="og:locale" content="ru_RU"/>
+    <meta property="og:site_name" content="Такси Дальняк"/>
+    <meta property="og:title" content="Такси Дальняк — межгородное такси от 200 км"/>
+    <meta property="og:description" content="Специализируемся только на дальних поездках. Фиксированная цена за км, без надбавок. Звоните 24/7."/>
+    <meta property="og:image" content="https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/9f1988fa-044e-4fe0-9ed6-d8c75200c13b.jpg"/>
+    <meta property="og:image:width" content="1200"/>
+    <meta property="og:image:height" content="630"/>
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Такси Дальняк — межгородное такси от 200 км"/>
+    <meta name="twitter:description" content="Дальние поездки по фиксированной цене. Стандарт 30₽/км, Комфорт 40₽/км, Минивэн 50₽/км."/>
+    <meta name="twitter:image" content="https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/9f1988fa-044e-4fe0-9ed6-d8c75200c13b.jpg"/>
+
+    <!-- Schema.org — структурированные данные для поиска -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TaxiService",
+      "name": "Такси Дальняк",
+      "description": "Межгородное такси. Дальние поездки от 200 км по фиксированной цене.",
+      "telephone": "+79956455125",
+      "url": "https://taxi-dalnyak-website.poehali.dev/",
+      "areaServed": "Россия",
+      "openingHours": "Mo-Su 00:00-23:59",
+      "priceRange": "от 30₽/км",
+      "sameAs": ["https://t.me/Mezhgorod1816"]
+    }
+    </script>
 
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS COMMENT! -->
 
@@ -28,8 +59,8 @@
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS COMMENT! -->
 
     <meta name="pp-name" value="taxi-dalnyak-website">
-      <script src="https://cdn.poehali.dev/intertnal/js/inspector-min.js"></script>
-  </head>
+    <script src="https://cdn.poehali.dev/intertnal/js/inspector-min.js"></script>
+</head>
 
 <body>
 <div id="root"></div>
@@ -43,16 +74,12 @@
         };
         m[i].l = 1 * new Date();
         for (var j = 0; j < document.scripts.length; j++) {
-            if (document.scripts[j].src === r) {
-                return;
-            }
+            if (document.scripts[j].src === r) { return; }
         }
         k = e.createElement(t), a = e.getElementsByTagName(t)[0], k.async = 1, k.src = r, a.parentNode.insertBefore(k, a)
-    })
-    (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+    })(window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
 
-    ym(101026698, "init", {
-        trustedDomains: ["poehali.dev"],
+    ym(108400932, "init", {
         clickmap: true,
         trackLinks: true,
         accurateTrackBounce: true,
@@ -61,7 +88,7 @@
     });
 </script>
 <noscript>
-    <div><img src="https://mc.yandex.ru/watch/101026698" style="position:absolute; left:-9999px;" alt=""/></div>
+    <div><img src="https://mc.yandex.ru/watch/108400932" style="position:absolute; left:-9999px;" alt=""/></div>
 </noscript>
 <!-- /Yandex.Metrika counter -->
 </body>

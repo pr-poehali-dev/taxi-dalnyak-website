@@ -7,7 +7,7 @@ const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fb
 const PHONE = "8 (995) 645-51-25";
 const PHONE_HREF = "tel:+79956455125";
 const TG_HREF = "https://t.me/Mezhgorod1816";
-const API = "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
+const API = "https://functions.poehali.dev/2cfb628d-f55c-47b3-9871-e215cef551a3";
 
 const NAV = [
   { id: "home", label: "Главная" },
@@ -529,6 +529,35 @@ export default function Index() {
                 </div>
               </button>
             ))}
+          </div>
+
+          {/* Поделиться */}
+          <div className={`mt-6 transition-all duration-700 delay-300 ${secContacts.v ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
+              <div className="flex-1 min-w-0">
+                <p className="font-oswald font-bold text-lg text-white">Знаете тех, кому нужно такси?</p>
+                <p className="font-golos text-sm text-white/40 mt-1">Поделитесь сайтом — и другу поможете, и нам спасибо.</p>
+              </div>
+              <div className="flex gap-3 shrink-0">
+                <button
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({ title: "Такси Дальняк — межгород", text: "Такси на дальние поездки от 200 км. Фиксированная цена за км.", url: window.location.href });
+                    } else {
+                      navigator.clipboard.writeText(window.location.href);
+                      alert("Ссылка скопирована!");
+                    }
+                  }}
+                  className="flex items-center gap-2 bg-amber text-coal font-oswald font-bold text-sm tracking-wider uppercase px-6 py-3 rounded-xl hover:bg-amber/90 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                  <Icon name="Share2" size={16} />Поделиться
+                </button>
+                <a href={`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent("Такси Дальняк — межгородное такси от 200 км. Фиксированная цена за км.")}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 border border-sky-500/30 text-sky-400 font-golos text-sm px-5 py-3 rounded-xl hover:bg-sky-500/10 hover:border-sky-500/60 transition-all">
+                  <Icon name="Send" size={16} />Telegram
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>

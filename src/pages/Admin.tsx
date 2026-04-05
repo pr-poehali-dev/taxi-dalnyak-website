@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import Icon from "@/components/ui/icon";
 
-const API = "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
+const API = "https://functions.poehali.dev/2cfb628d-f55c-47b3-9871-e215cef551a3";
 const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
 
 type Msg = { id: string; from: string; text: string; time: string; is_read: boolean; image_url?: string | null };
