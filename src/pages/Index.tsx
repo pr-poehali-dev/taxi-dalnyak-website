@@ -39,11 +39,16 @@ const TARIFFS = [
   },
 ];
 
-const INITIAL_MESSAGES = [
-  { id: 1, from: "operator", text: "Добрый день! Такси «Дальняк». Чем могу помочь?", time: "10:01" },
-  { id: 2, from: "client", text: "Здравствуйте! Хочу заказать машину до аэропорта завтра утром", time: "10:02" },
-  { id: 3, from: "operator", text: "Конечно! Уточните адрес подачи и время — подберём оптимальный тариф.", time: "10:02" },
-];
+const CHAT_URL = "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
+
+function getSessionId() {
+  let sid = localStorage.getItem("dalnyak_session");
+  if (!sid) {
+    sid = "s_" + Math.random().toString(36).slice(2) + Date.now();
+    localStorage.setItem("dalnyak_session", sid);
+  }
+  return sid;
+}
 
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
@@ -61,17 +66,30 @@ function useInView(threshold = 0.15) {
 
 export default function Index() {
   const [activeSection, setActiveSection] = useState("home");
-  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState<{id: string; from: string; text: string; time: string}[]>([]);
   const [inputVal, setInputVal] = useState("");
-  const [hasNotif, setHasNotif] = useState(false);
-  const [notifCount, setNotifCount] = useState(0);
+  const [sending, setSending] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [chatViewing, setChatViewing] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const sessionId = useRef(getSessionId());
 
   const tariffSection = useInView();
   const aboutSection = useInView();
   const contactSection = useInView();
+
+  const loadMessages = async () => {
+    try {
+      const res = await fetch(`${CHAT_URL}?session_id=${sessionId.current}`);
+      const data = await res.json();
+      if (data.messages) setMessages(data.messages.map((m: {id: string; from: string; text: string; time: string}) => ({ ...m, id: m.id })));
+    } catch (e) { console.warn(e); }
+  };
+
+  useEffect(() => {
+    loadMessages();
+    const interval = setInterval(loadMessages, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -92,63 +110,26 @@ export default function Index() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const newMsg = {
-        id: Date.now(),
-        from: "operator",
-        text: "Напомним: у нас действует скидка 15% на первую поездку! 🚕",
-        time: new Date().toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" }),
-      };
-      setMessages(prev => [...prev, newMsg]);
-      if (!chatViewing) {
-        setHasNotif(true);
-        setNotifCount(n => n + 1);
-        if ("Notification" in window && Notification.permission === "granted") {
-          new Notification("Такси Дальняк", { body: newMsg.text, icon: "/favicon.svg" });
-        }
-      }
-    }, 8000);
-    return () => clearTimeout(timer);
-  }, [chatViewing]);
-
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     setActiveSection(id);
     setMobileMenuOpen(false);
   };
 
-  const sendMessage = () => {
-    if (!inputVal.trim()) return;
-    const msg = {
-      id: Date.now(),
-      from: "client",
-      text: inputVal,
-      time: new Date().toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" }),
-    };
-    setMessages(prev => [...prev, msg]);
+  const sendMessage = async () => {
+    if (!inputVal.trim() || sending) return;
+    setSending(true);
+    const text = inputVal;
     setInputVal("");
-    setTimeout(() => {
-      const reply = {
-        id: Date.now() + 1,
-        from: "operator",
-        text: "Принято! Оператор ответит в ближайшее время.",
-        time: new Date().toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" }),
-      };
-      setMessages(prev => [...prev, reply]);
-    }, 1500);
-  };
-
-  const requestNotifPermission = () => {
-    if ("Notification" in window) {
-      Notification.requestPermission();
-    }
-  };
-
-  const handleChatFocus = () => {
-    setChatViewing(true);
-    setHasNotif(false);
-    setNotifCount(0);
+    try {
+      await fetch(CHAT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId.current, text, from_role: "client" }),
+      });
+      await loadMessages();
+    } catch (e) { console.warn(e); }
+    setSending(false);
   };
 
   return (
@@ -172,11 +153,6 @@ export default function Index() {
                 className={`nav-link font-golos text-sm tracking-wide transition-colors relative ${activeSection === item.id ? "text-amber active" : "text-muted-foreground hover:text-foreground"}`}
               >
                 {item.label}
-                {item.id === "chat" && hasNotif && (
-                  <span className="absolute -top-2 -right-3 w-4 h-4 bg-amber rounded-full flex items-center justify-center text-coal text-[9px] font-bold notification-ping">
-                    {notifCount}
-                  </span>
-                )}
               </button>
             ))}
           </div>
@@ -201,9 +177,6 @@ export default function Index() {
                 className={`text-left font-golos text-sm tracking-wide ${activeSection === item.id ? "text-amber" : "text-muted-foreground"}`}
               >
                 {item.label}
-                {item.id === "chat" && hasNotif && (
-                  <span className="ml-2 inline-flex items-center justify-center w-5 h-5 bg-amber rounded-full text-coal text-[10px] font-bold">{notifCount}</span>
-                )}
               </button>
             ))}
             <a href="tel:+78001234567" className="text-amber font-oswald text-sm">8 800 123-45-67</a>
@@ -337,20 +310,13 @@ export default function Index() {
       </div>
 
       {/* CHAT */}
-      <section id="chat" className="py-24 px-6 bg-asphalt" onFocus={handleChatFocus} onClick={handleChatFocus}>
+      <section id="chat" className="py-24 px-6 bg-asphalt">
         <div className="max-w-4xl mx-auto">
           <div className="mb-12 animate-fade-up">
             <span className="text-amber font-golos text-xs tracking-[0.3em] uppercase">03 / чат</span>
-            <div className="flex items-center gap-4 mt-2">
-              <h2 className="font-oswald font-bold text-5xl md:text-6xl text-foreground">
-                НАПИШИ<br /><span className="text-amber">ОПЕРАТОРУ</span>
-              </h2>
-              {hasNotif && (
-                <span className="bg-amber text-coal font-oswald font-bold text-sm px-3 py-1 rounded-sm notification-ping">
-                  {notifCount} новых
-                </span>
-              )}
-            </div>
+            <h2 className="font-oswald font-bold text-5xl md:text-6xl mt-2 text-foreground">
+              НАПИШИ<br /><span className="text-amber">ОПЕРАТОРУ</span>
+            </h2>
           </div>
 
           <div className="border border-border bg-card">
@@ -368,16 +334,16 @@ export default function Index() {
                   Онлайн · Ответим за 2 минуты
                 </div>
               </div>
-              <button
-                onClick={requestNotifPermission}
-                className="ml-auto flex items-center gap-2 text-xs text-muted-foreground hover:text-amber transition-colors font-golos border border-border hover:border-amber px-3 py-1.5"
-              >
-                <Icon name="Bell" size={13} />
-                Уведомления
-              </button>
             </div>
 
             <div className="h-80 overflow-y-auto p-4 space-y-4">
+              {messages.length === 0 && (
+                <div className="flex justify-start">
+                  <div className="bg-secondary text-foreground rounded-tr-lg rounded-br-lg rounded-bl-lg px-4 py-3 max-w-[75%]">
+                    <p className="font-golos text-sm leading-relaxed">Добрый день! Такси «Дальняк». Чем могу помочь?</p>
+                  </div>
+                </div>
+              )}
               {messages.map(msg => (
                 <div key={msg.id} className={`flex ${msg.from === "client" ? "justify-end" : "justify-start"} chat-bubble-in`}>
                   <div className={`max-w-[75%] px-4 py-3 ${msg.from === "client" ? "bg-amber text-coal rounded-tl-lg rounded-bl-lg rounded-br-lg" : "bg-secondary text-foreground rounded-tr-lg rounded-br-lg rounded-bl-lg"}`}>
@@ -400,7 +366,8 @@ export default function Index() {
               />
               <button
                 onClick={sendMessage}
-                className="bg-amber text-coal px-5 py-3 hover:bg-amber/90 transition-colors flex items-center gap-2 font-oswald font-semibold text-sm"
+                disabled={sending}
+                className="bg-amber text-coal px-5 py-3 hover:bg-amber/90 transition-colors flex items-center gap-2 font-oswald font-semibold text-sm disabled:opacity-50"
               >
                 <Icon name="Send" size={16} />
               </button>
@@ -408,7 +375,7 @@ export default function Index() {
           </div>
 
           <p className="mt-4 text-muted-foreground text-xs font-golos text-center">
-            Нажмите «Уведомления» — и мы сообщим вам о новых сообщениях, даже когда вкладка закрыта
+            Оператор ответит вам прямо здесь — обновление автоматическое
           </p>
         </div>
       </section>
