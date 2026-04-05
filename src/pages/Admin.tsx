@@ -1,105 +1,140 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const CHAT_URL = "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
-const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
+const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
 
-type Message = { id: string; from: string; text: string; time: string; is_read: boolean; image_url?: string | null };
-type Session = { session_id: string; last_message_at: string; unread: number; last_text: string | null };
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-function sendNotif(title: string, body: string) {
-  if (!("Notification" in window)) return;
-  if (Notification.permission === "granted") {
-    new Notification(title, { body, icon: LOGO });
-  }
+type Msg = {
+  id: string;
+  from: string;
+  text: string;
+  time: string;
+  is_read: boolean;
+  image_url?: string | null;
+};
+
+type Session = {
+  session_id: string;
+  last_message_at: string;
+  unread: number;
+  last_text: string | null;
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload  = () => resolve((r.result as string).split(",")[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
 }
 
+function fireNotif(title: string, body: string) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  try { new Notification(title, { body, icon: LOGO }); } catch { /* ignore */ }
+}
+
+function fmtDate(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  if (isToday) return d.toLocaleString("ru", { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleString("ru", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function Admin() {
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [activeSession, setActiveSession] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputVal, setInputVal] = useState("");
-  const [sending, setSending] = useState(false);
-  const [uploadingImg, setUploadingImg] = useState(false);
-  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
+  const [sessions, setSessions]             = useState<Session[]>([]);
+  const [activeSession, setActiveSession]   = useState<string | null>(null);
+  const [messages, setMessages]             = useState<Msg[]>([]);
+  const [input, setInput]                   = useState("");
+  const [sending, setSending]               = useState(false);
+  const [uploading, setUploading]           = useState(false);
+  const [msgsLoading, setMsgsLoading]       = useState(false);
+  const [notifPerm, setNotifPerm]           = useState<NotificationPermission>(
     "Notification" in window ? Notification.permission : "denied"
   );
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const lastSeenIds = useRef<Record<string, string>>({});
-  const sessionsInitialized = useRef(false);
+  const [sidebarOpen, setSidebarOpen]       = useState(false); // mobile sidebar
 
-  const askNotif = async () => {
-    const perm = await Notification.requestPermission();
-    setNotifPermission(perm);
-  };
+  const chatEndRef    = useRef<HTMLDivElement>(null);
+  const fileInputRef  = useRef<HTMLInputElement>(null);
+  const inputRef      = useRef<HTMLInputElement>(null);
+  const prevUnread    = useRef<Record<string, number>>({});
+  const sessionsInit  = useRef(false);
 
-  const loadSessions = async () => {
+  // ── Load sessions ─────────────────────────────────────────────────────────
+  const loadSessions = useCallback(async () => {
     try {
-      const res = await fetch(`${CHAT_URL}?all=true`);
+      const res  = await fetch(`${CHAT_URL}?all=true`);
       const data = await res.json();
-      const newSessions: Session[] = data.sessions || [];
+      const list: Session[] = data.sessions || [];
 
-      if (!sessionsInitialized.current) {
-        sessionsInitialized.current = true;
-        // Запоминаем текущее состояние — без уведомлений
-        newSessions.forEach(s => {
-          if (s.last_text) lastSeenIds.current[s.session_id] = s.last_message_at;
-        });
+      if (!sessionsInit.current) {
+        sessionsInit.current = true;
+        list.forEach(s => { prevUnread.current[s.session_id] = s.unread; });
       } else {
-        // Ищем новые непрочитанные в не открытых сессиях
-        newSessions.forEach(s => {
-          const prev = sessions.find(p => p.session_id === s.session_id);
-          if (
-            s.unread > 0 &&
-            s.session_id !== activeSession &&
-            (!prev || prev.unread < s.unread)
-          ) {
-            sendNotif("Дальняк — новое сообщение", s.last_text || "Новый клиент");
+        list.forEach(s => {
+          const prev = prevUnread.current[s.session_id] ?? 0;
+          if (s.unread > prev && s.session_id !== activeSession) {
+            fireNotif("Дальняк · новое сообщение", s.last_text || "Клиент прислал фото");
           }
+          prevUnread.current[s.session_id] = s.unread;
         });
       }
+      setSessions(list);
+    } catch { /* network */ }
+  }, [activeSession]);
 
-      setSessions(newSessions);
-    } catch (e) { console.warn(e); }
-  };
-
-  const loadMessages = async (sid: string) => {
+  // ── Load messages ─────────────────────────────────────────────────────────
+  const loadMessages = useCallback(async (sid: string) => {
     try {
-      const res = await fetch(`${CHAT_URL}?session_id=${sid}`);
+      const res  = await fetch(`${CHAT_URL}?session_id=${sid}`);
       const data = await res.json();
       setMessages(data.messages || []);
-      // отметить прочитанными
-      await fetch(CHAT_URL, {
+      // mark read silently
+      fetch(CHAT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_id: sid, mark_read: true }),
-      });
-    } catch (e) { console.warn(e); }
-  };
+      }).catch(() => {});
+    } catch { /* */ }
+    setMsgsLoading(false);
+  }, []);
 
+  // ── Intervals ─────────────────────────────────────────────────────────────
   useEffect(() => {
     loadSessions();
-    const interval = setInterval(loadSessions, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    const t = setInterval(loadSessions, 5000);
+    return () => clearInterval(t);
+  }, [loadSessions]);
 
   useEffect(() => {
     if (!activeSession) return;
+    setMsgsLoading(true);
+    setMessages([]);
     loadMessages(activeSession);
-    const interval = setInterval(() => loadMessages(activeSession), 3000);
-    return () => clearInterval(interval);
-  }, [activeSession]);
+    const t = setInterval(() => loadMessages(activeSession), 3000);
+    return () => clearInterval(t);
+  }, [activeSession, loadMessages]);
 
+  // ── Scroll ────────────────────────────────────────────────────────────────
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatEndRef.current) chatEndRef.current.scrollIntoView({ block: "nearest" });
   }, [messages]);
 
+  // ── Actions ───────────────────────────────────────────────────────────────
   const sendReply = async () => {
-    if (!inputVal.trim() || !activeSession || sending) return;
+    const text = input.trim();
+    if (!text || !activeSession || sending) return;
     setSending(true);
-    const text = inputVal;
-    setInputVal("");
+    setInput("");
     try {
       await fetch(CHAT_URL, {
         method: "POST",
@@ -108,198 +143,282 @@ export default function Admin() {
       });
       await loadMessages(activeSession);
       await loadSessions();
-    } catch (e) { console.warn(e); }
+    } catch { /* */ }
     setSending(false);
+    inputRef.current?.focus();
   };
 
   const sendPhoto = async (file: File) => {
     if (!activeSession) return;
-    setUploadingImg(true);
+    setUploading(true);
     try {
-      const reader = new FileReader();
-      const b64 = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve((reader.result as string).split(",")[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      const b64 = await fileToBase64(file);
       await fetch(CHAT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_id: activeSession, image_b64: b64, from_role: "operator" }),
       });
       await loadMessages(activeSession);
-    } catch (e) { console.warn(e); }
-    setUploadingImg(false);
+    } catch { /* */ }
+    setUploading(false);
   };
 
-  const totalUnread = sessions.reduce((sum, s) => sum + (s.unread || 0), 0);
-
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleString("ru", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const askNotif = async () => {
+    const p = await Notification.requestPermission();
+    setNotifPerm(p);
   };
 
+  const openSession = (sid: string) => {
+    setActiveSession(sid);
+    setSidebarOpen(false);
+    prevUnread.current[sid] = 0;
+  };
+
+  const totalUnread = sessions.reduce((s, x) => s + (x.unread || 0), 0);
+  const activeData  = sessions.find(s => s.session_id === activeSession);
+
+  // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background font-golos flex flex-col">
-      {/* Header */}
-      <header className="bg-card border-b border-border px-6 h-14 flex items-center justify-between shrink-0">
+    <div className="min-h-screen bg-background text-foreground font-golos flex flex-col">
+
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <header className="border-b border-white/8 bg-background/80 backdrop-blur-xl px-4 sm:px-6 h-14 flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 bg-amber flex items-center justify-center rounded-sm">
-            <span className="font-oswald font-bold text-coal text-xs">Д</span>
+          {/* mobile burger */}
+          <button onClick={() => setSidebarOpen(v => !v)}
+            className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition">
+            <Icon name={sidebarOpen ? "X" : "Menu"} size={18} />
+          </button>
+          <div className="w-7 h-7 bg-amber rounded-lg flex items-center justify-center shrink-0">
+            <span className="font-oswald font-black text-coal text-xs">Д</span>
           </div>
-          <span className="font-oswald font-bold tracking-widest text-foreground uppercase text-base">Дальняк · Оператор</span>
-        </div>
-        <div className="flex items-center gap-3">
+          <span className="font-oswald font-bold text-sm sm:text-base tracking-widest text-white uppercase">
+            Дальняк · Оператор
+          </span>
           {totalUnread > 0 && (
-            <span className="bg-amber text-coal font-oswald font-bold text-xs px-2.5 py-1 rounded-sm">
-              {totalUnread} непрочит.
+            <span className="bg-amber text-coal font-oswald font-black text-xs px-2.5 py-0.5 rounded-full">
+              {totalUnread}
             </span>
           )}
-          {notifPermission !== "granted" && "Notification" in window && (
-            <button
-              onClick={askNotif}
-              className="flex items-center gap-1.5 text-xs text-amber font-golos border border-amber/40 hover:border-amber hover:bg-amber/10 px-2.5 py-1.5 rounded-sm transition-all whitespace-nowrap"
-            >
+        </div>
+
+        <div className="flex items-center gap-2">
+          {notifPerm !== "granted" && "Notification" in window && (
+            <button onClick={askNotif}
+              className="flex items-center gap-1.5 text-xs text-amber border border-amber/30 hover:border-amber hover:bg-amber/10 px-3 py-1.5 rounded-lg font-golos transition">
               <Icon name="Bell" size={13} />
-              Уведомления
+              <span className="hidden sm:inline">Уведомления</span>
             </button>
           )}
-          <a href="/" className="text-muted-foreground hover:text-amber text-xs font-golos transition-colors flex items-center gap-1">
+          <a href="/" className="flex items-center gap-1.5 text-xs text-white/30 hover:text-amber font-golos transition px-2 py-1.5">
             <Icon name="ExternalLink" size={13} />
-            Сайт
+            <span className="hidden sm:inline">Сайт</span>
           </a>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sessions sidebar */}
-        <aside className="w-72 border-r border-border bg-card flex flex-col shrink-0 overflow-hidden">
-          <div className="px-4 py-3 border-b border-border">
-            <p className="font-golos text-xs text-muted-foreground uppercase tracking-widest">Диалоги</p>
+      <div className="flex flex-1 overflow-hidden relative">
+
+        {/* ── Mobile sidebar overlay ───────────────────────────────────── */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 bg-black/60 z-20 md:hidden"
+            onClick={() => setSidebarOpen(false)} />
+        )}
+
+        {/* ── Sessions sidebar ─────────────────────────────────────────── */}
+        <aside className={`
+          fixed md:relative inset-y-0 left-0 z-20
+          w-72 border-r border-white/8 bg-[#0d0d0d] flex flex-col shrink-0
+          transition-transform duration-300
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `} style={{ top: 56 }}>
+          <div className="px-4 py-3 border-b border-white/8 flex items-center justify-between shrink-0">
+            <p className="font-golos text-xs text-white/30 uppercase tracking-widest">Диалоги</p>
+            <span className="font-golos text-xs text-white/20">{sessions.length} чел.</span>
           </div>
+
           <div className="flex-1 overflow-y-auto">
             {sessions.length === 0 && (
-              <div className="p-6 text-center text-muted-foreground text-sm font-golos">
-                <Icon name="MessageSquare" size={32} className="mx-auto mb-3 opacity-30" />
-                Пока нет сообщений
+              <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                <Icon name="MessageSquare" size={36} className="text-white/10 mb-4" />
+                <p className="font-golos text-sm text-white/25">Пока нет сообщений</p>
+                <p className="font-golos text-xs text-white/15 mt-1">Обновление каждые 5 сек</p>
               </div>
             )}
-            {sessions.map(session => (
-              <button
-                key={session.session_id}
-                onClick={() => setActiveSession(session.session_id)}
-                className={`w-full text-left px-4 py-3.5 border-b border-border/50 hover:bg-secondary/50 transition-colors ${activeSession === session.session_id ? "bg-secondary border-l-2 border-l-amber" : ""}`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-8 h-8 bg-amber/10 border border-amber/30 flex items-center justify-center rounded-sm shrink-0">
-                      <Icon name="User" size={14} className="text-amber" />
+            {sessions.map(session => {
+              const isActive = activeSession === session.session_id;
+              return (
+                <button
+                  key={session.session_id}
+                  onClick={() => openSession(session.session_id)}
+                  className={`w-full text-left px-4 py-3.5 border-b border-white/[0.04] transition-colors ${
+                    isActive
+                      ? "bg-amber/8 border-l-2 border-l-amber"
+                      : "hover:bg-white/[0.03]"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                      isActive ? "bg-amber/20 border border-amber/30" : "bg-white/5"
+                    }`}>
+                      <Icon name="User" size={14} className={isActive ? "text-amber" : "text-white/30"} />
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-golos text-xs text-foreground truncate font-medium">
-                        Клиент #{session.session_id.slice(-6)}
-                      </p>
-                      <p className="font-golos text-[10px] text-muted-foreground truncate mt-0.5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className={`font-golos text-xs font-semibold truncate ${isActive ? "text-white" : "text-white/60"}`}>
+                          Клиент ···{session.session_id.slice(-5)}
+                        </p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <p className="text-[10px] text-white/20 font-golos">{fmtDate(session.last_message_at)}</p>
+                          {session.unread > 0 && (
+                            <span className="w-5 h-5 bg-amber rounded-full flex items-center justify-center text-coal text-[10px] font-black font-oswald">
+                              {session.unread}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <p className="font-golos text-[11px] text-white/25 truncate mt-0.5">
                         {session.last_text || "—"}
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <p className="text-[10px] text-muted-foreground font-golos">{formatDate(session.last_message_at)}</p>
-                    {session.unread > 0 && (
-                      <span className="w-5 h-5 bg-amber rounded-full flex items-center justify-center text-coal text-[10px] font-bold font-oswald">
-                        {session.unread}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </aside>
 
-        {/* Chat panel */}
-        <main className="flex-1 flex flex-col overflow-hidden">
+        {/* ── Chat panel ───────────────────────────────────────────────── */}
+        <main className="flex-1 flex flex-col overflow-hidden bg-background">
           {!activeSession ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-              <Icon name="MessageCircle" size={48} className="text-amber/30 mb-4" />
-              <h2 className="font-oswald font-bold text-2xl text-foreground/30 tracking-wider">ВЫБЕРИ ДИАЛОГ</h2>
-              <p className="font-golos text-sm text-muted-foreground mt-2">Нажми на клиента слева, чтобы начать отвечать</p>
+            <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
+              <div className="w-20 h-20 rounded-2xl bg-amber/8 border border-amber/15 flex items-center justify-center">
+                <Icon name="MessageCircle" size={36} className="text-amber/40" />
+              </div>
+              <div>
+                <h2 className="font-oswald font-bold text-xl text-white/30 tracking-wider">ВЫБЕРИ ДИАЛОГ</h2>
+                <p className="font-golos text-sm text-white/20 mt-1">
+                  {sessions.length > 0
+                    ? "Нажми на клиента слева, чтобы ответить"
+                    : "Жди — клиенты напишут здесь"}
+                </p>
+              </div>
             </div>
           ) : (
             <>
               {/* Chat header */}
-              <div className="px-6 h-14 border-b border-border flex items-center gap-3 bg-card shrink-0">
-                <div className="w-8 h-8 bg-amber/10 border border-amber/30 flex items-center justify-center rounded-sm">
-                  <Icon name="User" size={15} className="text-amber" />
+              <div className="px-4 sm:px-6 h-14 border-b border-white/8 flex items-center gap-3 bg-background/80 backdrop-blur-xl shrink-0">
+                <button onClick={() => setSidebarOpen(true)}
+                  className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition">
+                  <Icon name="ArrowLeft" size={16} />
+                </button>
+                <div className="w-8 h-8 bg-amber/10 border border-amber/20 rounded-xl flex items-center justify-center shrink-0">
+                  <Icon name="User" size={14} className="text-amber" />
                 </div>
-                <div>
-                  <p className="font-oswald font-semibold text-sm tracking-wider text-foreground">
-                    Клиент #{activeSession.slice(-6)}
+                <div className="flex-1 min-w-0">
+                  <p className="font-oswald font-semibold text-sm text-white tracking-wider">
+                    Клиент ···{activeSession.slice(-5)}
                   </p>
-                  <p className="font-golos text-[10px] text-green-400">Активный диалог</p>
+                  <p className="font-golos text-[10px] text-green-400">
+                    {activeData ? `Последнее: ${fmtDate(activeData.last_message_at)}` : "Активный диалог"}
+                  </p>
                 </div>
+                {/* Quick actions */}
+                <a href={`tel:`} className="hidden sm:flex items-center gap-1.5 text-xs text-white/30 hover:text-amber font-golos transition px-2 py-1">
+                  <Icon name="Phone" size={13} />
+                </a>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                {messages.length === 0 && (
-                  <div className="text-center text-muted-foreground text-sm font-golos py-8">Сообщений пока нет</div>
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4 bg-[#080808]">
+                {msgsLoading && (
+                  <div className="flex justify-center py-8">
+                    <Icon name="Loader" size={24} className="text-amber animate-spin" />
+                  </div>
                 )}
-                {messages.map(msg => (
-                  <div key={msg.id} className={`flex ${msg.from === "operator" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[65%] overflow-hidden ${msg.from === "operator" ? "bg-amber text-coal rounded-tl-lg rounded-bl-lg rounded-br-lg" : "bg-secondary text-foreground rounded-tr-lg rounded-br-lg rounded-bl-lg"}`}>
-                      {msg.image_url && (
-                        <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
-                          <img src={msg.image_url} alt="фото" className="max-w-full object-cover rounded-t-lg" style={{ maxHeight: 200 }} />
-                        </a>
+                {!msgsLoading && messages.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="font-golos text-sm text-white/20">Сообщений пока нет</p>
+                  </div>
+                )}
+                {messages.map(msg => {
+                  const isOp = msg.from === "operator";
+                  return (
+                    <div key={msg.id} className={`flex ${isOp ? "justify-end" : "justify-start"}`}>
+                      {!isOp && (
+                        <div className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center shrink-0 mt-1 mr-2">
+                          <Icon name="User" size={12} className="text-white/30" />
+                        </div>
                       )}
-                      <div className="px-4 py-3">
-                        {msg.text && <p className="font-golos text-sm leading-relaxed">{msg.text}</p>}
-                        <div className={`flex items-center gap-2 mt-1.5 ${msg.from === "operator" ? "justify-end" : ""}`}>
-                          <p className={`font-golos text-[10px] ${msg.from === "operator" ? "text-coal/60" : "text-muted-foreground"}`}>{msg.time}</p>
-                          <p className={`font-golos text-[10px] uppercase tracking-wide ${msg.from === "operator" ? "text-coal/50" : "text-muted-foreground"}`}>
-                            {msg.from === "operator" ? "вы" : "клиент"}
-                          </p>
+                      <div className={`max-w-[70%] overflow-hidden rounded-2xl ${
+                        isOp
+                          ? "bg-amber text-coal rounded-br-sm"
+                          : "bg-white/[0.06] text-white rounded-bl-sm"
+                      }`}>
+                        {msg.image_url && (
+                          <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
+                            <img src={msg.image_url} alt="фото" className="block max-w-full object-cover"
+                              style={{ maxHeight: 240 }} />
+                          </a>
+                        )}
+                        <div className="px-4 py-2.5">
+                          {msg.text && <p className="font-golos text-sm leading-relaxed">{msg.text}</p>}
+                          <div className={`flex items-center gap-2 mt-1 ${isOp ? "justify-end" : ""}`}>
+                            <p className={`font-golos text-[10px] ${isOp ? "text-coal/50" : "text-white/25"}`}>
+                              {msg.time}
+                            </p>
+                            <p className={`font-golos text-[10px] uppercase tracking-wider ${isOp ? "text-coal/40" : "text-white/20"}`}>
+                              {isOp ? "вы" : "клиент"}
+                            </p>
+                          </div>
                         </div>
                       </div>
+                      {isOp && (
+                        <div className="w-7 h-7 rounded-full bg-amber/20 border border-amber/30 flex items-center justify-center shrink-0 mt-1 ml-2">
+                          <Icon name="Headphones" size={12} className="text-amber" />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div ref={chatEndRef} />
               </div>
 
               {/* Input */}
-              <div className="p-4 border-t border-border bg-card shrink-0">
-                <div className="flex gap-2">
+              <div className="border-t border-white/8 bg-background px-4 sm:px-6 py-4 shrink-0">
+                <div className="flex items-center gap-2">
                   <input
+                    ref={inputRef}
                     type="text"
-                    value={inputVal}
-                    onChange={e => setInputVal(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && sendReply()}
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendReply()}
                     placeholder="Введите ответ клиенту..."
-                    className="flex-1 bg-secondary border border-border outline-none focus:border-amber transition-colors font-golos text-sm text-foreground placeholder:text-muted-foreground px-4 py-3 rounded-sm min-w-0"
+                    autoComplete="off"
+                    className="flex-1 bg-white/5 border border-white/10 focus:border-amber/40 rounded-xl px-4 py-3 font-golos text-sm text-white placeholder:text-white/25 outline-none transition min-w-0"
                   />
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
                     onChange={e => { const f = e.target.files?.[0]; if (f) sendPhoto(f); e.target.value = ""; }} />
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingImg}
-                    title="Отправить фото"
-                    className="text-muted-foreground hover:text-amber border border-border hover:border-amber px-3 py-3 transition-colors disabled:opacity-40 rounded-sm shrink-0"
+                    disabled={uploading}
+                    title="Прикрепить фото"
+                    className="w-11 h-11 flex items-center justify-center rounded-xl border border-white/10 hover:border-amber/30 text-white/30 hover:text-amber transition disabled:opacity-30 shrink-0"
                   >
-                    {uploadingImg ? <Icon name="Loader" size={16} className="animate-spin" /> : <Icon name="Paperclip" size={16} />}
+                    {uploading
+                      ? <Icon name="Loader" size={16} className="animate-spin" />
+                      : <Icon name="Paperclip" size={16} />}
                   </button>
                   <button
                     onClick={sendReply}
-                    disabled={sending || !inputVal.trim()}
-                    className="bg-amber text-coal px-5 py-3 hover:bg-amber/90 transition-colors flex items-center gap-2 font-oswald font-semibold text-sm tracking-wider disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                    disabled={sending || !input.trim()}
+                    className="h-11 px-5 bg-amber text-coal font-oswald font-bold text-sm tracking-wider rounded-xl hover:bg-amber/90 transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center gap-2"
                   >
-                    <Icon name="Send" size={16} />
-                    Отправить
+                    <Icon name="Send" size={15} />
+                    <span className="hidden sm:inline">Отправить</span>
                   </button>
                 </div>
-                <p className="text-muted-foreground text-[11px] font-golos mt-2">
+                <p className="mt-2 font-golos text-[11px] text-white/15">
                   Enter — отправить · Обновление каждые 3 сек
                 </p>
               </div>

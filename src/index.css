@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    --background: 220 15% 6%;
-    --foreground: 40 20% 92%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 92%;
 
     --card: 220 12% 9%;
     --card-foreground: 40 20% 92%;
@@ -91,6 +91,83 @@
   }
   .border-amber {
     border-color: hsl(var(--amber));
+  }
+  .text-coal {
+    color: hsl(var(--coal));
+  }
+  .bg-coal {
+    background-color: hsl(var(--coal));
+  }
+  /* Amber opacity helpers */
+  .bg-amber\/5 {
+    background-color: hsl(var(--amber) / 0.05);
+  }
+  .bg-amber\/8 {
+    background-color: hsl(var(--amber) / 0.08);
+  }
+  .bg-amber\/10 {
+    background-color: hsl(var(--amber) / 0.1);
+  }
+  .bg-amber\/15 {
+    background-color: hsl(var(--amber) / 0.15);
+  }
+  .bg-amber\/20 {
+    background-color: hsl(var(--amber) / 0.2);
+  }
+  .border-amber\/15 {
+    border-color: hsl(var(--amber) / 0.15);
+  }
+  .border-amber\/20 {
+    border-color: hsl(var(--amber) / 0.2);
+  }
+  .border-amber\/30 {
+    border-color: hsl(var(--amber) / 0.3);
+  }
+  .border-amber\/50 {
+    border-color: hsl(var(--amber) / 0.5);
+  }
+  .border-white\/8 {
+    border-color: rgb(255 255 255 / 0.08);
+  }
+  .border-white\/16 {
+    border-color: rgb(255 255 255 / 0.16);
+  }
+  .text-amber\/60 {
+    color: hsl(var(--amber) / 0.6);
+  }
+  .text-amber\/40 {
+    color: hsl(var(--amber) / 0.4);
+  }
+  .hover\:text-amber:hover {
+    color: hsl(var(--amber));
+  }
+  .hover\:border-amber:hover {
+    border-color: hsl(var(--amber));
+  }
+  .hover\:bg-amber\/10:hover {
+    background-color: hsl(var(--amber) / 0.1);
+  }
+  .hover\:bg-amber\/20:hover {
+    background-color: hsl(var(--amber) / 0.2);
+  }
+  .hover\:bg-amber\/90:hover {
+    background-color: hsl(var(--amber) / 0.9);
+  }
+  .hover\:bg-coal\/80:hover {
+    background-color: hsl(var(--coal) / 0.8);
+  }
+  .bg-amber\/\[0\.03\] {
+    background-color: hsl(var(--amber) / 0.03);
+  }
+  .hover\:border-amber\/30:hover {
+    border-color: hsl(var(--amber) / 0.3);
+  }
+  .hover\:border-amber\/50:hover {
+    border-color: hsl(var(--amber) / 0.5);
+  }
+  /* Sidebar */
+  .bg-amber\/8 {
+    background-color: hsl(var(--amber) / 0.08);
   }
 
   .animate-fade-up {

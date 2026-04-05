@@ -1,215 +1,266 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 
+// ─── Constants ───────────────────────────────────────────────────────────────
+
 const HERO_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/9f1988fa-044e-4fe0-9ed6-d8c75200c13b.jpg";
-const CAR_IMG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/d777a0ac-bb72-4451-9248-4a96fb44db9f.jpg";
-const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
+const CAR_IMG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/d777a0ac-bb72-4451-9248-4a96fb44db9f.jpg";
+const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
+
+const PHONE      = "8 (995) 645-51-25";
+const PHONE_HREF = "tel:+79956455125";
+const TG_HREF    = "https://t.me/Mezhgorod1816";
+const CHAT_URL   = "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
 
 const NAV_ITEMS = [
-  { id: "home", label: "Главная" },
-  { id: "tariffs", label: "Тарифы" },
-  { id: "chat", label: "Чат" },
-  { id: "about", label: "О компании" },
-  { id: "contacts", label: "Контакты" },
+  { id: "home",     label: "Главная"   },
+  { id: "tariffs",  label: "Тарифы"    },
+  { id: "chat",     label: "Чат"       },
+  { id: "about",    label: "О нас"     },
+  { id: "contacts", label: "Контакты"  },
 ];
 
 const TARIFFS = [
   {
+    id: "standart",
     name: "СТАНДАРТ",
-    price: "от 30 ₽/км",
+    price: "30 ₽",
+    unit: "за км",
+    desc: "Надёжный седан для дальних поездок",
+    features: ["Седан / Хэтчбек", "До 3 пассажиров", "Кондиционер", "Оплата картой или наличными"],
+    featured: false,
     badge: null,
-    desc: "Поездки от 200 км, комфортный седан",
-    features: ["Седан / Хэтчбек", "До 3 пассажиров", "Кондиционер", "Оплата картой"],
-    featured: false,
   },
   {
+    id: "comfort",
     name: "КОМФОРТ",
-    price: "от 40 ₽/км",
-    badge: "Хит",
-    desc: "Просторный салон, опытный водитель",
-    features: ["Бизнес-класс", "До 4 пассажиров", "Зарядка в авто", "Вода в подарок"],
+    price: "40 ₽",
+    unit: "за км",
+    desc: "Просторный бизнес-класс с максимальным удобством",
+    features: ["Бизнес-класс", "До 4 пассажиров", "Зарядка USB-C / USB-A", "Вода в дорогу"],
     featured: true,
+    badge: "Популярный",
   },
   {
+    id: "minivan",
     name: "МИНИВЭН",
-    price: "от 50 ₽/км",
-    badge: "VIP",
-    desc: "Большой салон для компаний и багажа",
-    features: ["Минивэн / Внедорожник", "До 6 пассажиров", "Детское кресло", "Помощь с багажом"],
+    price: "50 ₽",
+    unit: "за км",
+    desc: "Вместительный салон для компаний и больших поездок",
+    features: ["Минивэн / Внедорожник", "До 6 пассажиров", "Детское кресло", "Большой багажник"],
     featured: false,
+    badge: null,
   },
 ];
 
-const PHONE = "8(995) 645-5125";
-const PHONE_HREF = "tel:+79956455125";
-const TG_HREF = "https://t.me/Mezhgorod1816";
-const CHAT_URL = "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-type Msg = { id: string; from: string; text: string; time: string; image_url?: string | null };
+type Msg = {
+  id: string;
+  from: string;
+  text: string;
+  time: string;
+  image_url?: string | null;
+};
 
-function getSessionId() {
-  let sid = localStorage.getItem("dalnyak_session");
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getSessionId(): string {
+  let sid = localStorage.getItem("dalnyak_sid");
   if (!sid) {
-    sid = "s_" + Math.random().toString(36).slice(2) + Date.now();
-    localStorage.setItem("dalnyak_session", sid);
+    sid = "u_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16) + "_" + Date.now();
+    localStorage.setItem("dalnyak_sid", sid);
   }
   return sid;
 }
 
-function useInView(threshold = 0.15) {
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve((reader.result as string).split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function fireNotification(title: string, body: string) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  try { new Notification(title, { body, icon: LOGO, badge: LOGO }); } catch { /* ignore */ }
+}
+
+function useIntersect(threshold = 0.12) {
   const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
     const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect(); } },
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
       { threshold }
     );
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
-  }, [threshold]);
-  return { ref, inView };
+  }, []);
+  return { ref, visible };
 }
 
-function sendNotif(title: string, body: string) {
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
-  try { new Notification(title, { body, icon: LOGO }); } catch { /* Safari может не поддерживать */ }
-}
+// ─── Sub-components (defined OUTSIDE Index to prevent re-creation) ────────────
 
-// Рендер сообщения — вынесен ВНЕ компонента Index чтобы не пересоздаваться
-function MsgList({ messages, msgsRef }: { messages: Msg[]; msgsRef: React.RefObject<HTMLDivElement> }) {
+function ChatBubble({ msg }: { msg: Msg }) {
+  const isMe = msg.from === "client";
   return (
-    <div ref={msgsRef} className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
-      {messages.length === 0 && (
-        <div className="flex justify-start">
-          <div className="bg-secondary text-foreground rounded-tr-lg rounded-br-lg rounded-bl-lg px-3 py-2.5 max-w-[85%]">
-            <p className="font-golos text-sm leading-relaxed">
-              Добрый день! Специализируемся на дальних поездках от 200 км. Чем могу помочь?
+    <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+      <div className={`max-w-[80%] overflow-hidden rounded-2xl ${
+        isMe ? "bg-amber text-coal rounded-br-sm" : "bg-white/5 text-foreground rounded-bl-sm"
+      }`}>
+        {msg.image_url && (
+          <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
+            <img
+              src={msg.image_url}
+              alt="фото"
+              className="block max-w-full object-cover"
+              style={{ maxHeight: 220 }}
+            />
+          </a>
+        )}
+        {(msg.text || !msg.image_url) && (
+          <div className="px-4 py-2.5">
+            {msg.text && <p className="text-sm leading-relaxed font-golos">{msg.text}</p>}
+            <p className={`text-[10px] mt-1 font-golos ${isMe ? "text-coal/50 text-right" : "text-white/30"}`}>
+              {msg.time}
             </p>
           </div>
-        </div>
-      )}
-      {messages.map(msg => (
-        <div key={msg.id} className={`flex ${msg.from === "client" ? "justify-end" : "justify-start"}`}>
-          <div className={`max-w-[85%] ${msg.from === "client"
-            ? "bg-amber text-coal rounded-tl-lg rounded-bl-lg rounded-br-lg"
-            : "bg-secondary text-foreground rounded-tr-lg rounded-br-lg rounded-bl-lg"}`}>
-            {msg.image_url && (
-              <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
-                <img src={msg.image_url} alt="фото" className="rounded-t-lg max-w-[240px] w-full object-cover" style={{ maxHeight: 200 }} />
-              </a>
-            )}
-            <div className="px-3 py-2">
-              {msg.text && <p className="font-golos text-sm leading-relaxed">{msg.text}</p>}
-              <p className={`font-golos text-[10px] mt-0.5 ${msg.from === "client" ? "text-coal/60 text-right" : "text-muted-foreground"}`}>
-                {msg.time}
-              </p>
-            </div>
-          </div>
-        </div>
-      ))}
+        )}
+      </div>
     </div>
   );
 }
 
+function ChatEmpty() {
+  return (
+    <div className="flex justify-start">
+      <div className="bg-white/5 text-foreground rounded-2xl rounded-bl-sm px-4 py-3 max-w-[80%]">
+        <p className="text-sm leading-relaxed font-golos">
+          Здравствуйте! Мы специализируемся на дальних поездках от 200 км. Напишите маршрут — рассчитаем стоимость.
+        </p>
+        <p className="text-[10px] mt-1 text-white/30 font-golos">сейчас</p>
+      </div>
+    </div>
+  );
+}
+
+interface ChatMessagesProps {
+  messages: Msg[];
+  containerRef: React.RefObject<HTMLDivElement>;
+}
+
+function ChatMessages({ messages, containerRef }: ChatMessagesProps) {
+  return (
+    <div ref={containerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">
+      <ChatEmpty />
+      {messages.map(msg => <ChatBubble key={msg.id} msg={msg} />)}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function Index() {
-  const [activeSection, setActiveSection] = useState("home");
-  const [messages, setMessages] = useState<Msg[]>([]);
-  const [inputVal, setInputVal] = useState("");
-  const [sending, setSending] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
+  const [activeSection, setActiveSection]   = useState("home");
+  const [mobileOpen, setMobileOpen]         = useState(false);
+  const [messages, setMessages]             = useState<Msg[]>([]);
+  const [input, setInput]                   = useState("");
+  const [sending, setSending]               = useState(false);
+  const [uploading, setUploading]           = useState(false);
+  const [chatOpen, setChatOpen]             = useState(false);
+  const [chatLoading, setChatLoading]       = useState(true);
+  const [notifPerm, setNotifPerm]           = useState<NotificationPermission>(
     "Notification" in window ? Notification.permission : "denied"
   );
-  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
-  const [installDismissed, setInstallDismissed] = useState(() => localStorage.getItem("pwa_dismissed") === "1");
-  const [chatOpen, setChatOpen] = useState(false);
-  const [uploadingImg, setUploadingImg] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const fileInputSectionRef = useRef<HTMLInputElement>(null);
+  const [installPrompt, setInstallPrompt]   = useState<Event | null>(null);
+  const [pwaShown, setPwaShown]             = useState(false);
 
-  // Два отдельных рефа для скролла — для секции и для плавающего чата
-  const chatMsgsRef = useRef<HTMLDivElement>(null);
-  const chatFloatMsgsRef = useRef<HTMLDivElement>(null);
-  const sessionId = useRef(getSessionId());
-  const lastSeenId = useRef<string | null>(null);
+  const sessionId   = useRef(getSessionId());
+  const lastSeenId  = useRef<string | null>(null);
   const initialized = useRef(false);
+  const floatMsgs   = useRef<HTMLDivElement>(null);
+  const sectionMsgs = useRef<HTMLDivElement>(null);
+  const fileFloat   = useRef<HTMLInputElement>(null);
+  const fileSection = useRef<HTMLInputElement>(null);
 
-  const tariffSection = useInView();
-  const aboutSection = useInView();
-  const contactSection = useInView();
+  const tariffs  = useIntersect();
+  const about    = useIntersect();
+  const contacts = useIntersect();
 
-  // PWA install prompt — перехватываем до показа браузерного
+  // ── PWA install prompt ────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e); };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  const loadMessages = async () => {
+  // ── Chat API ──────────────────────────────────────────────────────────────
+  const loadMessages = useCallback(async () => {
     try {
-      const res = await fetch(`${CHAT_URL}?session_id=${sessionId.current}`);
+      const res  = await fetch(`${CHAT_URL}?session_id=${sessionId.current}`);
       const data = await res.json();
-      if (data.messages) {
-        const msgs: Msg[] = data.messages;
-        if (!initialized.current) {
-          // Первый запуск — запоминаем baseline, не уведомляем
-          initialized.current = true;
-          lastSeenId.current = msgs.length > 0 ? msgs[msgs.length - 1].id : null;
-        } else {
-          // Ищем новые сообщения оператора
-          const lastIdx = lastSeenId.current
-            ? msgs.findIndex(m => m.id === lastSeenId.current)
-            : -1;
-          const newMsgs = lastIdx >= 0 ? msgs.slice(lastIdx + 1) : [];
-          const newFromOperator = newMsgs.filter(m => m.from === "operator");
-          if (newFromOperator.length > 0) {
-            sendNotif("Такси Дальняк", newFromOperator[newFromOperator.length - 1].text);
-          }
-          if (msgs.length > 0) lastSeenId.current = msgs[msgs.length - 1].id;
-        }
-        setMessages(msgs);
+      if (!data.messages) return;
+
+      const msgs: Msg[] = data.messages;
+
+      if (!initialized.current) {
+        initialized.current = true;
+        setChatLoading(false);
+        lastSeenId.current = msgs.length ? msgs[msgs.length - 1].id : null;
+      } else {
+        const lastIdx  = lastSeenId.current ? msgs.findIndex(m => m.id === lastSeenId.current) : -1;
+        const newMsgs  = lastIdx >= 0 ? msgs.slice(lastIdx + 1) : [];
+        const opNew    = newMsgs.filter(m => m.from === "operator");
+        if (opNew.length) fireNotification("Такси Дальняк", opNew[opNew.length - 1].text || "Новое фото");
+        if (msgs.length) lastSeenId.current = msgs[msgs.length - 1].id;
       }
-    } catch { /* сеть недоступна */ }
-  };
+      setMessages(msgs);
+    } catch { setChatLoading(false); }
+  }, []);
 
   useEffect(() => {
     loadMessages();
-    const interval = setInterval(loadMessages, 4000);
-    return () => clearInterval(interval);
-  }, []);
+    const t = setInterval(loadMessages, 4000);
+    return () => clearInterval(t);
+  }, [loadMessages]);
 
-  // Скролл ТОЛЬКО внутри контейнера чата — никакого scrollIntoView на странице
+  // ── Scroll chat containers (NOT page) ────────────────────────────────────
   useEffect(() => {
-    if (chatMsgsRef.current) chatMsgsRef.current.scrollTop = chatMsgsRef.current.scrollHeight;
+    if (sectionMsgs.current) sectionMsgs.current.scrollTop = sectionMsgs.current.scrollHeight;
   }, [messages]);
 
   useEffect(() => {
-    if (chatOpen && chatFloatMsgsRef.current) chatFloatMsgsRef.current.scrollTop = chatFloatMsgsRef.current.scrollHeight;
+    if (chatOpen && floatMsgs.current) floatMsgs.current.scrollTop = floatMsgs.current.scrollHeight;
   }, [messages, chatOpen]);
 
+  // ── Active nav section ────────────────────────────────────────────────────
   useEffect(() => {
-    const handleScroll = () => {
-      const sections = ["home", "tariffs", "chat", "about", "contacts"];
-      for (const id of [...sections].reverse()) {
+    const onScroll = () => {
+      const ids = ["home", "tariffs", "chat", "about", "contacts"];
+      for (const id of [...ids].reverse()) {
         const el = document.getElementById(id);
-        if (el && window.scrollY >= el.offsetTop - 120) { setActiveSection(id); break; }
+        if (el && window.scrollY >= el.offsetTop - 130) { setActiveSection(id); break; }
       }
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // ── Actions ───────────────────────────────────────────────────────────────
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     setActiveSection(id);
-    setMobileMenuOpen(false);
+    setMobileOpen(false);
   };
 
-  const sendMessage = async () => {
-    if (!inputVal.trim() || sending) return;
+  const sendText = async () => {
+    const text = input.trim();
+    if (!text || sending) return;
     setSending(true);
-    const text = inputVal.trim();
-    setInputVal("");
+    setInput("");
     try {
       await fetch(CHAT_URL, {
         method: "POST",
@@ -222,17 +273,9 @@ export default function Index() {
   };
 
   const sendPhoto = async (file: File) => {
-    setUploadingImg(true);
+    setUploading(true);
     try {
-      const reader = new FileReader();
-      const b64 = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const result = reader.result as string;
-          resolve(result.split(",")[1]);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      const b64 = await fileToBase64(file);
       await fetch(CHAT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -240,13 +283,13 @@ export default function Index() {
       });
       await loadMessages();
     } catch { /* */ }
-    setUploadingImg(false);
+    setUploading(false);
   };
 
   const askNotif = async () => {
     if (!("Notification" in window)) return;
-    const perm = await Notification.requestPermission();
-    setNotifPermission(perm);
+    const p = await Notification.requestPermission();
+    setNotifPerm(p);
   };
 
   const handleInstall = async () => {
@@ -256,265 +299,319 @@ export default function Index() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (installPrompt as any).userChoice;
     setInstallPrompt(null);
-    setInstallDismissed(true);
-    localStorage.setItem("pwa_dismissed", "1");
+    setPwaShown(true);
   };
 
-  const dismissInstall = () => {
-    setInstallDismissed(true);
-    localStorage.setItem("pwa_dismissed", "1");
-  };
+  const showNotifBtn = notifPerm !== "granted" && "Notification" in window;
+  const showPwaBanner = !!installPrompt && !pwaShown;
 
-  const showNotifBtn = notifPermission !== "granted" && "Notification" in window;
+  // ── Chat input bar (shared) ───────────────────────────────────────────────
+  const ChatInputBar = ({ fileRef }: { fileRef: React.RefObject<HTMLInputElement> }) => (
+    <div className="flex items-center gap-2 p-3 border-t border-white/8 bg-card/80 shrink-0">
+      <input
+        type="text"
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendText()}
+        placeholder="Напишите маршрут или вопрос..."
+        autoComplete="off"
+        autoCorrect="on"
+        className="flex-1 bg-white/5 rounded-xl px-4 py-2.5 text-sm font-golos text-foreground placeholder:text-white/30 outline-none focus:ring-1 focus:ring-amber/50 transition min-w-0"
+      />
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) sendPhoto(f); e.target.value = ""; }}
+      />
+      <button
+        onClick={() => fileRef.current?.click()}
+        disabled={uploading}
+        className="w-9 h-9 flex items-center justify-center rounded-xl text-white/40 hover:text-amber hover:bg-amber/10 transition disabled:opacity-30 shrink-0"
+        title="Прикрепить фото"
+      >
+        {uploading
+          ? <Icon name="Loader" size={16} className="animate-spin" />
+          : <Icon name="Paperclip" size={16} />}
+      </button>
+      <button
+        onClick={sendText}
+        disabled={sending || !input.trim()}
+        className="w-9 h-9 flex items-center justify-center rounded-xl bg-amber text-coal hover:bg-amber/90 transition disabled:opacity-40 shrink-0"
+      >
+        <Icon name="Send" size={15} />
+      </button>
+    </div>
+  );
 
+  // ────────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background font-golos grain-overlay">
+    <div className="min-h-screen bg-background text-foreground font-golos">
 
-      {/* PWA INSTALL BANNER — яркий, хорошо заметный */}
-      {installPrompt && !installDismissed && (
-        <div className="fixed top-16 left-0 right-0 z-[60] mx-3 sm:mx-auto sm:max-w-md">
-          <div className="bg-amber rounded-xl px-4 py-3 flex items-center gap-3 shadow-2xl border-2 border-amber">
-            <img src={LOGO} alt="" className="w-10 h-10 rounded-lg object-contain flex-shrink-0 bg-black border border-black/20" />
+      {/* ── PWA Banner ──────────────────────────────────────────────────── */}
+      {showPwaBanner && (
+        <div className="fixed top-[57px] sm:top-[65px] inset-x-0 z-50 flex justify-center px-3 pointer-events-none">
+          <div className="pointer-events-auto w-full max-w-md bg-amber rounded-2xl shadow-2xl flex items-center gap-3 px-4 py-3">
+            <img src={LOGO} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0 bg-black" />
             <div className="flex-1 min-w-0">
               <p className="font-oswald font-bold text-coal text-sm leading-tight">Добавить на главный экран</p>
-              <p className="font-golos text-coal/70 text-xs mt-0.5">Такси Дальняк — быстрый доступ</p>
+              <p className="text-coal/60 text-xs font-golos mt-0.5">Быстрый доступ к Такси Дальняк</p>
             </div>
-            <button onClick={handleInstall} className="bg-coal text-amber font-oswald font-bold text-xs px-4 py-2 rounded-lg whitespace-nowrap hover:bg-coal/80 transition-colors shrink-0">
+            <button onClick={handleInstall} className="bg-coal text-amber font-oswald font-bold text-xs px-4 py-2 rounded-lg shrink-0 hover:bg-coal/80 transition">
               Добавить
             </button>
-            <button onClick={dismissInstall} className="text-coal/50 hover:text-coal p-1 shrink-0">
-              <Icon name="X" size={16} />
+            <button onClick={() => setPwaShown(true)} className="text-coal/40 hover:text-coal p-1 shrink-0">
+              <Icon name="X" size={15} />
             </button>
           </div>
         </div>
       )}
 
-      {/* FLOATING CHAT */}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+      {/* ── Floating chat button + window ───────────────────────────────── */}
+      <div className="fixed bottom-5 right-4 z-50 flex flex-col items-end gap-3">
         {chatOpen && (
           <div
-            className="bg-card border border-border rounded-xl shadow-2xl overflow-hidden flex flex-col"
-            style={{ width: "min(calc(100vw - 32px), 360px)", height: "min(calc(100vh - 120px), 500px)" }}
+            className="rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-white/10 bg-[#111]"
+            style={{ width: "min(calc(100vw - 32px), 370px)", height: "min(calc(100dvh - 130px), 520px)" }}
           >
-            {/* Шапка плавающего чата */}
-            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border bg-card shrink-0">
+            {/* header */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-white/8 bg-black/40 shrink-0">
               <div className="relative shrink-0">
-                <div className="w-8 h-8 bg-amber rounded-sm flex items-center justify-center">
-                  <Icon name="Car" size={15} className="text-coal" />
-                </div>
-                <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border-2 border-card" />
+                <img src={LOGO} alt="" className="w-9 h-9 rounded-lg object-cover bg-black" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-[#111]" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-oswald font-semibold text-sm text-foreground leading-none">Такси «Дальняк»</div>
-                <div className="text-green-400 text-[10px] font-golos mt-0.5">● Онлайн · от 200 км</div>
+                <p className="font-oswald font-semibold text-sm text-white leading-none">Такси «Дальняк»</p>
+                <p className="text-green-400 text-[11px] font-golos mt-0.5">● Онлайн · от 200 км</p>
               </div>
               {showNotifBtn && (
-                <button onClick={askNotif} className="text-amber/70 hover:text-amber p-1 transition-colors" title="Включить уведомления">
-                  <Icon name="Bell" size={15} />
+                <button onClick={askNotif} title="Включить уведомления"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-amber/60 hover:text-amber hover:bg-amber/10 transition shrink-0">
+                  <Icon name="Bell" size={16} />
                 </button>
               )}
-              <button onClick={() => setChatOpen(false)} className="text-muted-foreground hover:text-foreground p-1">
-                <Icon name="X" size={15} />
+              <button onClick={() => setChatOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition shrink-0">
+                <Icon name="X" size={16} />
               </button>
             </div>
 
-            {/* Сообщения */}
-            <MsgList messages={messages} msgsRef={chatFloatMsgsRef} />
+            {/* messages */}
+            {chatLoading
+              ? <div className="flex-1 flex items-center justify-center">
+                  <Icon name="Loader" size={24} className="text-amber animate-spin" />
+                </div>
+              : <ChatMessages messages={messages} containerRef={floatMsgs} />
+            }
 
-            {/* Ввод */}
-            <div className="p-2 border-t border-border flex gap-1.5 shrink-0 bg-card">
-              <input
-                type="text"
-                value={inputVal}
-                onChange={e => setInputVal(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && sendMessage()}
-                placeholder="Маршрут или вопрос..."
-                autoComplete="off"
-                className="flex-1 bg-secondary border-none outline-none font-golos text-sm text-foreground placeholder:text-muted-foreground px-3 py-2.5 rounded-sm min-w-0"
-              />
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if (f) sendPhoto(f); e.target.value = ""; }} />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingImg}
-                className="text-muted-foreground hover:text-amber p-2.5 transition-colors disabled:opacity-40 shrink-0"
-                title="Прикрепить фото"
-              >
-                {uploadingImg ? <Icon name="Loader" size={15} className="animate-spin" /> : <Icon name="Paperclip" size={15} />}
-              </button>
-              <button
-                onClick={sendMessage}
-                disabled={sending}
-                className="bg-amber text-coal px-3 py-2.5 hover:bg-amber/90 transition-colors flex items-center disabled:opacity-50 rounded-sm shrink-0"
-              >
-                <Icon name="Send" size={15} />
-              </button>
-            </div>
+            {/* input */}
+            <ChatInputBar fileRef={fileFloat} />
           </div>
         )}
 
-        {/* Кнопка открытия */}
+        {/* trigger */}
         <button
-          onClick={() => setChatOpen(prev => !prev)}
-          className="w-14 h-14 bg-amber rounded-full shadow-2xl flex items-center justify-center hover:bg-amber/90 transition-all active:scale-95"
+          onClick={() => setChatOpen(v => !v)}
+          className="w-14 h-14 bg-amber text-coal rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
           aria-label="Открыть чат"
         >
-          <Icon name={chatOpen ? "X" : "MessageCircle"} size={24} className="text-coal" />
+          <Icon name={chatOpen ? "X" : "MessageCircle"} size={24} />
         </button>
       </div>
 
-      {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-md border-b border-border">
+      {/* ── Navigation ──────────────────────────────────────────────────── */}
+      <header className="fixed top-0 inset-x-0 z-40 border-b border-white/8 bg-background/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-          <button onClick={() => scrollTo("home")} className="flex items-center gap-2">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-amber flex items-center justify-center rounded-sm shrink-0">
-              <span className="font-oswald font-bold text-coal text-xs">Д</span>
+          <button onClick={() => scrollTo("home")} className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-amber rounded-lg flex items-center justify-center shrink-0">
+              <span className="font-oswald font-black text-coal text-sm">Д</span>
             </div>
-            <span className="font-oswald font-bold text-lg sm:text-xl tracking-widest text-foreground uppercase">Дальняк</span>
+            <span className="font-oswald font-bold text-lg tracking-widest text-white uppercase">Дальняк</span>
           </button>
 
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
+          <nav className="hidden md:flex items-center gap-1">
             {NAV_ITEMS.map(item => (
-              <button
-                key={item.id}
-                onClick={() => scrollTo(item.id)}
-                className={`font-golos text-sm tracking-wide transition-colors ${activeSection === item.id ? "text-amber" : "text-muted-foreground hover:text-foreground"}`}
-              >
+              <button key={item.id} onClick={() => scrollTo(item.id)}
+                className={`px-3 py-1.5 rounded-lg font-golos text-sm transition-colors ${
+                  activeSection === item.id
+                    ? "text-amber bg-amber/10"
+                    : "text-white/50 hover:text-white hover:bg-white/5"
+                }`}>
                 {item.label}
               </button>
             ))}
-          </div>
+          </nav>
 
-          <div className="flex items-center gap-3">
-            <a href={PHONE_HREF} className="hidden md:flex items-center gap-2 text-amber font-oswald font-medium tracking-wider hover:opacity-80 transition-opacity text-sm">
-              <Icon name="Phone" size={15} />
+          <div className="flex items-center gap-2">
+            <a href={PHONE_HREF}
+              className="hidden md:flex items-center gap-2 text-amber font-oswald font-semibold text-sm hover:opacity-80 transition-opacity">
+              <Icon name="Phone" size={14} />
               {PHONE}
             </a>
-            <a href={PHONE_HREF} className="md:hidden text-amber p-1">
+            <a href={PHONE_HREF} className="md:hidden text-amber p-2">
               <Icon name="Phone" size={20} />
             </a>
-            <button className="md:hidden text-foreground p-1" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              <Icon name={mobileMenuOpen ? "X" : "Menu"} size={22} />
+            <button onClick={() => setMobileOpen(v => !v)}
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition">
+              <Icon name={mobileOpen ? "X" : "Menu"} size={20} />
             </button>
           </div>
         </div>
 
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-card border-t border-border px-4 py-2 flex flex-col animate-fade-in">
-            {NAV_ITEMS.map(item => (
-              <button
-                key={item.id}
-                onClick={() => scrollTo(item.id)}
-                className={`text-left font-golos text-sm py-3 px-2 border-b border-border/40 last:border-0 ${activeSection === item.id ? "text-amber" : "text-muted-foreground"}`}
-              >
-                {item.label}
-              </button>
-            ))}
-            <a href={PHONE_HREF} className="text-amber font-oswald text-sm py-3 px-2 flex items-center gap-2 border-b border-border/40">
-              <Icon name="Phone" size={14} />{PHONE}
-            </a>
-            <a href={TG_HREF} target="_blank" rel="noopener noreferrer" className="text-sky-400 font-golos text-sm py-3 px-2 flex items-center gap-2">
-              <Icon name="Send" size={14} />Telegram @Mezhgorod1816
-            </a>
+        {/* mobile menu */}
+        {mobileOpen && (
+          <div className="md:hidden border-t border-white/8 bg-background/95 backdrop-blur-xl">
+            <div className="max-w-6xl mx-auto px-4 py-3 space-y-1">
+              {NAV_ITEMS.map(item => (
+                <button key={item.id} onClick={() => scrollTo(item.id)}
+                  className={`w-full text-left px-4 py-3 rounded-xl font-golos text-sm transition-colors ${
+                    activeSection === item.id ? "text-amber bg-amber/10" : "text-white/60 hover:text-white hover:bg-white/5"
+                  }`}>
+                  {item.label}
+                </button>
+              ))}
+              <div className="pt-2 pb-1 flex flex-col gap-2">
+                <a href={PHONE_HREF} className="flex items-center gap-2 px-4 py-3 text-amber font-oswald font-semibold text-sm">
+                  <Icon name="Phone" size={16} />{PHONE}
+                </a>
+                <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-3 text-sky-400 font-golos text-sm">
+                  <Icon name="Send" size={16} />Telegram @Mezhgorod1816
+                </a>
+              </div>
+            </div>
           </div>
         )}
-      </nav>
+      </header>
 
-      {/* HERO */}
+      {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${HERO_BG})` }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-coal/80 via-coal/60 to-background" />
+        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${HERO_BG})` }} />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/50 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent" />
 
-        <div className="relative z-10 text-center px-4 sm:px-6 max-w-4xl mx-auto pt-14">
-          <div className="mb-4 sm:mb-6 animate-fade-in" style={{ animationDelay: "0.1s", opacity: 0 }}>
-            <span className="inline-block border border-amber/40 text-amber font-golos text-xs tracking-[0.2em] sm:tracking-[0.3em] px-3 sm:px-4 py-2 uppercase">
-              Межгород · Аэропорт · От 200 км
-            </span>
+        <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto pt-16">
+          <div className="inline-flex items-center gap-2 border border-amber/30 rounded-full px-4 py-1.5 mb-8
+            text-amber text-xs font-golos tracking-widest uppercase opacity-0 animate-fade-in"
+            style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
+            <span className="w-1.5 h-1.5 bg-amber rounded-full animate-pulse" />
+            Межгород · Аэропорт · От 200 км
           </div>
-          <h1 className="font-oswald font-bold text-5xl sm:text-7xl md:text-9xl tracking-tight text-white mb-3 sm:mb-4 animate-fade-up" style={{ animationDelay: "0.2s", opacity: 0 }}>
+
+          <h1 className="font-oswald font-black text-6xl sm:text-8xl md:text-[110px] leading-none tracking-tight text-white
+            opacity-0 animate-fade-up"
+            style={{ animationDelay: "0.2s", animationFillMode: "forwards" }}>
             ДАЛЬНЯК
           </h1>
-          <p className="font-golos text-base sm:text-xl text-foreground/70 mb-8 sm:mb-10 max-w-xl mx-auto animate-fade-up leading-relaxed" style={{ animationDelay: "0.4s", opacity: 0 }}>
-            Специализируемся только на дальних поездках от 200 км. Фиксированная цена за километр — без сюрпризов.
+
+          <p className="mt-6 font-golos text-base sm:text-xl text-white/60 max-w-xl mx-auto leading-relaxed
+            opacity-0 animate-fade-up"
+            style={{ animationDelay: "0.35s", animationFillMode: "forwards" }}>
+            Специализируемся только на дальних поездках от&nbsp;200&nbsp;км.<br />
+            Фиксированная цена за километр — никаких сюрпризов.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 animate-fade-up" style={{ animationDelay: "0.6s", opacity: 0 }}>
-            <button
-              onClick={() => scrollTo("tariffs")}
-              className="w-full sm:w-auto group bg-amber text-coal font-oswald font-semibold tracking-widest uppercase px-8 py-4 text-sm hover:bg-amber/90 transition-all duration-300"
-            >
-              Тарифы <Icon name="ArrowRight" size={16} className="inline ml-2 group-hover:translate-x-1 transition-transform" />
+
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4
+            opacity-0 animate-fade-up"
+            style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}>
+            <button onClick={() => scrollTo("tariffs")}
+              className="group w-full sm:w-auto bg-amber text-coal font-oswald font-bold tracking-widest uppercase
+                px-8 py-4 rounded-xl text-sm hover:bg-amber/90 transition-all hover:scale-[1.02] active:scale-[0.98]">
+              Посмотреть тарифы
+              <Icon name="ArrowRight" size={16}
+                className="inline ml-2 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button
-              onClick={() => setChatOpen(true)}
-              className="w-full sm:w-auto border border-foreground/30 text-foreground font-golos text-sm px-8 py-4 hover:border-amber hover:text-amber transition-all duration-300"
-            >
-              Написать в чат
+            <button onClick={() => setChatOpen(true)}
+              className="w-full sm:w-auto border border-white/20 text-white font-golos text-sm
+                px-8 py-4 rounded-xl hover:border-amber/50 hover:text-amber hover:bg-amber/5 transition-all">
+              Написать оператору
             </button>
           </div>
         </div>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-in" style={{ animationDelay: "1s", opacity: 0 }}>
-          <span className="text-muted-foreground text-xs tracking-[0.2em] uppercase">Прокрутить</span>
-          <div className="w-px h-8 bg-gradient-to-b from-amber to-transparent" />
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2
+          opacity-0 animate-fade-in" style={{ animationDelay: "1.2s", animationFillMode: "forwards" }}>
+          <span className="text-white/30 text-[11px] tracking-[0.2em] uppercase font-golos">Листать</span>
+          <div className="w-px h-10 bg-gradient-to-b from-amber/60 to-transparent" />
         </div>
       </section>
 
-      {/* STATS */}
-      <section className="bg-asphalt border-y border-border py-6 sm:py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+      {/* ── Stats bar ───────────────────────────────────────────────────── */}
+      <div className="border-y border-white/8 bg-white/[0.02]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
-            { num: "50 000+", label: "Поездок выполнено" },
-            { num: "5+ лет", label: "На рынке" },
-            { num: "24/7", label: "Работаем без выходных" },
-            { num: "от 200 км", label: "Минимальная поездка" },
-          ].map((stat, i) => (
-            <div key={i} className="text-center">
-              <div className="font-oswald font-bold text-xl sm:text-3xl text-amber">{stat.num}</div>
-              <div className="font-golos text-[11px] sm:text-xs text-muted-foreground mt-1 tracking-wide">{stat.label}</div>
+            { value: "50 000+", label: "Поездок выполнено" },
+            { value: "5+ лет",  label: "На рынке"          },
+            { value: "24 / 7",  label: "Работаем круглосуточно" },
+            { value: "≥ 200 км", label: "Минимальный маршрут"  },
+          ].map(s => (
+            <div key={s.value} className="text-center">
+              <div className="font-oswald font-bold text-2xl sm:text-3xl text-amber">{s.value}</div>
+              <div className="font-golos text-xs text-white/40 mt-1">{s.label}</div>
             </div>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* TARIFFS */}
-      <section id="tariffs" ref={tariffSection.ref} className="py-16 sm:py-24 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className={`mb-10 sm:mb-16 ${tariffSection.inView ? "animate-fade-up" : "opacity-0"}`}>
-            <span className="text-amber font-golos text-xs tracking-[0.3em] uppercase">02 / тарифы</span>
-            <h2 className="font-oswald font-bold text-4xl sm:text-6xl mt-2 text-foreground">
-              ВЫБЕРИ СВОЙ<br /><span className="text-amber">ТАРИФ</span>
+      {/* ── Tariffs ─────────────────────────────────────────────────────── */}
+      <section id="tariffs" ref={tariffs.ref} className="py-20 sm:py-32 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className={`mb-12 sm:mb-16 transition-all duration-700 ${tariffs.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+            <p className="text-amber font-golos text-xs tracking-[0.3em] uppercase mb-3">02 — тарифы</p>
+            <h2 className="font-oswald font-black text-4xl sm:text-6xl text-white leading-none">
+              ВЫБЕРИ<br /><span className="text-amber">ТАРИФ</span>
             </h2>
-            <p className="font-golos text-sm text-muted-foreground mt-3 max-w-md">
-              Стоимость считается за километр. Минимальная поездка — от 200 км.
+            <p className="mt-4 font-golos text-sm text-white/40 max-w-sm">
+              Цена считается за каждый километр. Минимальная поездка — 200 км.
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {TARIFFS.map((t, i) => (
-              <div
-                key={t.name}
-                className={`border bg-card p-6 sm:p-8 relative flex flex-col ${t.featured ? "border-amber" : "border-border"} ${tariffSection.inView ? "animate-fade-up" : "opacity-0"}`}
-                style={{ animationDelay: `${0.1 + i * 0.15}s` }}
-              >
+              <div key={t.id}
+                className={`relative flex flex-col rounded-2xl border p-6 sm:p-8 transition-all duration-700 ${
+                  tariffs.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                } ${t.featured
+                  ? "border-amber bg-amber/5 shadow-[0_0_40px_rgba(245,158,11,0.1)]"
+                  : "border-white/8 bg-white/[0.02] hover:border-white/16 hover:bg-white/[0.04]"
+                } transition-colors`}
+                style={{ transitionDelay: `${i * 100}ms` }}>
+
                 {t.badge && (
-                  <span className="absolute top-4 right-4 bg-amber text-coal font-oswald font-bold text-xs tracking-widest px-3 py-1 uppercase">{t.badge}</span>
+                  <div className="absolute top-5 right-5 bg-amber text-coal font-oswald font-bold text-[11px] tracking-wider px-3 py-1 rounded-full uppercase">
+                    {t.badge}
+                  </div>
                 )}
-                <div className="mb-4 sm:mb-6">
-                  <h3 className="font-oswald font-bold text-2xl sm:text-3xl tracking-widest text-foreground mb-1">{t.name}</h3>
-                  <p className="text-muted-foreground text-sm font-golos">{t.desc}</p>
+
+                <div className="mb-6">
+                  <h3 className="font-oswald font-black text-2xl tracking-wider text-white">{t.name}</h3>
+                  <p className="mt-1 font-golos text-sm text-white/40">{t.desc}</p>
                 </div>
-                <div className="text-amber font-oswald font-bold text-3xl sm:text-4xl mb-6 sm:mb-8">{t.price}</div>
-                <ul className="space-y-2.5 mb-6 sm:mb-8 flex-1">
+
+                <div className="mb-8 flex items-baseline gap-1.5">
+                  <span className="font-oswald font-black text-5xl text-amber">{t.price}</span>
+                  <span className="font-golos text-sm text-white/40">{t.unit}</span>
+                </div>
+
+                <ul className="space-y-3 flex-1 mb-8">
                   {t.features.map(f => (
-                    <li key={f} className="flex items-center gap-3 text-sm font-golos text-foreground/80">
-                      <Icon name="Check" size={14} className="text-amber flex-shrink-0" />{f}
+                    <li key={f} className="flex items-center gap-3 font-golos text-sm text-white/70">
+                      <span className="w-4 h-4 rounded-full bg-amber/15 flex items-center justify-center shrink-0">
+                        <Icon name="Check" size={10} className="text-amber" />
+                      </span>
+                      {f}
                     </li>
                   ))}
                 </ul>
-                <button
-                  onClick={() => setChatOpen(true)}
-                  className={`w-full py-3 font-oswald font-semibold tracking-widest text-sm uppercase transition-all duration-300 ${t.featured ? "bg-amber text-coal hover:bg-amber/90" : "border border-border text-foreground hover:border-amber hover:text-amber"}`}
-                >
+
+                <button onClick={() => setChatOpen(true)}
+                  className={`w-full py-3 rounded-xl font-oswald font-bold text-sm tracking-wider uppercase transition-all hover:scale-[1.01] active:scale-[0.99] ${
+                    t.featured
+                      ? "bg-amber text-coal hover:bg-amber/90"
+                      : "border border-white/15 text-white hover:border-amber/50 hover:text-amber"
+                  }`}>
                   Заказать
                 </button>
               </div>
@@ -523,203 +620,191 @@ export default function Index() {
         </div>
       </section>
 
-      {/* CAR DIVIDER */}
-      <div className="relative h-48 sm:h-64 overflow-hidden">
-        <img src={CAR_IMG} alt="Такси Дальняк" className="w-full h-full object-cover opacity-40" />
+      {/* ── Divider image ───────────────────────────────────────────────── */}
+      <div className="relative h-52 sm:h-72 overflow-hidden">
+        <img src={CAR_IMG} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-transparent to-background/50" />
         <div className="absolute inset-0 flex items-center justify-center px-4">
-          <p className="font-oswald text-3xl sm:text-5xl font-bold text-white text-center tracking-[0.1em] uppercase opacity-90">Везём дальше всех</p>
+          <p className="font-oswald font-black text-3xl sm:text-6xl text-white/90 tracking-[0.08em] uppercase text-center drop-shadow-2xl">
+            Везём дальше всех
+          </p>
         </div>
       </div>
 
-      {/* CHAT SECTION */}
-      <section id="chat" className="py-16 sm:py-24 px-4 sm:px-6 bg-asphalt">
+      {/* ── Chat section ────────────────────────────────────────────────── */}
+      <section id="chat" className="py-20 sm:py-32 px-4 sm:px-6 bg-white/[0.01]">
         <div className="max-w-2xl mx-auto">
-          <div className="mb-8 sm:mb-12 animate-fade-up">
-            <span className="text-amber font-golos text-xs tracking-[0.3em] uppercase">03 / чат</span>
-            <h2 className="font-oswald font-bold text-4xl sm:text-6xl mt-2 text-foreground">
+          <div className="mb-10">
+            <p className="text-amber font-golos text-xs tracking-[0.3em] uppercase mb-3">03 — чат</p>
+            <h2 className="font-oswald font-black text-4xl sm:text-6xl text-white leading-none">
               НАПИШИ<br /><span className="text-amber">ОПЕРАТОРУ</span>
             </h2>
           </div>
 
-          <div className="border border-border bg-card rounded-sm flex flex-col" style={{ height: "440px" }}>
-            {/* Шапка */}
-            <div className="flex flex-wrap items-center gap-3 p-3 sm:p-4 border-b border-border shrink-0">
+          {/* Chat widget */}
+          <div className="rounded-2xl border border-white/10 bg-[#0d0d0d] overflow-hidden flex flex-col"
+            style={{ height: 460 }}>
+            {/* header */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-white/8 bg-black/20 shrink-0">
               <div className="relative shrink-0">
-                <div className="w-10 h-10 bg-amber rounded-sm flex items-center justify-center">
-                  <Icon name="Car" size={18} className="text-coal" />
-                </div>
-                <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
+                <img src={LOGO} alt="" className="w-9 h-9 rounded-lg object-cover bg-black" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-[#0d0d0d]" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-oswald font-semibold tracking-wide text-foreground text-sm sm:text-base">Такси «Дальняк»</div>
-                <div className="text-green-400 text-xs font-golos flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full inline-block" />
-                  Онлайн · от 200 км · ответим за 2 мин
-                </div>
+                <p className="font-oswald font-semibold text-sm text-white">Такси «Дальняк»</p>
+                <p className="text-green-400 text-[11px] font-golos">● Онлайн · Ответим за 2 минуты</p>
               </div>
               {showNotifBtn && (
-                <button
-                  onClick={askNotif}
-                  className="flex items-center gap-1.5 text-[11px] text-amber font-golos border border-amber/40 hover:border-amber hover:bg-amber/10 px-2.5 py-1.5 transition-all whitespace-nowrap rounded-sm"
-                >
-                  <Icon name="Bell" size={13} />Уведомления
+                <button onClick={askNotif}
+                  className="flex items-center gap-1.5 text-xs text-amber border border-amber/30 hover:border-amber hover:bg-amber/10 px-3 py-1.5 rounded-lg font-golos transition shrink-0">
+                  <Icon name="Bell" size={13} />
+                  <span className="hidden sm:inline">Уведомления</span>
                 </button>
               )}
             </div>
 
-            {/* Сообщения */}
-            <MsgList messages={messages} msgsRef={chatMsgsRef} />
+            {/* messages */}
+            {chatLoading
+              ? <div className="flex-1 flex items-center justify-center gap-3">
+                  <Icon name="Loader" size={20} className="text-amber animate-spin" />
+                  <span className="text-white/30 text-sm font-golos">Загружаем чат...</span>
+                </div>
+              : <ChatMessages messages={messages} containerRef={sectionMsgs} />
+            }
 
-            {/* Ввод */}
-            <div className="p-2 sm:p-3 border-t border-border flex gap-1.5 shrink-0">
-              <input
-                type="text"
-                value={inputVal}
-                onChange={e => setInputVal(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && sendMessage()}
-                placeholder="Ваш маршрут или вопрос..."
-                autoComplete="off"
-                className="flex-1 bg-secondary border-none outline-none font-golos text-sm text-foreground placeholder:text-muted-foreground px-3 py-2.5 rounded-sm min-w-0"
-              />
-              <input ref={fileInputSectionRef} type="file" accept="image/*" className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if (f) sendPhoto(f); e.target.value = ""; }} />
-              <button
-                onClick={() => fileInputSectionRef.current?.click()}
-                disabled={uploadingImg}
-                className="text-muted-foreground hover:text-amber p-2.5 transition-colors disabled:opacity-40 shrink-0"
-                title="Прикрепить фото"
-              >
-                {uploadingImg ? <Icon name="Loader" size={15} className="animate-spin" /> : <Icon name="Paperclip" size={15} />}
-              </button>
-              <button
-                onClick={sendMessage}
-                disabled={sending}
-                className="bg-amber text-coal px-4 py-2.5 hover:bg-amber/90 transition-colors flex items-center gap-1 disabled:opacity-50 rounded-sm shrink-0"
-              >
-                <Icon name="Send" size={15} />
-              </button>
-            </div>
+            {/* input */}
+            <ChatInputBar fileRef={fileSection} />
           </div>
 
-          <p className="mt-3 text-muted-foreground text-xs font-golos text-center">
-            Оператор ответит здесь — обновление автоматическое
+          <p className="mt-4 text-white/25 text-xs font-golos text-center">
+            Чат обновляется автоматически каждые 4 секунды
           </p>
         </div>
       </section>
 
-      {/* ABOUT */}
-      <section id="about" ref={aboutSection.ref} className="py-16 sm:py-24 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className={`grid md:grid-cols-2 gap-10 sm:gap-16 items-center ${aboutSection.inView ? "animate-fade-up" : "opacity-0"}`}>
+      {/* ── About ───────────────────────────────────────────────────────── */}
+      <section id="about" ref={about.ref} className="py-20 sm:py-32 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className={`grid md:grid-cols-2 gap-12 sm:gap-20 items-center transition-all duration-700 ${about.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <div>
-              <span className="text-amber font-golos text-xs tracking-[0.3em] uppercase">04 / о компании</span>
-              <h2 className="font-oswald font-bold text-4xl sm:text-6xl mt-2 mb-5 sm:mb-6 text-foreground">
+              <p className="text-amber font-golos text-xs tracking-[0.3em] uppercase mb-3">04 — о нас</p>
+              <h2 className="font-oswald font-black text-4xl sm:text-6xl text-white leading-none mb-8">
                 МЫ ТЕ,<br /><span className="text-amber">КТО ЕДЕТ</span>
               </h2>
-              <p className="font-golos text-foreground/70 leading-relaxed mb-4 text-sm sm:text-base">
-                «Дальняк» — сервис, который специализируется исключительно на дальних поездках от 200 км. Межгород, аэропорты, трансферы на большие расстояния. Городскими поездками не занимаемся.
-              </p>
-              <p className="font-golos text-foreground/70 leading-relaxed mb-6 text-sm sm:text-base">
-                Фиксированная цена за километр без скрытых доплат — вы знаете стоимость заранее. Водители с опытом дальних маршрутов.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-4 font-golos text-sm text-white/55 leading-relaxed">
+                <p>«Дальняк» — сервис, который специализируется исключительно на дальних поездках от 200 км. Межгород, аэропорты, трансферы. Городскими поездками не занимаемся.</p>
+                <p>Фиксированная цена за километр — никаких надбавок за время суток, пробки или погоду. Вы знаете стоимость до посадки.</p>
+              </div>
+              <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { icon: "Route", text: "Только поездки от 200 км" },
-                  { icon: "DollarSign", text: "Фиксированная цена/км" },
-                  { icon: "MapPin", text: "Маршруты по всей России" },
-                  { icon: "Clock", text: "Работаем 24/7" },
+                  { icon: "Route",       text: "Только поездки от 200 км"  },
+                  { icon: "DollarSign",  text: "Фиксированная цена за км"  },
+                  { icon: "MapPin",      text: "Любые маршруты по России"  },
+                  { icon: "Clock",       text: "Работаем круглосуточно"    },
                 ].map(item => (
-                  <div key={item.text} className="flex items-start gap-3">
-                    <Icon name={item.icon} fallback="Circle" size={16} className="text-amber mt-0.5 flex-shrink-0" />
-                    <span className="font-golos text-sm text-foreground/80">{item.text}</span>
+                  <div key={item.text} className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber/10 flex items-center justify-center shrink-0">
+                      <Icon name={item.icon} fallback="Circle" size={15} className="text-amber" />
+                    </div>
+                    <span className="font-golos text-sm text-white/60">{item.text}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-card border border-border p-6 sm:p-8 space-y-5">
-              <h3 className="font-oswald font-bold text-xl sm:text-2xl tracking-wider text-foreground">ЦЕНЫ ЗА КМ</h3>
-              <p className="font-golos text-foreground/70 text-sm leading-relaxed">
-                Итоговая стоимость = тариф × расстояние. Никаких доплат за время суток или пробки на трассе.
-              </p>
-              <div className="h-px bg-border" />
-              <div className="grid grid-cols-3 gap-3 text-center">
+            {/* Price card */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-8">
+              <h3 className="font-oswald font-bold text-xl text-white mb-2">ТАРИФЫ ЗА КМ</h3>
+              <p className="font-golos text-xs text-white/30 mb-8">Итог = тариф × расстояние. Нет скрытых доплат.</p>
+              <div className="space-y-5">
                 {[
-                  { val: "30 ₽", label: "Стандарт/км" },
-                  { val: "40 ₽", label: "Комфорт/км" },
-                  { val: "50 ₽", label: "Минивэн/км" },
-                ].map(item => (
-                  <div key={item.label}>
-                    <div className="font-oswald font-bold text-amber text-xl sm:text-2xl">{item.val}</div>
-                    <div className="font-golos text-[11px] sm:text-xs text-muted-foreground mt-0.5">{item.label}</div>
+                  { name: "Стандарт", price: "30 ₽/км", featured: false },
+                  { name: "Комфорт",  price: "40 ₽/км", featured: true  },
+                  { name: "Минивэн",  price: "50 ₽/км", featured: false },
+                ].map(t => (
+                  <div key={t.name} className={`flex items-center justify-between p-4 rounded-xl ${t.featured ? "bg-amber/10 border border-amber/20" : "bg-white/[0.03]"}`}>
+                    <span className={`font-oswald font-semibold text-sm ${t.featured ? "text-amber" : "text-white/60"}`}>
+                      {t.name}
+                    </span>
+                    <span className={`font-oswald font-black text-xl ${t.featured ? "text-amber" : "text-white"}`}>
+                      {t.price}
+                    </span>
                   </div>
                 ))}
               </div>
-              <div className="h-px bg-border" />
-              <div className="flex items-center gap-3 text-sm font-golos text-foreground/70">
-                <Icon name="Info" size={16} className="text-amber shrink-0" />
-                Минимальная поездка от 200 км
+              <div className="mt-6 pt-6 border-t border-white/8 flex items-center gap-3">
+                <Icon name="Info" size={15} className="text-amber shrink-0" />
+                <p className="font-golos text-xs text-white/30">Минимальная поездка — 200 км</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CONTACTS */}
-      <section id="contacts" ref={contactSection.ref} className="py-16 sm:py-24 px-4 sm:px-6 bg-asphalt">
-        <div className="max-w-6xl mx-auto">
-          <div className={`mb-10 sm:mb-16 ${contactSection.inView ? "animate-fade-up" : "opacity-0"}`}>
-            <span className="text-amber font-golos text-xs tracking-[0.3em] uppercase">05 / контакты</span>
-            <h2 className="font-oswald font-bold text-4xl sm:text-6xl mt-2 text-foreground">
+      {/* ── Contacts ────────────────────────────────────────────────────── */}
+      <section id="contacts" ref={contacts.ref}
+        className="py-20 sm:py-32 px-4 sm:px-6 bg-white/[0.01] border-t border-white/5">
+        <div className="max-w-5xl mx-auto">
+          <div className={`mb-12 sm:mb-16 transition-all duration-700 ${contacts.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+            <p className="text-amber font-golos text-xs tracking-[0.3em] uppercase mb-3">05 — контакты</p>
+            <h2 className="font-oswald font-black text-4xl sm:text-6xl text-white leading-none">
               НА СВЯЗИ<br /><span className="text-amber">ВСЕГДА</span>
             </h2>
           </div>
 
-          <div className={`grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 ${contactSection.inView ? "animate-fade-up" : "opacity-0"}`} style={{ animationDelay: "0.2s" }}>
+          <div className={`grid sm:grid-cols-3 gap-4 transition-all duration-700 delay-150 ${contacts.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             {[
-              { icon: "Phone", title: "Телефон", value: PHONE, sub: "Звонки и WhatsApp", href: PHONE_HREF, external: false },
-              { icon: "Send", title: "Telegram", value: "@Mezhgorod1816", sub: "Пишите в любое время", href: TG_HREF, external: true },
-              { icon: "MessageCircle", title: "Онлайн-чат", value: "Прямо на сайте", sub: "Ответим за 2 минуты", href: null, external: false },
-            ].map(contact => (
-              <div
-                key={contact.title}
-                onClick={() => {
-                  if (contact.href) {
-                    if (contact.external) window.open(contact.href, "_blank");
-                    else window.location.href = contact.href;
-                  } else {
-                    setChatOpen(true);
-                  }
-                }}
-                className="cursor-pointer bg-card border border-border p-6 sm:p-8 flex flex-col gap-4 hover:border-amber/50 transition-colors active:scale-[0.99]"
-              >
-                <div className="w-11 h-11 sm:w-12 sm:h-12 bg-amber/10 border border-amber/30 flex items-center justify-center">
-                  <Icon name={contact.icon} fallback="Circle" size={20} className="text-amber" />
+              {
+                icon: "Phone",
+                title: "Телефон",
+                value: PHONE,
+                sub: "Звонки и WhatsApp",
+                action: () => { window.location.href = PHONE_HREF; },
+              },
+              {
+                icon: "Send",
+                title: "Telegram",
+                value: "@Mezhgorod1816",
+                sub: "Пишите в любое время",
+                action: () => { window.open(TG_HREF, "_blank"); },
+              },
+              {
+                icon: "MessageCircle",
+                title: "Онлайн-чат",
+                value: "Прямо на сайте",
+                sub: "Ответим за 2 минуты",
+                action: () => { setChatOpen(true); scrollTo("chat"); },
+              },
+            ].map(c => (
+              <button key={c.title} onClick={c.action}
+                className="group text-left rounded-2xl border border-white/8 bg-white/[0.02]
+                  hover:border-amber/30 hover:bg-amber/[0.03] p-6 sm:p-8 flex flex-col gap-5 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-amber/10 border border-amber/20 flex items-center justify-center
+                  group-hover:bg-amber/20 transition-colors">
+                  <Icon name={c.icon} fallback="Circle" size={20} className="text-amber" />
                 </div>
                 <div>
-                  <div className="font-oswald font-semibold text-sm tracking-wider text-muted-foreground uppercase">{contact.title}</div>
-                  <div className="font-oswald font-bold text-base sm:text-xl text-foreground mt-1">{contact.value}</div>
-                  <div className="font-golos text-sm text-muted-foreground mt-1">{contact.sub}</div>
+                  <p className="font-oswald font-semibold text-xs tracking-wider text-white/30 uppercase mb-1">{c.title}</p>
+                  <p className="font-oswald font-bold text-lg text-white group-hover:text-amber transition-colors">{c.value}</p>
+                  <p className="font-golos text-xs text-white/30 mt-1">{c.sub}</p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
-          <div className={`mt-6 sm:mt-8 bg-card border border-amber/30 p-6 sm:p-8 ${contactSection.inView ? "animate-fade-up" : "opacity-0"}`} style={{ animationDelay: "0.4s" }}>
+          {/* Callback form */}
+          <div className={`mt-6 rounded-2xl border border-amber/20 bg-amber/[0.03] p-6 sm:p-8 transition-all duration-700 delay-300 ${contacts.visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
             <div className="grid md:grid-cols-2 gap-6 items-center">
               <div>
-                <h3 className="font-oswald font-bold text-xl sm:text-2xl text-foreground mb-2">ЗАКАЗАТЬ ЗВОНОК</h3>
-                <p className="font-golos text-sm text-muted-foreground">Оставьте номер — перезвоним за 2 минуты</p>
+                <h3 className="font-oswald font-bold text-xl sm:text-2xl text-white mb-2">ЗАКАЗАТЬ ЗВОНОК</h3>
+                <p className="font-golos text-sm text-white/40">Оставьте номер — перезвоним за 2 минуты</p>
               </div>
               <div className="flex gap-3">
-                <input
-                  type="tel"
-                  placeholder="+7 (___) ___-__-__"
-                  className="flex-1 bg-secondary border border-border px-4 py-3 font-golos text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-amber transition-colors min-w-0"
-                />
-                <button className="bg-amber text-coal font-oswald font-semibold tracking-wider uppercase px-4 sm:px-6 py-3 text-xs sm:text-sm hover:bg-amber/90 transition-colors whitespace-nowrap">
-                  Позвонить
+                <input type="tel" placeholder="+7 (___) ___-__-__"
+                  className="flex-1 bg-white/5 border border-white/10 focus:border-amber/50 rounded-xl px-4 py-3 font-golos text-sm text-white placeholder:text-white/25 outline-none transition min-w-0" />
+                <button className="bg-amber text-coal font-oswald font-bold text-sm tracking-wider uppercase px-5 py-3 rounded-xl hover:bg-amber/90 transition shrink-0">
+                  Звонок
                 </button>
               </div>
             </div>
@@ -727,25 +812,29 @@ export default function Index() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="border-t border-border py-6 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 bg-amber rounded-sm flex items-center justify-center">
-              <span className="font-oswald font-bold text-coal text-[10px]">Д</span>
+      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      <footer className="border-t border-white/5 py-8 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-amber rounded-lg flex items-center justify-center">
+              <span className="font-oswald font-black text-coal text-xs">Д</span>
             </div>
-            <span className="font-oswald font-bold text-sm tracking-widest text-muted-foreground uppercase">Дальняк</span>
+            <span className="font-oswald font-bold text-sm tracking-widest text-white/40 uppercase">Дальняк</span>
           </div>
-          <p className="font-golos text-xs text-muted-foreground text-center">© 2025 Такси «Дальняк». Все права защищены.</p>
+          <p className="font-golos text-xs text-white/20 text-center">
+            © 2025 Такси «Дальняк». Все права защищены.
+          </p>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             {NAV_ITEMS.map(item => (
-              <button key={item.id} onClick={() => scrollTo(item.id)} className="font-golos text-xs text-muted-foreground hover:text-amber transition-colors">
+              <button key={item.id} onClick={() => scrollTo(item.id)}
+                className="font-golos text-xs text-white/25 hover:text-amber transition-colors">
                 {item.label}
               </button>
             ))}
           </div>
         </div>
       </footer>
+
     </div>
   );
 }
