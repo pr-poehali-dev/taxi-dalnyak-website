@@ -1,18 +1,13 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import Icon from "@/components/ui/icon";
 
-const HERO_BG =
-  "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/9f1988fa-044e-4fe0-9ed6-d8c75200c13b.jpg";
-const CAR_IMG =
-  "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/d777a0ac-bb72-4451-9248-4a96fb44db9f.jpg";
-const LOGO =
-  "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
-
+const HERO_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/9f1988fa-044e-4fe0-9ed6-d8c75200c13b.jpg";
+const CAR_IMG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/d777a0ac-bb72-4451-9248-4a96fb44db9f.jpg";
+const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
 const PHONE = "8 (995) 645-51-25";
 const PHONE_HREF = "tel:+79956455125";
 const TG_HREF = "https://t.me/Mezhgorod1816";
-const API =
-  "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
+const API = "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
 
 const NAV = [
   { id: "home", label: "Главная" },
@@ -23,33 +18,9 @@ const NAV = [
 ];
 
 const TARIFFS = [
-  {
-    name: "СТАНДАРТ",
-    price: "30 ₽",
-    unit: "за км",
-    desc: "Надёжный седан для дальних поездок",
-    features: ["Седан / Хэтчбек", "До 3 пассажиров", "Кондиционер", "Оплата картой или наличными"],
-    featured: false,
-    badge: "",
-  },
-  {
-    name: "КОМФОРТ",
-    price: "40 ₽",
-    unit: "за км",
-    desc: "Бизнес-класс с максимальным удобством",
-    features: ["Бизнес-класс авто", "До 4 пассажиров", "Зарядка USB-C / USB-A", "Вода в дорогу"],
-    featured: true,
-    badge: "Популярный",
-  },
-  {
-    name: "МИНИВЭН",
-    price: "50 ₽",
-    unit: "за км",
-    desc: "Для компаний и больших поездок",
-    features: ["Минивэн / Внедорожник", "До 6 пассажиров", "Детское кресло", "Большой багажник"],
-    featured: false,
-    badge: "",
-  },
+  { name: "СТАНДАРТ", price: "30 ₽", unit: "за км", desc: "Надёжный седан для дальних поездок", features: ["Седан / Хэтчбек", "До 3 пассажиров", "Кондиционер", "Оплата картой или наличными"], featured: false, badge: "" },
+  { name: "КОМФОРТ", price: "40 ₽", unit: "за км", desc: "Бизнес-класс с максимальным удобством", features: ["Бизнес-класс авто", "До 4 пассажиров", "Зарядка USB-C / USB-A", "Вода в дорогу"], featured: true, badge: "Популярный" },
+  { name: "МИНИВЭН", price: "50 ₽", unit: "за км", desc: "Для компаний и больших поездок", features: ["Минивэн / Внедорожник", "До 6 пассажиров", "Детское кресло", "Большой багажник"], featured: false, badge: "" },
 ];
 
 type Msg = { id: string; from: string; text: string; time: string; image_url?: string | null };
@@ -61,15 +32,6 @@ function getSid(): string {
     localStorage.setItem("dalnyak_sid", s);
   }
   return s;
-}
-
-function toBase64(file: File): Promise<string> {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res((r.result as string).split(",")[1]);
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
 }
 
 let audioCtx: AudioContext | null = null;
@@ -126,11 +88,42 @@ const Bubble = memo(({ msg }: { msg: Msg }) => {
 });
 Bubble.displayName = "Bubble";
 
+function ChatInput({ onSend }: { onSend: (t: string) => Promise<void> }) {
+  const [txt, setTxt] = useState("");
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const send = async () => {
+    const t = txt.trim();
+    if (!t || busy) return;
+    setBusy(true);
+    setTxt("");
+    await onSend(t);
+    setBusy(false);
+    inputRef.current?.focus();
+  };
+
+  return (
+    <div className="flex items-center gap-2 p-3 border-t border-white/[0.08] bg-[#111]/80 shrink-0">
+      <input ref={inputRef} type="text" value={txt} onChange={(e) => setTxt(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+        placeholder="Напишите маршрут или вопрос..."
+        autoComplete="off" enterKeyHint="send"
+        className="flex-1 bg-white/5 rounded-xl px-4 py-2.5 text-sm font-golos text-foreground placeholder:text-white/30 outline-none focus:ring-1 focus:ring-amber/50 transition min-w-0" />
+      <button onClick={send} disabled={busy || !txt.trim()}
+        className="w-10 h-10 flex items-center justify-center rounded-xl bg-amber text-coal hover:bg-amber/90 transition disabled:opacity-40 shrink-0">
+        <Icon name="Send" size={16} />
+      </button>
+    </div>
+  );
+}
+
 export default function Index() {
   const [section, setSection] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatVisible, setChatVisible] = useState(false);
   const [notifPerm, setNotifPerm] = useState<NotificationPermission>(
     "Notification" in window ? Notification.permission : "denied"
   );
@@ -142,6 +135,7 @@ export default function Index() {
   const inited = useRef(false);
   const floatScroll = useRef<HTMLDivElement>(null);
   const secScroll = useRef<HTMLDivElement>(null);
+  const chatSectionRef = useRef<HTMLDivElement>(null);
 
   const secTariffs = useVisible();
   const secAbout = useVisible();
@@ -151,6 +145,12 @@ export default function Index() {
     const h = (e: Event) => { e.preventDefault(); setPwaEvt(e); };
     window.addEventListener("beforeinstallprompt", h);
     return () => window.removeEventListener("beforeinstallprompt", h);
+  }, []);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => setChatVisible(e.isIntersecting), { threshold: 0.1 });
+    if (chatSectionRef.current) obs.observe(chatSectionRef.current);
+    return () => obs.disconnect();
   }, []);
 
   const load = useCallback(async () => {
@@ -171,20 +171,22 @@ export default function Index() {
         if (op.length) {
           playSound();
           if ("Notification" in window && Notification.permission === "granted") {
-            try { new Notification("Такси Дальняк", { body: op[op.length - 1].text || "Новое фото", icon: LOGO }); } catch { /* */ }
+            try { new Notification("Такси Дальняк", { body: op[op.length - 1].text || "Новое сообщение", icon: LOGO }); } catch { /* */ }
           }
         }
         if (m.length) lastSeen.current = m[m.length - 1].id;
       }
       setMsgs(m);
-    } catch { /* тихо — чат просто ждёт связи */ }
+    } catch { /* тихо */ }
   }, []);
 
+  const needPolling = chatOpen || chatVisible;
   useEffect(() => {
+    if (!needPolling) return;
     load();
-    const t = setInterval(load, 4000);
+    const t = setInterval(load, 8000);
     return () => clearInterval(t);
-  }, [load]);
+  }, [load, needPolling]);
 
   useEffect(() => {
     if (secScroll.current) secScroll.current.scrollTop = secScroll.current.scrollHeight;
@@ -217,18 +219,6 @@ export default function Index() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_id: sid.current, text, from_role: "client" }),
-      });
-      await load();
-    } catch { /* */ }
-  };
-
-  const doSendPhoto = async (file: File) => {
-    try {
-      const b64 = await toBase64(file);
-      await fetch(API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sid.current, image_b64: b64, from_role: "client" }),
       });
       await load();
     } catch { /* */ }
@@ -303,7 +293,7 @@ export default function Index() {
               </div>
               {msgs.map((m) => <Bubble key={m.id} msg={m} />)}
             </div>
-            <ChatInput onSendText={doSendText} onSendPhoto={doSendPhoto} />
+            <ChatInput onSend={doSendText} />
           </div>
         )}
         <button onClick={() => setChatOpen((v) => !v)}
@@ -316,9 +306,7 @@ export default function Index() {
       <header className="fixed top-0 inset-x-0 z-40 border-b border-white/[0.08] bg-background/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <button onClick={() => go("home")} className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-amber rounded-lg flex items-center justify-center shrink-0">
-              <span className="font-oswald font-black text-coal text-sm">Д</span>
-            </div>
+            <div className="w-8 h-8 bg-amber rounded-lg flex items-center justify-center shrink-0"><span className="font-oswald font-black text-coal text-sm">Д</span></div>
             <span className="font-oswald font-bold text-lg tracking-widest text-white uppercase">Дальняк</span>
           </button>
           <nav className="hidden md:flex items-center gap-1">
@@ -330,12 +318,9 @@ export default function Index() {
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <a href={PHONE_HREF} className="hidden md:flex items-center gap-2 text-amber font-oswald font-semibold text-sm">
-              <Icon name="Phone" size={14} />{PHONE}
-            </a>
+            <a href={PHONE_HREF} className="hidden md:flex items-center gap-2 text-amber font-oswald font-semibold text-sm"><Icon name="Phone" size={14} />{PHONE}</a>
             <a href={PHONE_HREF} className="md:hidden text-amber p-2"><Icon name="Phone" size={20} /></a>
-            <button onClick={() => setMenuOpen((v) => !v)}
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition">
+            <button onClick={() => setMenuOpen((v) => !v)} className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition">
               <Icon name={menuOpen ? "X" : "Menu"} size={20} />
             </button>
           </div>
@@ -446,7 +431,7 @@ export default function Index() {
       </div>
 
       {/* chat section */}
-      <section id="chat" className="py-20 sm:py-32 px-4 sm:px-6 bg-white/[0.01]">
+      <section id="chat" ref={chatSectionRef} className="py-20 sm:py-32 px-4 sm:px-6 bg-white/[0.01]">
         <div className="max-w-2xl mx-auto">
           <div className="mb-10">
             <p className="text-amber font-golos text-xs tracking-[0.3em] uppercase mb-3">03 — чат</p>
@@ -477,9 +462,8 @@ export default function Index() {
               </div>
               {msgs.map((m) => <Bubble key={m.id} msg={m} />)}
             </div>
-            <ChatInput onSendText={doSendText} onSendPhoto={doSendPhoto} />
+            <ChatInput onSend={doSendText} />
           </div>
-          <p className="mt-4 text-white/25 text-xs font-golos text-center">Чат обновляется автоматически</p>
         </div>
       </section>
 
@@ -515,8 +499,7 @@ export default function Index() {
                 ))}
               </div>
               <div className="mt-6 pt-6 border-t border-white/[0.08] flex items-center gap-3">
-                <Icon name="Info" size={15} className="text-amber shrink-0" />
-                <p className="font-golos text-xs text-white/30">Минимальная поездка — 200 км</p>
+                <Icon name="Info" size={15} className="text-amber shrink-0" /><p className="font-golos text-xs text-white/30">Минимальная поездка — 200 км</p>
               </div>
             </div>
           </div>
@@ -538,9 +521,7 @@ export default function Index() {
             ].map((c) => (
               <button key={c.title} onClick={c.action}
                 className="group text-left rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:border-amber/30 hover:bg-amber/[0.03] p-6 sm:p-8 flex flex-col gap-5 transition-all">
-                <div className="w-12 h-12 rounded-xl bg-amber/10 border border-amber/20 flex items-center justify-center group-hover:bg-amber/20 transition-colors">
-                  <Icon name={c.icon} fallback="Circle" size={20} className="text-amber" />
-                </div>
+                <div className="w-12 h-12 rounded-xl bg-amber/10 border border-amber/20 flex items-center justify-center group-hover:bg-amber/20 transition-colors"><Icon name={c.icon} fallback="Circle" size={20} className="text-amber" /></div>
                 <div>
                   <p className="font-oswald font-semibold text-xs tracking-wider text-white/30 uppercase mb-1">{c.title}</p>
                   <p className="font-oswald font-bold text-lg text-white group-hover:text-amber transition-colors">{c.value}</p>
@@ -548,18 +529,6 @@ export default function Index() {
                 </div>
               </button>
             ))}
-          </div>
-          <div className={`mt-6 rounded-2xl border border-amber/20 bg-amber/[0.03] p-6 sm:p-8 transition-all duration-700 delay-300 ${secContacts.v ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <div className="grid md:grid-cols-2 gap-6 items-center">
-              <div>
-                <h3 className="font-oswald font-bold text-xl sm:text-2xl text-white mb-2">ЗАКАЗАТЬ ЗВОНОК</h3>
-                <p className="font-golos text-sm text-white/40">Оставьте номер — перезвоним за 2 минуты</p>
-              </div>
-              <div className="flex gap-3">
-                <input type="tel" placeholder="+7 (___) ___-__-__" className="flex-1 bg-white/5 border border-white/10 focus:border-amber/50 rounded-xl px-4 py-3 font-golos text-sm text-white placeholder:text-white/25 outline-none transition min-w-0" />
-                <button className="bg-amber text-coal font-oswald font-bold text-sm tracking-wider uppercase px-5 py-3 rounded-xl hover:bg-amber/90 transition shrink-0">Звонок</button>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -571,62 +540,12 @@ export default function Index() {
             <div className="w-7 h-7 bg-amber rounded-lg flex items-center justify-center"><span className="font-oswald font-black text-coal text-xs">Д</span></div>
             <span className="font-oswald font-bold text-sm tracking-widest text-white/40 uppercase">Дальняк</span>
           </div>
-          <p className="font-golos text-xs text-white/20 text-center">© 2025 Такси «Дальняк». Все права защищены.</p>
+          <p className="font-golos text-xs text-white/20 text-center">© 2025 Такси «Дальняк»</p>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             {NAV.map((n) => <button key={n.id} onClick={() => go(n.id)} className="font-golos text-xs text-white/25 hover:text-amber transition-colors">{n.label}</button>)}
           </div>
         </div>
       </footer>
-    </div>
-  );
-}
-
-function ChatInput({ onSendText, onSendPhoto }: { onSendText: (t: string) => Promise<void>; onSendPhoto: (f: File) => Promise<void> }) {
-  const [txt, setTxt] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [photobusy, setPhotobusy] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const send = async () => {
-    const t = txt.trim();
-    if (!t || busy) return;
-    setBusy(true);
-    setTxt("");
-    await onSendText(t);
-    setBusy(false);
-    inputRef.current?.focus();
-  };
-
-  const photo = async (file: File) => {
-    setPhotobusy(true);
-    await onSendPhoto(file);
-    setPhotobusy(false);
-  };
-
-  return (
-    <div className="flex items-center gap-2 p-3 border-t border-white/[0.08] bg-[#111]/80 shrink-0">
-      <input
-        ref={inputRef}
-        type="text"
-        value={txt}
-        onChange={(e) => setTxt(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-        placeholder="Напишите маршрут..."
-        autoComplete="off"
-        enterKeyHint="send"
-        className="flex-1 bg-white/5 rounded-xl px-4 py-2.5 text-sm font-golos text-foreground placeholder:text-white/30 outline-none focus:ring-1 focus:ring-amber/50 transition min-w-0"
-      />
-      <input ref={fileRef} type="file" accept="image/*" className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) photo(f); e.target.value = ""; }} />
-      <button onClick={() => fileRef.current?.click()} disabled={photobusy}
-        className="w-9 h-9 flex items-center justify-center rounded-xl text-white/40 hover:text-amber hover:bg-white/5 transition disabled:opacity-30 shrink-0">
-        {photobusy ? <Icon name="Loader" size={16} className="animate-spin" /> : <Icon name="Paperclip" size={16} />}
-      </button>
-      <button onClick={send} disabled={busy || !txt.trim()}
-        className="w-9 h-9 flex items-center justify-center rounded-xl bg-amber text-coal hover:bg-amber/90 transition disabled:opacity-40 shrink-0">
-        <Icon name="Send" size={15} />
-      </button>
     </div>
   );
 }

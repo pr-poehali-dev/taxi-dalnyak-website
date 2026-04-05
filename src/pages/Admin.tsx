@@ -1,22 +1,11 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import Icon from "@/components/ui/icon";
 
-const API =
-  "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
-const LOGO =
-  "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
+const API = "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
+const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
 
 type Msg = { id: string; from: string; text: string; time: string; is_read: boolean; image_url?: string | null };
 type Session = { session_id: string; last_message_at: string; unread: number; last_text: string | null };
-
-function toBase64(file: File): Promise<string> {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res((r.result as string).split(",")[1]);
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
-}
 
 let audioCtx: AudioContext | null = null;
 function playSound() {
@@ -80,11 +69,9 @@ const MsgBubble = memo(({ msg }: { msg: Msg }) => {
 });
 MsgBubble.displayName = "MsgBubble";
 
-function AdminInput({ onSend, onPhoto }: { onSend: (t: string) => Promise<void>; onPhoto: (f: File) => Promise<void> }) {
+function AdminInput({ onSend }: { onSend: (t: string) => Promise<void> }) {
   const [txt, setTxt] = useState("");
   const [busy, setBusy] = useState(false);
-  const [photoBusy, setPhotoBusy] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const send = async () => {
@@ -97,12 +84,6 @@ function AdminInput({ onSend, onPhoto }: { onSend: (t: string) => Promise<void>;
     inputRef.current?.focus();
   };
 
-  const photo = async (file: File) => {
-    setPhotoBusy(true);
-    await onPhoto(file);
-    setPhotoBusy(false);
-  };
-
   return (
     <div className="border-t border-white/[0.08] bg-background px-4 sm:px-6 py-4 shrink-0">
       <div className="flex items-center gap-2">
@@ -110,12 +91,6 @@ function AdminInput({ onSend, onPhoto }: { onSend: (t: string) => Promise<void>;
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
           placeholder="Введите ответ клиенту..." autoComplete="off" enterKeyHint="send"
           className="flex-1 bg-white/5 border border-white/10 focus:border-amber/40 rounded-xl px-4 py-3 font-golos text-sm text-white placeholder:text-white/25 outline-none transition min-w-0" />
-        <input ref={fileRef} type="file" accept="image/*" className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) photo(f); e.target.value = ""; }} />
-        <button onClick={() => fileRef.current?.click()} disabled={photoBusy}
-          className="w-11 h-11 flex items-center justify-center rounded-xl border border-white/10 hover:border-amber/30 text-white/30 hover:text-amber transition disabled:opacity-30 shrink-0">
-          {photoBusy ? <Icon name="Loader" size={16} className="animate-spin" /> : <Icon name="Paperclip" size={16} />}
-        </button>
         <button onClick={send} disabled={busy || !txt.trim()}
           className="h-11 px-5 bg-amber text-coal font-oswald font-bold text-sm tracking-wider rounded-xl hover:bg-amber/90 transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center gap-2">
           <Icon name="Send" size={15} /><span className="hidden sm:inline">Отправить</span>
@@ -156,7 +131,7 @@ export default function Admin() {
           if (s.unread > prev && s.session_id !== active) {
             playSound();
             if ("Notification" in window && Notification.permission === "granted") {
-              try { new Notification("Новое сообщение", { body: s.last_text || "Клиент прислал фото", icon: LOGO }); } catch { /* */ }
+              try { new Notification("Новое сообщение", { body: s.last_text || "Клиент написал", icon: LOGO }); } catch { /* */ }
             }
           }
           prevUnread.current[s.session_id] = s.unread;
@@ -179,7 +154,7 @@ export default function Admin() {
 
   useEffect(() => {
     loadSessions();
-    const t = setInterval(loadSessions, 5000);
+    const t = setInterval(loadSessions, 10000);
     return () => clearInterval(t);
   }, [loadSessions]);
 
@@ -188,7 +163,7 @@ export default function Admin() {
     setMsgsLoading(true);
     setMsgs([]);
     loadMsgs(active);
-    const t = setInterval(() => loadMsgs(active), 3000);
+    const t = setInterval(() => loadMsgs(active), 8000);
     return () => clearInterval(t);
   }, [active, loadMsgs]);
 
@@ -200,16 +175,6 @@ export default function Admin() {
     if (!active) return;
     try {
       await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session_id: active, text, from_role: "operator" }) });
-      await loadMsgs(active);
-      await loadSessions();
-    } catch { /* */ }
-  };
-
-  const doSendPhoto = async (file: File) => {
-    if (!active) return;
-    try {
-      const b64 = await toBase64(file);
-      await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session_id: active, image_b64: b64, from_role: "operator" }) });
       await loadMsgs(active);
       await loadSessions();
     } catch { /* */ }
@@ -265,7 +230,7 @@ export default function Admin() {
               <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
                 <Icon name="MessageSquare" size={36} className="text-white/10 mb-4" />
                 <p className="font-golos text-sm text-white/25">Пока нет сообщений</p>
-                <p className="font-golos text-xs text-white/15 mt-1">Обновление каждые 5 сек</p>
+                <p className="font-golos text-xs text-white/15 mt-1">Обновление каждые 10 сек</p>
               </div>
             )}
             {sessions.map((s) => {
@@ -325,7 +290,7 @@ export default function Admin() {
                 {msgs.map((m) => <MsgBubble key={m.id} msg={m} />)}
                 <div ref={endRef} />
               </div>
-              <AdminInput onSend={doSendReply} onPhoto={doSendPhoto} />
+              <AdminInput onSend={doSendReply} />
             </>
           )}
         </main>
