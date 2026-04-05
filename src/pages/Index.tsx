@@ -45,7 +45,7 @@ const PHONE_HREF = "tel:+79956455125";
 const TG_HREF = "https://t.me/Mezhgorod1816";
 const CHAT_URL = "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
 
-type Msg = { id: string; from: string; text: string; time: string };
+type Msg = { id: string; from: string; text: string; time: string; image_url?: string | null };
 
 function getSessionId() {
   let sid = localStorage.getItem("dalnyak_session");
@@ -75,7 +75,7 @@ function sendNotif(title: string, body: string) {
   try { new Notification(title, { body, icon: LOGO }); } catch { /* Safari может не поддерживать */ }
 }
 
-// Рендер списка сообщений — вынесен ВНЕ компонента Index чтобы не пересоздаваться
+// Рендер сообщения — вынесен ВНЕ компонента Index чтобы не пересоздаваться
 function MsgList({ messages, msgsRef }: { messages: Msg[]; msgsRef: React.RefObject<HTMLDivElement> }) {
   return (
     <div ref={msgsRef} className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
@@ -90,13 +90,20 @@ function MsgList({ messages, msgsRef }: { messages: Msg[]; msgsRef: React.RefObj
       )}
       {messages.map(msg => (
         <div key={msg.id} className={`flex ${msg.from === "client" ? "justify-end" : "justify-start"}`}>
-          <div className={`max-w-[85%] px-3 py-2.5 ${msg.from === "client"
+          <div className={`max-w-[85%] ${msg.from === "client"
             ? "bg-amber text-coal rounded-tl-lg rounded-bl-lg rounded-br-lg"
             : "bg-secondary text-foreground rounded-tr-lg rounded-br-lg rounded-bl-lg"}`}>
-            <p className="font-golos text-sm leading-relaxed">{msg.text}</p>
-            <p className={`font-golos text-[10px] mt-1 ${msg.from === "client" ? "text-coal/60 text-right" : "text-muted-foreground"}`}>
-              {msg.time}
-            </p>
+            {msg.image_url && (
+              <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
+                <img src={msg.image_url} alt="фото" className="rounded-t-lg max-w-[240px] w-full object-cover" style={{ maxHeight: 200 }} />
+              </a>
+            )}
+            <div className="px-3 py-2">
+              {msg.text && <p className="font-golos text-sm leading-relaxed">{msg.text}</p>}
+              <p className={`font-golos text-[10px] mt-0.5 ${msg.from === "client" ? "text-coal/60 text-right" : "text-muted-foreground"}`}>
+                {msg.time}
+              </p>
+            </div>
           </div>
         </div>
       ))}
@@ -116,6 +123,9 @@ export default function Index() {
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [installDismissed, setInstallDismissed] = useState(() => localStorage.getItem("pwa_dismissed") === "1");
   const [chatOpen, setChatOpen] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputSectionRef = useRef<HTMLInputElement>(null);
 
   // Два отдельных рефа для скролла — для секции и для плавающего чата
   const chatMsgsRef = useRef<HTMLDivElement>(null);
@@ -211,6 +221,28 @@ export default function Index() {
     setSending(false);
   };
 
+  const sendPhoto = async (file: File) => {
+    setUploadingImg(true);
+    try {
+      const reader = new FileReader();
+      const b64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(",")[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      await fetch(CHAT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId.current, image_b64: b64, from_role: "client" }),
+      });
+      await loadMessages();
+    } catch { /* */ }
+    setUploadingImg(false);
+  };
+
   const askNotif = async () => {
     if (!("Notification" in window)) return;
     const perm = await Notification.requestPermission();
@@ -238,20 +270,22 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background font-golos grain-overlay">
 
-      {/* PWA INSTALL BANNER */}
+      {/* PWA INSTALL BANNER — яркий, хорошо заметный */}
       {installPrompt && !installDismissed && (
-        <div className="fixed bottom-20 left-3 right-3 z-[60] bg-card border border-amber/50 rounded-xl px-4 py-3 flex items-center gap-3 shadow-2xl sm:bottom-6 sm:left-auto sm:right-6 sm:w-80">
-          <img src={LOGO} alt="" className="w-10 h-10 rounded-lg object-contain flex-shrink-0 bg-black" />
-          <div className="flex-1 min-w-0">
-            <p className="font-oswald font-semibold text-foreground text-sm">Такси Дальняк</p>
-            <p className="font-golos text-xs text-muted-foreground">Добавить на главный экран</p>
+        <div className="fixed top-16 left-0 right-0 z-[60] mx-3 sm:mx-auto sm:max-w-md">
+          <div className="bg-amber rounded-xl px-4 py-3 flex items-center gap-3 shadow-2xl border-2 border-amber">
+            <img src={LOGO} alt="" className="w-10 h-10 rounded-lg object-contain flex-shrink-0 bg-black border border-black/20" />
+            <div className="flex-1 min-w-0">
+              <p className="font-oswald font-bold text-coal text-sm leading-tight">Добавить на главный экран</p>
+              <p className="font-golos text-coal/70 text-xs mt-0.5">Такси Дальняк — быстрый доступ</p>
+            </div>
+            <button onClick={handleInstall} className="bg-coal text-amber font-oswald font-bold text-xs px-4 py-2 rounded-lg whitespace-nowrap hover:bg-coal/80 transition-colors shrink-0">
+              Добавить
+            </button>
+            <button onClick={dismissInstall} className="text-coal/50 hover:text-coal p-1 shrink-0">
+              <Icon name="X" size={16} />
+            </button>
           </div>
-          <button onClick={handleInstall} className="bg-amber text-coal font-oswald font-bold text-xs px-3 py-2 rounded whitespace-nowrap hover:bg-amber/90 transition-colors">
-            Добавить
-          </button>
-          <button onClick={dismissInstall} className="text-muted-foreground hover:text-foreground p-1 shrink-0">
-            <Icon name="X" size={16} />
-          </button>
         </div>
       )}
 
@@ -288,7 +322,7 @@ export default function Index() {
             <MsgList messages={messages} msgsRef={chatFloatMsgsRef} />
 
             {/* Ввод */}
-            <div className="p-2 border-t border-border flex gap-2 shrink-0 bg-card">
+            <div className="p-2 border-t border-border flex gap-1.5 shrink-0 bg-card">
               <input
                 type="text"
                 value={inputVal}
@@ -298,6 +332,16 @@ export default function Index() {
                 autoComplete="off"
                 className="flex-1 bg-secondary border-none outline-none font-golos text-sm text-foreground placeholder:text-muted-foreground px-3 py-2.5 rounded-sm min-w-0"
               />
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) sendPhoto(f); e.target.value = ""; }} />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingImg}
+                className="text-muted-foreground hover:text-amber p-2.5 transition-colors disabled:opacity-40 shrink-0"
+                title="Прикрепить фото"
+              >
+                {uploadingImg ? <Icon name="Loader" size={15} className="animate-spin" /> : <Icon name="Paperclip" size={15} />}
+              </button>
               <button
                 onClick={sendMessage}
                 disabled={sending}
@@ -528,7 +572,7 @@ export default function Index() {
             <MsgList messages={messages} msgsRef={chatMsgsRef} />
 
             {/* Ввод */}
-            <div className="p-2 sm:p-3 border-t border-border flex gap-2 shrink-0">
+            <div className="p-2 sm:p-3 border-t border-border flex gap-1.5 shrink-0">
               <input
                 type="text"
                 value={inputVal}
@@ -538,6 +582,16 @@ export default function Index() {
                 autoComplete="off"
                 className="flex-1 bg-secondary border-none outline-none font-golos text-sm text-foreground placeholder:text-muted-foreground px-3 py-2.5 rounded-sm min-w-0"
               />
+              <input ref={fileInputSectionRef} type="file" accept="image/*" className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) sendPhoto(f); e.target.value = ""; }} />
+              <button
+                onClick={() => fileInputSectionRef.current?.click()}
+                disabled={uploadingImg}
+                className="text-muted-foreground hover:text-amber p-2.5 transition-colors disabled:opacity-40 shrink-0"
+                title="Прикрепить фото"
+              >
+                {uploadingImg ? <Icon name="Loader" size={15} className="animate-spin" /> : <Icon name="Paperclip" size={15} />}
+              </button>
               <button
                 onClick={sendMessage}
                 disabled={sending}

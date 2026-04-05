@@ -4,7 +4,7 @@ import Icon from "@/components/ui/icon";
 const CHAT_URL = "https://functions.poehali.dev/7cea919d-afa7-4c03-a9cd-0e6cc7e634e8";
 const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
 
-type Message = { id: string; from: string; text: string; time: string; is_read: boolean };
+type Message = { id: string; from: string; text: string; time: string; is_read: boolean; image_url?: string | null };
 type Session = { session_id: string; last_message_at: string; unread: number; last_text: string | null };
 
 function sendNotif(title: string, body: string) {
@@ -20,10 +20,12 @@ export default function Admin() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputVal, setInputVal] = useState("");
   const [sending, setSending] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
     "Notification" in window ? Notification.permission : "denied"
   );
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const lastSeenIds = useRef<Record<string, string>>({});
   const sessionsInitialized = useRef(false);
 
@@ -108,6 +110,26 @@ export default function Admin() {
       await loadSessions();
     } catch (e) { console.warn(e); }
     setSending(false);
+  };
+
+  const sendPhoto = async (file: File) => {
+    if (!activeSession) return;
+    setUploadingImg(true);
+    try {
+      const reader = new FileReader();
+      const b64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve((reader.result as string).split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      await fetch(CHAT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: activeSession, image_b64: b64, from_role: "operator" }),
+      });
+      await loadMessages(activeSession);
+    } catch (e) { console.warn(e); }
+    setUploadingImg(false);
   };
 
   const totalUnread = sessions.reduce((sum, s) => sum + (s.unread || 0), 0);
@@ -226,13 +248,20 @@ export default function Admin() {
                 )}
                 {messages.map(msg => (
                   <div key={msg.id} className={`flex ${msg.from === "operator" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[65%] px-4 py-3 ${msg.from === "operator" ? "bg-amber text-coal rounded-tl-lg rounded-bl-lg rounded-br-lg" : "bg-secondary text-foreground rounded-tr-lg rounded-br-lg rounded-bl-lg"}`}>
-                      <p className="font-golos text-sm leading-relaxed">{msg.text}</p>
-                      <div className={`flex items-center gap-2 mt-1.5 ${msg.from === "operator" ? "justify-end" : ""}`}>
-                        <p className={`font-golos text-[10px] ${msg.from === "operator" ? "text-coal/60" : "text-muted-foreground"}`}>{msg.time}</p>
-                        <p className={`font-golos text-[10px] uppercase tracking-wide ${msg.from === "operator" ? "text-coal/50" : "text-muted-foreground"}`}>
-                          {msg.from === "operator" ? "вы" : "клиент"}
-                        </p>
+                    <div className={`max-w-[65%] overflow-hidden ${msg.from === "operator" ? "bg-amber text-coal rounded-tl-lg rounded-bl-lg rounded-br-lg" : "bg-secondary text-foreground rounded-tr-lg rounded-br-lg rounded-bl-lg"}`}>
+                      {msg.image_url && (
+                        <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
+                          <img src={msg.image_url} alt="фото" className="max-w-full object-cover rounded-t-lg" style={{ maxHeight: 200 }} />
+                        </a>
+                      )}
+                      <div className="px-4 py-3">
+                        {msg.text && <p className="font-golos text-sm leading-relaxed">{msg.text}</p>}
+                        <div className={`flex items-center gap-2 mt-1.5 ${msg.from === "operator" ? "justify-end" : ""}`}>
+                          <p className={`font-golos text-[10px] ${msg.from === "operator" ? "text-coal/60" : "text-muted-foreground"}`}>{msg.time}</p>
+                          <p className={`font-golos text-[10px] uppercase tracking-wide ${msg.from === "operator" ? "text-coal/50" : "text-muted-foreground"}`}>
+                            {msg.from === "operator" ? "вы" : "клиент"}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -242,26 +271,36 @@ export default function Admin() {
 
               {/* Input */}
               <div className="p-4 border-t border-border bg-card shrink-0">
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   <input
                     type="text"
                     value={inputVal}
                     onChange={e => setInputVal(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && sendReply()}
                     placeholder="Введите ответ клиенту..."
-                    className="flex-1 bg-secondary border border-border outline-none focus:border-amber transition-colors font-golos text-sm text-foreground placeholder:text-muted-foreground px-4 py-3 rounded-sm"
+                    className="flex-1 bg-secondary border border-border outline-none focus:border-amber transition-colors font-golos text-sm text-foreground placeholder:text-muted-foreground px-4 py-3 rounded-sm min-w-0"
                   />
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) sendPhoto(f); e.target.value = ""; }} />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImg}
+                    title="Отправить фото"
+                    className="text-muted-foreground hover:text-amber border border-border hover:border-amber px-3 py-3 transition-colors disabled:opacity-40 rounded-sm shrink-0"
+                  >
+                    {uploadingImg ? <Icon name="Loader" size={16} className="animate-spin" /> : <Icon name="Paperclip" size={16} />}
+                  </button>
                   <button
                     onClick={sendReply}
                     disabled={sending || !inputVal.trim()}
-                    className="bg-amber text-coal px-5 py-3 hover:bg-amber/90 transition-colors flex items-center gap-2 font-oswald font-semibold text-sm tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-amber text-coal px-5 py-3 hover:bg-amber/90 transition-colors flex items-center gap-2 font-oswald font-semibold text-sm tracking-wider disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                   >
                     <Icon name="Send" size={16} />
                     Отправить
                   </button>
                 </div>
                 <p className="text-muted-foreground text-[11px] font-golos mt-2">
-                  Enter — отправить · Обновление автоматическое каждые 3 сек
+                  Enter — отправить · Обновление каждые 3 сек
                 </p>
               </div>
             </>
