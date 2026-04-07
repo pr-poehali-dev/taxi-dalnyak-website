@@ -73,7 +73,7 @@ export default function SplashScreen({ onDone }: SplashScreenProps) {
             Сервис заказа такси<br />на дальние поездки
           </p>
           <p className="font-golos text-amber text-sm md:text-base leading-relaxed">
-            Оформить поездку можно прямо в чате — напишите нам прямо сейчас
+            Работаем по всей России и новым территориям — 24/7
           </p>
         </div>
 

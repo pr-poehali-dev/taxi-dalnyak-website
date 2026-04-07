@@ -1,6 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import Icon from "@/components/ui/icon";
 
+function MaxIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="24" height="24" rx="6" fill="#005FF9"/>
+      <path d="M4 17V7l4.5 5L13 7v10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M14.5 12l2.5-5 2.5 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M13.8 14h6.4" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 // ─── Константы ────────────────────────────────────────────────────────────────
 const HERO_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/9f1988fa-044e-4fe0-9ed6-d8c75200c13b.jpg";
 const CAR_IMG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/d777a0ac-bb72-4451-9248-4a96fb44db9f.jpg";
@@ -51,7 +62,7 @@ const WHY = [
   { icon: "ShieldCheck", title: "Фиксированная цена", text: "Цена за поездку известна заранее. Никаких надбавок за ночь, пробки или погоду." },
   { icon: "Route",       title: "Только от 200 км",   text: "Специализируемся исключительно на дальних маршрутах — знаем их как никто." },
   { icon: "Clock",       title: "24 часа, 7 дней",    text: "Принимаем заказы круглосуточно. Выезд в любое время суток." },
-  { icon: "MapPin",      title: "Вся Россия",          text: "Межгород, аэропорты, трансферы — любое направление по стране." },
+  { icon: "MapPin",      title: "Вся Россия + новые территории", text: "Межгород, аэропорты, трансферы — любое направление. Работаем в ДНР, ЛНР, Запорожской и Херсонской областях." },
   { icon: "Banknote",    title: "Выгоднее такси",      text: "На дальних маршрутах дешевле агрегаторов на 20–40%. Считаем за км, не за мин." },
   { icon: "ThumbsUp",    title: "5 лет на рынке",      text: "Более 50 000 выполненных поездок. Опытные водители, чистые авто." },
 ];
@@ -258,7 +269,7 @@ export default function Index() {
           {/* Бейдж */}
           <div className="inline-flex items-center gap-2 border border-amber/40 bg-amber/5 rounded-full px-5 py-2 mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}>
             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-amber text-xs font-bold tracking-widest uppercase">Принимаем заказы · 24/7</span>
+            <span className="text-amber text-xs font-bold tracking-widest uppercase">Вся Россия · Новые территории · 24/7</span>
           </div>
 
           {/* Заголовок */}
@@ -287,9 +298,10 @@ export default function Index() {
           {/* CTA */}
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center opacity-0 animate-fade-up" style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}>
             <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2.5 bg-sky-500 hover:bg-sky-400 active:scale-[0.97] text-white font-black text-lg px-8 py-4 rounded-2xl transition shadow-xl shadow-sky-500/25"
+              className="flex flex-col items-center justify-center gap-0.5 bg-sky-500 hover:bg-sky-400 active:scale-[0.97] text-white px-8 py-3.5 rounded-2xl transition shadow-xl shadow-sky-500/25"
               style={{ fontFamily: "Oswald" }}>
-              <Icon name="Send" size={22} />Узнать стоимость
+              <span className="flex items-center gap-2 font-black text-lg"><Icon name="Send" size={22} />Узнать стоимость</span>
+              <span className="text-xs font-normal opacity-75 tracking-normal" style={{ fontFamily: "'Golos Text', sans-serif" }}>откроется Telegram</span>
             </a>
             <a href={PHONE_HREF}
               className="flex items-center justify-center gap-2.5 border-2 border-amber/60 text-amber hover:bg-amber hover:text-coal font-black text-lg px-8 py-4 rounded-2xl transition"
@@ -309,8 +321,8 @@ export default function Index() {
               <Icon name="Users" size={15} />ВКонтакте
             </a>
             <a href={MAX_HREF} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm font-bold text-purple-400 border border-purple-600/30 bg-purple-600/10 hover:bg-purple-600/20 px-4 py-2 rounded-xl transition">
-              <Icon name="Zap" size={15} />MAX
+              className="flex items-center gap-2 text-sm font-bold text-white border border-[#005FF9]/40 bg-[#005FF9]/15 hover:bg-[#005FF9]/25 px-4 py-2 rounded-xl transition">
+              <MaxIcon size={16} />MAX
             </a>
           </div>
 
@@ -459,6 +471,49 @@ export default function Index() {
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════════
+          НОВЫЕ ТЕРРИТОРИИ
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div className="py-16 px-4 border-y border-red-900/40 bg-gradient-to-b from-red-950/30 to-transparent">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-col md:flex-row gap-8 items-start">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-1 h-8 bg-red-500 rounded-full" />
+                <div>
+                  <p className="text-red-400 text-xs font-bold tracking-[0.3em] uppercase">специальный тариф</p>
+                  <h2 className="font-black text-2xl sm:text-3xl text-white mt-0.5" style={{ fontFamily: "Oswald" }}>
+                    НОВЫЕ ТЕРРИТОРИИ
+                  </h2>
+                </div>
+              </div>
+              <p className="text-white/55 text-sm leading-relaxed max-w-md">
+                Работаем по всей России, включая новые территории — ДНР, ЛНР, Запорожскую и Херсонскую области. Отдельный тариф с учётом особенностей маршрута.
+              </p>
+              <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
+                className="mt-5 inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-white font-black text-sm px-6 py-3 rounded-xl transition active:scale-[0.97]"
+                style={{ fontFamily: "Oswald" }}>
+                <Icon name="Send" size={16} />Уточнить маршрут — откроется Telegram
+              </a>
+            </div>
+            <div className="w-full md:w-auto flex-shrink-0 grid grid-cols-3 gap-3">
+              {[
+                { name: "СТАНДАРТ", price: "80", icon: "Car" },
+                { name: "КОМФОРТ",  price: "100", icon: "Star" },
+                { name: "МИНИВЭН",  price: "110", icon: "Users" },
+              ].map(t => (
+                <div key={t.name} className="flex flex-col items-center p-4 rounded-2xl border border-red-800/40 bg-red-950/30 min-w-[90px]">
+                  <Icon name={t.icon} fallback="Car" size={18} className="text-red-400 mb-2" />
+                  <p className="font-black text-xl text-white leading-none" style={{ fontFamily: "Oswald" }}>{t.price}₽</p>
+                  <p className="text-red-400/70 text-[10px] mt-0.5">за км</p>
+                  <p className="text-white/40 text-[10px] mt-1 text-center leading-tight" style={{ fontFamily: "Oswald" }}>{t.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
           ПОЧЕМУ МЫ
       ══════════════════════════════════════════════════════════════════════ */}
       <section id="why" ref={secWhy.ref} className="py-20 sm:py-28 px-4">
@@ -570,8 +625,8 @@ export default function Index() {
           {/* MAX + Поделиться */}
           <div className={cls("flex flex-col sm:flex-row gap-3 transition-all duration-700 delay-200", secContacts.v ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8")}>
             <a href={MAX_HREF} target="_blank" rel="noopener noreferrer"
-              className="flex-1 flex items-center gap-3 p-4 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white transition active:scale-[0.98]">
-              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center shrink-0"><Icon name="Zap" size={20} /></div>
+              className="flex-1 flex items-center gap-3 p-4 rounded-2xl bg-[#005FF9] hover:bg-[#1a70ff] text-white transition active:scale-[0.98]">
+              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center shrink-0"><MaxIcon size={22} /></div>
               <div>
                 <p className="font-black text-base" style={{ fontFamily: "Oswald" }}>MAX</p>
                 <p className="text-xs opacity-70">Мессенджер от ВКонтакте</p>
@@ -615,7 +670,7 @@ export default function Index() {
               <a href={TG_HREF} target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-sky-500/20 hover:bg-sky-500/40 rounded-xl flex items-center justify-center text-sky-400 transition"><Icon name="Send" size={16} /></a>
               <a href={WA_HREF} target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-green-600/20 hover:bg-green-600/40 rounded-xl flex items-center justify-center text-green-400 transition"><Icon name="MessageCircle" size={16} /></a>
               <a href={VK_HREF} target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-blue-500/20 hover:bg-blue-500/40 rounded-xl flex items-center justify-center text-blue-400 transition"><Icon name="Users" size={16} /></a>
-              <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-purple-600/20 hover:bg-purple-600/40 rounded-xl flex items-center justify-center text-purple-400 transition"><Icon name="Zap" size={16} /></a>
+              <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-[#005FF9]/20 hover:bg-[#005FF9]/40 rounded-xl flex items-center justify-center transition"><MaxIcon size={18} /></a>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t border-white/5">
