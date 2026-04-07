@@ -1,6 +1,5 @@
 import Icon from "@/components/ui/icon";
 import { NAV, LOGO, TG_HREF, WA_HREF, PHONE, PHONE_HREF, MAX_HREF, VK_HREF } from "./constants";
-import { MaxIcon } from "./MaxIcon";
 
 interface HeaderProps {
   section: string;
@@ -51,8 +50,8 @@ export function Header({
         <a href={PHONE_HREF} className="flex-1 flex items-center justify-center gap-1.5 bg-amber text-coal font-bold text-sm py-3 rounded-xl active:scale-[0.97] transition" style={{ fontFamily: "Oswald" }}>
           <Icon name="Phone" size={16} />Звонок
         </a>
-        <a href={TG_HREF} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 bg-sky-500 text-white font-bold text-sm py-3 rounded-xl active:scale-[0.97] transition" style={{ fontFamily: "Oswald" }}>
-          <Icon name="Send" size={16} />Telegram
+        <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 bg-[#005FF9] text-white font-bold text-sm py-3 rounded-xl active:scale-[0.97] transition" style={{ fontFamily: "Oswald" }}>
+          MAX
         </a>
         <a href={WA_HREF} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 bg-green-600 text-white font-bold text-sm py-3 rounded-xl active:scale-[0.97] transition" style={{ fontFamily: "Oswald" }}>
           <Icon name="MessageCircle" size={16} />WhatsApp
@@ -77,8 +76,8 @@ export function Header({
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
-            <a href={TG_HREF} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1.5 bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs px-3 py-2 rounded-xl transition" style={{ fontFamily: "Oswald" }}>
-              <Icon name="Send" size={13} />Telegram
+            <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1.5 bg-[#005FF9] hover:bg-[#1a70ff] text-white font-bold text-xs px-3 py-2 rounded-xl transition" style={{ fontFamily: "Oswald" }}>
+              MAX — написать
             </a>
             <a href={PHONE_HREF} className="hidden sm:flex items-center gap-1.5 bg-amber text-coal font-bold text-xs px-3 py-2 rounded-xl transition hover:bg-amber/90" style={{ fontFamily: "Oswald" }}>
               <Icon name="Phone" size={13} />{PHONE}
@@ -98,18 +97,22 @@ export function Header({
                   {n.label}
                 </button>
               ))}
+              <div className="pt-2 pb-1 space-y-2">
+                <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center font-black text-sm bg-[#005FF9] text-white py-3 rounded-xl" style={{ fontFamily: "Oswald" }}>
+                  Написать в MAX
+                </a>
+                <a href={TG_HREF} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 font-bold text-sm border border-white/10 text-white/50 py-3 rounded-xl" style={{ fontFamily: "Oswald" }}>
+                  <Icon name="Send" size={14} />Telegram
+                </a>
+              </div>
             </div>
           </div>
         )}
       </header>
 
-      {/* ── Footer соцсети (используются и в footer странице, но тут — шапочные иконки) ── */}
-      {/* Этот компонент не рендерит footer — он только в шапке */}
-      {/* Скрытые ссылки для SEO */}
       <div className="sr-only">
         <a href={VK_HREF}>ВКонтакте</a>
-        <a href={MAX_HREF}>MAX</a>
-        <MaxIcon size={0} />
+        <a href={TG_HREF}>Telegram</a>
       </div>
     </>
   );

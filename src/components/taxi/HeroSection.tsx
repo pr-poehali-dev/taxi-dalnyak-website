@@ -1,6 +1,5 @@
 import Icon from "@/components/ui/icon";
 import { HERO_BG, TG_HREF, WA_HREF, VK_HREF, MAX_HREF, PHONE, PHONE_HREF } from "./constants";
-import { MaxIcon } from "./MaxIcon";
 
 interface HeroSectionProps {
   onGo: (id: string) => void;
@@ -47,14 +46,16 @@ export function HeroSection({ onGo }: HeroSectionProps) {
             ))}
           </div>
 
-          {/* CTA */}
+          {/* CTA — главные кнопки */}
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center opacity-0 animate-fade-up" style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}>
-            <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
-              className="flex flex-col items-center justify-center gap-0.5 bg-sky-500 hover:bg-sky-400 active:scale-[0.97] text-white px-8 py-3.5 rounded-2xl transition shadow-xl shadow-sky-500/25"
+            {/* MAX — главная */}
+            <a href={MAX_HREF} target="_blank" rel="noopener noreferrer"
+              className="flex flex-col items-center justify-center gap-0.5 bg-[#005FF9] hover:bg-[#1a70ff] active:scale-[0.97] text-white px-8 py-3.5 rounded-2xl transition shadow-xl shadow-[#005FF9]/25"
               style={{ fontFamily: "Oswald" }}>
-              <span className="flex items-center gap-2 font-black text-lg"><Icon name="Send" size={22} />Узнать стоимость</span>
-              <span className="text-xs font-normal opacity-75 tracking-normal" style={{ fontFamily: "'Golos Text', sans-serif" }}>откроется Telegram</span>
+              <span className="font-black text-lg">Узнать стоимость в MAX</span>
+              <span className="text-xs font-normal opacity-75 tracking-normal" style={{ fontFamily: "'Golos Text', sans-serif" }}>откроется мессенджер MAX</span>
             </a>
+            {/* Звонок */}
             <a href={PHONE_HREF}
               className="flex items-center justify-center gap-2.5 border-2 border-amber/60 text-amber hover:bg-amber hover:text-coal font-black text-lg px-8 py-4 rounded-2xl transition"
               style={{ fontFamily: "Oswald" }}>
@@ -62,19 +63,19 @@ export function HeroSection({ onGo }: HeroSectionProps) {
             </a>
           </div>
 
-          {/* Мессенджеры */}
-          <div className="mt-4 flex gap-3 justify-center opacity-0 animate-fade-in" style={{ animationDelay: "0.7s", animationFillMode: "forwards" }}>
+          {/* Второстепенные мессенджеры */}
+          <div className="mt-4 flex flex-wrap gap-2 justify-center opacity-0 animate-fade-in" style={{ animationDelay: "0.7s", animationFillMode: "forwards" }}>
             <a href={WA_HREF} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm font-bold text-green-400 border border-green-600/30 bg-green-600/10 hover:bg-green-600/20 px-4 py-2 rounded-xl transition">
               <Icon name="MessageCircle" size={15} />WhatsApp
             </a>
+            <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm font-bold text-white/40 border border-white/10 bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition">
+              <Icon name="Send" size={15} />Telegram
+            </a>
             <a href={VK_HREF} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm font-bold text-blue-400 border border-blue-600/30 bg-blue-600/10 hover:bg-blue-600/20 px-4 py-2 rounded-xl transition">
               <Icon name="Users" size={15} />ВКонтакте
-            </a>
-            <a href={MAX_HREF} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm font-bold text-white border border-[#005FF9]/40 bg-[#005FF9]/15 hover:bg-[#005FF9]/25 px-4 py-2 rounded-xl transition">
-              <MaxIcon size={16} />MAX
             </a>
           </div>
 

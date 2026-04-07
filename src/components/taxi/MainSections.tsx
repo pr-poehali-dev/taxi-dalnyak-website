@@ -5,7 +5,6 @@ import {
   TG_HREF, WA_HREF, VK_HREF, MAX_HREF, PHONE, PHONE_HREF,
   TARIFFS, WHY, REVIEWS, NAV,
 } from "./constants";
-import { MaxIcon } from "./MaxIcon";
 
 function useVisible(th = 0.1) {
   const ref = useRef<HTMLDivElement>(null);
@@ -26,10 +25,11 @@ function cls(...args: (string | false | undefined)[]) {
 function CTABlock({ text = "Узнать стоимость" }: { text?: string }) {
   return (
     <div className="flex flex-col sm:flex-row gap-3">
-      <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2.5 bg-sky-500 hover:bg-sky-400 active:scale-[0.97] text-white font-bold text-base px-7 py-4 rounded-2xl transition shadow-lg shadow-sky-500/20 whitespace-nowrap"
+      {/* MAX — главная */}
+      <a href={MAX_HREF} target="_blank" rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2.5 bg-[#005FF9] hover:bg-[#1a70ff] active:scale-[0.97] text-white font-bold text-base px-7 py-4 rounded-2xl transition shadow-lg shadow-[#005FF9]/20 whitespace-nowrap"
         style={{ fontFamily: "Oswald" }}>
-        <Icon name="Send" size={20} />{text} в Telegram
+        {text} в MAX
       </a>
       <a href={WA_HREF} target="_blank" rel="noopener noreferrer"
         className="flex items-center justify-center gap-2.5 bg-green-600 hover:bg-green-500 active:scale-[0.97] text-white font-bold text-base px-7 py-4 rounded-2xl transition shadow-lg shadow-green-600/20 whitespace-nowrap"
@@ -117,13 +117,20 @@ export function MainSections({ onShare }: MainSectionsProps) {
                     </li>
                   ))}
                 </ul>
-                <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
+                {/* MAX — главная кнопка в карточке */}
+                <a href={MAX_HREF} target="_blank" rel="noopener noreferrer"
                   className={cls(
                     "w-full py-3.5 rounded-xl font-black text-sm uppercase tracking-wider transition active:scale-[0.98] text-center block",
-                    t.featured ? "bg-amber text-coal hover:bg-amber/90 shadow-lg shadow-amber/20" : "border border-white/15 text-white hover:border-amber/50 hover:text-amber"
+                    t.featured ? "bg-[#005FF9] text-white hover:bg-[#1a70ff] shadow-lg shadow-[#005FF9]/20" : "bg-[#005FF9]/10 border border-[#005FF9]/30 text-[#5599FF] hover:bg-[#005FF9]/20"
                   )}
                   style={{ fontFamily: "Oswald" }}>
-                  Узнать стоимость
+                  Узнать стоимость в MAX
+                </a>
+                {/* Telegram — второстепенный */}
+                <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
+                  className="mt-2 w-full py-2 rounded-xl font-bold text-xs text-white/30 hover:text-white/50 text-center block transition"
+                  style={{ fontFamily: "Oswald" }}>
+                  или написать в Telegram
                 </a>
               </div>
             ))}
@@ -180,11 +187,20 @@ export function MainSections({ onShare }: MainSectionsProps) {
             </div>
           ) : null}
 
-          <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-2.5 bg-sky-500 hover:bg-sky-400 text-white font-black text-base px-8 py-4 rounded-2xl transition active:scale-[0.97] shadow-lg shadow-sky-500/20"
+          {/* MAX — главная */}
+          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2.5 bg-[#005FF9] hover:bg-[#1a70ff] text-white font-black text-base px-8 py-4 rounded-2xl transition active:scale-[0.97] shadow-lg shadow-[#005FF9]/20"
             style={{ fontFamily: "Oswald" }}>
-            <Icon name="Send" size={20} />Получить точную цену в Telegram
+            Получить точную цену в MAX
           </a>
+          {/* Telegram — второстепенный */}
+          <div className="mt-3">
+            <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-white/30 hover:text-white/50 transition"
+              style={{ fontFamily: "Oswald" }}>
+              <Icon name="Send" size={13} />или написать в Telegram
+            </a>
+          </div>
         </div>
       </div>
 
@@ -207,10 +223,10 @@ export function MainSections({ onShare }: MainSectionsProps) {
               <p className="text-white/55 text-sm leading-relaxed max-w-md">
                 Работаем по всей России, включая новые территории — ДНР, ЛНР, Запорожскую и Херсонскую области. Отдельный тариф с учётом особенностей маршрута.
               </p>
-              <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
-                className="mt-5 inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-white font-black text-sm px-6 py-3 rounded-xl transition active:scale-[0.97]"
+              <a href={MAX_HREF} target="_blank" rel="noopener noreferrer"
+                className="mt-5 inline-flex items-center gap-2 bg-[#005FF9] hover:bg-[#1a70ff] text-white font-black text-sm px-6 py-3 rounded-xl transition active:scale-[0.97]"
                 style={{ fontFamily: "Oswald" }}>
-                <Icon name="Send" size={16} />Уточнить маршрут — откроется Telegram
+                Уточнить маршрут в MAX
               </a>
             </div>
             <div className="w-full md:w-auto flex-shrink-0 grid grid-cols-3 gap-3">
@@ -296,16 +312,17 @@ export function MainSections({ onShare }: MainSectionsProps) {
             <h2 className="font-black text-4xl sm:text-5xl text-white" style={{ fontFamily: "Oswald" }}>СВЯЖИСЬ<br /><span className="text-amber">СЕЙЧАС</span></h2>
           </div>
 
-          {/* Большие кнопки */}
+          {/* Главные кнопки */}
           <div className={cls("grid sm:grid-cols-2 gap-3 mb-3 transition-all duration-700 delay-100", secContacts.v ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8")}>
-            <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-4 p-5 rounded-2xl bg-sky-500 hover:bg-sky-400 text-white transition active:scale-[0.98] group">
+            {/* MAX — первый и самый большой */}
+            <a href={MAX_HREF} target="_blank" rel="noopener noreferrer"
+              className="sm:col-span-2 flex items-center gap-4 p-5 rounded-2xl bg-[#005FF9] hover:bg-[#1a70ff] text-white transition active:scale-[0.98] group">
               <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-white/25 transition">
-                <Icon name="Send" size={26} />
+                <span className="font-black text-xl text-white" style={{ fontFamily: "Oswald" }}>MAX</span>
               </div>
               <div>
-                <p className="font-black text-xl" style={{ fontFamily: "Oswald" }}>Telegram</p>
-                <p className="text-sm opacity-75">@Mezhgorod1816 · быстрый ответ</p>
+                <p className="font-black text-xl" style={{ fontFamily: "Oswald" }}>Написать в MAX</p>
+                <p className="text-sm opacity-75">Мессенджер MAX — отвечаем быстрее всего</p>
               </div>
             </a>
             <a href={PHONE_HREF}
@@ -328,32 +345,30 @@ export function MainSections({ onShare }: MainSectionsProps) {
                 <p className="text-sm opacity-75">{PHONE}</p>
               </div>
             </a>
-            <a href={VK_HREF} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-4 p-5 rounded-2xl bg-[#0077FF] hover:bg-[#0088FF] text-white transition active:scale-[0.98] group">
-              <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-white/25 transition">
-                <Icon name="Users" size={26} />
-              </div>
-              <div>
-                <p className="font-black text-xl" style={{ fontFamily: "Oswald" }}>ВКонтакте</p>
-                <p className="text-sm opacity-75">vk.ru/dalnyack</p>
-              </div>
-            </a>
           </div>
 
-          {/* MAX + Поделиться */}
+          {/* Второстепенные: Telegram + ВКонтакте + Поделиться */}
           <div className={cls("flex flex-col sm:flex-row gap-3 transition-all duration-700 delay-200", secContacts.v ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8")}>
-            <a href={MAX_HREF} target="_blank" rel="noopener noreferrer"
-              className="flex-1 flex items-center gap-3 p-4 rounded-2xl bg-[#005FF9] hover:bg-[#1a70ff] text-white transition active:scale-[0.98]">
-              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center shrink-0"><MaxIcon size={22} /></div>
+            <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
+              className="flex-1 flex items-center gap-3 p-4 rounded-2xl border border-white/10 bg-white/[0.02] hover:border-white/20 text-white/50 hover:text-white transition active:scale-[0.98]">
+              <div className="w-9 h-9 bg-white/5 rounded-xl flex items-center justify-center shrink-0"><Icon name="Send" size={18} /></div>
               <div>
-                <p className="font-black text-base" style={{ fontFamily: "Oswald" }}>MAX</p>
-                <p className="text-xs opacity-70">Мессенджер от ВКонтакте</p>
+                <p className="font-bold text-sm" style={{ fontFamily: "Oswald" }}>Telegram</p>
+                <p className="text-xs opacity-60">@Mezhgorod1816</p>
+              </div>
+            </a>
+            <a href={VK_HREF} target="_blank" rel="noopener noreferrer"
+              className="flex-1 flex items-center gap-3 p-4 rounded-2xl bg-[#0077FF] hover:bg-[#0088FF] text-white transition active:scale-[0.98]">
+              <div className="w-9 h-9 bg-white/15 rounded-xl flex items-center justify-center shrink-0"><Icon name="Users" size={18} /></div>
+              <div>
+                <p className="font-bold text-sm" style={{ fontFamily: "Oswald" }}>ВКонтакте</p>
+                <p className="text-xs opacity-75">vk.ru/dalnyack</p>
               </div>
             </a>
             <div className="flex-1 flex items-center gap-3 p-4 rounded-2xl border border-white/10 bg-white/[0.02]">
               <div className="flex-1">
                 <p className="font-bold text-sm text-white" style={{ fontFamily: "Oswald" }}>Порекомендуй нас</p>
-                <p className="text-xs text-white/40">Поделись сайтом с другом</p>
+                <p className="text-xs text-white/40">Поделись с другом</p>
               </div>
               <button onClick={onShare} className="flex items-center gap-2 bg-amber text-coal font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-amber/90 transition shrink-0" style={{ fontFamily: "Oswald" }}>
                 <Icon name="Share2" size={15} />Поделиться
@@ -385,10 +400,10 @@ export function MainSections({ onShare }: MainSectionsProps) {
               <span className="font-black text-base tracking-widest text-white uppercase" style={{ fontFamily: "Oswald" }}>Дальняк</span>
             </div>
             <div className="flex items-center gap-3">
-              <a href={TG_HREF} target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-sky-500/20 hover:bg-sky-500/40 rounded-xl flex items-center justify-center text-sky-400 transition"><Icon name="Send" size={16} /></a>
+              <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" className="px-3 py-2 bg-[#005FF9]/20 hover:bg-[#005FF9]/40 rounded-xl text-[#5599FF] font-black text-xs transition" style={{ fontFamily: "Oswald" }}>MAX</a>
               <a href={WA_HREF} target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-green-600/20 hover:bg-green-600/40 rounded-xl flex items-center justify-center text-green-400 transition"><Icon name="MessageCircle" size={16} /></a>
+              <a href={TG_HREF} target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-sky-500/20 hover:bg-sky-500/40 rounded-xl flex items-center justify-center text-sky-400/50 transition"><Icon name="Send" size={16} /></a>
               <a href={VK_HREF} target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-blue-500/20 hover:bg-blue-500/40 rounded-xl flex items-center justify-center text-blue-400 transition"><Icon name="Users" size={16} /></a>
-              <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-[#005FF9]/20 hover:bg-[#005FF9]/40 rounded-xl flex items-center justify-center transition"><MaxIcon size={18} /></a>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t border-white/5">
@@ -398,7 +413,6 @@ export function MainSections({ onShare }: MainSectionsProps) {
         </div>
       </footer>
 
-      {/* Навигация для onGo — используется неявно через NAV */}
       <div className="sr-only">{NAV.map(n => n.id).join(",")}</div>
     </>
   );
