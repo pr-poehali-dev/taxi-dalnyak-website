@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 
 // ─── Данные ───────────────────────────────────────────────────────────────────
 const LOGO    = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
@@ -349,20 +349,20 @@ export default function Index() {
                       textAlign:i===0?"left":"center"}}>{h}</div>
                   ))}
                   {tar.rows.map((r,i)=>(
-                    <>
-                      <div key={`d${i}`} style={{padding:"10px 8px",fontSize:12,color:"rgba(255,255,255,.6)",
+                    <React.Fragment key={i}>
+                      <div style={{padding:"10px 8px",fontSize:12,color:"rgba(255,255,255,.6)",
                         borderBottom:i<2?"1px solid rgba(255,255,255,.05)":"none"}}>
                         {r.d}
                         {i===2&&<span style={{display:"block",fontSize:9,color:tar.color,fontWeight:700,marginTop:2}}>🏆 выгоднее всего</span>}
                       </div>
-                      <div key={`r${i}`} style={{padding:"10px 4px",textAlign:"center",
+                      <div style={{padding:"10px 4px",textAlign:"center",
                         fontSize:18,fontWeight:700,color:tar.color,
                         textShadow:`0 0 8px ${tar.color}80`,
                         borderBottom:i<2?"1px solid rgba(255,255,255,.05)":"none"}}>{r.r}<span style={{fontSize:9,fontWeight:500,opacity:.6}}>/км</span></div>
-                      <div key={`n${i}`} style={{padding:"10px 4px",textAlign:"center",
+                      <div style={{padding:"10px 4px",textAlign:"center",
                         fontSize:16,fontWeight:700,color:"#FF7070",
                         borderBottom:i<2?"1px solid rgba(255,255,255,.05)":"none"}}>{r.n}<span style={{fontSize:9,fontWeight:500,opacity:.6}}>/км</span></div>
-                    </>
+                    </React.Fragment>
                   ))}
                 </div>
               </div>
