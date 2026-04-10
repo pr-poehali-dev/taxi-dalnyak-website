@@ -57,12 +57,14 @@ export const TARIFFS = [
   },
 ];
 
+export const IMG_CARSEAT = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/918a26f0-02c2-4f96-a09e-5fd799521d3a.jpg";
+
 export const ADVANTAGES = [
-  { icon: "⚡", text: "Подача от 30 мин (кроме Москвы и СПб)" },
-  { icon: "📋", text: "Предзаказ без предоплаты" },
-  { icon: "🔄", text: "Туда-обратно в один день — ожидание бесплатно" },
-  { icon: "🪑", text: "Детское кресло — бесплатно" },
-  { icon: "🐾", text: "Домашние животные — бесплатно" },
+  { img: null,         icon: "⚡", text: "Подача от 30 мин",          sub: "кроме Москвы и СПб" },
+  { img: null,         icon: "📋", text: "Предзаказ",                  sub: "без предоплаты" },
+  { img: null,         icon: "🔄", text: "Ожидание бесплатно",         sub: "при поездке туда-обратно в один день" },
+  { img: IMG_CARSEAT,  icon: "",   text: "Детское кресло",             sub: "бесплатно" },
+  { img: null,         icon: "🐾", text: "Животные",                   sub: "бесплатно" },
 ];
 
 export const WHO = [
