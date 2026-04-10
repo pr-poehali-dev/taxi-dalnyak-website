@@ -1,6 +1,9 @@
-export const HERO_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/9f1988fa-044e-4fe0-9ed6-d8c75200c13b.jpg";
-export const CAR_IMG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/d777a0ac-bb72-4451-9248-4a96fb44db9f.jpg";
+export const HERO_BG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/5b51c7b0-9a76-4168-9d48-1f212a2618c4.jpg";
 export const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
+
+export const IMG_SOLARIS = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/50fbc92b-0398-4145-abda-af1256d79d90.jpg";
+export const IMG_K5      = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/c9beeef8-2aa7-49f3-b8b4-e8937eae11a5.jpg";
+export const IMG_STARIA  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/c7203733-cf29-40aa-9486-829fbf00a034.jpg";
 
 export const PHONE      = "8 (995) 645-51-25";
 export const PHONE_HREF = "tel:+79956455125";
@@ -9,51 +12,61 @@ export const WA_HREF    = "https://wa.me/79956455125?text=" + encodeURIComponent
 export const VK_HREF    = "https://vk.ru/dalnyack";
 export const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
 
-export const NAV = [
-  { id: "hero",     label: "Главная"   },
-  { id: "tariffs",  label: "Тарифы"    },
-  { id: "why",      label: "Почему мы" },
-  { id: "contacts", label: "Контакты"  },
-];
-
 export const TARIFFS = [
   {
-    icon: "Car",
+    id: "standard",
     name: "СТАНДАРТ",
-    price: "30",
-    desc: "Комфортная поездка на проверенном седане",
-    features: ["Седан / Хэтчбек", "До 3 пассажиров", "Кондиционер", "Оплата картой / наличными"],
-    featured: false,
+    car: "Hyundai Solaris",
+    img: IMG_SOLARIS,
+    accentColor: "#e8c97a",
+    prices: [
+      { label: "до 500 км",   price: "35₽/км" },
+      { label: "500–1000 км", price: "32₽/км" },
+      { label: "от 1000 км",  price: "30₽/км" },
+    ],
+    newTerr: "80₽/км",
+    features: ["Седан / Хэтчбек", "До 3 пассажиров", "Кондиционер"],
   },
   {
-    icon: "Star",
+    id: "comfort",
     name: "КОМФОРТ",
-    price: "40",
-    desc: "Бизнес-класс для тех, кто ценит качество",
-    features: ["Бизнес-авто", "До 4 пассажиров", "USB / USB-C зарядка", "Вода в дорогу"],
-    featured: true,
+    car: "Kia K5",
+    img: IMG_K5,
+    accentColor: "#7ab8e8",
+    prices: [
+      { label: "до 500 км",   price: "42₽/км" },
+      { label: "500–1000 км", price: "40₽/км" },
+      { label: "от 1000 км",  price: "38₽/км" },
+    ],
+    newTerr: "100₽/км",
+    features: ["Бизнес-авто", "До 4 пассажиров", "USB / USB-C зарядка"],
   },
   {
-    icon: "Users",
+    id: "minivan",
     name: "МИНИВЭН",
-    price: "50",
-    desc: "Большой автомобиль для компании или груза",
-    features: ["Минивэн / Внедорожник", "До 6 пассажиров", "Детское кресло", "Большой багажник"],
-    featured: false,
+    car: "Hyundai Staria",
+    img: IMG_STARIA,
+    accentColor: "#a8e87a",
+    prices: [
+      { label: "до 500 км",   price: "60₽/км" },
+      { label: "500–1000 км", price: "55₽/км" },
+      { label: "от 1000 км",  price: "50₽/км" },
+    ],
+    newTerr: "100₽/км",
+    features: ["Минивэн", "До 6 пассажиров", "Детское кресло"],
   },
 ];
 
-export const WHY = [
-  { icon: "ShieldCheck", title: "Фиксированная цена",           text: "Цена за поездку известна заранее. Никаких надбавок за ночь, пробки или погоду." },
-  { icon: "Route",       title: "Только от 200 км",             text: "Специализируемся исключительно на дальних маршрутах — знаем их как никто." },
-  { icon: "Clock",       title: "24 часа, 7 дней",              text: "Принимаем заказы круглосуточно. Выезд в любое время суток." },
-  { icon: "MapPin",      title: "Вся Россия + новые территории", text: "Межгород, аэропорты, трансферы — любое направление. Работаем в ДНР, ЛНР, Запорожской и Херсонской областях." },
-  { icon: "Banknote",    title: "Выгоднее такси",               text: "На дальних маршрутах дешевле агрегаторов на 20–40%. Считаем за км, не за мин." },
-  { icon: "ThumbsUp",    title: "5 лет на рынке",               text: "Более 50 000 выполненных поездок. Опытные водители, чистые авто." },
+export const ADVANTAGES = [
+  { icon: "⚡", text: "Подача от 30 мин (кроме Москвы и СПб)" },
+  { icon: "📋", text: "Предзаказ без предоплаты" },
+  { icon: "🔄", text: "Туда-обратно в один день — ожидание бесплатно" },
+  { icon: "🪑", text: "Детское кресло — бесплатно" },
+  { icon: "🐾", text: "Домашние животные — бесплатно" },
 ];
 
-export const REVIEWS = [
-  { name: "Алексей М.",  city: "Москва → Казань",             text: "Ехали с семьёй 800 км — водитель пунктуальный, машина чистая, цена как договорились. Однозначно рекомендую!", stars: 5 },
-  { name: "Светлана К.", city: "Нижний Новгород → Самара",    text: "Заказывала несколько раз для командировок. Всегда в срок, цена честная, никаких сюрпризов. Теперь только Дальняк.", stars: 5 },
-  { name: "Дмитрий Р.",  city: "Ижевск → Чайковский",        text: "Быстро ответили в Telegram, сразу назвали цену. Поездка прошла отлично, приеду ещё.", stars: 5 },
+export const WHO = [
+  { icon: "🎖️", label: "Бойцы СВО" },
+  { icon: "👨‍👩‍👧", label: "Семьи с детьми" },
+  { icon: "🏢", label: "Организации" },
 ];
