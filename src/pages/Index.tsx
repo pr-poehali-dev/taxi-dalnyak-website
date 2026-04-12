@@ -9,13 +9,13 @@ const TG      = "https://t.me/Mezhgorod1816";
 const MAX     = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
 
 const IMGS = {
-  road:    "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/635bc32c-ece1-42f9-ab56-5eacdba7faae.jpg",
-  solaris: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/c4158496-7ea3-41a3-b40a-6e19deab36d1.jpg",
-  camry:   "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/a426143a-e9b6-48d8-90c0-fcb20094f2cf.jpg",
-  starex:  "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/12ee82fe-f1a5-441c-b40f-c4f3b720dd0a.jpg",
-  mil:     "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/0b60554b-a7cd-49ba-8722-155d755fbd73.jpg",
-  family:  "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/80b711b2-61c1-4760-84f3-fc8ed6875af8.jpg",
-  biz:     "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/a1d87dfd-c611-4d5a-b825-8cec8e5f15d8.jpg",
+  road:    "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/bb98cd15-bd8b-4250-a5bb-862d1a80f09a.jpg",
+  solaris: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/127f047b-28ee-4c21-b1fa-c3163c861a85.jpg",
+  camry:   "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/d48194e6-00be-4078-a950-1191e7c530be.jpg",
+  starex:  "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/58abbe0a-622c-4b10-bc65-0e2feaeb5648.jpg",
+  mil:     "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/f980822b-31b7-41e1-a439-210af5f90f33.jpg",
+  family:  "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/b702120f-a865-4d0f-aca3-9c839ddd3bf7.jpg",
+  biz:     "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/f395953f-c908-4408-b355-d437272d8804.jpg",
 };
 
 type S = "intro" | "t0" | "t1" | "t2" | "perks" | "who" | "cta";
@@ -161,17 +161,14 @@ export default function Index() {
         @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         html,body,#root{height:100%;overflow:hidden;background:#000;-webkit-tap-highlight-color:transparent}
-        @keyframes bgz{from{transform:scale(1)}to{transform:scale(1.06)}}
-        @keyframes fup{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes zin{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
-        @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-        @keyframes pr{0%{box-shadow:0 0 0 0 rgba(245,200,66,.5)}70%{box-shadow:0 0 0 12px rgba(245,200,66,0)}100%{box-shadow:0 0 0 0 rgba(245,200,66,0)}}
-        @keyframes pb{0%{box-shadow:0 0 0 0 rgba(0,95,249,.5)}70%{box-shadow:0 0 0 12px rgba(0,95,249,0)}100%{box-shadow:0 0 0 0 rgba(0,95,249,0)}}
-        @keyframes glow{0%,100%{opacity:1}50%{opacity:.6}}
-        @keyframes lines{0%{background-position:0 0}100%{background-position:0 100vh}}
+        @keyframes fup{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes zin{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+        @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+        @keyframes pr{0%{box-shadow:0 0 0 0 rgba(245,200,66,.4)}70%{box-shadow:0 0 0 10px transparent}100%{box-shadow:0 0 0 0 transparent}}
         .fup{animation:fup .5s ease forwards}
         .zin{animation:zin .45s ease forwards}
         .pf{transition:width 7s linear}
+        img{content-visibility:auto}
         a,button{cursor:pointer;-webkit-user-select:none;user-select:none}
       `}</style>
 
@@ -204,18 +201,13 @@ export default function Index() {
 
         {/* ═══ ФОН ═══ */}
         <div style={{position:"absolute",inset:0,zIndex:0}}>
-          <img key={BG[scene]} src={BG[scene]} alt="" style={{
+          <img key={BG[scene]} src={BG[scene]} alt="" loading="eager" decoding="async" style={{
             width:"100%",height:"100%",objectFit:"cover",
-            animation:"bgz 8s ease-in-out infinite alternate",
+            transition:"opacity .5s",
           }} />
           <div style={{position:"absolute",inset:0,background:
             tar ? `linear-gradient(to bottom,rgba(0,0,0,.72) 0%,rgba(0,0,0,.25) 45%,rgba(0,0,0,.85) 100%)`
                 : "linear-gradient(to bottom,rgba(0,0,0,.75) 0%,rgba(0,0,0,.3) 45%,rgba(0,0,0,.88) 100%)"}} />
-          {tar&&<div style={{position:"absolute",inset:0,background:`radial-gradient(ellipse at 50% 55%, ${tar.color}14 0%, transparent 65%)`,transition:"all .7s"}} />}
-          {/* сканлайны */}
-          <div style={{position:"absolute",inset:0,pointerEvents:"none",
-            backgroundImage:"repeating-linear-gradient(transparent,transparent 3px,rgba(0,0,0,.015) 3px,rgba(0,0,0,.015) 4px)",
-            animation:"lines 14s linear infinite"}} />
           {/* кино-рамки */}
           <div style={{position:"absolute",top:0,left:0,right:0,height:34,background:"#000"}} />
           <div style={{position:"absolute",bottom:0,left:0,right:0,height:34,background:"#000"}} />
@@ -226,7 +218,7 @@ export default function Index() {
           position:"absolute",top:34,left:0,right:0,zIndex:100,
           padding:"4px 10px",
           display:"flex",alignItems:"center",justifyContent:"space-between",
-          background:"rgba(0,0,0,.55)",backdropFilter:"blur(16px)",
+          background:"rgba(0,0,0,.75)",
           borderBottom:"1px solid rgba(255,255,255,.06)",
         }}>
           <a href={TG} target="_blank" rel="noopener noreferrer" style={{
@@ -234,7 +226,6 @@ export default function Index() {
             color:"#38BDF8",textDecoration:"none",fontWeight:700,fontSize:12,
             border:"1px solid rgba(56,189,248,.28)",borderRadius:11,padding:"6px 10px",
             background:"rgba(56,189,248,.07)",
-            animation:"pr 2.5s infinite",
           }}>
             <IcTG/> Telegram
           </a>
@@ -278,8 +269,7 @@ export default function Index() {
                 ТАКСИ<br/>
                 <span style={{
                   color:"#F5C842",
-                  textShadow:"0 0 18px rgba(245,200,66,.7), 0 0 36px rgba(245,200,66,.35)",
-                  animation:"glow 2.5s ease-in-out infinite",
+                  textShadow:"0 0 14px rgba(245,200,66,.5)",
                 }}>МЕЖГОРОД</span>
               </h1>
 
@@ -306,16 +296,15 @@ export default function Index() {
                   display:"flex",alignItems:"center",justifyContent:"center",
                   background:"#005FF9",color:"#fff",textDecoration:"none",
                   fontWeight:700,fontSize:16,padding:"13px",borderRadius:18,
-                  boxShadow:"0 0 22px rgba(0,95,249,.4)",
-                  animation:"pb 2s infinite",
+                  boxShadow:"0 0 16px rgba(0,95,249,.3)",
                 }}>Заказать в MAX</a>
 
                 <a href={PHONE_H} style={{
                   display:"flex",alignItems:"center",justifyContent:"center",gap:8,
                   background:"#F5C842",color:"#000",textDecoration:"none",
                   fontWeight:700,fontSize:15,padding:"13px",borderRadius:18,
-                  boxShadow:"0 0 22px rgba(245,200,66,.4)",
-                  animation:"pr 2s infinite", textAlign:"center",lineHeight:1.2,
+                  boxShadow:"0 0 16px rgba(245,200,66,.3)",
+                  textAlign:"center",lineHeight:1.2,
                 }}>
                   <IcPhone/>Узнать стоимость по телефону<br/>
                   <span style={{fontSize:11,fontWeight:500,opacity:.7}}>или отправив SMS</span>
@@ -341,7 +330,7 @@ export default function Index() {
               {/* Таблица цен */}
               <div style={{marginBottom:10,borderRadius:18,overflow:"hidden",border:"1px solid rgba(255,255,255,.08)"}}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 80px 80px",
-                  background:"rgba(0,0,0,.5)",backdropFilter:"blur(14px)"}}>
+                  background:"rgba(0,0,0,.65)"}}>
                   {["Расстояние","Россия","Нов.терр."].map((h,i)=>(
                     <div key={i} style={{padding:"7px 8px",fontSize:9,fontWeight:700,
                       color:"rgba(255,255,255,.35)",textTransform:"uppercase",letterSpacing:".05em",
@@ -377,9 +366,8 @@ export default function Index() {
                 display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
                 background:"#F5C842",color:"#000",textDecoration:"none",
                 fontWeight:700,fontSize:15,padding:"13px",borderRadius:18,
-                boxShadow:"0 0 22px rgba(245,200,66,.4)",width:"100%",
+                boxShadow:"0 0 14px rgba(245,200,66,.3)",width:"100%",
                 textAlign:"center",lineHeight:1.3,
-                animation:"pr 2s infinite",
               }}>
                 <span>Узнать стоимость по телефону</span>
                 <span style={{fontSize:11,fontWeight:500,opacity:.6,marginTop:2}}>или отправив SMS</span>
@@ -398,7 +386,7 @@ export default function Index() {
                 <div key={i} style={{
                   display:"flex",alignItems:"center",gap:12,
                   padding:"10px 14px",borderRadius:15,marginBottom:7,
-                  background:"rgba(0,0,0,.5)",backdropFilter:"blur(12px)",
+                  background:"rgba(0,0,0,.6)",
                   border:"1px solid rgba(255,255,255,.07)",
                   animation:`fup .4s ease ${i*.07}s forwards`,opacity:0,
                 }}>
