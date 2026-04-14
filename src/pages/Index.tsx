@@ -104,17 +104,10 @@ export default function Index() {
     if (autoOpenDone.current) return;
     const t = setTimeout(() => {
       autoOpenDone.current = true;
-      setChatOpen(true);
-      if (utmCity) {
-        setChatStep("utm_confirm");
-        addBot(`Здравствуйте! \u{1F44B} Вам нужно такси до ${utmCity}?`, ["Да", "Нет, другой город"]);
-      } else {
-        setChatStep("from");
-        addBot("Здравствуйте! \u{1F44B} Я помогу рассчитать стоимость поездки. Откуда вы хотите поехать?");
-      }
-    }, 3000);
+      setChatNotif(true);
+    }, 5000);
     return () => clearTimeout(t);
-  }, [utmCity, addBot]);
+  }, []);
 
   useEffect(() => {
     const onMouse = (e: MouseEvent) => {
@@ -308,8 +301,10 @@ export default function Index() {
     }
   }, [chatStep, utmCity, addBot, addUser]);
 
+  const fmtPrice = (n: number) => n.toLocaleString("ru-RU") + " \u20BD";
+
   const handleTariffSelect = useCallback((t: TariffPrice) => {
-    addUser(`${t.name} \u2014 ${t.price}\u20BD`);
+    addUser(`${t.name} \u2014 ${t.price.toLocaleString("ru-RU")} \u20BD`);
     setChatStep("date");
     addBot("Когда планируете поездку? (дата и время)");
   }, [addBot, addUser]);
@@ -348,24 +343,30 @@ export default function Index() {
           headerBg ? "bg-coal/95 backdrop-blur-md border-b border-amber/15" : "bg-transparent"
         }`}
       >
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <a href="#hero" className="flex items-center gap-3">
-            <img src={LOGO} alt="Дальняк" className="w-10 h-10 rounded-full object-cover" />
-            <span className="font-oswald text-xl font-bold text-amber uppercase tracking-wider">Дальняк</span>
+        <div className="max-w-6xl mx-auto px-3 md:px-4 py-2.5 flex items-center justify-between gap-2">
+          <a href="#hero" className="flex items-center gap-2 shrink-0">
+            <img src={LOGO} alt="Дальняк" className="w-9 h-9 rounded-full object-cover" />
+            <span className="font-oswald text-lg font-bold text-amber uppercase tracking-wider hidden sm:block">Дальняк</span>
           </a>
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden lg:flex items-center gap-5">
             <a href="#tariffs" className="nav-link text-sm text-white/70 hover:text-amber transition-colors font-golos">Тарифы</a>
             <a href="#advantages" className="nav-link text-sm text-white/70 hover:text-amber transition-colors font-golos">Преимущества</a>
             <a href="#who" className="nav-link text-sm text-white/70 hover:text-amber transition-colors font-golos">Кого возим</a>
-            <a href={PHONE_HREF} className="flex items-center gap-2 text-amber font-oswald text-lg font-semibold">
-              <Icon name="Phone" size={16} />
-              {PHONE}
-            </a>
           </nav>
-          <a href={PHONE_HREF} className="md:hidden flex items-center gap-2 text-amber font-oswald text-base font-semibold">
-            <Icon name="Phone" size={16} />
-            <span className="hidden sm:inline">{PHONE}</span>
-          </a>
+          <div className="flex items-center gap-2">
+            <a href={TG} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-white/80 hover:text-[#38BDF8] font-oswald text-xs font-bold px-3 py-2 rounded-lg border border-white/10 hover:border-[#38BDF8]/40 transition-all">
+              <Icon name="Send" size={14} />
+              <span className="hidden sm:inline">Telegram</span>
+            </a>
+            <a href={MAX_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 bg-[#005FF9] hover:bg-[#1a70ff] text-white font-oswald text-xs font-bold px-3 py-2 rounded-lg transition-all">
+              MAX
+            </a>
+            <a href={PHONE_HREF} className="flex items-center gap-1.5 bg-amber text-coal font-oswald text-xs font-bold px-3 py-2 rounded-lg hover:bg-amber/90 transition-all">
+              <Icon name="Phone" size={13} />
+              <span className="hidden md:inline">{PHONE}</span>
+              <span className="md:hidden">Звонок</span>
+            </a>
+          </div>
         </div>
       </header>
 
@@ -388,32 +389,32 @@ export default function Index() {
           </div>
           <div className="animate-fade-up flex flex-col sm:flex-row gap-3 justify-center items-center" style={{ animationDelay: "0.3s" }}>
             <button
-              onClick={() => {
-                setChatNotif(false);
-                setChatOpen(true);
-                if (messages.length === 0) {
-                  if (utmCity) {
-                    setChatStep("utm_confirm");
-                    addBot(`Здравствуйте! \u{1F44B} Вам нужно такси до ${utmCity}?`, ["Да", "Нет, другой город"]);
-                  } else {
-                    setChatStep("from");
-                    addBot("Здравствуйте! \u{1F44B} Я помогу рассчитать стоимость поездки. Откуда вы хотите поехать?");
-                  }
-                }
-              }}
-              className="bg-amber text-coal font-oswald text-lg uppercase font-bold px-8 py-4 rounded hover:bg-amber/90 transition-all hover:scale-105"
+              onClick={toggleChat}
+              className="w-full sm:w-auto bg-amber text-coal font-oswald text-base sm:text-lg uppercase font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded hover:bg-amber/90 transition-all hover:scale-105 flex items-center justify-center gap-2"
             >
+              <Icon name="Calculator" size={18} />
               Рассчитать стоимость
             </button>
             <a
               href={PHONE_HREF}
-              className="border border-amber/30 text-amber font-oswald text-lg uppercase font-semibold px-8 py-4 rounded hover:bg-amber/10 transition-all flex items-center gap-2"
+              className="w-full sm:w-auto border border-amber/30 text-amber font-oswald text-base sm:text-lg uppercase font-semibold px-6 sm:px-8 py-3.5 sm:py-4 rounded hover:bg-amber/10 transition-all flex items-center justify-center gap-2"
             >
               <Icon name="Phone" size={18} />
-              Позвонить
+              {PHONE}
             </a>
           </div>
-          <div className="mt-12 animate-fade-in" style={{ animationDelay: "0.8s" }}>
+          <div className="animate-fade-up flex flex-wrap gap-2.5 justify-center mt-5" style={{ animationDelay: "0.5s" }}>
+            <a href={TG} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-bold text-white/60 border border-white/10 bg-white/5 hover:bg-white/10 hover:text-[#38BDF8] hover:border-[#38BDF8]/30 px-4 py-2.5 rounded-lg transition-all">
+              <Icon name="Send" size={15} />Telegram
+            </a>
+            <a href={MAX_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-bold text-white bg-[#005FF9] hover:bg-[#1a70ff] px-4 py-2.5 rounded-lg transition-all shadow-lg shadow-[#005FF9]/20">
+              MAX — написать
+            </a>
+            <a href={WA} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-bold text-white/60 border border-white/10 bg-white/5 hover:bg-white/10 hover:text-green-400 hover:border-green-500/30 px-4 py-2.5 rounded-lg transition-all">
+              <Icon name="MessageCircle" size={15} />WhatsApp
+            </a>
+          </div>
+          <div className="mt-10 animate-fade-in" style={{ animationDelay: "0.8s" }}>
             <Icon name="ChevronDown" size={28} className="text-amber/50 mx-auto animate-bounce" />
           </div>
         </div>
@@ -432,22 +433,22 @@ export default function Index() {
                 name: "Стандарт",
                 car: "Hyundai Solaris",
                 img: IMG_SOLARIS,
-                min: "3 000",
+                min: "3 000 ₽",
                 rows: [
-                  { d: "до 250 км", r: "35\u20BD/км" },
-                  { d: "от 250 км", r: "31\u20BD/км" },
-                  { d: "новые территории", r: "80\u20BD/км" },
+                  { d: "до 250 км", r: "35 ₽/км" },
+                  { d: "от 250 км", r: "31 ₽/км" },
+                  { d: "новые территории", r: "80 ₽/км" },
                 ],
               },
               {
                 name: "Комфорт+",
                 car: "Toyota Camry 70",
                 img: IMG_CAMRY,
-                min: "5 000",
+                min: "5 000 ₽",
                 rows: [
-                  { d: "до 250 км", r: "50\u20BD/км" },
-                  { d: "от 250 км", r: "42\u20BD/км" },
-                  { d: "новые территории", r: "100\u20BD/км" },
+                  { d: "до 250 км", r: "50 ₽/км" },
+                  { d: "от 250 км", r: "42 ₽/км" },
+                  { d: "новые территории", r: "100 ₽/км" },
                 ],
                 popular: true,
               },
@@ -455,11 +456,11 @@ export default function Index() {
                 name: "Минивэн",
                 car: "Hyundai Starex",
                 img: IMG_STAREX,
-                min: "5 000",
+                min: "5 000 ₽",
                 rows: [
-                  { d: "до 250 км", r: "60\u20BD/км" },
-                  { d: "от 250 км", r: "55\u20BD/км" },
-                  { d: "новые территории", r: "100\u20BD/км" },
+                  { d: "до 250 км", r: "60 ₽/км" },
+                  { d: "от 250 км", r: "55 ₽/км" },
+                  { d: "новые территории", r: "100 ₽/км" },
                 ],
               },
             ].map((t, i) => (
@@ -491,7 +492,7 @@ export default function Index() {
                   </div>
                   <div className="border-t border-white/8 pt-3">
                     <p className="text-xs text-white/40 font-golos">Минимальный заказ</p>
-                    <p className="text-amber font-oswald text-xl font-bold">{t.min}\u20BD</p>
+                    <p className="text-amber font-oswald text-xl font-bold">{t.min}</p>
                   </div>
                 </div>
               </div>
@@ -563,53 +564,30 @@ export default function Index() {
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-amber font-oswald text-sm uppercase tracking-[0.25em] mb-2">Готовы ехать?</p>
           <h2 className="font-oswald text-3xl md:text-5xl font-bold text-white uppercase mb-4">
-            Рассчитайте стоимость<br />
-            <span className="text-amber">за 30 секунд</span>
+            Закажите такси<br />
+            <span className="text-amber">прямо сейчас</span>
           </h2>
           <p className="text-white/50 font-golos mb-8 max-w-lg mx-auto">
-            Наш ассистент моментально рассчитает цену и оформит заказ. Без ожидания на линии.
+            Напишите нам в мессенджер, позвоните или рассчитайте стоимость через ассистента.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            <button
-              onClick={() => {
-                setChatNotif(false);
-                setChatOpen(true);
-                if (messages.length === 0) {
-                  if (utmCity) {
-                    setChatStep("utm_confirm");
-                    addBot(`Здравствуйте! \u{1F44B} Вам нужно такси до ${utmCity}?`, ["Да", "Нет, другой город"]);
-                  } else {
-                    setChatStep("from");
-                    addBot("Здравствуйте! \u{1F44B} Я помогу рассчитать стоимость поездки. Откуда вы хотите поехать?");
-                  }
-                }
-              }}
-              className="bg-amber text-coal font-oswald text-lg uppercase font-bold px-8 py-4 rounded hover:bg-amber/90 transition-all hover:scale-105 flex items-center gap-2"
-            >
-              <Icon name="MessageCircle" size={20} />
-              Открыть ассистент
-            </button>
-            <a
-              href={PHONE_HREF}
-              className="border border-amber/30 text-amber font-oswald text-lg uppercase font-semibold px-8 py-4 rounded hover:bg-amber/10 transition-all flex items-center gap-2"
-            >
-              <Icon name="Phone" size={18} />
-              {PHONE}
+          <div className="flex flex-col gap-3 max-w-md mx-auto">
+            <a href={TG} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2.5 bg-[#38BDF8]/15 border border-[#38BDF8]/30 text-[#38BDF8] font-oswald text-base uppercase font-bold px-6 py-4 rounded-lg hover:bg-[#38BDF8]/25 transition-all active:scale-[0.98]">
+              <Icon name="Send" size={18} />Написать в Telegram
             </a>
-          </div>
-          <div className="flex items-center justify-center gap-6 mt-10">
-            <a href={TG} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-amber transition-colors">
-              <Icon name="Send" size={22} />
+            <a href={MAX_URL} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2.5 bg-[#005FF9] text-white font-oswald text-base uppercase font-bold px-6 py-4 rounded-lg hover:bg-[#1a70ff] transition-all shadow-lg shadow-[#005FF9]/20 active:scale-[0.98]">
+              Написать в MAX
             </a>
-            <a href={WA} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-amber transition-colors">
-              <Icon name="MessageCircle" size={22} />
+            <a href={PHONE_HREF} className="flex items-center justify-center gap-2.5 bg-amber text-coal font-oswald text-base uppercase font-bold px-6 py-4 rounded-lg hover:bg-amber/90 transition-all active:scale-[0.98]">
+              <Icon name="Phone" size={18} />{PHONE}
             </a>
-            <a href={VK} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-amber transition-colors">
-              <Icon name="Users" size={22} />
-            </a>
-            <a href={MAX_URL} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-amber transition-colors">
-              <Icon name="ExternalLink" size={22} />
-            </a>
+            <div className="flex gap-3">
+              <a href={WA} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 text-sm font-bold text-green-400 border border-green-600/20 bg-green-600/10 hover:bg-green-600/20 px-4 py-3 rounded-lg transition-all">
+                <Icon name="MessageCircle" size={15} />WhatsApp
+              </a>
+              <button onClick={toggleChat} className="flex-1 flex items-center justify-center gap-2 text-sm font-bold text-amber border border-amber/20 bg-amber/5 hover:bg-amber/15 px-4 py-3 rounded-lg transition-all">
+                <Icon name="Calculator" size={15} />Рассчитать цену
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -621,39 +599,26 @@ export default function Index() {
         </div>
       </footer>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-coal/95 backdrop-blur-md border-t border-amber/15 pb-[env(safe-area-inset-bottom)]">
-        <div className="grid grid-cols-3 gap-0">
-          <a
-            href={TG}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center justify-center py-3 text-white/70 hover:text-amber transition-colors"
-          >
-            <Icon name="Send" size={20} />
-            <span className="text-[10px] font-golos mt-1">Telegram</span>
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-[#0a0a0a]/95 backdrop-blur-md border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
+        <div className="flex gap-1.5 px-2 py-2">
+          <a href={TG} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-[#38BDF8]/15 text-[#38BDF8] font-oswald text-xs font-bold active:scale-95 transition-all">
+            <Icon name="Send" size={14} />TG
           </a>
-          <a
-            href={PHONE_HREF}
-            className="flex flex-col items-center justify-center py-3 bg-amber text-coal"
-          >
-            <Icon name="Phone" size={20} />
-            <span className="text-[10px] font-oswald font-bold mt-1 uppercase">Позвонить</span>
+          <a href={PHONE_HREF} className="flex-[2] flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-amber text-coal font-oswald text-xs font-bold active:scale-95 transition-all">
+            <Icon name="Phone" size={14} />Звонок
           </a>
-          <a
-            href={MAX_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center justify-center py-3 text-white/70 hover:text-amber transition-colors"
-          >
-            <Icon name="ExternalLink" size={20} />
-            <span className="text-[10px] font-golos mt-1">MAX</span>
+          <a href={MAX_URL} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-[#005FF9] text-white font-oswald text-xs font-bold active:scale-95 transition-all">
+            MAX
+          </a>
+          <a href={WA} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-green-600/15 text-green-400 font-oswald text-xs font-bold active:scale-95 transition-all">
+            <Icon name="MessageCircle" size={14} />WA
           </a>
         </div>
       </div>
 
-      <div className="fixed z-50 bottom-20 md:bottom-6 right-4">
+      <div className="fixed z-50 bottom-[72px] md:bottom-6 right-3 md:right-4">
         {chatOpen && (
-          <div className="chat-bubble-in mb-3 w-[calc(100vw-2rem)] sm:w-[380px] max-h-[500px] bg-card border border-white/8 rounded-lg shadow-2xl flex flex-col overflow-hidden">
+          <div className="chat-bubble-in mb-3 w-[calc(100vw-1.5rem)] sm:w-[380px] max-h-[70vh] md:max-h-[500px] bg-card border border-white/8 rounded-lg shadow-2xl flex flex-col overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 bg-amber/10 border-b border-amber/15 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-amber flex items-center justify-center">
@@ -708,7 +673,7 @@ export default function Index() {
                                 <p className="font-oswald text-sm font-semibold text-white">{t.name}</p>
                                 <p className="text-[11px] text-white/40 font-golos">{t.car}</p>
                               </div>
-                              <p className="font-oswald text-lg font-bold text-amber">{t.price}\u20BD</p>
+                              <p className="font-oswald text-lg font-bold text-amber">{fmtPrice(t.price)}</p>
                             </div>
                           </button>
                         ))}
@@ -768,22 +733,25 @@ export default function Index() {
           </div>
         )}
 
-        <button
-          onClick={toggleChat}
-          className={`ml-auto flex items-center justify-center w-14 h-14 rounded-full bg-amber text-coal shadow-lg hover:scale-110 transition-transform relative ${
-            chatNotif ? "animate-pulse-amber" : ""
-          }`}
-        >
-          {chatOpen ? <Icon name="X" size={24} /> : <Icon name="MessageCircle" size={24} />}
+        <div className="flex items-end justify-end gap-2">
           {chatNotif && !chatOpen && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center notification-ping">
-              1
-            </span>
+            <div className="chat-bubble-in bg-card border border-amber/20 rounded-lg rounded-br-none px-3 py-2 shadow-lg max-w-[200px]">
+              <p className="text-xs text-white/80 font-golos">Рассчитать стоимость поездки?</p>
+            </div>
           )}
-        </button>
+          <button
+            onClick={toggleChat}
+            className="shrink-0 flex items-center justify-center w-14 h-14 rounded-full bg-amber text-coal shadow-lg hover:scale-105 transition-transform relative"
+          >
+            {chatOpen ? <Icon name="X" size={24} /> : <Icon name="MessageCircle" size={24} />}
+            {chatNotif && !chatOpen && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 border-2 border-card" />
+            )}
+          </button>
+        </div>
       </div>
 
-      <div className="h-16 md:hidden" />
+      <div className="h-20 md:hidden" />
     </div>
   );
 }
