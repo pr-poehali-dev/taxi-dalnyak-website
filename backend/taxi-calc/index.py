@@ -2,7 +2,7 @@ import json
 import urllib.request
 import urllib.parse
 
-YANDEX_API_KEY = "993965fc-9e33-4d8c-95c5-fabdd248dfc4"
+YANDEX_API_KEY = "71c57f36-0b99-44b3-b543-01ccfbc3bfdb"
 YANDEX_SUGGEST_KEY = "71c57f36-0b99-44b3-b543-01ccfbc3bfdb"
 BOT_TOKEN = "8294092024:AAG29J99kYrTw5iCYy-f7afgO7T1iubyPSs"
 CHAT_ID = "-4725554768"
