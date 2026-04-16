@@ -65,19 +65,23 @@ def https_post(host, path, body_dict, headers=None):
     return json.loads(data)
 
 
-def call_openai(messages, api_key):
-    """OpenAI ChatCompletion"""
-    return https_post(
-        "api.openai.com",
-        "/v1/chat/completions",
+def call_llm(messages, api_key):
+    """LLM ChatCompletion via Groq (OpenAI-compatible, works from RU)"""
+    result = https_post(
+        "api.groq.com",
+        "/openai/v1/chat/completions",
         {
-            "model": "gpt-4o-mini",
+            "model": "llama-3.3-70b-versatile",
             "messages": messages,
             "max_tokens": 200,
             "temperature": 0.7,
         },
         {"Authorization": "Bearer " + api_key},
-    )["choices"][0]["message"]["content"].strip()
+    )
+    if "error" in result:
+        err_msg = result.get("error", {}).get("message", "LLM error")
+        raise Exception("LLM: " + err_msg)
+    return result["choices"][0]["message"]["content"].strip()
 
 
 def detect_phone(text):
@@ -136,7 +140,8 @@ def handler(event, context):
     if event.get("httpMethod") != "POST":
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"status": "ok"})}
 
-    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    raw_key = os.environ.get("GROQ_API_KEY", "").strip()
+    api_key = "".join(c for c in raw_key if ord(c) < 128).strip()
     if not api_key:
         return {"statusCode": 500, "headers": CORS, "body": json.dumps({"error": "API key not configured"})}
 
@@ -159,7 +164,14 @@ def handler(event, context):
         if user_message:
             messages.append({"role": "user", "content": user_message})
 
-        reply = call_openai(messages, api_key)
+        try:
+            reply = call_llm(messages, api_key)
+        except Exception as e:
+            return {
+                "statusCode": 200,
+                "headers": CORS,
+                "body": json.dumps({"reply": "Извините, произошла техническая ошибка. Позвоните нам: 8 (995) 645-51-25", "phone_detected": False, "error": str(e)}),
+            }
 
         phone = None
         if user_message:

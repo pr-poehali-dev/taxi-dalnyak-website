@@ -82,21 +82,48 @@ export default function Index() {
     return () => document.removeEventListener("click", trackClick, true);
   }, [trackClick]);
 
-  // Exit intent — desktop: mouse leaves viewport top
+  const triggerExit = useCallback(() => {
+    if (exitTriggered.current || userEngaged) return;
+    exitTriggered.current = true;
+    setShowExitChat(true);
+  }, [userEngaged]);
+
+  // Desktop: mouse leaves viewport top
   useEffect(() => {
     const onMouse = (e: MouseEvent) => {
-      if (e.clientY < 5 && !exitTriggered.current && !userEngaged && !chatOpen) {
-        exitTriggered.current = true;
-        setShowExitChat(true);
-      }
+      if (e.clientY < 5 && !chatOpen) triggerExit();
     };
     document.addEventListener("mouseout", onMouse);
     return () => document.removeEventListener("mouseout", onMouse);
-  }, [userEngaged, chatOpen]);
+  }, [chatOpen, triggerExit]);
 
-  // Exit intent — mobile: back button / visibility change after 20s
+  // Mobile: fast scroll up (user reaching for address bar / back)
   useEffect(() => {
+    let lastY = window.scrollY;
+    let lastTime = Date.now();
+    const minTimeOnPage = 10000;
+    const pageLoadTime = Date.now();
+
+    const onScroll = () => {
+      const now = Date.now();
+      if (now - pageLoadTime < minTimeOnPage) { lastY = window.scrollY; lastTime = now; return; }
+      const dy = lastY - window.scrollY;
+      const dt = now - lastTime;
+      if (dy > 200 && dt < 400 && !chatOpen) triggerExit();
+      lastY = window.scrollY;
+      lastTime = now;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [chatOpen, triggerExit]);
+
+  // Mobile: back button / tab switch — show on return
+  useEffect(() => {
+    let ready = false;
+    const readyTimer = setTimeout(() => { ready = true; }, 15000);
+
     const onVisibility = () => {
+      if (!ready) return;
       if (document.visibilityState === "hidden" && !exitTriggered.current && !userEngaged) {
         exitTriggered.current = true;
       }
@@ -104,26 +131,26 @@ export default function Index() {
         setShowExitChat(true);
       }
     };
-    const timer = setTimeout(() => {
-      document.addEventListener("visibilitychange", onVisibility);
-    }, 20000);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [userEngaged, chatOpen, showExitChat]);
+    document.addEventListener("visibilitychange", onVisibility);
 
-  // Idle fallback — if user does nothing for 40s
+    const onBeforeUnload = () => { triggerExit(); };
+    window.addEventListener("beforeunload", onBeforeUnload);
+
+    return () => {
+      clearTimeout(readyTimer);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+    };
+  }, [userEngaged, chatOpen, showExitChat, triggerExit]);
+
+  // Fallback: idle 25s on mobile, 35s on desktop
   useEffect(() => {
     if (userEngaged || exitTriggered.current) return;
-    const t = setTimeout(() => {
-      if (!exitTriggered.current && !userEngaged) {
-        exitTriggered.current = true;
-        setShowExitChat(true);
-      }
-    }, 40000);
+    const isMobile = window.innerWidth < 768;
+    const delay = isMobile ? 25000 : 35000;
+    const t = setTimeout(() => triggerExit(), delay);
     return () => clearTimeout(t);
-  }, [userEngaged]);
+  }, [userEngaged, triggerExit]);
 
   // When showExitChat triggers, open chat with greeting
   useEffect(() => {
