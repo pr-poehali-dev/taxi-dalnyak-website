@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Icon from "@/components/ui/icon";
-
-const AI_API = "https://functions.poehali.dev/08fe4061-ac7e-4404-8a08-788b739d491b";
+const LEAD_API = "https://functions.poehali.dev/08fe4061-ac7e-4404-8a08-788b739d491b";
 const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
 const HERO_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/5b51c7b0-9a76-4168-9d48-1f212a2618c4.jpg";
 const IMG_SOLARIS = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/127f047b-28ee-4c21-b1fa-c3163c861a85.jpg";
@@ -39,9 +38,9 @@ export default function Index() {
   const [userEngaged, setUserEngaged] = useState(false);
   const [showExitChat, setShowExitChat] = useState(false);
   const [utmParams] = useState(() => getAllUtmParams());
+  const [chatStep, setChatStep] = useState(0);
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const exitTriggered = useRef(false);
-  const conversationRef = useRef<{ role: string; content: string }[]>([]);
 
   const scrollChat = useCallback(() => {
     setTimeout(() => {
@@ -177,7 +176,6 @@ export default function Index() {
 
     setTyping(true);
     scrollChat();
-    conversationRef.current = [{ role: "assistant", content: greeting }];
     setTimeout(() => {
       setTyping(false);
       setMessages([{ role: "bot", text: greeting }]);
@@ -185,7 +183,7 @@ export default function Index() {
     }, 800);
   }, [showExitChat, chatOpen, messages.length, utmParams, scrollChat]);
 
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback((text: string) => {
     if (!text.trim() || typing || phoneDone) return;
 
     const userMsg = text.trim();
@@ -194,37 +192,50 @@ export default function Index() {
     setTyping(true);
     scrollChat();
 
-    conversationRef.current.push({ role: "user", content: userMsg });
+    const digits = userMsg.replace(/\D/g, "");
+    const isPhone = digits.length >= 10;
 
-    try {
-      const res = await fetch(AI_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "chat",
-          message: userMsg,
-          conversation: conversationRef.current,
-          utm: utmParams,
-        }),
-      });
-      const data = await res.json();
-      const reply = data.reply || "Извините, произошла ошибка. Позвоните нам: " + PHONE;
+    let reply: string;
+    let nextPhoneDone = false;
 
-      conversationRef.current.push({ role: "assistant", content: reply });
+    if (chatStep === 0) {
+      reply = "Отличный маршрут! Подскажите, сколько пассажиров планируется и когда хотели бы выехать?";
+      setChatStep(1);
+    } else if (chatStep === 1) {
+      reply = "Хорошо! Чтобы диспетчер рассчитал точную стоимость и подобрал автомобиль, оставьте ваш номер телефона — перезвоним в течение 5 минут.";
+      setChatStep(2);
+    } else if (chatStep === 2 && isPhone) {
+      reply = "Спасибо! Диспетчер свяжется с вами в ближайшее время с номера 8 (995) 645-51-25. Хорошего дня!";
+      nextPhoneDone = true;
 
+      // Send phone lead to Telegram via backend
+      if (LEAD_API) {
+        fetch(LEAD_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "phone_lead",
+            phone: userMsg,
+            conversation: messages.map(m => ({ role: m.role === "bot" ? "assistant" : "user", content: m.text })),
+            utm: utmParams,
+          }),
+        }).catch(() => {});
+      }
+    } else if (chatStep === 2) {
+      reply = "Пожалуйста, оставьте номер телефона в формате +7 (XXX) XXX-XX-XX, и наш диспетчер перезвонит вам.";
+    } else {
+      reply = "Позвоните нам: " + PHONE;
+    }
+
+    setTimeout(() => {
       setTyping(false);
       setMessages(prev => [...prev, { role: "bot", text: reply }]);
       scrollChat();
-
-      if (data.phone_detected) {
+      if (nextPhoneDone) {
         setPhoneDone(true);
       }
-    } catch {
-      setTyping(false);
-      setMessages(prev => [...prev, { role: "bot", text: "Связь прервалась. Позвоните нам: " + PHONE }]);
-      scrollChat();
-    }
-  }, [typing, phoneDone, utmParams, scrollChat]);
+    }, 800);
+  }, [typing, phoneDone, chatStep, messages, utmParams, scrollChat]);
 
   const handleSend = useCallback(() => {
     sendMessage(inputVal);

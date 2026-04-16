@@ -9,13 +9,13 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Chat message",
+      "name": "Phone lead",
       "method": "POST",
       "path": "/",
       "headers": {"Content-Type": "application/json"},
-      "body": {"action": "chat", "message": "Здравствуйте, сколько стоит такси?", "conversation": [], "utm": {}},
+      "body": {"action": "phone_lead", "phone": "+79991234567", "conversation": [{"role": "assistant", "content": "Hello"}, {"role": "user", "content": "+79991234567"}], "utm": {"utm_source": "test"}},
       "expectedStatus": 200,
-      "expectedBody": {"reply": "string"},
+      "expectedBody": {"ok": true},
       "bodyMatcher": "partial"
     }
   ]
