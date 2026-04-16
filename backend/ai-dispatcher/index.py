@@ -1,6 +1,9 @@
 import json
 import os
-import urllib.request
+import re
+import http.client
+import ssl
+
 
 BOT_TOKEN = "8294092024:AAG29J99kYrTw5iCYy-f7afgO7T1iubyPSs"
 CHAT_ID = "-4725554768"
@@ -12,51 +15,73 @@ CORS = {
     "Content-Type": "application/json",
 }
 
-SYSTEM_PROMPT = """Ты — профессиональный диспетчер службы межгородного такси "Дальняк".
-Твоя задача — вежливо и естественно общаться с клиентом, помочь ему и ОБЯЗАТЕЛЬНО получить его номер телефона для обратной связи.
+SYSTEM_PROMPT = (
+    "You are a professional dispatcher of intercity taxi service called Dalnyak. "
+    "You MUST respond ONLY in Russian language. "
+    "Your task is to politely and naturally communicate with the client, help them, "
+    "and DEFINITELY get their phone number for callback.\n\n"
+    "RULES:\n"
+    "1. Be polite, friendly and professional. Don't be pushy.\n"
+    "2. Use formal 'you' (on Russian).\n"
+    "3. If client asks about route/price - say the exact cost will be calculated by dispatcher via phone, "
+    "but approximately from 35 RUB/km (Standard), from 50 RUB/km (Comfort+), from 60 RUB/km (Minivan). "
+    "Minimum order 3000 RUB.\n"
+    "4. Your MAIN goal is to get the client's phone number. Do it softly and naturally, "
+    "for example: 'Leave your phone number - the dispatcher will call you back and clarify everything.'\n"
+    "5. When the client gave a phone number - thank them and say the dispatcher will contact them "
+    "shortly from number 8 (995) 645-51-25.\n"
+    "6. Do NOT use markdown formatting (**, ## etc). Write plain text.\n"
+    "7. Answer SHORT - 1-3 sentences maximum.\n"
+    "8. If client wrote a city - clarify from where and to where, then suggest leaving a number.\n"
+    "9. Never say you are a bot or AI. You are a dispatcher.\n"
+    "10. If there is UTM info about client's request - use it for personalization.\n\n"
+    "TARIFFS (approximate):\n"
+    "- Standard (Hyundai Solaris): from 35 RUB/km (up to 250 km), from 31 RUB/km (over 250 km), min 3000 RUB\n"
+    "- Comfort+ (Toyota Camry 70): from 50 RUB/km (up to 250 km), from 42 RUB/km (over 250 km), min 5000 RUB\n"
+    "- Minivan (Hyundai Starex): from 60 RUB/km (up to 250 km), from 55 RUB/km (over 250 km), min 5000 RUB\n"
+    "- New territories (DPR, LPR, Kherson, Zaporizhzhia): from 80-100 RUB/km\n\n"
+    "Contacts: phone 8 (995) 645-51-25, Telegram @Mezhgorod1816, WhatsApp +79956455125.\n"
+    "IMPORTANT: Always respond in Russian!"
+)
 
-ПРАВИЛА:
-1. Будь вежливым, дружелюбным и профессиональным. Не будь навязчивым.
-2. Обращайся на "вы".
-3. Если клиент спрашивает о маршруте/цене — скажи что точную стоимость рассчитает диспетчер по телефону, но ориентировочно от 35₽/км (Стандарт), от 50₽/км (Комфорт+), от 60₽/км (Минивэн). Минимальный заказ 3000₽.
-4. Твоя ГЛАВНАЯ цель — получить номер телефона клиента. Делай это мягко и естественно, например: "Оставьте номер телефона — диспетчер перезвонит и всё уточнит".
-5. Когда клиент дал номер телефона — поблагодари и скажи что диспетчер свяжется в ближайшее время с номера 8 (995) 645-51-25.
-6. Не используй markdown-разметку (**, ## и т.д.). Пиши простым текстом.
-7. Отвечай КОРОТКО — 1-3 предложения максимум.
-8. Если клиент написал город — уточни откуда и куда, затем предложи оставить номер.
-9. Никогда не говори что ты бот или ИИ. Ты — диспетчер.
-10. Если есть UTM-информация о запросе клиента — используй её для персонализации (например, если utm содержит город — спроси подтверждение).
+_ssl_ctx = ssl.create_default_context()
 
-ТАРИФЫ (ориентировочные):
-- Стандарт (Hyundai Solaris): от 35₽/км (до 250 км), от 31₽/км (свыше 250 км), мин. 3000₽
-- Комфорт+ (Toyota Camry 70): от 50₽/км (до 250 км), от 42₽/км (свыше 250 км), мин. 5000₽
-- Минивэн (Hyundai Starex): от 60₽/км (до 250 км), от 55₽/км (свыше 250 км), мин. 5000₽
-- Новые территории (ДНР, ЛНР, Херсон, Запорожье): от 80-100₽/км
 
-Способы связи: телефон 8 (995) 645-51-25, Telegram @Mezhgorod1816, WhatsApp +79956455125."""
+def https_post(host, path, body_dict, headers=None):
+    """HTTPS POST with proper UTF-8 encoding"""
+    body_str = json.dumps(body_dict)
+    body_bytes = body_str.encode("utf-8")
+    conn = http.client.HTTPSConnection(host, timeout=15, context=_ssl_ctx)
+    hdrs = {
+        "Content-Type": "application/json",
+        "Content-Length": str(len(body_bytes)),
+    }
+    if headers:
+        hdrs.update(headers)
+    conn.request("POST", path, body=body_bytes, headers=hdrs)
+    resp = conn.getresponse()
+    data = resp.read().decode("utf-8")
+    conn.close()
+    return json.loads(data)
 
 
 def call_openai(messages, api_key):
-    """Вызов OpenAI ChatCompletion API"""
-    url = "https://api.openai.com/v1/chat/completions"
-    payload = json.dumps({
-        "model": "gpt-4o-mini",
-        "messages": messages,
-        "max_tokens": 200,
-        "temperature": 0.7,
-    }).encode()
-    req = urllib.request.Request(url, data=payload, headers={
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}",
-    })
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        data = json.loads(resp.read().decode())
-    return data["choices"][0]["message"]["content"].strip()
+    """OpenAI ChatCompletion"""
+    return https_post(
+        "api.openai.com",
+        "/v1/chat/completions",
+        {
+            "model": "gpt-4o-mini",
+            "messages": messages,
+            "max_tokens": 200,
+            "temperature": 0.7,
+        },
+        {"Authorization": "Bearer " + api_key},
+    )["choices"][0]["message"]["content"].strip()
 
 
 def detect_phone(text):
-    """Ищем номер телефона в тексте"""
-    import re
+    """Find phone number in text"""
     cleaned = re.sub(r'[^\d+]', '', text)
     if len(cleaned) >= 10:
         return cleaned
@@ -73,50 +98,45 @@ def detect_phone(text):
 
 
 def send_telegram_chat(conversation, phone, utm_info, source_ip):
-    """Отправляем переписку в Telegram"""
+    """Send chat transcript to Telegram"""
     chat_text = ""
     for msg in conversation:
         if msg["role"] == "assistant":
-            chat_text += f"🤖 Диспетчер: {msg['content']}\n"
+            chat_text += "Dispatcher: " + msg["content"] + "\n"
         elif msg["role"] == "user":
-            chat_text += f"👤 Клиент: {msg['content']}\n"
+            chat_text += "Client: " + msg["content"] + "\n"
 
     utm_text = ""
     if utm_info:
         for k, v in utm_info.items():
-            utm_text += f"  {k}: {v}\n"
+            utm_text += "  " + k + ": " + v + "\n"
 
-    msg = (
-        f"📞 НОВЫЙ КОНТАКТ ОТ AI-ДИСПЕТЧЕРА\n"
-        f"{'─' * 30}\n"
-        f"📱 Телефон: {phone}\n"
-        f"🌐 IP: {source_ip or 'неизвестен'}\n"
-    )
+    text = "NEW CONTACT FROM AI-DISPATCHER\n"
+    text += "---\n"
+    text += "Phone: " + phone + "\n"
+    text += "IP: " + (source_ip or "unknown") + "\n"
 
     if utm_text:
-        msg += f"{'─' * 30}\n🔗 UTM:\n{utm_text}"
+        text += "---\nUTM:\n" + utm_text
 
-    msg += f"{'─' * 30}\n💬 Переписка:\n{chat_text}"
+    text += "---\nConversation:\n" + chat_text
 
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = json.dumps({
-        "chat_id": CHAT_ID,
-        "text": msg[:4000],
-    }).encode()
-    req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=10) as resp:
-        return json.loads(resp.read().decode())
+    return https_post(
+        "api.telegram.org",
+        "/bot" + BOT_TOKEN + "/sendMessage",
+        {"chat_id": CHAT_ID, "text": text[:4000]},
+    )
 
 
 def handler(event, context):
-    """AI-диспетчер такси: ведёт диалог с клиентом, получает телефон и отправляет переписку в Telegram"""
+    """AI dispatcher for intercity taxi: conducts dialog, gets phone, sends transcript to Telegram"""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
 
     if event.get("httpMethod") != "POST":
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"status": "ok"})}
 
-    api_key = os.environ.get("OPENAI_API_KEY", "")
+    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
     if not api_key:
         return {"statusCode": 500, "headers": CORS, "body": json.dumps({"error": "API key not configured"})}
 
@@ -130,8 +150,8 @@ def handler(event, context):
     if action == "chat":
         system_msg = SYSTEM_PROMPT
         if utm_info:
-            utm_details = ", ".join(f"{k}={v}" for k, v in utm_info.items())
-            system_msg += f"\n\nИнформация о запросе клиента (UTM): {utm_details}. Используй это для персонализации, если релевантно."
+            utm_details = ", ".join(k + "=" + v for k, v in utm_info.items())
+            system_msg += "\n\nClient UTM info: " + utm_details + ". Use for personalization if relevant."
 
         messages = [{"role": "system", "content": system_msg}]
         messages.extend(conversation)
