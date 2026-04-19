@@ -42,8 +42,10 @@ def handler(event, context):
     body = json.loads(event.get("body", "{}"))
     action = body.get("action", "")
 
-    if action != "lead":
+    if action not in ("lead", "callback"):
         return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "unknown action"})}
+
+    is_callback = action == "callback"
 
     from_city = str(body.get("from", "")).strip()[:200]
     to_city = str(body.get("to", "")).strip()[:200]
@@ -60,7 +62,10 @@ def handler(event, context):
     if len(digits_only) < 10:
         return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "phone required"})}
 
-    text = "<b>НОВАЯ ЗАЯВКА С САЙТА</b>\n"
+    if is_callback:
+        text = "<b>⚡ ОБРАТНЫЙ ЗВОНОК ЗА 30 СЕК</b>\n"
+    else:
+        text = "<b>НОВАЯ ЗАЯВКА С САЙТА</b>\n"
     text += "---\n"
     if name:
         text += "<b>Имя:</b> " + name + "\n"
