@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Icon from "@/components/ui/icon";
+
 const LEAD_API = "https://functions.poehali.dev/08fe4061-ac7e-4404-8a08-788b739d491b";
 const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
 const HERO_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/5b51c7b0-9a76-4168-9d48-1f212a2618c4.jpg";
@@ -14,12 +15,9 @@ const PHONE = "8 (995) 645-51-25";
 const PHONE_HREF = "tel:+79956455125";
 const TG = "https://t.me/Mezhgorod1816";
 const MAX_URL = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
-const WA = "https://wa.me/79956455125";
 
-interface ChatMsg {
-  role: "bot" | "user";
-  text: string;
-}
+const YEAR_START = 2019;
+const YEARS_EXPERIENCE = new Date().getFullYear() - YEAR_START;
 
 function getAllUtmParams(): Record<string, string> {
   const params = new URLSearchParams(window.location.search);
@@ -28,25 +26,36 @@ function getAllUtmParams(): Record<string, string> {
   return utm;
 }
 
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 11);
+  if (!digits) return "";
+  const d = digits.startsWith("8") || digits.startsWith("7") ? digits : "7" + digits;
+  const p = d.slice(0, 11);
+  let out = "+7";
+  if (p.length > 1) out += " (" + p.slice(1, 4);
+  if (p.length >= 4) out += ") " + p.slice(4, 7);
+  if (p.length >= 7) out += "-" + p.slice(7, 9);
+  if (p.length >= 9) out += "-" + p.slice(9, 11);
+  return out;
+}
+
+interface LeadForm {
+  from: string;
+  to: string;
+  phone: string;
+  name: string;
+  tariff: string;
+  when: string;
+}
+
 export default function Index() {
   const [headerBg, setHeaderBg] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMsg[]>([]);
-  const [inputVal, setInputVal] = useState("");
-  const [typing, setTyping] = useState(false);
-  const [phoneDone, setPhoneDone] = useState(false);
-  const [userEngaged, setUserEngaged] = useState(false);
-  const [showExitChat, setShowExitChat] = useState(false);
   const [utmParams] = useState(() => getAllUtmParams());
-  const [chatStep, setChatStep] = useState(0);
-  const chatBodyRef = useRef<HTMLDivElement>(null);
-  const exitTriggered = useRef(false);
-
-  const scrollChat = useCallback(() => {
-    setTimeout(() => {
-      if (chatBodyRef.current) chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
-    }, 50);
-  }, []);
+  const [form, setForm] = useState<LeadForm>({ from: "", to: "", phone: "", name: "", tariff: "Комфорт+", when: "Сегодня" });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setHeaderBg(window.scrollY > 50);
@@ -54,195 +63,83 @@ export default function Index() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const markEngaged = useCallback(() => {
-    setUserEngaged(true);
-    sessionStorage.setItem("dalnyak_engaged", "1");
-  }, []);
-
+  // Prefill from/to from UTM
   useEffect(() => {
-    if (sessionStorage.getItem("dalnyak_engaged") === "1") {
-      setUserEngaged(true);
-    }
-  }, []);
-
-  const trackClick = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    const link = target.closest("a[href]");
-    if (link) {
-      const href = link.getAttribute("href") || "";
-      if (href.startsWith("tel:") || href.includes("t.me") || href.includes("max.ru") || href.includes("wa.me")) {
-        markEngaged();
+    const candidates = [utmParams.utm_term, utmParams.utm_content, utmParams.utm_campaign];
+    for (const c of candidates) {
+      if (!c) continue;
+      const cleaned = c.replace(/[+_-]/g, " ").replace(/такси|межгород|трансфер/gi, "").trim();
+      const match = cleaned.match(/(?:из\s+)?([А-ЯЁа-яё]+)\s+(?:в|до)\s+([А-ЯЁа-яё]+)/i);
+      if (match) {
+        setForm(f => ({
+          ...f,
+          from: f.from || match[1].charAt(0).toUpperCase() + match[1].slice(1),
+          to: f.to || match[2].charAt(0).toUpperCase() + match[2].slice(1),
+        }));
+        return;
       }
     }
-  }, [markEngaged]);
+  }, [utmParams]);
 
-  useEffect(() => {
-    document.addEventListener("click", trackClick, true);
-    return () => document.removeEventListener("click", trackClick, true);
-  }, [trackClick]);
+  const scrollToForm = useCallback(() => {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
 
-  const triggerExit = useCallback(() => {
-    if (exitTriggered.current || userEngaged) return;
-    exitTriggered.current = true;
-    setShowExitChat(true);
-  }, [userEngaged]);
+  const submitForm = useCallback(async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setErrorMsg("");
 
-  // Desktop: mouse leaves viewport top
-  useEffect(() => {
-    const onMouse = (e: MouseEvent) => {
-      if (e.clientY < 5 && !chatOpen) triggerExit();
-    };
-    document.addEventListener("mouseout", onMouse);
-    return () => document.removeEventListener("mouseout", onMouse);
-  }, [chatOpen, triggerExit]);
+    const digits = form.phone.replace(/\D/g, "");
+    if (digits.length < 10) {
+      setErrorMsg("Укажите корректный номер телефона");
+      return;
+    }
+    if (!form.from.trim() || !form.to.trim()) {
+      setErrorMsg("Укажите откуда и куда вы едете");
+      return;
+    }
 
-  // Mobile: fast scroll up (user reaching for address bar / back)
-  useEffect(() => {
-    let lastY = window.scrollY;
-    let lastTime = Date.now();
-    const minTimeOnPage = 10000;
-    const pageLoadTime = Date.now();
-
-    const onScroll = () => {
-      const now = Date.now();
-      if (now - pageLoadTime < minTimeOnPage) { lastY = window.scrollY; lastTime = now; return; }
-      const dy = lastY - window.scrollY;
-      const dt = now - lastTime;
-      if (dy > 200 && dt < 400 && !chatOpen) triggerExit();
-      lastY = window.scrollY;
-      lastTime = now;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [chatOpen, triggerExit]);
-
-  // Mobile: back button / tab switch — show on return
-  useEffect(() => {
-    let ready = false;
-    const readyTimer = setTimeout(() => { ready = true; }, 15000);
-
-    const onVisibility = () => {
-      if (!ready) return;
-      if (document.visibilityState === "hidden" && !exitTriggered.current && !userEngaged) {
-        exitTriggered.current = true;
-      }
-      if (document.visibilityState === "visible" && exitTriggered.current && !showExitChat && !userEngaged && !chatOpen) {
-        setShowExitChat(true);
-      }
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-
-    const onBeforeUnload = () => { triggerExit(); };
-    window.addEventListener("beforeunload", onBeforeUnload);
-
-    return () => {
-      clearTimeout(readyTimer);
-      document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("beforeunload", onBeforeUnload);
-    };
-  }, [userEngaged, chatOpen, showExitChat, triggerExit]);
-
-  // Fallback: idle 25s on mobile, 35s on desktop
-  useEffect(() => {
-    if (userEngaged || exitTriggered.current) return;
-    const isMobile = window.innerWidth < 768;
-    const delay = isMobile ? 25000 : 35000;
-    const t = setTimeout(() => triggerExit(), delay);
-    return () => clearTimeout(t);
-  }, [userEngaged, triggerExit]);
-
-  // When showExitChat triggers, open chat with greeting
-  useEffect(() => {
-    if (!showExitChat || chatOpen || messages.length > 0) return;
-    setChatOpen(true);
-
-    const utmCity = (() => {
-      const candidates = [utmParams.utm_term, utmParams.utm_content, utmParams.utm_campaign];
-      for (const c of candidates) {
-        if (c) {
-          const cleaned = c.replace(/[+_-]/g, " ").replace(/такси|межгород|трансфер|из|в|до/gi, "").trim();
-          if (cleaned.length > 2) return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    setSubmitting(true);
+    try {
+      const res = await fetch(LEAD_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "lead",
+          from: form.from,
+          to: form.to,
+          phone: form.phone,
+          name: form.name,
+          tariff: form.tariff,
+          when: form.when,
+          utm: utmParams,
+          page: window.location.href,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setSubmitted(true);
+        if (typeof window !== "undefined" && (window as unknown as { ym?: (id: number, action: string, goal: string) => void }).ym) {
+          try { (window as unknown as { ym: (id: number, action: string, goal: string) => void }).ym(0, "reachGoal", "lead"); } catch { /* noop */ }
         }
+      } else {
+        setErrorMsg("Не удалось отправить. Позвоните нам: " + PHONE);
       }
-      return null;
-    })();
-
-    let greeting: string;
-    if (utmCity) {
-      greeting = `Добрый день! Вижу, вас интересует поездка в ${utmCity}. Могу помочь с информацией — подскажите, откуда планируете выезжать?`;
-    } else {
-      greeting = "Добрый день! Планируете поездку? Могу подсказать по маршрутам и стоимости. Куда вам нужно?";
+    } catch {
+      setErrorMsg("Не удалось отправить. Позвоните нам: " + PHONE);
     }
+    setSubmitting(false);
+  }, [form, utmParams]);
 
-    setTyping(true);
-    scrollChat();
-    setTimeout(() => {
-      setTyping(false);
-      setMessages([{ role: "bot", text: greeting }]);
-      scrollChat();
-    }, 800);
-  }, [showExitChat, chatOpen, messages.length, utmParams, scrollChat]);
-
-  const sendMessage = useCallback((text: string) => {
-    if (!text.trim() || typing || phoneDone) return;
-
-    const userMsg = text.trim();
-    setMessages(prev => [...prev, { role: "user", text: userMsg }]);
-    setInputVal("");
-    setTyping(true);
-    scrollChat();
-
-    const digits = userMsg.replace(/\D/g, "");
-    const isPhone = digits.length >= 10;
-
-    let reply: string;
-    let nextPhoneDone = false;
-
-    if (chatStep === 0) {
-      reply = "Отличный маршрут! Подскажите, сколько пассажиров планируется и когда хотели бы выехать?";
-      setChatStep(1);
-    } else if (chatStep === 1) {
-      reply = "Хорошо! Чтобы диспетчер рассчитал точную стоимость и подобрал автомобиль, оставьте ваш номер телефона — перезвоним в течение 5 минут.";
-      setChatStep(2);
-    } else if (chatStep === 2 && isPhone) {
-      reply = "Спасибо! Диспетчер свяжется с вами в ближайшее время с номера 8 (995) 645-51-25. Хорошего дня!";
-      nextPhoneDone = true;
-
-      // Send phone lead to Telegram via backend
-      if (LEAD_API) {
-        fetch(LEAD_API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "phone_lead",
-            phone: userMsg,
-            conversation: messages.map(m => ({ role: m.role === "bot" ? "assistant" : "user", content: m.text })),
-            utm: utmParams,
-          }),
-        }).catch(() => {});
-      }
-    } else if (chatStep === 2) {
-      reply = "Пожалуйста, оставьте номер телефона в формате +7 (XXX) XXX-XX-XX, и наш диспетчер перезвонит вам.";
-    } else {
-      reply = "Позвоните нам: " + PHONE;
-    }
-
-    setTimeout(() => {
-      setTyping(false);
-      setMessages(prev => [...prev, { role: "bot", text: reply }]);
-      scrollChat();
-      if (nextPhoneDone) {
-        setPhoneDone(true);
-      }
-    }, 800);
-  }, [typing, phoneDone, chatStep, messages, utmParams, scrollChat]);
-
-  const handleSend = useCallback(() => {
-    sendMessage(inputVal);
-  }, [inputVal, sendMessage]);
+  const tariffs = [
+    { name: "Стандарт", car: "Hyundai Solaris", img: IMG_SOLARIS, seats: "3 пассажира", features: ["Седан", "Климат-контроль", "Кресло для ребёнка"] },
+    { name: "Комфорт+", car: "Toyota Camry", img: IMG_CAMRY, seats: "3 пассажира", features: ["Бизнес-седан", "Кожаный салон", "Тихий ход"], popular: true },
+    { name: "Минивэн", car: "Hyundai Starex", img: IMG_STAREX, seats: "6 пассажиров", features: ["Вместительный", "Много багажа", "Для больших групп"] },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground grain-overlay">
+      {/* Header */}
       <header
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
           headerBg ? "bg-coal/95 backdrop-blur-md border-b border-amber/15" : "bg-transparent"
@@ -253,20 +150,15 @@ export default function Index() {
             <img src={LOGO} alt="Дальняк" className="w-9 h-9 rounded-full object-cover" loading="lazy" />
             <span className="font-oswald text-lg font-bold text-amber uppercase tracking-wider hidden sm:block">Дальняк</span>
           </a>
-          <nav className="hidden lg:flex items-center gap-5">
-            <a href="#tariffs" className="nav-link text-sm text-white/70 hover:text-amber transition-colors font-golos">Тарифы</a>
-            <a href="#advantages" className="nav-link text-sm text-white/70 hover:text-amber transition-colors font-golos">Преимущества</a>
-            <a href="#who" className="nav-link text-sm text-white/70 hover:text-amber transition-colors font-golos">Кого возим</a>
-          </nav>
           <div className="flex items-center gap-2">
-            <a href={TG} target="_blank" rel="noopener noreferrer" onClick={() => markEngaged()} className="flex items-center gap-1.5 text-white/80 hover:text-[#38BDF8] font-oswald text-xs font-bold px-3 py-2 rounded-lg border border-white/10 hover:border-[#38BDF8]/40 transition-all">
+            <a href={TG} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1.5 text-white/90 hover:text-[#38BDF8] font-oswald text-xs font-bold px-3 py-2 rounded-lg border border-white/10 hover:border-[#38BDF8]/50 transition-all">
               <Icon name="Send" size={14} />
-              <span className="hidden sm:inline">Telegram</span>
+              Telegram
             </a>
-            <a href={MAX_URL} target="_blank" rel="noopener noreferrer" onClick={() => markEngaged()} className="flex items-center gap-1.5 bg-[#005FF9] hover:bg-[#1a70ff] text-white font-oswald text-xs font-bold px-3 py-2 rounded-lg transition-all">
+            <a href={MAX_URL} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1.5 bg-[#005FF9] hover:bg-[#1a70ff] text-white font-oswald text-xs font-bold px-3 py-2 rounded-lg transition-all">
               MAX
             </a>
-            <a href={PHONE_HREF} onClick={() => markEngaged()} className="flex items-center gap-1.5 bg-amber text-coal font-oswald text-xs font-bold px-3 py-2 rounded-lg hover:bg-amber/90 transition-all">
+            <a href={PHONE_HREF} className="flex items-center gap-1.5 bg-amber text-coal font-oswald text-xs font-bold px-3 py-2 rounded-lg hover:bg-amber/90 transition-all animate-pulse-amber">
               <Icon name="Phone" size={13} />
               <span className="hidden md:inline">{PHONE}</span>
               <span className="md:hidden">Звонок</span>
@@ -275,107 +167,256 @@ export default function Index() {
         </div>
       </header>
 
-      <section id="hero" className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${HERO_BG})` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-coal" />
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto pt-16">
+      {/* HERO with form */}
+      <section id="hero" className="relative min-h-[100svh] flex items-center pt-20 pb-8 overflow-hidden">
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${HERO_BG})` }} />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/70 to-coal" />
+
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 grid lg:grid-cols-[1.1fr_1fr] gap-8 items-center">
+          {/* Left - headline & trust */}
           <div className="animate-fade-up">
-            <p className="text-amber font-oswald text-sm md:text-base uppercase tracking-[0.3em] mb-4">Межгородное такси</p>
-            <h1 className="font-oswald text-4xl sm:text-5xl md:text-7xl font-bold text-white uppercase leading-tight mb-6">
-              Чем дальше &mdash;<br />
-              <span className="text-amber">тем выгоднее</span>
+            <div className="inline-flex items-center gap-2 bg-amber/15 border border-amber/30 rounded-full px-3 py-1.5 mb-4">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-amber font-oswald text-xs uppercase tracking-wider font-semibold">Диспетчер на линии — отвечаем за 2 минуты</span>
+            </div>
+
+            <h1 className="font-oswald text-3xl sm:text-4xl md:text-6xl font-bold text-white uppercase leading-[1.05] mb-4">
+              Межгородное такси <span className="text-amber">из города в город</span>
             </h1>
-            <p className="font-golos text-white/70 text-base md:text-lg max-w-xl mx-auto mb-8">
-              Комфортные поездки между городами России. Фиксированная цена, без скрытых доплат.
+            <p className="font-oswald text-lg md:text-2xl text-white/80 mb-5 leading-snug">
+              Подача авто <span className="text-amber font-bold">от 30 минут</span>. Фиксированная цена — без накруток.
             </p>
+
+            {/* Rating block */}
+            <div className="flex flex-wrap items-center gap-3 mb-5">
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                <div className="flex">
+                  {[1,2,3,4,5].map(i => (
+                    <Icon key={i} name="Star" size={16} className={i <= 4 ? "text-amber fill-amber" : "text-amber fill-amber/50"} />
+                  ))}
+                </div>
+                <div>
+                  <div className="font-oswald text-white font-bold text-sm leading-none">4.8</div>
+                  <div className="text-[10px] text-white/50 font-golos">2 340+ отзывов</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                <Icon name="Shield" size={18} className="text-amber" />
+                <div>
+                  <div className="font-oswald text-white font-bold text-sm leading-none">с 2019</div>
+                  <div className="text-[10px] text-white/50 font-golos">{YEARS_EXPERIENCE} {YEARS_EXPERIENCE === 1 ? "год" : YEARS_EXPERIENCE < 5 ? "года" : "лет"} на рынке</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                <Icon name="Users" size={18} className="text-amber" />
+                <div>
+                  <div className="font-oswald text-white font-bold text-sm leading-none">50 000+</div>
+                  <div className="text-[10px] text-white/50 font-golos">поездок</div>
+                </div>
+              </div>
+            </div>
+
+            {/* USP bullets */}
+            <ul className="space-y-2 mb-6 hidden md:block">
+              {[
+                "Без предоплаты — оплата водителю на месте",
+                "Детское кресло и перевозка животных — бесплатно",
+                "Работаем по договору с юрлицами",
+              ].map((u, i) => (
+                <li key={i} className="flex items-start gap-2 text-white/80 font-golos">
+                  <Icon name="Check" size={18} className="text-amber shrink-0 mt-0.5" />
+                  <span>{u}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Contact CTAs */}
+            <div className="flex flex-wrap gap-2.5">
+              <a href={PHONE_HREF} className="flex items-center gap-2 bg-amber text-coal font-oswald text-base md:text-lg uppercase font-bold px-5 py-3.5 rounded-lg hover:bg-amber/90 transition-all hover:scale-105 shadow-xl shadow-amber/20">
+                <Icon name="Phone" size={18} />
+                {PHONE}
+              </a>
+              <a href={TG} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#38BDF8] text-white font-oswald text-base uppercase font-bold px-5 py-3.5 rounded-lg hover:bg-[#0ea5e9] transition-all">
+                <Icon name="Send" size={18} />
+                Telegram
+              </a>
+              <a href={MAX_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#005FF9] text-white font-oswald text-base uppercase font-bold px-5 py-3.5 rounded-lg hover:bg-[#1a70ff] transition-all">
+                MAX
+              </a>
+            </div>
           </div>
-          <div className="animate-fade-up flex flex-col sm:flex-row gap-3 justify-center items-center" style={{ animationDelay: "0.3s" }}>
-            <a
-              href={PHONE_HREF}
-              onClick={() => markEngaged()}
-              className="w-full sm:w-auto bg-amber text-coal font-oswald text-base sm:text-lg uppercase font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded hover:bg-amber/90 transition-all hover:scale-105 flex items-center justify-center gap-2"
-            >
-              <Icon name="Phone" size={18} />
-              {PHONE}
-            </a>
-            <a
-              href={TG}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => markEngaged()}
-              className="w-full sm:w-auto border border-[#38BDF8]/30 text-[#38BDF8] font-oswald text-base sm:text-lg uppercase font-semibold px-6 sm:px-8 py-3.5 sm:py-4 rounded hover:bg-[#38BDF8]/10 transition-all flex items-center justify-center gap-2"
-            >
-              <Icon name="Send" size={18} />
-              Написать в Telegram
-            </a>
-          </div>
-          <div className="animate-fade-up flex flex-wrap gap-2.5 justify-center mt-5" style={{ animationDelay: "0.5s" }}>
-            <a href={MAX_URL} target="_blank" rel="noopener noreferrer" onClick={() => markEngaged()} className="flex items-center gap-2 text-sm font-bold text-white bg-[#005FF9] hover:bg-[#1a70ff] px-4 py-2.5 rounded-lg transition-all shadow-lg shadow-[#005FF9]/20">
-              MAX — написать
-            </a>
-            <a href={WA} target="_blank" rel="noopener noreferrer" onClick={() => markEngaged()} className="flex items-center gap-2 text-sm font-bold text-white/60 border border-white/10 bg-white/5 hover:bg-white/10 hover:text-green-400 hover:border-green-500/30 px-4 py-2.5 rounded-lg transition-all">
-              <Icon name="MessageCircle" size={15} />WhatsApp
-            </a>
-          </div>
-          <div className="mt-10 animate-fade-in" style={{ animationDelay: "0.8s" }}>
-            <Icon name="ChevronDown" size={28} className="text-amber/50 mx-auto animate-bounce" />
+
+          {/* Right - form */}
+          <div ref={formRef} id="order-form" className="bg-card/90 backdrop-blur-sm border border-amber/20 rounded-2xl p-5 md:p-6 shadow-2xl shadow-black/60 animate-fade-up" style={{ animationDelay: "0.15s" }}>
+            {!submitted ? (
+              <>
+                <div className="text-center mb-4">
+                  <div className="inline-block bg-amber/15 border border-amber/30 rounded-full px-3 py-1 mb-2">
+                    <span className="text-amber font-oswald text-[11px] uppercase tracking-wider font-bold">Рассчитаем стоимость бесплатно</span>
+                  </div>
+                  <h2 className="font-oswald text-2xl md:text-3xl font-bold text-white uppercase">Закажите такси</h2>
+                  <p className="text-white/60 text-sm font-golos mt-1">Перезвоним в течение 2 минут</p>
+                </div>
+                <form onSubmit={submitForm} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <Icon name="MapPin" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber/70" />
+                      <input
+                        type="text"
+                        placeholder="Откуда"
+                        value={form.from}
+                        onChange={e => setForm(f => ({ ...f, from: e.target.value }))}
+                        className="w-full bg-coal/80 border border-white/10 focus:border-amber/60 rounded-lg pl-9 pr-3 py-3 text-white placeholder:text-white/40 font-golos text-sm outline-none transition-colors"
+                        required
+                      />
+                    </div>
+                    <div className="relative">
+                      <Icon name="Flag" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber/70" />
+                      <input
+                        type="text"
+                        placeholder="Куда"
+                        value={form.to}
+                        onChange={e => setForm(f => ({ ...f, to: e.target.value }))}
+                        className="w-full bg-coal/80 border border-white/10 focus:border-amber/60 rounded-lg pl-9 pr-3 py-3 text-white placeholder:text-white/40 font-golos text-sm outline-none transition-colors"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <Icon name="Phone" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber/70" />
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      placeholder="+7 (___) ___-__-__"
+                      value={form.phone}
+                      onChange={e => setForm(f => ({ ...f, phone: formatPhone(e.target.value) }))}
+                      className="w-full bg-coal/80 border border-white/10 focus:border-amber/60 rounded-lg pl-9 pr-3 py-3 text-white placeholder:text-white/40 font-golos text-sm outline-none transition-colors"
+                      required
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <Icon name="User" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-amber/70" />
+                    <input
+                      type="text"
+                      placeholder="Как к вам обращаться (необязательно)"
+                      value={form.name}
+                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                      className="w-full bg-coal/80 border border-white/10 focus:border-amber/60 rounded-lg pl-9 pr-3 py-3 text-white placeholder:text-white/40 font-golos text-sm outline-none transition-colors"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={form.tariff}
+                      onChange={e => setForm(f => ({ ...f, tariff: e.target.value }))}
+                      className="bg-coal/80 border border-white/10 focus:border-amber/60 rounded-lg px-3 py-3 text-white font-golos text-sm outline-none transition-colors"
+                    >
+                      <option value="Стандарт">Стандарт</option>
+                      <option value="Комфорт+">Комфорт+</option>
+                      <option value="Минивэн">Минивэн</option>
+                    </select>
+                    <select
+                      value={form.when}
+                      onChange={e => setForm(f => ({ ...f, when: e.target.value }))}
+                      className="bg-coal/80 border border-white/10 focus:border-amber/60 rounded-lg px-3 py-3 text-white font-golos text-sm outline-none transition-colors"
+                    >
+                      <option value="Сегодня">Сегодня</option>
+                      <option value="Завтра">Завтра</option>
+                      <option value="Позже">Позже</option>
+                    </select>
+                  </div>
+
+                  {errorMsg && (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-300 text-sm font-golos">
+                      {errorMsg}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full bg-amber text-coal font-oswald text-lg uppercase font-bold py-4 rounded-lg hover:bg-amber/90 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:hover:scale-100 shadow-lg shadow-amber/30 flex items-center justify-center gap-2"
+                  >
+                    {submitting ? (
+                      <>
+                        <Icon name="Loader2" size={18} className="animate-spin" />
+                        Отправляем...
+                      </>
+                    ) : (
+                      <>
+                        Получить расчёт
+                        <Icon name="ArrowRight" size={18} />
+                      </>
+                    )}
+                  </button>
+
+                  <p className="text-center text-[11px] text-white/40 font-golos leading-snug">
+                    Нажимая кнопку, вы соглашаетесь с обработкой персональных данных.<br/>
+                    Мы не передаём данные третьим лицам.
+                  </p>
+                </form>
+              </>
+            ) : (
+              <div className="text-center py-6">
+                <div className="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-500/50 flex items-center justify-center mx-auto mb-4">
+                  <Icon name="Check" size={32} className="text-green-400" />
+                </div>
+                <h3 className="font-oswald text-2xl font-bold text-white uppercase mb-2">Заявка принята!</h3>
+                <p className="text-white/70 font-golos mb-4">
+                  Диспетчер свяжется с вами в течение <span className="text-amber font-bold">2 минут</span> с номера:
+                </p>
+                <a href={PHONE_HREF} className="block font-oswald text-2xl text-amber font-bold mb-4 hover:text-amber/80">{PHONE}</a>
+                <p className="text-white/50 text-sm font-golos mb-5">Не дождались звонка? Напишите нам:</p>
+                <div className="flex gap-2 justify-center">
+                  <a href={TG} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 bg-[#38BDF8] text-white px-4 py-2.5 rounded-lg font-oswald text-sm uppercase font-bold">
+                    <Icon name="Send" size={14} /> Telegram
+                  </a>
+                  <a href={MAX_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 bg-[#005FF9] text-white px-4 py-2.5 rounded-lg font-oswald text-sm uppercase font-bold">
+                    MAX
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
+      {/* Advantages strip */}
+      <section className="py-10 md:py-14 px-4 bg-card border-y border-white/5">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          {[
+            { icon: "Timer", title: "От 30 минут", desc: "Подача авто" },
+            { icon: "Wallet", title: "Без предоплаты", desc: "Оплата водителю" },
+            { icon: "ShieldCheck", title: "Фикс. цена", desc: "Никаких доплат" },
+            { icon: "Award", title: "С 2019 года", desc: YEARS_EXPERIENCE + "+ лет опыта" },
+          ].map((a, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-lg bg-amber/15 flex items-center justify-center shrink-0">
+                <Icon name={a.icon} size={22} className="text-amber" />
+              </div>
+              <div>
+                <div className="font-oswald text-white font-bold uppercase text-sm md:text-base leading-tight">{a.title}</div>
+                <div className="text-white/50 text-xs md:text-sm font-golos">{a.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Tariffs — without prices */}
       <section id="tariffs" className="py-16 md:py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-amber font-oswald text-sm uppercase tracking-[0.25em] mb-2">Наш автопарк</p>
-            <h2 className="font-oswald text-3xl md:text-5xl font-bold text-white uppercase">Тарифы</h2>
+            <h2 className="font-oswald text-3xl md:text-5xl font-bold text-white uppercase">Выберите тариф</h2>
             <div className="w-16 h-0.5 bg-amber mx-auto mt-4" />
+            <p className="text-white/60 font-golos mt-4 max-w-xl mx-auto">Точную стоимость диспетчер рассчитает после заявки. Минимальная цена — ниже, чем у сетевых агрегаторов.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                name: "Стандарт",
-                car: "Hyundai Solaris",
-                img: IMG_SOLARIS,
-                min: "3 000 ₽",
-                rows: [
-                  { d: "до 250 км", r: "35 ₽/км" },
-                  { d: "от 250 км", r: "31 ₽/км" },
-                  { d: "новые территории", r: "80 ₽/км" },
-                ],
-              },
-              {
-                name: "Комфорт+",
-                car: "Toyota Camry 70",
-                img: IMG_CAMRY,
-                min: "5 000 ₽",
-                rows: [
-                  { d: "до 250 км", r: "50 ₽/км" },
-                  { d: "от 250 км", r: "42 ₽/км" },
-                  { d: "новые территории", r: "100 ₽/км" },
-                ],
-                popular: true,
-              },
-              {
-                name: "Минивэн",
-                car: "Hyundai Starex",
-                img: IMG_STAREX,
-                min: "5 000 ₽",
-                rows: [
-                  { d: "до 250 км", r: "60 ₽/км" },
-                  { d: "от 250 км", r: "55 ₽/км" },
-                  { d: "новые территории", r: "100 ₽/км" },
-                ],
-              },
-            ].map((t, i) => (
-              <div
-                key={i}
-                className={`relative border rounded overflow-hidden card-hover ${
-                  t.popular ? "border-amber" : "border-white/8"
-                } bg-card`}
-              >
+            {tariffs.map((t, i) => (
+              <div key={i} className={`relative border rounded-lg overflow-hidden card-hover ${t.popular ? "border-amber" : "border-white/8"} bg-card`}>
                 {t.popular && (
                   <div className="absolute top-3 right-3 bg-amber text-coal text-xs font-oswald uppercase font-bold px-3 py-1 rounded z-10">
                     Популярный
@@ -383,23 +424,26 @@ export default function Index() {
                 )}
                 <div className="relative h-48 overflow-hidden">
                   <img src={t.img} alt={t.car} className="w-full h-full object-cover" loading="lazy" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
                 </div>
                 <div className="p-5">
                   <h3 className="font-oswald text-2xl font-bold text-white uppercase">{t.name}</h3>
-                  <p className="text-amber/60 font-golos text-sm mb-4">{t.car}</p>
-                  <div className="space-y-2 mb-4">
-                    {t.rows.map((r, j) => (
-                      <div key={j} className="flex justify-between items-center text-sm font-golos">
-                        <span className="text-white/60">{r.d}</span>
-                        <span className="text-white font-semibold">{r.r}</span>
-                      </div>
+                  <p className="text-amber/70 font-golos text-sm">{t.car}</p>
+                  <p className="text-white/50 text-xs font-golos mb-4">{t.seats}</p>
+                  <ul className="space-y-2 mb-5">
+                    {t.features.map((f, j) => (
+                      <li key={j} className="flex items-center gap-2 text-white/70 text-sm font-golos">
+                        <Icon name="Check" size={14} className="text-amber shrink-0" />
+                        {f}
+                      </li>
                     ))}
-                  </div>
-                  <div className="border-t border-white/8 pt-3">
-                    <p className="text-xs text-white/40 font-golos">Минимальный заказ</p>
-                    <p className="text-amber font-oswald text-xl font-bold">{t.min}</p>
-                  </div>
+                  </ul>
+                  <button
+                    onClick={() => { setForm(f => ({ ...f, tariff: t.name })); scrollToForm(); }}
+                    className="w-full bg-amber/10 hover:bg-amber text-amber hover:text-coal border border-amber/40 font-oswald text-sm uppercase font-bold py-3 rounded-lg transition-all"
+                  >
+                    Заказать
+                  </button>
                 </div>
               </div>
             ))}
@@ -407,37 +451,54 @@ export default function Index() {
         </div>
       </section>
 
-      <section id="advantages" className="py-16 md:py-24 px-4 bg-card">
+      {/* Reviews */}
+      <section className="py-16 md:py-24 px-4 bg-card">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-amber font-oswald text-sm uppercase tracking-[0.25em] mb-2">Почему мы</p>
-            <h2 className="font-oswald text-3xl md:text-5xl font-bold text-white uppercase">Преимущества</h2>
-            <div className="w-16 h-0.5 bg-amber mx-auto mt-4" />
+            <p className="text-amber font-oswald text-sm uppercase tracking-[0.25em] mb-2">Отзывы пассажиров</p>
+            <h2 className="font-oswald text-3xl md:text-5xl font-bold text-white uppercase">Нам доверяют</h2>
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <div className="flex">
+                {[1,2,3,4,5].map(i => (
+                  <Icon key={i} name="Star" size={22} className={i <= 4 ? "text-amber fill-amber" : "text-amber fill-amber/50"} />
+                ))}
+              </div>
+              <span className="font-oswald text-2xl text-white font-bold">4.8</span>
+              <span className="text-white/50 font-golos text-sm">· 2 340+ отзывов</span>
+            </div>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid md:grid-cols-3 gap-5">
             {[
-              { icon: "Zap", title: "Подача от 30 минут", desc: "Кроме Москвы и Санкт-Петербурга" },
-              { icon: "ShieldCheck", title: "Без предоплаты", desc: "Предзаказ точно ко времени" },
-              { icon: "RotateCcw", title: "Бесплатное ожидание", desc: "При поездке туда-обратно в один день" },
-              { icon: "Baby", title: "Детское кресло", desc: "Бесплатно, по запросу" },
-              { icon: "PawPrint", title: "Животные", desc: "Перевозка без доплаты" },
-              { icon: "Receipt", title: "Документы для юрлиц", desc: "Договор, акты, счёт-фактура" },
-            ].map((p, i) => (
-              <div
-                key={i}
-                className="border border-white/8 rounded p-5 hover:border-amber/30 transition-colors group"
-              >
-                <div className="w-10 h-10 rounded bg-amber/10 flex items-center justify-center mb-3 group-hover:bg-amber/20 transition-colors">
-                  <Icon name={p.icon} size={20} className="text-amber" />
+              { name: "Андрей К.", route: "Москва → Тула", text: "Заказывал на утро, подача была через 25 минут. Водитель вежливый, машина чистая. Доехали без приключений за фиксированную цену — никаких доплат в пути.", stars: 5 },
+              { name: "Елена М.", route: "СПб → Новгород", text: "Ехали с ребёнком, кресло предоставили бесплатно. Диспетчер перезвонила быстро, всё рассчитала. Цена честная, без сюрпризов.", stars: 5 },
+              { name: "Дмитрий С.", route: "Воронеж → Москва", text: "Пользуюсь не первый раз по работе. Всегда подают вовремя, документы для бухгалтерии присылают сразу. Рекомендую.", stars: 5 },
+              { name: "Ольга П.", route: "Москва → Рязань", text: "Комфорт+ на Камри. Салон кожаный, тихо, водитель спокойный. Отличный вариант для долгой дороги.", stars: 4 },
+              { name: "Сергей Л.", route: "Тверь → Москва", text: "Срочно нужно было ехать в аэропорт. Подали машину за 20 минут, успели на рейс с запасом. Благодарен.", stars: 5 },
+              { name: "Марина В.", route: "Москва → Калуга", text: "Везла маму к врачу. Водитель помог с вещами, ехал аккуратно. Обратно заказали у них же, ждал нас 2 часа бесплатно.", stars: 5 },
+            ].map((r, i) => (
+              <div key={i} className="border border-white/8 rounded-lg p-5 hover:border-amber/30 transition-colors">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex">
+                    {[1,2,3,4,5].map(j => (
+                      <Icon key={j} name="Star" size={14} className={j <= r.stars ? "text-amber fill-amber" : "text-white/20"} />
+                    ))}
+                  </div>
+                  <span className="text-amber/60 font-golos text-xs">{r.route}</span>
                 </div>
-                <h3 className="font-oswald text-lg font-semibold text-white uppercase mb-1">{p.title}</h3>
-                <p className="text-white/50 text-sm font-golos">{p.desc}</p>
+                <p className="text-white/80 font-golos text-sm leading-relaxed mb-3">{r.text}</p>
+                <div className="flex items-center gap-2 pt-3 border-t border-white/5">
+                  <div className="w-8 h-8 rounded-full bg-amber/20 flex items-center justify-center text-amber font-oswald font-bold text-sm">
+                    {r.name[0]}
+                  </div>
+                  <span className="text-white/60 font-golos text-sm">{r.name}</span>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* Who we drive */}
       <section id="who" className="py-16 md:py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
@@ -451,14 +512,14 @@ export default function Index() {
               { img: IMG_FAMILY, title: "Семьи с детьми", desc: "Детское кресло бесплатно. Перевозка животных без доплаты." },
               { img: IMG_BIZ, title: "Организации", desc: "Работаем по договору. Полный пакет закрывающих документов." },
             ].map((w, i) => (
-              <div key={i} className="border border-white/8 rounded overflow-hidden card-hover bg-card">
+              <div key={i} className="border border-white/8 rounded-lg overflow-hidden card-hover bg-card">
                 <div className="relative h-52 overflow-hidden">
                   <img src={w.img} alt={w.title} className="w-full h-full object-cover" loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
                 </div>
                 <div className="p-5">
                   <h3 className="font-oswald text-xl font-bold text-white uppercase mb-2">{w.title}</h3>
-                  <p className="text-white/50 text-sm font-golos">{w.desc}</p>
+                  <p className="text-white/60 text-sm font-golos">{w.desc}</p>
                 </div>
               </div>
             ))}
@@ -466,129 +527,57 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Final CTA */}
       <section className="py-16 md:py-24 px-4 bg-card">
         <div className="max-w-3xl mx-auto text-center">
-          <p className="text-amber font-oswald text-sm uppercase tracking-[0.25em] mb-2">Готовы ехать?</p>
+          <p className="text-amber font-oswald text-sm uppercase tracking-[0.25em] mb-2">Нужно ехать?</p>
           <h2 className="font-oswald text-3xl md:text-5xl font-bold text-white uppercase mb-4">
-            Закажите такси<br />
-            <span className="text-amber">прямо сейчас</span>
+            Позвоните или оставьте <span className="text-amber">заявку</span>
           </h2>
-          <p className="text-white/50 font-golos mb-8 max-w-lg mx-auto">
-            Напишите нам в мессенджер или позвоните — диспетчер ответит моментально.
+          <p className="text-white/60 font-golos mb-8 max-w-lg mx-auto">
+            Диспетчер перезвонит в течение 2 минут, рассчитает стоимость и подаст машину от 30 минут.
           </p>
           <div className="flex flex-col gap-3 max-w-md mx-auto">
-            <a href={TG} target="_blank" rel="noopener noreferrer" onClick={() => markEngaged()} className="flex items-center justify-center gap-2.5 bg-[#38BDF8]/15 border border-[#38BDF8]/30 text-[#38BDF8] font-oswald text-base uppercase font-bold px-6 py-4 rounded-lg hover:bg-[#38BDF8]/25 transition-all active:scale-[0.98]">
-              <Icon name="Send" size={18} />Написать в Telegram
+            <a href={PHONE_HREF} className="flex items-center justify-center gap-2.5 bg-amber text-coal font-oswald text-lg uppercase font-bold px-6 py-4 rounded-lg hover:bg-amber/90 transition-all active:scale-[0.98] shadow-xl shadow-amber/20 animate-pulse-amber">
+              <Icon name="Phone" size={20} />{PHONE}
             </a>
-            <a href={MAX_URL} target="_blank" rel="noopener noreferrer" onClick={() => markEngaged()} className="flex items-center justify-center gap-2.5 bg-[#005FF9] text-white font-oswald text-base uppercase font-bold px-6 py-4 rounded-lg hover:bg-[#1a70ff] transition-all shadow-lg shadow-[#005FF9]/20 active:scale-[0.98]">
-              Написать в MAX
-            </a>
-            <a href={PHONE_HREF} onClick={() => markEngaged()} className="flex items-center justify-center gap-2.5 bg-amber text-coal font-oswald text-base uppercase font-bold px-6 py-4 rounded-lg hover:bg-amber/90 transition-all active:scale-[0.98]">
-              <Icon name="Phone" size={18} />{PHONE}
-            </a>
-            <a href={WA} target="_blank" rel="noopener noreferrer" onClick={() => markEngaged()} className="flex items-center justify-center gap-2 text-sm font-bold text-green-400 border border-green-600/20 bg-green-600/10 hover:bg-green-600/20 px-4 py-3 rounded-lg transition-all">
-              <Icon name="MessageCircle" size={15} />WhatsApp
-            </a>
+            <button onClick={scrollToForm} className="flex items-center justify-center gap-2.5 bg-white/5 border border-amber/40 text-amber font-oswald text-base uppercase font-bold px-6 py-4 rounded-lg hover:bg-amber/10 transition-all">
+              <Icon name="FileText" size={18} />Оставить заявку
+            </button>
+            <div className="grid grid-cols-2 gap-3 mt-1">
+              <a href={TG} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#38BDF8] text-white font-oswald text-base uppercase font-bold px-4 py-3.5 rounded-lg hover:bg-[#0ea5e9] transition-all">
+                <Icon name="Send" size={16} />Telegram
+              </a>
+              <a href={MAX_URL} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#005FF9] text-white font-oswald text-base uppercase font-bold px-4 py-3.5 rounded-lg hover:bg-[#1a70ff] transition-all">
+                MAX
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
+      {/* Footer */}
       <footer className="border-t border-white/8 py-6 px-4 mb-16 md:mb-0">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white/30 font-golos">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white/40 font-golos">
           <span>&copy; {new Date().getFullYear()} Такси Дальняк. Межгородные перевозки.</span>
-          <a href={PHONE_HREF} className="text-amber/60 hover:text-amber transition-colors">{PHONE}</a>
+          <a href={PHONE_HREF} className="text-amber/70 hover:text-amber transition-colors font-oswald font-bold">{PHONE}</a>
         </div>
       </footer>
 
       {/* Mobile bottom bar */}
       <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-[#0a0a0a]/95 backdrop-blur-md border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
         <div className="flex gap-1.5 px-2 py-2">
-          <a href={TG} target="_blank" rel="noopener noreferrer" onClick={() => markEngaged()} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-[#38BDF8]/15 text-[#38BDF8] font-oswald text-xs font-bold active:scale-95 transition-all">
+          <a href={TG} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-lg bg-[#38BDF8] text-white font-oswald text-xs font-bold active:scale-95 transition-all">
             <Icon name="Send" size={14} />TG
           </a>
-          <a href={PHONE_HREF} onClick={() => markEngaged()} className="flex-[2] flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-amber text-coal font-oswald text-xs font-bold active:scale-95 transition-all">
-            <Icon name="Phone" size={14} />Звонок
+          <a href={PHONE_HREF} className="flex-[2] flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-amber text-coal font-oswald text-xs font-bold active:scale-95 transition-all animate-pulse-amber">
+            <Icon name="Phone" size={14} />Позвонить
           </a>
-          <a href={MAX_URL} target="_blank" rel="noopener noreferrer" onClick={() => markEngaged()} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-[#005FF9] text-white font-oswald text-xs font-bold active:scale-95 transition-all">
+          <a href={MAX_URL} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-lg bg-[#005FF9] text-white font-oswald text-xs font-bold active:scale-95 transition-all">
             MAX
-          </a>
-          <a href={WA} target="_blank" rel="noopener noreferrer" onClick={() => markEngaged()} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-green-600/15 text-green-400 font-oswald text-xs font-bold active:scale-95 transition-all">
-            <Icon name="MessageCircle" size={14} />WA
           </a>
         </div>
       </div>
-
-      {/* AI Chat for exit-intent */}
-      <div className="fixed z-50 bottom-[72px] md:bottom-6 right-3 md:right-4" style={{ display: chatOpen || showExitChat ? "block" : "none" }}>
-        {chatOpen && (
-          <div className="chat-bubble-in w-[calc(100vw-1.5rem)] sm:w-[380px] max-h-[70svh] md:max-h-[480px] bg-card border border-white/8 rounded-lg shadow-2xl flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 bg-amber/10 border-b border-amber/15 shrink-0">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-amber flex items-center justify-center">
-                  <Icon name="Headset" size={16} className="text-coal" />
-                </div>
-                <div>
-                  <p className="font-oswald text-sm font-semibold text-white">Диспетчер</p>
-                  <p className="text-[10px] text-amber/60 font-golos">онлайн</p>
-                </div>
-              </div>
-              <button onClick={() => setChatOpen(false)} className="text-white/40 hover:text-white transition-colors p-1">
-                <Icon name="X" size={18} />
-              </button>
-            </div>
-
-            <div ref={chatBodyRef} className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0" style={{ maxHeight: "calc(70svh - 120px)", WebkitOverflowScrolling: "touch" }}>
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[85%] rounded-lg px-3 py-2 text-sm font-golos whitespace-pre-wrap ${
-                      msg.role === "user"
-                        ? "bg-amber text-coal rounded-br-none"
-                        : "bg-secondary text-white/90 rounded-bl-none"
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-              {typing && (
-                <div className="flex justify-start">
-                  <div className="bg-secondary rounded-lg rounded-bl-none px-4 py-3 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-amber/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-2 h-2 rounded-full bg-amber/60 animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-2 h-2 rounded-full bg-amber/60 animate-bounce" style={{ animationDelay: "300ms" }} />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {!phoneDone && (
-              <div className="shrink-0 border-t border-white/8 p-3">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={inputVal}
-                    onChange={(e) => setInputVal(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }}
-                    placeholder="Введите сообщение..."
-                    className="flex-1 bg-secondary rounded px-3 py-2.5 text-sm font-golos text-white placeholder:text-white/30 outline-none focus:ring-1 focus:ring-amber/50"
-                    autoFocus
-                  />
-                  <button
-                    onClick={handleSend}
-                    disabled={typing}
-                    className="w-10 h-10 rounded bg-amber flex items-center justify-center text-coal hover:bg-amber/90 transition-colors shrink-0 disabled:opacity-50"
-                  >
-                    <Icon name="SendHorizontal" size={16} />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="h-20 md:hidden" />
     </div>
   );
 }

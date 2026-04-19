@@ -17,7 +17,7 @@ _ssl_ctx = ssl.create_default_context()
 
 
 def send_telegram(text):
-    body_bytes = json.dumps({"chat_id": CHAT_ID, "text": text[:4000]}).encode("utf-8")
+    body_bytes = json.dumps({"chat_id": CHAT_ID, "text": text[:4000], "parse_mode": "HTML"}).encode("utf-8")
     conn = http.client.HTTPSConnection("api.telegram.org", timeout=10, context=_ssl_ctx)
     conn.request(
         "POST",
@@ -32,7 +32,7 @@ def send_telegram(text):
 
 
 def handler(event, context):
-    """Sends phone leads from chat bot to Telegram"""
+    """Receives lead form submissions from website and sends them to Telegram"""
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
 
@@ -42,38 +42,49 @@ def handler(event, context):
     body = json.loads(event.get("body", "{}"))
     action = body.get("action", "")
 
-    if action != "phone_lead":
+    if action != "lead":
         return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "unknown action"})}
 
-    phone = body.get("phone", "")
-    conversation = body.get("conversation", [])
-    utm_info = body.get("utm", {})
+    from_city = str(body.get("from", "")).strip()[:200]
+    to_city = str(body.get("to", "")).strip()[:200]
+    phone = str(body.get("phone", "")).strip()[:50]
+    name = str(body.get("name", "")).strip()[:100]
+    tariff = str(body.get("tariff", "")).strip()[:50]
+    when = str(body.get("when", "")).strip()[:100]
+    comment = str(body.get("comment", "")).strip()[:500]
+    utm_info = body.get("utm", {}) or {}
+    page = str(body.get("page", "")).strip()[:500]
     source_ip = (event.get("requestContext") or {}).get("identity", {}).get("sourceIp", "")
 
-    chat_text = ""
-    for msg in conversation:
-        role = msg.get("role", "")
-        content = msg.get("content", "")
-        if role == "assistant":
-            chat_text += "Bot: " + content + "\n"
-        elif role == "user":
-            chat_text += "Client: " + content + "\n"
+    digits_only = "".join(ch for ch in phone if ch.isdigit())
+    if len(digits_only) < 10:
+        return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "phone required"})}
 
-    utm_text = ""
-    if utm_info:
-        for k, v in utm_info.items():
-            utm_text += "  " + str(k) + ": " + str(v) + "\n"
-
-    text = "NEW LEAD FROM WEBSITE CHAT\n"
+    text = "<b>НОВАЯ ЗАЯВКА С САЙТА</b>\n"
     text += "---\n"
-    text += "Phone: " + phone + "\n"
-    text += "IP: " + (source_ip or "unknown") + "\n"
+    if name:
+        text += "<b>Имя:</b> " + name + "\n"
+    text += "<b>Телефон:</b> " + phone + "\n"
+    if from_city:
+        text += "<b>Откуда:</b> " + from_city + "\n"
+    if to_city:
+        text += "<b>Куда:</b> " + to_city + "\n"
+    if tariff:
+        text += "<b>Тариф:</b> " + tariff + "\n"
+    if when:
+        text += "<b>Когда:</b> " + when + "\n"
+    if comment:
+        text += "<b>Комментарий:</b> " + comment + "\n"
 
-    if utm_text:
-        text += "---\nUTM:\n" + utm_text
+    if utm_info:
+        text += "---\n<b>UTM:</b>\n"
+        for k, v in utm_info.items():
+            text += "  " + str(k) + ": " + str(v) + "\n"
 
-    if chat_text:
-        text += "---\nChat:\n" + chat_text
+    text += "---\n"
+    text += "IP: " + (source_ip or "—") + "\n"
+    if page:
+        text += "Страница: " + page
 
     send_telegram(text)
 

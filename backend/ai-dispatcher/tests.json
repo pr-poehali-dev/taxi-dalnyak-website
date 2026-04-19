@@ -9,13 +9,23 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Phone lead",
+      "name": "Lead form",
       "method": "POST",
       "path": "/",
       "headers": {"Content-Type": "application/json"},
-      "body": {"action": "phone_lead", "phone": "+79991234567", "conversation": [{"role": "assistant", "content": "Hello"}, {"role": "user", "content": "+79991234567"}], "utm": {"utm_source": "test"}},
+      "body": {"action": "lead", "from": "Москва", "to": "Тула", "phone": "+79991234567", "name": "Тест", "tariff": "Комфорт+", "utm": {"utm_source": "test"}},
       "expectedStatus": 200,
       "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Lead without phone fails",
+      "method": "POST",
+      "path": "/",
+      "headers": {"Content-Type": "application/json"},
+      "body": {"action": "lead", "from": "Москва", "to": "Тула"},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     }
   ]
