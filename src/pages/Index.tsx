@@ -3,7 +3,7 @@ import Icon from "@/components/ui/icon";
 
 const LEAD_API = "https://functions.poehali.dev/08fe4061-ac7e-4404-8a08-788b739d491b";
 const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
-const HERO_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/070823e8-a973-4123-b1f4-998332b7edef.jpg";
+const HERO_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/e72b842e-823b-4b0b-8118-1f1329cf7e61.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/c12972fd-7c56-4a6f-9266-e44e65c003fa.jpeg";
 
 const PHONE = "8 (995) 645-51-25";
@@ -127,21 +127,20 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-[#F8F5F0] text-[#1a1a1a] relative overflow-hidden">
-      {/* Subtle hero image — top portion, soft */}
-      <div className="absolute inset-x-0 top-0 h-[38vh] sm:h-[44vh] z-0 overflow-hidden">
+      {/* Hero image — bigger, clearer */}
+      <div className="absolute inset-x-0 top-0 h-[58vh] sm:h-[62vh] z-0 overflow-hidden">
         <img
           src={HERO_BG}
-          alt=""
-          className="w-full h-full object-cover"
+          alt="Такси Дальняк"
+          className="w-full h-full object-cover object-center"
           fetchPriority="high"
           decoding="async"
+          width={1024}
+          height={1024}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/25 to-[#F8F5F0]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-[#F8F5F0]" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#F8F5F0] to-transparent" />
       </div>
-
-      {/* Decorative gradient blob */}
-      <div className="absolute -right-20 top-1/3 w-72 h-72 rounded-full bg-amber/20 blur-3xl z-0" aria-hidden />
-      <div className="absolute -left-20 bottom-0 w-72 h-72 rounded-full bg-blue-400/15 blur-3xl z-0" aria-hidden />
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col px-4 py-5 sm:py-8">
@@ -242,15 +241,17 @@ export default function Index() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackGoal("max")}
-                  className="flex items-center justify-center gap-2 py-3 rounded-xl font-oswald text-base uppercase font-bold active:scale-95 transition-transform bg-white border-2 border-black/10"
+                  className="flex items-center justify-center gap-2 py-4 rounded-xl font-oswald text-base uppercase font-bold active:scale-95 transition-transform bg-white border-2 border-black/10"
                   style={{
-                    boxShadow: "0 8px 20px rgba(100, 50, 200, 0.18)",
+                    boxShadow: "0 8px 20px rgba(100, 50, 200, 0.25)",
                   }}
                 >
                   <img
                     src={MAX_LOGO}
                     alt="MAX"
-                    className="h-7 w-auto object-contain"
+                    className="h-10 w-auto object-contain"
+                    width={80}
+                    height={40}
                     loading="lazy"
                   />
                 </a>
