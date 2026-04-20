@@ -4,6 +4,7 @@ import Icon from "@/components/ui/icon";
 const LEAD_API = "https://functions.poehali.dev/08fe4061-ac7e-4404-8a08-788b739d491b";
 const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
 const HERO_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/070823e8-a973-4123-b1f4-998332b7edef.jpg";
+const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/c12972fd-7c56-4a6f-9266-e44e65c003fa.jpeg";
 
 const PHONE = "8 (995) 645-51-25";
 const PHONE_HREF = "tel:+79956455125";
@@ -120,17 +121,14 @@ export default function Index() {
       }
       setInstallPrompt(null);
     } else {
-      const ua = navigator.userAgent || "";
-      const isIOS = /iPad|iPhone|iPod/.test(ua);
-      if (isIOS) setShowIosHint(true);
-      else setShowIosHint(true);
+      setShowIosHint(true);
     }
   }, [installPrompt, trackGoal]);
 
   return (
-    <div className="min-h-screen bg-coal text-white relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 z-0">
+    <div className="min-h-screen bg-[#F8F5F0] text-[#1a1a1a] relative overflow-hidden">
+      {/* Subtle hero image — top portion, soft */}
+      <div className="absolute inset-x-0 top-0 h-[38vh] sm:h-[44vh] z-0 overflow-hidden">
         <img
           src={HERO_BG}
           alt=""
@@ -138,36 +136,39 @@ export default function Index() {
           fetchPriority="high"
           decoding="async"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/85 to-black/95" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/25 to-[#F8F5F0]" />
       </div>
+
+      {/* Decorative gradient blob */}
+      <div className="absolute -right-20 top-1/3 w-72 h-72 rounded-full bg-amber/20 blur-3xl z-0" aria-hidden />
+      <div className="absolute -left-20 bottom-0 w-72 h-72 rounded-full bg-blue-400/15 blur-3xl z-0" aria-hidden />
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col px-4 py-5 sm:py-8">
         {/* Top: logo + install */}
-        <header className="flex items-center justify-between mb-6 sm:mb-8 max-w-md sm:max-w-xl w-full mx-auto">
+        <header className="flex items-center justify-between mb-5 sm:mb-8 max-w-md sm:max-w-xl w-full mx-auto">
           <div className="flex items-center gap-2.5">
             <img
               src={LOGO}
               alt="Дальняк"
-              className="w-11 h-11 rounded-full object-cover ring-2 ring-amber/60"
+              className="w-11 h-11 rounded-full object-cover ring-2 ring-white shadow-lg"
               width={44}
               height={44}
             />
             <div>
-              <div className="font-oswald text-lg font-bold text-amber uppercase tracking-wider leading-none">
+              <div className="font-oswald text-lg font-bold text-white uppercase tracking-wider leading-none drop-shadow-md">
                 Дальняк
               </div>
-              <div className="text-[10px] text-white/50 font-golos mt-0.5">Межгород 24/7</div>
+              <div className="text-[10px] text-white/90 font-golos mt-0.5 drop-shadow">Межгород 24/7</div>
             </div>
           </div>
 
           {!isInstalled && (
             <button
               onClick={handleInstall}
-              className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-golos text-xs font-semibold px-3 py-2 rounded-lg transition-all active:scale-95"
+              className="flex items-center gap-1.5 bg-white/95 hover:bg-white border border-white text-[#1a1a1a] font-golos text-xs font-semibold px-3 py-2 rounded-lg transition-all active:scale-95 shadow-md"
             >
-              <Icon name="Download" size={13} />
+              <Icon name="Download" size={13} className="text-amber" />
               <span className="hidden sm:inline">Добавить на экран</span>
               <span className="sm:hidden">Ярлык</span>
             </button>
@@ -177,96 +178,101 @@ export default function Index() {
         {/* Hero card */}
         <main className="flex-1 flex items-center justify-center">
           <div className="w-full max-w-md sm:max-w-xl mx-auto">
-            <div className="text-center mb-5">
-              <div className="inline-flex items-center gap-2 bg-green-500/15 border border-green-500/30 rounded-full px-3 py-1 mb-4">
+            <div className="text-center mb-5 sm:mb-6">
+              <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur border border-green-500/30 rounded-full px-3 py-1.5 mb-4 shadow-md">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
                 </span>
-                <span className="text-green-300 font-golos text-xs font-medium">
-                  Диспетчер онлайн — ответим за 2 минуты
+                <span className="text-green-700 font-golos text-xs font-semibold">
+                  Диспетчер онлайн · ответим за 2 минуты
                 </span>
               </div>
 
-              <h1 className="font-oswald text-[38px] leading-[0.95] sm:text-5xl font-bold text-white uppercase mb-3">
+              <h1 className="font-oswald text-[36px] leading-[1] sm:text-5xl font-bold text-white uppercase mb-3 drop-shadow-xl">
                 Междугороднее
                 <br />
                 <span className="text-amber">такси</span>
               </h1>
-              <p className="font-golos text-white/70 text-sm sm:text-base max-w-sm mx-auto">
+              <p className="font-golos text-white text-sm sm:text-base max-w-sm mx-auto drop-shadow-lg font-medium">
                 Фиксированная цена · Подача от 30 минут · Без предоплаты
               </p>
             </div>
 
-            {/* Big phone button — pulsing */}
-            <a
-              href={PHONE_HREF}
-              onClick={() => trackGoal("call")}
-              className="relative flex items-center justify-center gap-3 w-full bg-amber text-coal font-oswald text-2xl sm:text-3xl uppercase font-bold py-5 rounded-2xl active:scale-[0.98] transition-transform shadow-2xl shadow-amber/40 mb-3 pulse-big"
-            >
-              <Icon name="Phone" size={26} className="fill-coal" />
-              <span className="tracking-wide">{PHONE}</span>
-            </a>
-
-            {/* Messenger buttons — brand colors, large logos */}
-            <div className="grid grid-cols-2 gap-2.5 mb-3">
+            {/* Main white card */}
+            <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.25)] border border-black/5">
+              {/* Big phone button — pulsing */}
               <a
-                href={TG}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackGoal("tg")}
-                className="flex items-center justify-center gap-2 py-4 rounded-xl font-oswald text-base uppercase font-bold active:scale-95 transition-transform shadow-lg"
-                style={{
-                  background: "linear-gradient(135deg, #2AABEE 0%, #229ED9 100%)",
-                  color: "#fff",
-                  boxShadow: "0 6px 20px rgba(42,171,238,0.35)",
-                }}
+                href={PHONE_HREF}
+                onClick={() => trackGoal("call")}
+                className="relative flex items-center justify-center gap-3 w-full bg-amber text-[#1a1a1a] font-oswald text-2xl sm:text-3xl uppercase font-bold py-5 rounded-2xl active:scale-[0.98] transition-transform shadow-xl shadow-amber/40 mb-4 pulse-big"
               >
-                <TelegramLogo />
-                <span>Telegram</span>
+                <Icon name="Phone" size={26} className="fill-[#1a1a1a]" />
+                <span className="tracking-wide">{PHONE}</span>
               </a>
-              <a
-                href={MAX_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackGoal("max")}
-                className="flex items-center justify-center gap-2 py-4 rounded-xl font-oswald text-base uppercase font-bold active:scale-95 transition-transform shadow-lg"
-                style={{
-                  background: "linear-gradient(135deg, #1470FF 0%, #005FF9 100%)",
-                  color: "#fff",
-                  boxShadow: "0 6px 20px rgba(20,112,255,0.35)",
-                }}
-              >
-                <MaxLogo />
-                <span>MAX</span>
-              </a>
-            </div>
 
-            {/* CTA — узнать стоимость */}
-            <a
-              href={TG}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackGoal("price_tg")}
-              className="flex items-center justify-center gap-2 w-full bg-white/10 hover:bg-white/15 border border-amber/40 text-amber font-oswald text-base uppercase font-bold py-4 rounded-xl active:scale-[0.98] transition-all mb-5"
-            >
-              <Icon name="Calculator" size={18} />
-              Узнать стоимость поездки
-            </a>
+              {/* "Узнать стоимость" label */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-black/15 to-transparent" />
+                <p className="text-[#1a1a1a]/60 font-golos text-xs uppercase tracking-widest font-semibold whitespace-nowrap">
+                  Узнать стоимость
+                </p>
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-black/15 to-transparent" />
+              </div>
 
-            {/* Callback form */}
-            <div className="bg-black/50 backdrop-blur-md border border-amber/25 rounded-2xl p-4 sm:p-5 shadow-2xl">
+              {/* Messenger buttons */}
+              <div className="grid grid-cols-2 gap-2.5 mb-4">
+                <a
+                  href={TG}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackGoal("tg")}
+                  className="flex items-center justify-center gap-2 py-4 rounded-xl font-oswald text-base uppercase font-bold active:scale-95 transition-transform"
+                  style={{
+                    background: "linear-gradient(135deg, #2AABEE 0%, #229ED9 100%)",
+                    color: "#fff",
+                    boxShadow: "0 8px 20px rgba(42,171,238,0.35)",
+                  }}
+                >
+                  <TelegramLogo />
+                  <span>Telegram</span>
+                </a>
+                <a
+                  href={MAX_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackGoal("max")}
+                  className="flex items-center justify-center gap-2 py-3 rounded-xl font-oswald text-base uppercase font-bold active:scale-95 transition-transform bg-white border-2 border-black/10"
+                  style={{
+                    boxShadow: "0 8px 20px rgba(100, 50, 200, 0.18)",
+                  }}
+                >
+                  <img
+                    src={MAX_LOGO}
+                    alt="MAX"
+                    className="h-7 w-auto object-contain"
+                    loading="lazy"
+                  />
+                </a>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-black/8 mb-4" />
+
+              {/* Callback form */}
               {!submitted ? (
                 <>
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-9 h-9 rounded-full bg-amber/20 border border-amber/40 flex items-center justify-center shrink-0">
-                      <Icon name="PhoneCall" size={16} className="text-amber" />
+                    <div className="w-10 h-10 rounded-full bg-amber/15 border border-amber/30 flex items-center justify-center shrink-0">
+                      <Icon name="PhoneCall" size={18} className="text-amber" />
                     </div>
                     <div>
-                      <div className="font-oswald text-white font-bold uppercase text-sm sm:text-base leading-tight">
+                      <div className="font-oswald text-[#1a1a1a] font-bold uppercase text-sm sm:text-base leading-tight">
                         Перезвоните мне
                       </div>
-                      <div className="text-white/50 text-xs font-golos">Наберём в течение 2 минут</div>
+                      <div className="text-black/55 text-xs font-golos">
+                        Наберём в течение 2 минут
+                      </div>
                     </div>
                   </div>
                   <form onSubmit={submit} className="space-y-2.5">
@@ -274,7 +280,7 @@ export default function Index() {
                       <Icon
                         name="Phone"
                         size={16}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-amber/70"
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber"
                       />
                       <input
                         type="tel"
@@ -282,13 +288,13 @@ export default function Index() {
                         placeholder="+7 (___) ___-__-__"
                         value={phone}
                         onChange={(e) => setPhone(formatPhone(e.target.value))}
-                        className="w-full bg-coal/80 border border-amber/20 focus:border-amber rounded-xl pl-10 pr-3 py-3.5 text-white placeholder:text-white/40 font-golos text-base outline-none transition-colors"
+                        className="w-full bg-[#F5F2ED] border-2 border-transparent focus:border-amber focus:bg-white rounded-xl pl-10 pr-3 py-3.5 text-[#1a1a1a] placeholder:text-black/35 font-golos text-base outline-none transition-all"
                         required
                       />
                     </div>
 
                     {error && (
-                      <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-300 text-xs font-golos">
+                      <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-red-700 text-xs font-golos">
                         {error}
                       </div>
                     )}
@@ -296,7 +302,7 @@ export default function Index() {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="w-full bg-amber text-coal font-oswald text-base uppercase font-bold py-3.5 rounded-xl hover:bg-amber/90 transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-amber/30"
+                      className="w-full bg-amber hover:bg-amber/90 text-[#1a1a1a] font-oswald text-base uppercase font-bold py-3.5 rounded-xl transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-amber/30"
                     >
                       {submitting ? (
                         <>
@@ -310,20 +316,20 @@ export default function Index() {
                         </>
                       )}
                     </button>
-                    <p className="text-[10px] text-white/40 text-center font-golos">
+                    <p className="text-[10px] text-black/40 text-center font-golos">
                       Нажимая кнопку, вы соглашаетесь с обработкой персональных данных
                     </p>
                   </form>
                 </>
               ) : (
-                <div className="text-center py-2">
-                  <div className="w-12 h-12 mx-auto rounded-full bg-green-500/20 border-2 border-green-500/50 flex items-center justify-center mb-2">
-                    <Icon name="Check" size={24} className="text-green-400" />
+                <div className="text-center py-3">
+                  <div className="w-14 h-14 mx-auto rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center mb-2">
+                    <Icon name="Check" size={26} className="text-green-600" />
                   </div>
-                  <h3 className="font-oswald text-lg font-bold text-white uppercase mb-1">
+                  <h3 className="font-oswald text-lg font-bold text-[#1a1a1a] uppercase mb-1">
                     Заявка принята
                   </h3>
-                  <p className="text-white/70 font-golos text-sm">
+                  <p className="text-black/60 font-golos text-sm">
                     Диспетчер наберёт вас в течение 2 минут
                   </p>
                 </div>
@@ -331,21 +337,21 @@ export default function Index() {
             </div>
 
             {/* Trust micro-row */}
-            <div className="flex items-center justify-center gap-4 mt-5 text-[11px] text-white/50 font-golos">
+            <div className="flex items-center justify-center gap-4 mt-5 text-[11px] text-black/55 font-golos">
               <div className="flex items-center gap-1">
                 <Icon name="Star" size={12} className="text-amber fill-amber" />
-                <span>4.8 / 2340 отзывов</span>
+                <span className="font-semibold">4.8 · 2340 отзывов</span>
               </div>
-              <div className="w-1 h-1 rounded-full bg-white/20" />
+              <div className="w-1 h-1 rounded-full bg-black/25" />
               <div className="flex items-center gap-1">
                 <Icon name="Shield" size={12} className="text-amber" />
-                <span>С 2019 года</span>
+                <span className="font-semibold">С 2019 года</span>
               </div>
             </div>
           </div>
         </main>
 
-        <footer className="max-w-md sm:max-w-xl w-full mx-auto mt-6 text-center text-[10px] text-white/30 font-golos">
+        <footer className="max-w-md sm:max-w-xl w-full mx-auto mt-6 text-center text-[10px] text-black/35 font-golos">
           &copy; {new Date().getFullYear()} Такси Дальняк · Межгородные перевозки
         </footer>
       </div>
@@ -353,48 +359,48 @@ export default function Index() {
       {/* iOS install hint modal */}
       {showIosHint && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
           onClick={() => setShowIosHint(false)}
         >
           <div
-            className="bg-card border border-amber/30 rounded-2xl p-5 max-w-sm w-full shadow-2xl"
+            className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-3">
-              <h3 className="font-oswald text-lg font-bold text-white uppercase">
+              <h3 className="font-oswald text-lg font-bold text-[#1a1a1a] uppercase">
                 Добавить на экран
               </h3>
               <button
                 onClick={() => setShowIosHint(false)}
-                className="text-white/40 hover:text-white"
+                className="text-black/40 hover:text-black"
               >
                 <Icon name="X" size={20} />
               </button>
             </div>
-            <p className="text-white/70 text-sm font-golos mb-4">
+            <p className="text-black/70 text-sm font-golos mb-4">
               Чтобы добавить ярлык Такси Дальняк на главный экран телефона:
             </p>
-            <ol className="space-y-2.5 text-sm text-white/80 font-golos mb-4">
+            <ol className="space-y-2.5 text-sm text-[#1a1a1a] font-golos mb-4">
               <li className="flex gap-2.5">
-                <span className="w-6 h-6 rounded-full bg-amber text-coal font-bold flex items-center justify-center shrink-0 text-xs">
+                <span className="w-6 h-6 rounded-full bg-amber text-[#1a1a1a] font-bold flex items-center justify-center shrink-0 text-xs">
                   1
                 </span>
                 <span>
                   Нажмите кнопку{" "}
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white/10 rounded">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-black/5 rounded">
                     <Icon name="Share" size={14} className="text-amber" />
                   </span>{" "}
                   «Поделиться» в браузере
                 </span>
               </li>
               <li className="flex gap-2.5">
-                <span className="w-6 h-6 rounded-full bg-amber text-coal font-bold flex items-center justify-center shrink-0 text-xs">
+                <span className="w-6 h-6 rounded-full bg-amber text-[#1a1a1a] font-bold flex items-center justify-center shrink-0 text-xs">
                   2
                 </span>
                 <span>Выберите «На экран Домой» / «Добавить на главный экран»</span>
               </li>
               <li className="flex gap-2.5">
-                <span className="w-6 h-6 rounded-full bg-amber text-coal font-bold flex items-center justify-center shrink-0 text-xs">
+                <span className="w-6 h-6 rounded-full bg-amber text-[#1a1a1a] font-bold flex items-center justify-center shrink-0 text-xs">
                   3
                 </span>
                 <span>Нажмите «Добавить» — готово!</span>
@@ -402,7 +408,7 @@ export default function Index() {
             </ol>
             <button
               onClick={() => setShowIosHint(false)}
-              className="w-full bg-amber text-coal font-oswald text-base uppercase font-bold py-3 rounded-xl"
+              className="w-full bg-amber text-[#1a1a1a] font-oswald text-base uppercase font-bold py-3 rounded-xl"
             >
               Понятно
             </button>
@@ -417,17 +423,6 @@ function TelegramLogo() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" />
-    </svg>
-  );
-}
-
-function MaxLogo() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M3 20L7.5 4h3.2l1.3 10L13.3 4h3.2L21 20h-3l-2.7-10.5L14 20h-2.5L10 9.5 7.5 20H3z"
-        fill="currentColor"
-      />
     </svg>
   );
 }
