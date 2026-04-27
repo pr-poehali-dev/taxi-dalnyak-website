@@ -29,27 +29,143 @@ const STOP_WORDS = new Set([
   "такси",
   "taxi",
   "заказать",
+  "заказать",
   "заказ",
+  "заказы",
+  "заказывать",
   "вызвать",
   "вызов",
+  "вызова",
+  "поездка",
+  "поездку",
+  "поездки",
+  "трансфер",
   "междугороднее",
+  "междугородное",
+  "междугородний",
   "межгород",
   "межгороднее",
+  "межгород",
   "недорого",
   "дешево",
   "дёшево",
+  "дешевое",
   "цена",
+  "цены",
   "стоимость",
   "номер",
+  "номера",
   "телефон",
+  "телефоны",
   "круглосуточно",
+  "круглосуточное",
+  "онлайн",
+  "сайт",
+  "официальный",
   "из",
   "в",
+  "во",
   "до",
+  "со",
+  "с",
   "на",
   "по",
   "и",
+  "от",
+  "к",
+  "ко",
 ]);
+
+// Common Russian city name suffixes — strip to get nominative-ish form.
+// Order matters: longer first.
+const CITY_SUFFIXES = [
+  "ского",
+  "ская",
+  "скую",
+  "ский",
+  "ское",
+  "ому",
+  "ему",
+  "ыми",
+  "ими",
+  "ого",
+  "его",
+  "ой",
+  "ей",
+  "ом",
+  "ам",
+  "ям",
+  "ах",
+  "ях",
+  "ы",
+  "и",
+  "у",
+  "ю",
+  "е",
+  "а",
+  "я",
+];
+
+const KEEP_AS_IS = new Set([
+  "москва",
+  "уфа",
+  "анапа",
+  "ялта",
+  "сочи",
+  "тверь",
+  "пермь",
+  "тула",
+  "рязань",
+  "казань",
+  "самара",
+  "пенза",
+  "элиста",
+]);
+
+function normalizeCity(word: string): string {
+  if (word.length <= 3) return word;
+  if (KEEP_AS_IS.has(word)) return word;
+  // Special: "ростова"/"ростове" -> "ростов", "москву"/"москве" -> "москва"
+  if (word.startsWith("москв")) return "москва";
+  if (word.startsWith("ростов")) return "ростов";
+  if (word.startsWith("воронеж")) return "воронеж";
+  if (word.startsWith("краснодар")) return "краснодар";
+  if (word.startsWith("ставропол")) return "ставрополь";
+  if (word.startsWith("волгоград")) return "волгоград";
+  if (word.startsWith("саратов")) return "саратов";
+  if (word.startsWith("астрахан")) return "астрахань";
+  if (word.startsWith("новочеркасск")) return "новочеркасск";
+  if (word.startsWith("таганрог")) return "таганрог";
+  if (word.startsWith("шахт")) return "шахты";
+  if (word.startsWith("сочи")) return "сочи";
+  if (word.startsWith("анап")) return "анапа";
+  if (word.startsWith("геленджик")) return "геленджик";
+  if (word.startsWith("новороссийск")) return "новороссийск";
+  if (word.startsWith("пятигорск")) return "пятигорск";
+  if (word.startsWith("кисловодск")) return "кисловодск";
+  if (word.startsWith("минеральн")) return "минеральные воды";
+  if (word.startsWith("махачкал")) return "махачкала";
+  if (word.startsWith("грозн")) return "грозный";
+  if (word.startsWith("нальчик")) return "нальчик";
+  if (word.startsWith("владикавказ")) return "владикавказ";
+  if (word.startsWith("санкт")) return "санкт-петербург";
+  if (word.startsWith("питер")) return "санкт-петербург";
+  if (word.startsWith("петербург")) return "санкт-петербург";
+  // Generic suffix strip
+  for (const suf of CITY_SUFFIXES) {
+    if (word.length - suf.length >= 3 && word.endsWith(suf)) {
+      return word.slice(0, -suf.length);
+    }
+  }
+  return word;
+}
+
+function titleCase(word: string): string {
+  return word
+    .split(/[-\s]/)
+    .map((p) => (p ? p[0].toUpperCase() + p.slice(1) : p))
+    .join(word.includes("-") ? "-" : " ");
+}
 
 function parseKeyword(termRaw: string): string {
   if (!termRaw) return "";
@@ -60,10 +176,15 @@ function parseKeyword(termRaw: string): string {
     .split(/\s+/)
     .map((t) => t.trim())
     .filter((t) => t.length >= 2 && !STOP_WORDS.has(t));
-  if (tokens.length < 2) return "";
-  // Take up to 3 cities/words
-  const words = tokens.slice(0, 3).map((w) => w[0].toUpperCase() + w.slice(1));
-  return words.join(" ");
+  if (tokens.length === 0) return "";
+  // Normalize each token (city name to nominative form)
+  const normalized = tokens.slice(0, 3).map((t) => normalizeCity(t));
+  // Deduplicate (sometimes "ростов ростова" -> ["ростов","ростов"])
+  const unique: string[] = [];
+  for (const w of normalized) {
+    if (!unique.includes(w)) unique.push(w);
+  }
+  return unique.map(titleCase).join(" ");
 }
 
 function formatPhone(raw: string): string {
@@ -243,21 +364,21 @@ export default function Index() {
               <div className="inline-block bg-black/55 backdrop-blur-sm rounded-2xl px-5 py-3 sm:px-6 sm:py-4 mb-3 ring-1 ring-white/10 shadow-2xl">
                 {route ? (
                   <h1
-                    className="font-oswald text-[32px] leading-[1] sm:text-5xl font-bold text-white uppercase"
+                    className="font-oswald text-[28px] leading-[1.05] sm:text-4xl font-bold text-white uppercase"
                     style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}
                   >
-                    Заказать такси
+                    Хотите заказать
                     <br />
-                    <span className="text-amber">{route}</span>
+                    такси <span className="text-amber">{route}</span>?
                   </h1>
                 ) : (
                   <h1
                     className="font-oswald text-[34px] leading-[1] sm:text-5xl font-bold text-white uppercase"
                     style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}
                   >
-                    Междугороднее
+                    Закажите
                     <br />
-                    <span className="text-amber">такси</span>
+                    <span className="text-amber">междугороднее такси</span>
                   </h1>
                 )}
               </div>
