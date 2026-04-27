@@ -54,6 +54,7 @@ def handler(event, context):
     tariff = str(body.get("tariff", "")).strip()[:50]
     when = str(body.get("when", "")).strip()[:100]
     comment = str(body.get("comment", "")).strip()[:500]
+    route = str(body.get("route", "")).strip()[:200]
     utm_info = body.get("utm", {}) or {}
     page = str(body.get("page", "")).strip()[:500]
     source_ip = (event.get("requestContext") or {}).get("identity", {}).get("sourceIp", "")
@@ -62,6 +63,32 @@ def handler(event, context):
     if len(digits_only) < 10:
         return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "phone required"})}
 
+    # Build clickable phone link in tg format: +7XXXXXXXXXX
+    if len(digits_only) == 11 and digits_only[0] == "8":
+        digits_e164 = "7" + digits_only[1:]
+    elif len(digits_only) == 10:
+        digits_e164 = "7" + digits_only
+    else:
+        digits_e164 = digits_only
+    phone_link = "+" + digits_e164
+
+    # Filter Yandex placeholders that weren't substituted
+    def is_valid_utm(v):
+        if not v:
+            return False
+        s = str(v).strip()
+        if not s:
+            return False
+        if s.startswith("{") or s.endswith("}"):
+            return False
+        return True
+
+    clean_utm = {}
+    if isinstance(utm_info, dict):
+        for k, v in utm_info.items():
+            if is_valid_utm(v):
+                clean_utm[str(k)] = str(v)
+
     if is_callback:
         text = "<b>⚡ ОБРАТНЫЙ ЗВОНОК ЗА 30 СЕК</b>\n"
     else:
@@ -69,7 +96,9 @@ def handler(event, context):
     text += "---\n"
     if name:
         text += "<b>Имя:</b> " + name + "\n"
-    text += "<b>Телефон:</b> " + phone + "\n"
+    text += '<b>Телефон:</b> <a href="tel:' + phone_link + '">' + phone + "</a>\n"
+    if route:
+        text += "<b>Маршрут (запрос):</b> " + route + "\n"
     if from_city:
         text += "<b>Откуда:</b> " + from_city + "\n"
     if to_city:
@@ -81,10 +110,10 @@ def handler(event, context):
     if comment:
         text += "<b>Комментарий:</b> " + comment + "\n"
 
-    if utm_info:
+    if clean_utm:
         text += "---\n<b>UTM:</b>\n"
-        for k, v in utm_info.items():
-            text += "  " + str(k) + ": " + str(v) + "\n"
+        for k, v in clean_utm.items():
+            text += "  " + k + ": " + v + "\n"
 
     text += "---\n"
     text += "IP: " + (source_ip or "—") + "\n"

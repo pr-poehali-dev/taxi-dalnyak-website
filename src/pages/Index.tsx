@@ -15,9 +15,55 @@ function getAllUtmParams(): Record<string, string> {
   const params = new URLSearchParams(window.location.search);
   const utm: Record<string, string> = {};
   params.forEach((v, k) => {
-    if (k.startsWith("utm_")) utm[k] = v;
+    if (k.startsWith("utm_")) {
+      const val = v.trim();
+      // Skip Yandex placeholders that weren't substituted
+      if (!val || val.startsWith("{") || val.endsWith("}")) return;
+      utm[k] = val;
+    }
   });
   return utm;
+}
+
+const STOP_WORDS = new Set([
+  "такси",
+  "taxi",
+  "заказать",
+  "заказ",
+  "вызвать",
+  "вызов",
+  "междугороднее",
+  "межгород",
+  "межгороднее",
+  "недорого",
+  "дешево",
+  "дёшево",
+  "цена",
+  "стоимость",
+  "номер",
+  "телефон",
+  "круглосуточно",
+  "из",
+  "в",
+  "до",
+  "на",
+  "по",
+  "и",
+]);
+
+function parseKeyword(termRaw: string): string {
+  if (!termRaw) return "";
+  let term = decodeURIComponent(termRaw).toLowerCase().trim();
+  if (!term || term.startsWith("{") || term.endsWith("}")) return "";
+  term = term.replace(/[+_]/g, " ").replace(/[^a-zа-яё\s-]/gi, " ");
+  const tokens = term
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 2 && !STOP_WORDS.has(t));
+  if (tokens.length < 2) return "";
+  // Take up to 3 cities/words
+  const words = tokens.slice(0, 3).map((w) => w[0].toUpperCase() + w.slice(1));
+  return words.join(" ");
 }
 
 function formatPhone(raw: string): string {
@@ -49,9 +95,14 @@ export default function Index() {
   const [isInstalled, setIsInstalled] = useState(false);
 
   const utmRef = useRef<Record<string, string>>({});
+  const [route, setRoute] = useState("");
 
   useEffect(() => {
     utmRef.current = getAllUtmParams();
+    const params = new URLSearchParams(window.location.search);
+    const term = params.get("utm_term") || params.get("keyword") || "";
+    const parsed = parseKeyword(term);
+    if (parsed) setRoute(parsed);
 
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
@@ -93,6 +144,7 @@ export default function Index() {
             action: "callback",
             phone,
             utm: utmRef.current,
+            route,
             page: window.location.href,
           }),
         });
@@ -108,7 +160,7 @@ export default function Index() {
       }
       setSubmitting(false);
     },
-    [phone, trackGoal],
+    [phone, trackGoal, route],
   );
 
   const handleInstall = useCallback(async () => {
@@ -188,11 +240,19 @@ export default function Index() {
                 </span>
               </div>
 
-              <h1 className="font-oswald text-[36px] leading-[1] sm:text-5xl font-bold text-white uppercase mb-3 drop-shadow-xl">
-                Междугороднее
-                <br />
-                <span className="text-amber">такси</span>
-              </h1>
+              {route ? (
+                <h1 className="font-oswald text-[34px] leading-[1] sm:text-5xl font-bold text-white uppercase mb-3 drop-shadow-xl">
+                  Заказать такси
+                  <br />
+                  <span className="text-amber">{route}</span>
+                </h1>
+              ) : (
+                <h1 className="font-oswald text-[36px] leading-[1] sm:text-5xl font-bold text-white uppercase mb-3 drop-shadow-xl">
+                  Междугороднее
+                  <br />
+                  <span className="text-amber">такси</span>
+                </h1>
+              )}
               <p className="font-golos text-white text-sm sm:text-base max-w-sm mx-auto drop-shadow-lg font-medium">
                 Фиксированная цена · Подача от 30 минут · Без предоплаты
               </p>
@@ -210,14 +270,29 @@ export default function Index() {
                 <span className="tracking-wide">{PHONE}</span>
               </a>
 
-              {/* "Узнать стоимость" label */}
+              {/* Callback explainer */}
+              <div className="flex items-start gap-2.5 mb-4 px-1">
+                <Icon name="Info" size={16} className="text-amber shrink-0 mt-0.5" />
+                <p className="text-[#1a1a1a]/75 font-golos text-[12.5px] leading-snug">
+                  Мы перезвоним или напишем в течение минуты, чтобы подтвердить детали и назвать точную стоимость вашей поездки.
+                </p>
+              </div>
+
+              {/* "Написать в мессенджер" label */}
               <div className="flex items-center gap-3 mb-3">
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-black/15 to-transparent" />
                 <p className="text-[#1a1a1a]/60 font-golos text-xs uppercase tracking-widest font-semibold whitespace-nowrap">
-                  Узнать стоимость
+                  Написать в мессенджер
                 </p>
                 <div className="flex-1 h-px bg-gradient-to-r from-transparent via-black/15 to-transparent" />
               </div>
+
+              {/* Dynamic CTA text for messengers */}
+              <p className="text-center font-golos text-[#1a1a1a]/70 text-[13px] mb-2.5">
+                {route
+                  ? `Заказать такси ${route} через:`
+                  : "Узнать стоимость и заказать через:"}
+              </p>
 
               {/* Messenger buttons */}
               <div className="grid grid-cols-2 gap-2.5 mb-4">
@@ -272,7 +347,7 @@ export default function Index() {
                         Перезвоните мне
                       </div>
                       <div className="text-black/55 text-xs font-golos">
-                        Наберём в течение 2 минут
+                        Перезвоним за 1 минуту и назовём точную стоимость
                       </div>
                     </div>
                   </div>
