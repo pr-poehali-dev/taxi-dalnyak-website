@@ -167,24 +167,51 @@ function titleCase(word: string): string {
     .join(word.includes("-") ? "-" : " ");
 }
 
-function parseKeyword(termRaw: string): string {
-  if (!termRaw) return "";
+interface ParsedRoute {
+  display: string;
+  from: string;
+  to: string;
+}
+
+function parseKeyword(termRaw: string): ParsedRoute {
+  const empty: ParsedRoute = { display: "", from: "", to: "" };
+  if (!termRaw) return empty;
   let term = decodeURIComponent(termRaw).toLowerCase().trim();
-  if (!term || term.startsWith("{") || term.endsWith("}")) return "";
+  if (!term || term.startsWith("{") || term.endsWith("}")) return empty;
   term = term.replace(/[+_]/g, " ").replace(/[^a-zа-яё\s-]/gi, " ");
-  const tokens = term
-    .split(/\s+/)
-    .map((t) => t.trim())
-    .filter((t) => t.length >= 2 && !STOP_WORDS.has(t));
-  if (tokens.length === 0) return "";
-  // Normalize each token (city name to nominative form)
-  const normalized = tokens.slice(0, 3).map((t) => normalizeCity(t));
-  // Deduplicate (sometimes "ростов ростова" -> ["ростов","ростов"])
-  const unique: string[] = [];
-  for (const w of normalized) {
-    if (!unique.includes(w)) unique.push(w);
+
+  const rawTokens = term.split(/\s+/).map((t) => t.trim()).filter(Boolean);
+  // Detect "из X в Y" — find indexes of prepositions BEFORE removing them
+  let fromCity = "";
+  let toCity = "";
+  for (let i = 0; i < rawTokens.length - 1; i++) {
+    const t = rawTokens[i];
+    const next = rawTokens[i + 1];
+    if (!next || STOP_WORDS.has(next)) continue;
+    if ((t === "из" || t === "от" || t === "с" || t === "со") && !fromCity) {
+      fromCity = normalizeCity(next);
+    }
+    if ((t === "в" || t === "во" || t === "до" || t === "к" || t === "ко") && !toCity) {
+      toCity = normalizeCity(next);
+    }
   }
-  return unique.map(titleCase).join(" ");
+
+  const tokens = rawTokens.filter((t) => t.length >= 2 && !STOP_WORDS.has(t));
+  if (tokens.length === 0) return empty;
+
+  const normalized = tokens.slice(0, 3).map((t) => normalizeCity(t));
+  const unique: string[] = [];
+  for (const w of normalized) if (!unique.includes(w)) unique.push(w);
+
+  // If we didn't catch "из/в" — fall back: 1st token = from, 2nd = to
+  if (!fromCity && unique[0]) fromCity = unique[0];
+  if (!toCity && unique[1]) toCity = unique[1];
+
+  return {
+    display: unique.map(titleCase).join(" "),
+    from: fromCity ? titleCase(fromCity) : "",
+    to: toCity ? titleCase(toCity) : "",
+  };
 }
 
 function formatPhone(raw: string): string {
@@ -217,13 +244,18 @@ export default function Index() {
 
   const utmRef = useRef<Record<string, string>>({});
   const [route, setRoute] = useState("");
+  const [fromCity, setFromCity] = useState("");
+  const [toCity, setToCity] = useState("");
+  const [copyHint, setCopyHint] = useState("");
 
   useEffect(() => {
     utmRef.current = getAllUtmParams();
     const params = new URLSearchParams(window.location.search);
     const term = params.get("utm_term") || params.get("keyword") || "";
     const parsed = parseKeyword(term);
-    if (parsed) setRoute(parsed);
+    if (parsed.display) setRoute(parsed.display);
+    if (parsed.from) setFromCity(parsed.from);
+    if (parsed.to) setToCity(parsed.to);
 
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
@@ -246,6 +278,50 @@ export default function Index() {
       /* noop */
     }
   }, []);
+
+  const buildMessengerText = useCallback((): string => {
+    if (fromCity && toCity) {
+      return `Здравствуйте! Хочу заказать такси из ${fromCity} в ${toCity}. Подскажите стоимость и доступное время подачи.`;
+    }
+    if (route) {
+      return `Здравствуйте! Хочу заказать такси ${route}. Подскажите стоимость и доступное время подачи.`;
+    }
+    return "Здравствуйте! Хочу заказать междугороднее такси. Подскажите, пожалуйста, стоимость.";
+  }, [fromCity, toCity, route]);
+
+  const openMessenger = useCallback(
+    async (kind: "tg" | "max", e: React.MouseEvent<HTMLAnchorElement>) => {
+      const text = buildMessengerText();
+      const targetUrl = kind === "tg" ? TG : MAX_URL;
+      trackGoal(kind);
+
+      // Try to copy text to clipboard so user just pastes it (Cmd/Ctrl+V) in chat.
+      // t.me/<username> и MAX-инвайты не поддерживают prefilled text через URL.
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+        }
+        e.preventDefault();
+        setCopyHint(
+          "Сообщение скопировано! Вставьте его в чат (долгое нажатие → Вставить) и нажмите «Отправить».",
+        );
+        window.open(targetUrl, "_blank", "noopener,noreferrer");
+        window.setTimeout(() => setCopyHint(""), 8000);
+      } catch {
+        // Если копирование недоступно — просто открываем чат как раньше
+      }
+    },
+    [buildMessengerText, trackGoal],
+  );
 
   const submit = useCallback(
     async (e?: React.FormEvent) => {
@@ -420,12 +496,12 @@ export default function Index() {
               </div>
 
               {/* Messenger buttons */}
-              <div className="grid grid-cols-2 gap-2.5 mb-4">
+              <div className="grid grid-cols-2 gap-2.5 mb-2">
                 <a
                   href={TG}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => trackGoal("tg")}
+                  onClick={(e) => openMessenger("tg", e)}
                   className="flex items-center justify-center gap-2 py-4 rounded-xl font-oswald text-base uppercase font-bold active:scale-95 transition-transform"
                   style={{
                     background: "linear-gradient(135deg, #2AABEE 0%, #229ED9 100%)",
@@ -440,7 +516,7 @@ export default function Index() {
                   href={MAX_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => trackGoal("max")}
+                  onClick={(e) => openMessenger("max", e)}
                   className="flex items-center justify-center gap-2 py-4 rounded-xl font-oswald text-base uppercase font-bold active:scale-95 transition-transform bg-white border-2 border-black/10"
                   style={{
                     boxShadow: "0 8px 20px rgba(100, 50, 200, 0.25)",
@@ -456,6 +532,33 @@ export default function Index() {
                   />
                 </a>
               </div>
+
+              {/* Preview of prefilled message */}
+              {(fromCity && toCity) || route ? (
+                <div className="mb-3 rounded-xl bg-[#F5F2ED] border border-black/10 px-3 py-2.5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Icon name="MessageSquare" size={13} className="text-amber" />
+                    <span className="font-golos text-[11px] uppercase tracking-wider font-bold text-black/55">
+                      Готовое сообщение
+                    </span>
+                  </div>
+                  <p className="font-golos text-[12.5px] leading-snug text-[#1a1a1a]/85">
+                    «{buildMessengerText()}»
+                  </p>
+                  <p className="font-golos text-[11px] text-black/50 mt-1.5">
+                    Скопируется автоматически — останется только вставить и отправить.
+                  </p>
+                </div>
+              ) : null}
+
+              {copyHint ? (
+                <div className="mb-3 rounded-xl bg-amber/15 border border-amber/40 px-3 py-2.5 flex items-start gap-2">
+                  <Icon name="ClipboardCheck" size={16} className="text-amber shrink-0 mt-0.5" />
+                  <p className="font-golos text-[12.5px] leading-snug text-[#1a1a1a]">
+                    {copyHint}
+                  </p>
+                </div>
+              ) : null}
 
               {/* Divider */}
               <div className="h-px bg-black/8 mb-4" />
