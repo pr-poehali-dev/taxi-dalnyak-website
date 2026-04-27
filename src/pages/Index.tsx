@@ -240,20 +240,31 @@ export default function Index() {
                 </span>
               </div>
 
-              {route ? (
-                <h1 className="font-oswald text-[34px] leading-[1] sm:text-5xl font-bold text-white uppercase mb-3 drop-shadow-xl">
-                  Заказать такси
-                  <br />
-                  <span className="text-amber">{route}</span>
-                </h1>
-              ) : (
-                <h1 className="font-oswald text-[36px] leading-[1] sm:text-5xl font-bold text-white uppercase mb-3 drop-shadow-xl">
-                  Междугороднее
-                  <br />
-                  <span className="text-amber">такси</span>
-                </h1>
-              )}
-              <p className="font-golos text-white text-sm sm:text-base max-w-sm mx-auto drop-shadow-lg font-medium">
+              <div className="inline-block bg-black/55 backdrop-blur-sm rounded-2xl px-5 py-3 sm:px-6 sm:py-4 mb-3 ring-1 ring-white/10 shadow-2xl">
+                {route ? (
+                  <h1
+                    className="font-oswald text-[32px] leading-[1] sm:text-5xl font-bold text-white uppercase"
+                    style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}
+                  >
+                    Заказать такси
+                    <br />
+                    <span className="text-amber">{route}</span>
+                  </h1>
+                ) : (
+                  <h1
+                    className="font-oswald text-[34px] leading-[1] sm:text-5xl font-bold text-white uppercase"
+                    style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}
+                  >
+                    Междугороднее
+                    <br />
+                    <span className="text-amber">такси</span>
+                  </h1>
+                )}
+              </div>
+              <p
+                className="font-golos text-white text-sm sm:text-base max-w-sm mx-auto font-semibold"
+                style={{ textShadow: "0 2px 8px rgba(0,0,0,0.85)" }}
+              >
                 Фиксированная цена · Подача от 30 минут · Без предоплаты
               </p>
             </div>
@@ -278,21 +289,14 @@ export default function Index() {
                 </p>
               </div>
 
-              {/* "Написать в мессенджер" label */}
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-black/15 to-transparent" />
-                <p className="text-[#1a1a1a]/60 font-golos text-xs uppercase tracking-widest font-semibold whitespace-nowrap">
-                  Написать в мессенджер
+              {/* Dynamic CTA — contrasted block */}
+              <div className="bg-gradient-to-r from-amber/15 via-amber/25 to-amber/15 border border-amber/40 rounded-xl px-3 py-2.5 mb-3 text-center">
+                <p className="font-oswald text-[#1a1a1a] text-[14px] sm:text-base uppercase font-bold tracking-wide leading-tight">
+                  {route
+                    ? `Заказать такси ${route} через:`
+                    : "Узнать стоимость и заказать через:"}
                 </p>
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-black/15 to-transparent" />
               </div>
-
-              {/* Dynamic CTA text for messengers */}
-              <p className="text-center font-golos text-[#1a1a1a]/70 text-[13px] mb-2.5">
-                {route
-                  ? `Заказать такси ${route} через:`
-                  : "Узнать стоимость и заказать через:"}
-              </p>
 
               {/* Messenger buttons */}
               <div className="grid grid-cols-2 gap-2.5 mb-4">
