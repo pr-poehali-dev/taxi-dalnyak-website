@@ -9,6 +9,10 @@ const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 const PHONE = "8 (995) 645-51-25";
 const PHONE_HREF = "tel:+79956455125";
 const TG = "https://t.me/Mezhgorod1816";
+// Если у вас есть Telegram-бот для приёма заявок — впишите его username сюда без @.
+// Тогда вместо клипборда будет использоваться deeplink ?start=<payload>,
+// и бот сможет ответить готовым сообщением для отправки одной кнопкой.
+const TG_BOT_USERNAME = ""; // например: "MezhgorodOrderBot"
 const MAX_URL = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
 
 function getAllUtmParams(): Record<string, string> {
@@ -289,39 +293,97 @@ export default function Index() {
     return "Здравствуйте! Хочу заказать междугороднее такси. Подскажите, пожалуйста, стоимость.";
   }, [fromCity, toCity, route]);
 
+  const copyToClipboard = useCallback(async (text: string): Promise<boolean> => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const buildTgUrl = useCallback((text: string): string => {
+    if (TG_BOT_USERNAME) {
+      // Deeplink в бота: бот получит /start <payload> и отправит готовое сообщение клиенту
+      const payload = btoa(unescape(encodeURIComponent(text)))
+        .replace(/=+$/, "")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .slice(0, 64);
+      return `https://t.me/${TG_BOT_USERNAME}?start=${payload}`;
+    }
+    return TG;
+  }, []);
+
+  const buildMaxUrl = useCallback((text: string): string => {
+    // У MAX-инвайт-ссылок нет официального prefill, но пробуем ?text= — некоторые версии клиента подхватывают
+    const sep = MAX_URL.includes("?") ? "&" : "?";
+    return `${MAX_URL}${sep}text=${encodeURIComponent(text)}`;
+  }, []);
+
   const openMessenger = useCallback(
     async (kind: "tg" | "max", e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
       const text = buildMessengerText();
-      const targetUrl = kind === "tg" ? TG : MAX_URL;
+      const targetUrl = kind === "tg" ? buildTgUrl(text) : buildMaxUrl(text);
       trackGoal(kind);
 
-      // Try to copy text to clipboard so user just pastes it (Cmd/Ctrl+V) in chat.
-      // t.me/<username> и MAX-инвайты не поддерживают prefilled text через URL.
-      try {
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(text);
-        } else {
-          const ta = document.createElement("textarea");
-          ta.value = text;
-          ta.style.position = "fixed";
-          ta.style.opacity = "0";
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand("copy");
-          document.body.removeChild(ta);
+      // На мобильных пробуем системный шит (Web Share API) — это самый чистый UX
+      const isMobile = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+      const nav = navigator as Navigator & { share?: (data: ShareData) => Promise<void> };
+      if (isMobile && nav.share && kind === "tg" && !TG_BOT_USERNAME) {
+        try {
+          await nav.share({ text, url: targetUrl });
+          return;
+        } catch {
+          /* пользователь закрыл шит — продолжаем fallback */
         }
-        e.preventDefault();
-        setCopyHint(
-          "Сообщение скопировано! Вставьте его в чат (долгое нажатие → Вставить) и нажмите «Отправить».",
-        );
-        window.open(targetUrl, "_blank", "noopener,noreferrer");
-        window.setTimeout(() => setCopyHint(""), 8000);
-      } catch {
-        // Если копирование недоступно — просто открываем чат как раньше
       }
+
+      // Fallback: копируем текст в буфер и открываем чат
+      const copied = await copyToClipboard(text);
+      if (copied) {
+        if (TG_BOT_USERNAME && kind === "tg") {
+          setCopyHint("Откроется чат с ботом — нажмите «Запустить», и сообщение сформируется автоматически.");
+        } else {
+          setCopyHint("Сообщение скопировано! Вставьте его в чат (долгое нажатие → Вставить) и нажмите «Отправить».");
+        }
+        window.setTimeout(() => setCopyHint(""), 8000);
+      }
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
     },
-    [buildMessengerText, trackGoal],
+    [buildMessengerText, trackGoal, copyToClipboard, buildTgUrl, buildMaxUrl],
   );
+
+  const shareViaSystem = useCallback(async () => {
+    const text = buildMessengerText();
+    const nav = navigator as Navigator & { share?: (data: ShareData) => Promise<void> };
+    trackGoal("share");
+    if (nav.share) {
+      try {
+        await nav.share({ title: "Заказ такси", text });
+        return;
+      } catch {
+        /* пользователь закрыл — fallback на копирование */
+      }
+    }
+    const copied = await copyToClipboard(text);
+    if (copied) {
+      setCopyHint("Сообщение скопировано — вставьте его в любой мессенджер.");
+      window.setTimeout(() => setCopyHint(""), 8000);
+    }
+  }, [buildMessengerText, copyToClipboard, trackGoal]);
 
   const submit = useCallback(
     async (e?: React.FormEvent) => {
@@ -532,6 +594,17 @@ export default function Index() {
                   />
                 </a>
               </div>
+
+              {/* Share via system sheet (mobile) */}
+              <button
+                type="button"
+                onClick={shareViaSystem}
+                className="w-full mb-3 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#1a1a1a] text-white font-oswald uppercase text-sm font-bold active:scale-95 transition-transform"
+                style={{ boxShadow: "0 6px 16px rgba(0,0,0,0.18)" }}
+              >
+                <Icon name="Share2" size={16} />
+                <span>Поделиться готовой заявкой</span>
+              </button>
 
               {/* Preview of prefilled message */}
               {(fromCity && toCity) || route ? (
