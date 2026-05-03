@@ -53,22 +53,19 @@ def deepseek_summary(stats_text, dropped_dialogs):
         "3) одна-две гипотезы как улучшить промпт Алисы. Без воды и общих фраз. Только конкретика по диалогам.\n\n"
         f"СТАТИСТИКА:\n{stats_text}\n\nФРАГМЕНТЫ ОТКАЗОВ:\n{dropped_dialogs[:3500]}"
     )
-    if not YANDEX_FOLDER_ID or not YANDEX_GPT_API_KEY:
+    if not DEEPSEEK_API_KEY:
         return None
     payload = {
-        "model": f"gpt://{YANDEX_FOLDER_ID}/yandexgpt/latest",
+        "model": "deepseek-chat",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.5,
         "max_tokens": 500,
     }
     s, data = https_post_json(
-        "llm.api.cloud.yandex.net",
-        "/v1/chat/completions",
+        "api.deepseek.com",
+        "/chat/completions",
         payload,
-        {
-            "Authorization": f"Api-Key {YANDEX_GPT_API_KEY}",
-            "x-folder-id": YANDEX_FOLDER_ID,
-        },
+        {"Authorization": f"Bearer {DEEPSEEK_API_KEY}"},
         timeout=60,
     )
     if s != 200:

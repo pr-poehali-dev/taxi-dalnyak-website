@@ -158,23 +158,26 @@ const AlisaChat = forwardRef<AlisaChatHandle, Props>(function AlisaChat(
 
       let data: ApiResponse | null = null;
       let lastErr: unknown = null;
-      // 2 попытки: 60с основная + 30с ретрай. Сессия и история сохраняются на бэке — повтор безопасен.
-      for (let attempt = 0; attempt < 2; attempt++) {
+      // 3 попытки с увеличенными таймаутами. История на бэке сохраняется — повтор безопасен.
+      const timeouts = [90000, 60000, 45000];
+      for (let attempt = 0; attempt < timeouts.length; attempt++) {
         try {
-          data = await callOnce(attempt === 0 ? 60000 : 30000);
+          data = await callOnce(timeouts[attempt]);
           lastErr = null;
           break;
         } catch (e) {
           lastErr = e;
-          if (attempt === 0) await new Promise((r) => setTimeout(r, 1200));
+          console.warn(`[alisa] attempt ${attempt + 1} failed:`, e);
+          if (attempt < timeouts.length - 1) {
+            await new Promise((r) => setTimeout(r, 1500));
+          }
         }
       }
 
       if (!data) {
-        console.warn("[alisa] sendToBackend failed:", lastErr);
+        console.warn("[alisa] sendToBackend ALL attempts failed:", lastErr);
         await pushAssistantBubbles([
-          "Секундочку, не дошло сообщение 🙈",
-          "Напишите, пожалуйста, ещё раз — я всё помню, продолжим с того же места.",
+          "Чуть задумалась 🙈 Дайте секунду и напишите ещё разок — я помню всё, что вы говорили.",
         ]);
         setSending(false);
         return;
