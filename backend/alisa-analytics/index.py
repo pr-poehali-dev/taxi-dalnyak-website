@@ -52,7 +52,7 @@ def deepseek_summary(stats_text, dropped_dialogs):
         f"СТАТИСТИКА:\n{stats_text}\n\nФРАГМЕНТЫ ОТКАЗОВ:\n{dropped_dialogs[:3500]}"
     )
     payload = {
-        "model": "deepseek-chat",
+        "model": "deepseek-v4-flash",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.5,
         "max_tokens": 500,

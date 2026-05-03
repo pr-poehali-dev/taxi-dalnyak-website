@@ -643,7 +643,7 @@ def _digits(raw):
 
 def deepseek_chat(messages, tools=None):
     payload = {
-        "model": "deepseek-chat",
+        "model": "deepseek-v4-flash",
         "messages": messages,
         "temperature": 0.85,
         "max_tokens": 250,
