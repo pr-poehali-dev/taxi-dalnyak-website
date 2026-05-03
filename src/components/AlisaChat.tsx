@@ -134,17 +134,53 @@ const AlisaChat = forwardRef<AlisaChatHandle, Props>(function AlisaChat(
   const sendToBackend = useCallback(
     async (text: string, isAuto = false) => {
       setSending(true);
+
+      const callOnce = async (timeoutMs: number) => {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+        try {
+          const res = await fetch(CHAT_API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: text,
+              session_id: sessionIdRef.current,
+              utm,
+            }),
+            signal: ctrl.signal,
+          });
+          if (!res.ok) throw new Error("http_" + res.status);
+          return (await res.json()) as ApiResponse;
+        } finally {
+          clearTimeout(timer);
+        }
+      };
+
+      let data: ApiResponse | null = null;
+      let lastErr: unknown = null;
+      // 2 попытки: 60с основная + 30с ретрай. Сессия и история сохраняются на бэке — повтор безопасен.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          data = await callOnce(attempt === 0 ? 60000 : 30000);
+          lastErr = null;
+          break;
+        } catch (e) {
+          lastErr = e;
+          if (attempt === 0) await new Promise((r) => setTimeout(r, 1200));
+        }
+      }
+
+      if (!data) {
+        console.warn("[alisa] sendToBackend failed:", lastErr);
+        await pushAssistantBubbles([
+          "Секундочку, не дошло сообщение 🙈",
+          "Напишите, пожалуйста, ещё раз — я всё помню, продолжим с того же места.",
+        ]);
+        setSending(false);
+        return;
+      }
+
       try {
-        const res = await fetch(CHAT_API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: text,
-            session_id: sessionIdRef.current,
-            utm,
-          }),
-        });
-        const data = (await res.json()) as ApiResponse;
         const bubbles = data.bubbles && data.bubbles.length > 0 ? data.bubbles : [data.reply || "..."];
         await pushAssistantBubbles(bubbles);
 
@@ -158,8 +194,6 @@ const AlisaChat = forwardRef<AlisaChatHandle, Props>(function AlisaChat(
           if (onOrdered) onOrdered();
         }
         if (!isAuto) trackGoal("alisa_message_sent");
-      } catch {
-        await pushAssistantBubbles(["Связь подвисла на секунду 🙈", "Повторите, пожалуйста?"]);
       } finally {
         setSending(false);
       }
