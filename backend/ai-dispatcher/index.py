@@ -1,11 +1,10 @@
 import json
-import os
 import http.client
 import ssl
 
 
-BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+BOT_TOKEN = "8294092024:AAG29J99kYrTw5iCYy-f7afgO7T1iubyPSs"
+CHAT_ID = "-4725554768"
 
 CORS = {
     "Access-Control-Allow-Origin": "*",
