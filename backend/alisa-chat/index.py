@@ -677,6 +677,15 @@ def format_order_telegram(args, phone_norm, session_id, utm):
     return "\n".join(lines)
 
 
+def is_operator_active(cur, session_id):
+    cur.execute(
+        f"SELECT operator_active FROM {DB_SCHEMA}.chat_sessions WHERE session_id = %s",
+        (session_id,),
+    )
+    row = cur.fetchone()
+    return bool(row and row[0])
+
+
 def run_chat(session_id, user_message, utm, user_agent, ip):
     conn = db_conn()
     conn.autocommit = False
@@ -684,6 +693,17 @@ def run_chat(session_id, user_message, utm, user_agent, ip):
         cur = conn.cursor()
         ensure_session(cur, session_id, utm, user_agent, ip)
         save_message(cur, session_id, "user", user_message)
+
+        # Если оператор активен — Алиса молчит, только увеличиваем счётчик непрочитанных
+        if is_operator_active(cur, session_id):
+            cur.execute(
+                f"UPDATE {DB_SCHEMA}.chat_sessions "
+                f"SET unread_for_operator = COALESCE(unread_for_operator,0) + 1, last_message_at = NOW() "
+                f"WHERE session_id = %s",
+                (session_id,),
+            )
+            conn.commit()
+            return {"reply": "", "bubbles": [], "session_id": session_id, "operator_active": True}
 
         history = load_history(cur, session_id, limit=30)
         memory = load_session_memory(cur, session_id)
@@ -779,7 +799,11 @@ def run_chat(session_id, user_message, utm, user_agent, ip):
                         tg_lines.append(f"session: <code>{session_id[:12]}</code>")
                         telegram_send("\n".join(tg_lines))
                         try:
-                            update_session_meta(cur, session_id, drop_stage=f"handoff: {reason}"[:500])
+                            update_session_meta(
+                                cur, session_id,
+                                drop_stage=f"handoff: {reason}"[:500],
+                                needs_operator=True,
+                            )
                         except Exception:
                             pass
                         result = {
@@ -879,11 +903,63 @@ def run_chat(session_id, user_message, utm, user_agent, ip):
         conn.close()
 
 
+def poll_new_messages(session_id, since_iso):
+    """Возвращает новые сообщения для клиента (от оператора или Алисы) с момента since_iso."""
+    conn = db_conn()
+    try:
+        cur = conn.cursor()
+        if since_iso:
+            cur.execute(
+                f"SELECT from_role, text, created_at FROM {DB_SCHEMA}.chat_messages "
+                f"WHERE session_id = %s AND created_at > %s::timestamptz "
+                f"ORDER BY created_at ASC LIMIT 50",
+                (session_id, since_iso),
+            )
+        else:
+            cur.execute(
+                f"SELECT from_role, text, created_at FROM {DB_SCHEMA}.chat_messages "
+                f"WHERE session_id = %s AND from_role = 'operator' "
+                f"ORDER BY created_at DESC LIMIT 5",
+                (session_id,),
+            )
+        rows = cur.fetchall()
+        msgs = []
+        for role, text, ts in rows:
+            msgs.append({
+                "role": role,
+                "text": text,
+                "ts": ts.isoformat() if ts else None,
+            })
+        cur.execute(
+            f"SELECT operator_active FROM {DB_SCHEMA}.chat_sessions WHERE session_id = %s",
+            (session_id,),
+        )
+        row = cur.fetchone()
+        operator_active = bool(row and row[0])
+        return {"messages": msgs, "operator_active": operator_active}
+    finally:
+        conn.close()
+
+
 def handler(event, context):
     """ИИ-агент Алиса: чат с клиентом для оформления межгороднего такси"""
     method = event.get("httpMethod", "POST")
     if method == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
+
+    # GET — поллинг новых сообщений от оператора
+    if method == "GET":
+        qs = event.get("queryStringParameters") or {}
+        sid = (qs.get("session_id") or "").strip()
+        if not sid:
+            return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "session_id required"})}
+        since = qs.get("since") or ""
+        try:
+            data = poll_new_messages(sid, since)
+            return {"statusCode": 200, "headers": CORS, "body": json.dumps(data, ensure_ascii=False, default=str)}
+        except Exception as e:
+            print(f"[alisa] poll error: {e}")
+            return {"statusCode": 200, "headers": CORS, "body": json.dumps({"messages": [], "operator_active": False})}
 
     if method != "POST":
         return {"statusCode": 405, "headers": CORS, "body": json.dumps({"error": "method_not_allowed"})}

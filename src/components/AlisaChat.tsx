@@ -62,12 +62,14 @@ const AlisaChat = forwardRef<AlisaChatHandle, Props>(function AlisaChat(
   const [sending, setSending] = useState(false);
   const [typing, setTyping] = useState(false);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const [operatorActive, setOperatorActive] = useState(false);
   const sessionIdRef = useRef<string>("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const startedRef = useRef(false);
   const orderDetectedRef = useRef(false);
   const queueRef = useRef<Promise<void>>(Promise.resolve());
+  const lastSeenIsoRef = useRef<string>("");
 
   useEffect(() => {
     sessionIdRef.current = getOrCreateSession();
@@ -193,6 +195,47 @@ const AlisaChat = forwardRef<AlisaChatHandle, Props>(function AlisaChat(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Поллинг — забираем новые сообщения от оператора (если он подключился)
+  useEffect(() => {
+    let stopped = false;
+    const poll = async () => {
+      if (!sessionIdRef.current || stopped) return;
+      try {
+        const since = lastSeenIsoRef.current ? `&since=${encodeURIComponent(lastSeenIsoRef.current)}` : "";
+        const res = await fetch(`${CHAT_API}?session_id=${encodeURIComponent(sessionIdRef.current)}${since}`);
+        const data = await res.json();
+        if (data.operator_active !== undefined) setOperatorActive(!!data.operator_active);
+        const newMsgs = (data.messages || []) as Array<{ role: string; text: string; ts: string }>;
+        // Фильтруем только сообщения от оператора (Алисины уже в стейте)
+        const opMsgs = newMsgs.filter((m) => m.role === "operator");
+        if (opMsgs.length > 0) {
+          for (const m of opMsgs) {
+            setMessages((arr) => [
+              ...arr,
+              { id: "op_" + (m.ts || Date.now()), role: "assistant", content: m.text, ts: Date.now() },
+            ]);
+            if (m.ts) lastSeenIsoRef.current = m.ts;
+          }
+          scrollToBottom();
+        } else if (newMsgs.length > 0) {
+          // Просто двигаем курсор поллинга
+          const lastTs = newMsgs[newMsgs.length - 1].ts;
+          if (lastTs) lastSeenIsoRef.current = lastTs;
+        }
+      } catch {
+        /* noop */
+      }
+    };
+    const t = setInterval(poll, 4000);
+    // первый раз через секунду
+    const t0 = setTimeout(poll, 1000);
+    return () => {
+      stopped = true;
+      clearInterval(t);
+      clearTimeout(t0);
+    };
+  }, [scrollToBottom]);
+
   useEffect(scrollToBottom, [messages, typing, scrollToBottom]);
 
   const handleUserSend = useCallback(
@@ -246,11 +289,11 @@ const AlisaChat = forwardRef<AlisaChatHandle, Props>(function AlisaChat(
           </div>
           <div className="flex-1">
             <div className="font-oswald text-[13px] font-bold uppercase tracking-wide leading-tight">
-              Алиса · диспетчер
+              {operatorActive ? "Диспетчер на связи" : "Алиса · диспетчер"}
             </div>
-            <div className="text-[10.5px] text-green-600 font-golos flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              онлайн
+            <div className={`text-[10.5px] font-golos flex items-center gap-1 ${operatorActive ? "text-blue-600" : "text-green-600"}`}>
+              <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${operatorActive ? "bg-blue-500" : "bg-green-500"}`} />
+              {operatorActive ? "живой человек отвечает" : "онлайн"}
             </div>
           </div>
         </div>
