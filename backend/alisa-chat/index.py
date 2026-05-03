@@ -109,7 +109,19 @@ SYSTEM_PROMPT = """Ты — Алиса, диспетчер компании «Д
 
 ═══ ИНСТРУМЕНТЫ ═══
 - calculate_route(origin, destination) — ОБЯЗАТЕЛЬНО вызывай ДО озвучивания цены. Не придумывай км.
-- create_order — вызывай ТОЛЬКО когда есть: маршрут + дата + время + телефон. Передавай pickup_date и pickup_time отдельными полями.
+  ⚠️ Если в блоке «ПАМЯТЬ СЕССИИ» уже есть «Расстояние: X км» — НЕ вызывай calculate_route повторно. Используй сохранённое значение.
+- create_order — вызывай когда есть: маршрут + дата + время + телефон. Передавай pickup_date и pickup_time отдельными полями.
+  Если телефон явно неполный (меньше 10 цифр) — НЕ вызывай инструмент, мягко переспроси: «Кажется, в номере не хватает цифр. Продиктуйте ещё раз, пожалуйста?»
+
+═══ ПАМЯТЬ ═══
+В системе автоматически сохраняется всё, что ты выяснила (маршрут, км, дата, время, цена, пассажиры, телефон).
+Перед каждым ответом смотри блок «ПАМЯТЬ СЕССИИ» выше — там вся история.
+НИКОГДА не переспрашивай то, что уже есть в памяти. Это бесит клиента.
+
+═══ ВАЛИДАЦИЯ ТЕЛЕФОНА ═══
+Российский номер = 11 цифр (начинается с 7 или 8) или 10 цифр (без кода страны).
+Если клиент дал «8 916 23» — это явно мало, мягко переспроси.
+Если дал «89162345678» — это 11 цифр, ОК, оформляй.
 
 ═══ ВОЗРАЖЕНИЯ (отвечай коротко, не лекциями) ═══
 "Дорого / у других дешевле" → "Понимаю. У нас цена не растёт в дороге, машина не старше 3 лет. Многие к нам возвращаются 🤝"
@@ -300,6 +312,20 @@ def normalize_phone(raw):
     return digits
 
 
+def is_valid_phone(raw):
+    """Проверяет что номер похож на российский: 11 цифр, начинается с 7 или 8."""
+    digits = re.sub(r"\D", "", raw or "")
+    if len(digits) == 10:
+        return True  # без кода страны
+    if len(digits) == 11 and digits[0] in ("7", "8"):
+        return True
+    return False
+
+
+def _digits(raw):
+    return re.sub(r"\D", "", raw or "")
+
+
 def deepseek_chat(messages, tools=None):
     payload = {
         "model": "deepseek-chat",
@@ -374,6 +400,60 @@ def ensure_session(cur, session_id, utm, user_agent, ip):
             (ip or "")[:64],
         ),
     )
+
+
+def load_session_memory(cur, session_id):
+    """Загружает всё что мы уже знаем о клиенте в этой сессии."""
+    cur.execute(
+        f"SELECT route_from, route_to, distance_km, car_class, quoted_price, phone, "
+        f"pickup_date, pickup_time, pax_count, has_toll, extras, is_ordered "
+        f"FROM {DB_SCHEMA}.chat_sessions WHERE session_id = %s",
+        (session_id,),
+    )
+    row = cur.fetchone()
+    if not row:
+        return {}
+    keys = [
+        "route_from", "route_to", "distance_km", "car_class", "quoted_price",
+        "phone", "pickup_date", "pickup_time", "pax_count", "has_toll", "extras", "is_ordered",
+    ]
+    return {k: v for k, v in zip(keys, row) if v is not None}
+
+
+def format_memory_block(mem):
+    """Формирует блок памяти для системного промпта."""
+    if not mem:
+        return ""
+    lines = ["═══ ЧТО ТЫ УЖЕ ЗНАЕШЬ О КЛИЕНТЕ (ПАМЯТЬ СЕССИИ) ═══",
+             "Эти данные уже выяснены, НЕ переспрашивай их повторно:"]
+    if mem.get("route_from") and mem.get("route_to"):
+        lines.append(f"• Маршрут: {mem['route_from']} → {mem['route_to']}")
+    elif mem.get("route_from"):
+        lines.append(f"• Откуда: {mem['route_from']}")
+    elif mem.get("route_to"):
+        lines.append(f"• Куда: {mem['route_to']}")
+    if mem.get("distance_km"):
+        lines.append(f"• Расстояние: {mem['distance_km']} км (УЖЕ РАССЧИТАНО, не вызывай calculate_route повторно)")
+    if mem.get("has_toll"):
+        lines.append("• На маршруте есть платные дороги")
+    if mem.get("pickup_date"):
+        lines.append(f"• Дата выезда: {mem['pickup_date']}")
+    if mem.get("pickup_time"):
+        lines.append(f"• Время выезда: {mem['pickup_time']}")
+    if mem.get("pax_count"):
+        lines.append(f"• Пассажиров: {mem['pax_count']}")
+    if mem.get("car_class"):
+        lines.append(f"• Класс авто: {mem['car_class']}")
+    if mem.get("quoted_price"):
+        lines.append(f"• Озвученная цена: {int(float(mem['quoted_price']))} ₽")
+    if mem.get("phone"):
+        lines.append(f"• Телефон: +{mem['phone']}")
+    if mem.get("extras"):
+        lines.append(f"• Доп: {mem['extras']}")
+    if mem.get("is_ordered"):
+        lines.append("• ⚠️ ЗАКАЗ УЖЕ ОФОРМЛЕН. Не оформляй второй раз. Если клиент пишет — отвечай по делу.")
+    lines.append("")
+    return "\n".join(lines) + "\n"
 
 
 def update_session_meta(cur, session_id, **kwargs):
@@ -473,6 +553,8 @@ def run_chat(session_id, user_message, utm, user_agent, ip):
         save_message(cur, session_id, "user", user_message)
 
         history = load_history(cur, session_id, limit=30)
+        memory = load_session_memory(cur, session_id)
+        memory_block = format_memory_block(memory)
 
         utm_hint = ""
         if utm:
@@ -480,9 +562,10 @@ def run_chat(session_id, user_message, utm, user_agent, ip):
             if term and not str(term).startswith("{"):
                 utm_hint = f"\n\n[Контекст: клиент пришёл с рекламы по запросу «{term}». Если в запросе есть маршрут — учти его сразу.]"
 
-        messages = [{"role": "system", "content": SYSTEM_PROMPT + utm_hint}] + history
+        system_full = SYSTEM_PROMPT + "\n" + memory_block + utm_hint
+        messages = [{"role": "system", "content": system_full}] + history
 
-        # Multi-step: до 3 итераций tool calls
+        # Multi-step: до 4 итераций tool calls
         final_text = None
         last_err = None
         for _ in range(4):
@@ -502,18 +585,73 @@ def run_chat(session_id, user_message, utm, user_agent, ip):
                         args = json.loads(tc["function"].get("arguments") or "{}")
                     except Exception:
                         args = {}
+                    print(f"[alisa] tool_call: {fn} args={json.dumps(args, ensure_ascii=False)[:300]}")
+
                     if fn == "calculate_route":
-                        result = geoapify_route(args.get("origin", ""), args.get("destination", ""))
-                    elif fn == "create_order":
-                        order_id, phone_norm = save_order(cur, session_id, args)
-                        text_tg = format_order_telegram(args, phone_norm, session_id, utm)
-                        sent = telegram_send(text_tg)
-                        if sent:
-                            cur.execute(
-                                f"UPDATE {DB_SCHEMA}.chat_orders SET sent_to_telegram = TRUE WHERE id = %s",
-                                (order_id,),
+                        origin = args.get("origin") or memory.get("route_from") or ""
+                        dest = args.get("destination") or memory.get("route_to") or ""
+                        result = geoapify_route(origin, dest)
+                        # Сохраняем в память сессии
+                        if result.get("ok"):
+                            memory["route_from"] = origin
+                            memory["route_to"] = dest
+                            memory["distance_km"] = result.get("distance_km")
+                            memory["has_toll"] = result.get("has_toll")
+                            update_session_meta(
+                                cur, session_id,
+                                route_from=origin,
+                                route_to=dest,
+                                distance_km=result.get("distance_km"),
+                                has_toll=result.get("has_toll"),
                             )
-                        result = {"ok": True, "order_id": order_id, "telegram_sent": sent}
+                            print(f"[alisa] route saved: {origin} -> {dest} = {result.get('distance_km')} km")
+                    elif fn == "create_order":
+                        # МЕРДЖИМ: если LLM не передал поле — берём из памяти
+                        merged = dict(args)
+                        for fld in ("route_from", "route_to", "distance_km", "car_class",
+                                    "price", "pax_count", "pickup_date", "pickup_time", "extras"):
+                            if not merged.get(fld) and memory.get(fld) is not None:
+                                merged[fld] = memory[fld]
+                        # Маппим поля из БД с другими именами
+                        if not merged.get("price") and memory.get("quoted_price"):
+                            merged["price"] = memory["quoted_price"]
+
+                        # Валидация телефона
+                        phone_raw = merged.get("phone", "")
+                        if not is_valid_phone(phone_raw):
+                            digits = _digits(phone_raw)
+                            result = {
+                                "ok": False,
+                                "error": "invalid_phone",
+                                "got_digits": len(digits),
+                                "hint": "Российский номер должен содержать 11 цифр (или 10 без кода). Переспроси клиента вежливо: «Кажется, в номере не хватает цифр — продиктуйте ещё раз?»",
+                            }
+                            print(f"[alisa] invalid phone: '{phone_raw}' digits={len(digits)}")
+                        # Проверка обязательных полей
+                        elif not merged.get("pickup_date") or not merged.get("pickup_time"):
+                            result = {
+                                "ok": False,
+                                "error": "missing_datetime",
+                                "missing": [f for f in ("pickup_date", "pickup_time") if not merged.get(f)],
+                                "hint": "Перед оформлением обязательно спроси дату и время поездки.",
+                            }
+                        elif not merged.get("route_from") or not merged.get("route_to"):
+                            result = {
+                                "ok": False,
+                                "error": "missing_route",
+                                "hint": "Сначала выясни маршрут (откуда и куда).",
+                            }
+                        else:
+                            order_id, phone_norm = save_order(cur, session_id, merged)
+                            text_tg = format_order_telegram(merged, phone_norm, session_id, utm)
+                            sent = telegram_send(text_tg)
+                            if sent:
+                                cur.execute(
+                                    f"UPDATE {DB_SCHEMA}.chat_orders SET sent_to_telegram = TRUE WHERE id = %s",
+                                    (order_id,),
+                                )
+                            print(f"[alisa] order saved id={order_id} tg_sent={sent}")
+                            result = {"ok": True, "order_id": order_id, "telegram_sent": sent}
                     else:
                         result = {"error": "unknown_tool"}
                     messages.append({
