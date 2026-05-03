@@ -96,13 +96,13 @@ export default function Index() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col px-3 pt-2 min-h-0">
+      <div className="px-3 pt-2">
         <div
-          className="flex-1 rounded-2xl bg-white border border-black/10 overflow-hidden shadow-lg"
+          className="rounded-2xl bg-white border border-black/10 overflow-hidden shadow-lg"
           style={{
             boxShadow: "0 12px 28px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.04)",
-            minHeight: "55vh",
-            maxHeight: "70dvh",
+            height: "calc(100dvh - 200px)",
+            minHeight: "420px",
           }}
         >
           <AlisaChat

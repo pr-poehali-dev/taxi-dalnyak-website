@@ -61,14 +61,47 @@ const AlisaChat = forwardRef<AlisaChatHandle, Props>(function AlisaChat(
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const sessionIdRef = useRef<string>("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const startedRef = useRef(false);
   const orderDetectedRef = useRef(false);
   const queueRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     sessionIdRef.current = getOrCreateSession();
+  }, []);
+
+  // Обработка экранной клавиатуры через VisualViewport API
+  useEffect(() => {
+    const vv = (window as Window & { visualViewport?: VisualViewport }).visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKeyboardOffset(offset);
+      // Прокручиваем сообщения вниз когда клавиатура появилась
+      requestAnimationFrame(() => {
+        const el = scrollRef.current;
+        if (el) el.scrollTop = el.scrollHeight;
+      });
+    };
+    vv.addEventListener("resize", onResize);
+    vv.addEventListener("scroll", onResize);
+    onResize();
+    return () => {
+      vv.removeEventListener("resize", onResize);
+      vv.removeEventListener("scroll", onResize);
+    };
+  }, []);
+
+  const handleInputFocus = useCallback(() => {
+    // Через небольшую паузу — чтобы клавиатура успела появиться
+    setTimeout(() => {
+      const el = scrollRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+      inputRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+    }, 250);
   }, []);
 
   const scrollToBottom = useCallback(() => {
@@ -199,8 +232,11 @@ const AlisaChat = forwardRef<AlisaChatHandle, Props>(function AlisaChat(
   );
 
   return (
-    <div className="flex flex-col h-full bg-[#F5F2ED]">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
+    <div
+      className="flex flex-col h-full bg-[#F5F2ED] transition-[padding] duration-150"
+      style={{ paddingBottom: keyboardOffset ? `${keyboardOffset}px` : 0 }}
+    >
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-2 overscroll-contain">
         <div className="flex items-center gap-2 px-1 pb-2 sticky top-0 bg-[#F5F2ED]/90 backdrop-blur-sm z-10">
           <div className="relative">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-[15px]">
@@ -247,17 +283,20 @@ const AlisaChat = forwardRef<AlisaChatHandle, Props>(function AlisaChat(
 
       <div className="px-3 py-2.5 bg-white border-t border-black/10 flex items-center gap-2">
         <input
+          ref={inputRef}
           type="text"
           inputMode="text"
           autoComplete="off"
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onFocus={handleInputFocus}
           onKeyDown={(e) => {
             if (e.key === "Enter") handleSendInput();
           }}
           placeholder="Напишите Алисе…"
           disabled={sending}
-          className="flex-1 px-4 py-2.5 rounded-full bg-[#F5F2ED] text-[15px] font-golos focus:outline-none focus:ring-2 focus:ring-amber-400/50 disabled:opacity-60"
+          className="flex-1 px-4 py-2.5 rounded-full bg-[#F5F2ED] text-[16px] font-golos focus:outline-none focus:ring-2 focus:ring-amber-400/50 disabled:opacity-60"
+          style={{ fontSize: "16px" }}
         />
         <button
           type="button"
