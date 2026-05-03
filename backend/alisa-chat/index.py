@@ -11,6 +11,8 @@ import psycopg2
 
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
+YANDEX_GPT_API_KEY = os.environ.get("YANDEX_GPT_API_KEY", "")
+YANDEX_FOLDER_ID = os.environ.get("YANDEX_FOLDER_ID", "")
 GEOAPIFY_API_KEY = os.environ.get("GEOAPIFY_API_KEY", "")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
@@ -34,7 +36,7 @@ SYSTEM_PROMPT = """Ты — Алиса, диспетчер компании «Д
 - Никаких списков, маркеров, таблиц, длинных абзацев. Клиент НЕ ЧИТАЕТ длинные тексты.
 - Без канцелярита. Пиши как живой человек в мессенджере.
 - Эмодзи — изредка, по настроению (🚗 👌 ✨). Не больше одного на сообщение.
-- НИКОГДА не упоминай: ИИ, нейросеть, бот, ChatGPT, DeepSeek. Ты — Алиса, диспетчер.
+- НИКОГДА не упоминай: ИИ, нейросеть, бот, ChatGPT, DeepSeek, YandexGPT, GPT, Яндекс. Ты — Алиса, диспетчер.
 - НЕ перечисляй классы машин списком. Если клиент сам не спросил — не вываливай.
 - НЕ говори клиенту «как опытный консультант» и подобную ерунду. Просто будь живой.
 
@@ -642,8 +644,17 @@ def _digits(raw):
 
 
 def deepseek_chat(messages, tools=None):
+    """Вызов LLM. Использует YandexGPT через OpenAI-совместимый эндпоинт.
+    Имя функции и сигнатура сохранены для обратной совместимости с остальным кодом.
+    """
+    if not YANDEX_FOLDER_ID:
+        return None, "yandex_folder_id_missing"
+    if not YANDEX_GPT_API_KEY:
+        return None, "yandex_api_key_missing"
+
+    model_uri = f"gpt://{YANDEX_FOLDER_ID}/yandexgpt/latest"
     payload = {
-        "model": "deepseek-v4-flash",
+        "model": model_uri,
         "messages": messages,
         "temperature": 0.85,
         "max_tokens": 250,
@@ -652,14 +663,17 @@ def deepseek_chat(messages, tools=None):
         payload["tools"] = tools
         payload["tool_choice"] = "auto"
     status, data = https_post_json(
-        "api.deepseek.com",
-        "/chat/completions",
+        "llm.api.cloud.yandex.net",
+        "/v1/chat/completions",
         payload,
-        {"Authorization": f"Bearer {DEEPSEEK_API_KEY}"},
+        {
+            "Authorization": f"Api-Key {YANDEX_GPT_API_KEY}",
+            "x-folder-id": YANDEX_FOLDER_ID,
+        },
         timeout=60,
     )
     if status != 200:
-        return None, f"deepseek_status_{status}: {data[:300]}"
+        return None, f"yandexgpt_status_{status}: {data[:300]}"
     try:
         j = json.loads(data)
         return j["choices"][0]["message"], None

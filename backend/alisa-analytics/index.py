@@ -9,6 +9,8 @@ import psycopg2
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
+YANDEX_GPT_API_KEY = os.environ.get("YANDEX_GPT_API_KEY", "")
+YANDEX_FOLDER_ID = os.environ.get("YANDEX_FOLDER_ID", "")
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 DB_SCHEMA = os.environ.get("MAIN_DB_SCHEMA", "t_p85334902_taxi_dalnyak_website")
 
@@ -51,17 +53,22 @@ def deepseek_summary(stats_text, dropped_dialogs):
         "3) одна-две гипотезы как улучшить промпт Алисы. Без воды и общих фраз. Только конкретика по диалогам.\n\n"
         f"СТАТИСТИКА:\n{stats_text}\n\nФРАГМЕНТЫ ОТКАЗОВ:\n{dropped_dialogs[:3500]}"
     )
+    if not YANDEX_FOLDER_ID or not YANDEX_GPT_API_KEY:
+        return None
     payload = {
-        "model": "deepseek-v4-flash",
+        "model": f"gpt://{YANDEX_FOLDER_ID}/yandexgpt/latest",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.5,
         "max_tokens": 500,
     }
     s, data = https_post_json(
-        "api.deepseek.com",
-        "/chat/completions",
+        "llm.api.cloud.yandex.net",
+        "/v1/chat/completions",
         payload,
-        {"Authorization": f"Bearer {DEEPSEEK_API_KEY}"},
+        {
+            "Authorization": f"Api-Key {YANDEX_GPT_API_KEY}",
+            "x-folder-id": YANDEX_FOLDER_ID,
+        },
         timeout=60,
     )
     if s != 200:
