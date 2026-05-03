@@ -356,6 +356,18 @@ def smart_geocode(text):
     return None
 
 
+def haversine_km(lat1, lon1, lat2, lon2):
+    """Расстояние по прямой между двумя точками в км."""
+    import math
+    R = 6371.0
+    p1 = math.radians(lat1)
+    p2 = math.radians(lat2)
+    dp = math.radians(lat2 - lat1)
+    dl = math.radians(lon2 - lon1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * R * math.asin(math.sqrt(a))
+
+
 def geoapify_route(origin_text, destination_text):
     a = smart_geocode(origin_text)
     b = smart_geocode(destination_text)
@@ -370,10 +382,31 @@ def geoapify_route(origin_text, destination_text):
         }
 
     waypoints = f"{a['lat']},{a['lon']}|{b['lat']},{b['lon']}"
-    path = f"/v1/routing?waypoints={waypoints}&mode=drive&details=route_details,toll&apiKey={GEOAPIFY_API_KEY}"
+    # ВАЖНО: details поддерживает только route_details, instruction_details, elevation
+    # Информация о toll включена в route_details автоматически
+    path = f"/v1/routing?waypoints={waypoints}&mode=drive&details=route_details&apiKey={GEOAPIFY_API_KEY}"
     status, data = https_get("api.geoapify.com", path, timeout=30)
     if status != 200:
-        return {"ok": False, "error": f"routing_status_{status}"}
+        # Fallback 1: пробуем без details
+        path2 = f"/v1/routing?waypoints={waypoints}&mode=drive&apiKey={GEOAPIFY_API_KEY}"
+        status2, data2 = https_get("api.geoapify.com", path2, timeout=30)
+        if status2 == 200:
+            status, data = status2, data2
+        else:
+            # Fallback 2: считаем по прямой + 30% на крюк дорог. Лучше так, чем «извините не получилось»
+            print(f"[alisa] routing both failed: {status}/{status2} | using haversine fallback")
+            straight = haversine_km(a["lat"], a["lon"], b["lat"], b["lon"])
+            road_km = round(straight * 1.30, 1)
+            return {
+                "ok": True,
+                "distance_km": road_km,
+                "duration_h": round(road_km / 80.0, 1),
+                "has_toll": False,
+                "origin": a["name"],
+                "destination": b["name"],
+                "estimated": True,
+                "note": "Расстояние оценочное (по прямой +30% на крюк). Точная стоимость подтверждается диспетчером.",
+            }
     try:
         j = json.loads(data)
         feats = j.get("features") or []
