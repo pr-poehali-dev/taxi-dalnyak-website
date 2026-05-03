@@ -109,19 +109,42 @@ SYSTEM_PROMPT = """Ты — Алиса, диспетчер компании «Д
 
 ═══ ИНСТРУМЕНТЫ ═══
 - calculate_route(origin, destination) — ОБЯЗАТЕЛЬНО вызывай ДО озвучивания цены. Не придумывай км.
-  ⚠️ Если в блоке «ПАМЯТЬ СЕССИИ» уже есть «Расстояние: X км» — НЕ вызывай calculate_route повторно. Используй сохранённое значение.
-- create_order — вызывай когда есть: маршрут + дата + время + телефон. Передавай pickup_date и pickup_time отдельными полями.
-  Если телефон явно неполный (меньше 10 цифр) — НЕ вызывай инструмент, мягко переспроси: «Кажется, в номере не хватает цифр. Продиктуйте ещё раз, пожалуйста?»
+  ⚠️ Если в блоке «ПАМЯТЬ СЕССИИ» уже есть «Расстояние: X км» — НЕ вызывай calculate_route повторно.
+  Если geoapify вернул error=geocode_failed — НЕ паникуй и НЕ переспрашивай маршрут заново. Один раз вежливо уточни полное название города («Подскажите полное название — какой город?»). Если и со второй попытки не находит — сразу handoff_to_operator.
+- create_order — вызывай когда есть: маршрут + дата + время + телефон.
+  Если телефон неполный — мягко переспроси, не вызывай инструмент.
+- handoff_to_operator(reason, context) — переключить на живого диспетчера 8 995 645 51 25.
+  Когда вызывать:
+   • не можешь распознать город даже после уточнения
+   • клиент задаёт вопрос, на который ты не знаешь ответа (нестандартный маршрут, особые условия, корпоративный заказ, страховка, груз и т.д.)
+   • клиент явно просит «дайте человека / оператора / диспетчера / позвоните мне»
+   • что-то идёт не так (повторные ошибки, клиент злится)
+  ❗ НИКОГДА не выдумывай ответ если не уверена. Лучше передай оператору.
 
 ═══ ПАМЯТЬ ═══
-В системе автоматически сохраняется всё, что ты выяснила (маршрут, км, дата, время, цена, пассажиры, телефон).
-Перед каждым ответом смотри блок «ПАМЯТЬ СЕССИИ» выше — там вся история.
-НИКОГДА не переспрашивай то, что уже есть в памяти. Это бесит клиента.
+Перед каждым ответом смотри блок «ПАМЯТЬ СЕССИИ» — там всё что ты уже выяснила.
+🚫 ЖЕЛЕЗНОЕ ПРАВИЛО: если что-то ЕСТЬ в памяти — НИКОГДА не спрашивай это снова.
+Если в памяти есть «Маршрут: РнА → Москва» — НЕ пиши «А куда едем?».
+Если в памяти багаж/пассажиры/класс/доп — это всё уже сказано, переходи к следующему вопросу.
+
+🧠 КАЖДЫЙ РАЗ когда клиент дал новый факт — СРАЗУ вызывай инструмент remember.
+Примеры:
+• «большой багаж» → remember(extras: "большой багаж")
+• «нас четверо» → remember(pax_count: 4)
+• «завтра вечером» → remember(pickup_date: "завтра", pickup_time: "вечером")
+• «с собакой» → remember(extras: "с собакой")
+• «нужен минивэн» → remember(car_class: "Минивэн")
+Это критично — без remember ты забудешь сказанное и переспросишь как робот.
 
 ═══ ВАЛИДАЦИЯ ТЕЛЕФОНА ═══
-Российский номер = 11 цифр (начинается с 7 или 8) или 10 цифр (без кода страны).
-Если клиент дал «8 916 23» — это явно мало, мягко переспроси.
-Если дал «89162345678» — это 11 цифр, ОК, оформляй.
+Российский номер = 11 цифр (начинается с 7 или 8) или 10 цифр.
+Меньше — переспроси: «Кажется, цифр маловато. Продиктуйте ещё раз?»
+
+═══ ОПЕРАТОР ═══
+Если что-то непонятно или ты не справляешься — НЕ выдумывай. Сразу:
+1) Вызови handoff_to_operator с описанием ситуации
+2) В ответе клиенту скажи коротко: «Передаю вас диспетчеру: 8 995 645 51 25. Он сейчас свяжется 👌»
+Это лучше, чем потерять клиента из-за бесполезных переспрашиваний.
 
 ═══ ВОЗРАЖЕНИЯ (отвечай коротко, не лекциями) ═══
 "Дорого / у других дешевле" → "Понимаю. У нас цена не растёт в дороге, машина не старше 3 лет. Многие к нам возвращаются 🤝"
@@ -156,6 +179,40 @@ TOOLS = [
                     "destination": {"type": "string", "description": "Город/адрес куда (например: Москва)"},
                 },
                 "required": ["origin", "destination"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "remember",
+            "description": "Сохранить важный факт о поездке клиента в память (чтобы не забыть и не переспрашивать). Вызывай КАЖДЫЙ раз когда клиент дал новую информацию: багаж, пассажиры, класс, дата, время, особые условия, имя.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "route_from": {"type": "string", "description": "Откуда забрать (если клиент сказал)"},
+                    "route_to": {"type": "string", "description": "Куда едем (если клиент сказал)"},
+                    "pickup_date": {"type": "string", "description": "Дата выезда: 'завтра', '15 мая' и т.д."},
+                    "pickup_time": {"type": "string", "description": "Время выезда: 'утром', '14:00' и т.д."},
+                    "pax_count": {"type": "integer", "description": "Сколько пассажиров"},
+                    "car_class": {"type": "string", "description": "Стандарт | Комфорт | Комфорт+ | Минивэн"},
+                    "extras": {"type": "string", "description": "Багаж, дет.кресло, питомец, документы, особые пожелания и т.д."},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "handoff_to_operator",
+            "description": "Переключить клиента на живого оператора-диспетчера. Вызывай когда: не можешь распознать город/маршрут даже после уточнения; клиент задаёт вопрос вне твоей компетенции; клиент явно просит человека; ситуация нестандартная и требует решения диспетчера.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "reason": {"type": "string", "description": "Краткая причина передачи: что нужно решить диспетчеру"},
+                    "context": {"type": "string", "description": "Что уже выяснено о поездке (маршрут, дата, и т.д.)"},
+                },
+                "required": ["reason"],
             },
         },
     },
@@ -213,7 +270,54 @@ def https_get(host, path, timeout=20):
     return status, data.decode("utf-8", errors="ignore")
 
 
+# Часто встречающиеся сокращения городов
+CITY_ALIASES = {
+    "рна": "Ростов-на-Дону",
+    "р/на": "Ростов-на-Дону",
+    "р-на-дону": "Ростов-на-Дону",
+    "ростов на дону": "Ростов-на-Дону",
+    "ростов": "Ростов-на-Дону",
+    "спб": "Санкт-Петербург",
+    "питер": "Санкт-Петербург",
+    "санкт петербург": "Санкт-Петербург",
+    "мск": "Москва",
+    "ебург": "Екатеринбург",
+    "екб": "Екатеринбург",
+    "нск": "Новосибирск",
+    "нн": "Нижний Новгород",
+    "ннов": "Нижний Новгород",
+    "ноовгород": "Нижний Новгород",
+    "кмв": "Минеральные Воды",
+    "минводы": "Минеральные Воды",
+    "мин-воды": "Минеральные Воды",
+    "влг": "Волгоград",
+    "крд": "Краснодар",
+    "ростов-папа": "Ростов-на-Дону",
+    "белгород": "Белгород",
+    "стваполь": "Ставрополь",
+}
+
+
+def normalize_city_name(text):
+    """Расшифровывает сокращения городов и нормализует написание."""
+    if not text:
+        return ""
+    raw = text.strip()
+    low = raw.lower().strip(" .,!?")
+    # Убираем «г.», «город» в начале
+    low = re.sub(r"^(г\.?\s*|город\s+)", "", low)
+    if low in CITY_ALIASES:
+        return CITY_ALIASES[low]
+    # Поищем алиас как подстроку (например в «из рна в москву»)
+    for alias, full in CITY_ALIASES.items():
+        if len(alias) >= 3 and re.search(r"\b" + re.escape(alias) + r"\b", low):
+            return full
+    return raw
+
+
 def geoapify_geocode(query):
+    if not query:
+        return None
     q = urllib.parse.quote(query)
     path = f"/v1/geocode/search?text={q}&lang=ru&limit=1&filter=countrycode:ru,by,kz,ua&apiKey={GEOAPIFY_API_KEY}"
     status, data = https_get("api.geoapify.com", path)
@@ -230,11 +334,40 @@ def geoapify_geocode(query):
         return None
 
 
+def smart_geocode(text):
+    """Геокодирует с расшифровкой сокращений и fallback-попытками."""
+    if not text:
+        return None
+    # Сначала — расшифровка сокращений
+    normalized = normalize_city_name(text)
+    res = geoapify_geocode(normalized)
+    if res:
+        return res
+    # Fallback 1: добавляем «город»
+    if not normalized.lower().startswith(("город ", "г.")):
+        res = geoapify_geocode("город " + normalized)
+        if res:
+            return res
+    # Fallback 2: исходный текст как есть
+    if normalized != text:
+        res = geoapify_geocode(text)
+        if res:
+            return res
+    return None
+
+
 def geoapify_route(origin_text, destination_text):
-    a = geoapify_geocode(origin_text)
-    b = geoapify_geocode(destination_text)
+    a = smart_geocode(origin_text)
+    b = smart_geocode(destination_text)
     if not a or not b:
-        return {"ok": False, "error": "geocode_failed", "origin": origin_text, "destination": destination_text}
+        return {
+            "ok": False,
+            "error": "geocode_failed",
+            "origin": origin_text,
+            "destination": destination_text,
+            "missing": ("origin" if not a else "") + ("destination" if not b else ""),
+            "hint": "Не удалось распознать город. Попроси клиента уточнить полное название или написать ближайший крупный город.",
+        }
 
     waypoints = f"{a['lat']},{a['lon']}|{b['lat']},{b['lon']}"
     path = f"/v1/routing?waypoints={waypoints}&mode=drive&details=route_details,toll&apiKey={GEOAPIFY_API_KEY}"
@@ -591,20 +724,71 @@ def run_chat(session_id, user_message, utm, user_agent, ip):
                         origin = args.get("origin") or memory.get("route_from") or ""
                         dest = args.get("destination") or memory.get("route_to") or ""
                         result = geoapify_route(origin, dest)
-                        # Сохраняем в память сессии
-                        if result.get("ok"):
+                        # ВСЕГДА сохраняем что клиент назвал — даже если геокодер сломался
+                        if origin and origin != memory.get("route_from"):
                             memory["route_from"] = origin
+                            update_session_meta(cur, session_id, route_from=origin)
+                        if dest and dest != memory.get("route_to"):
                             memory["route_to"] = dest
+                            update_session_meta(cur, session_id, route_to=dest)
+                        # Если успех — добавляем расстояние
+                        if result.get("ok"):
                             memory["distance_km"] = result.get("distance_km")
                             memory["has_toll"] = result.get("has_toll")
                             update_session_meta(
                                 cur, session_id,
-                                route_from=origin,
-                                route_to=dest,
                                 distance_km=result.get("distance_km"),
                                 has_toll=result.get("has_toll"),
                             )
                             print(f"[alisa] route saved: {origin} -> {dest} = {result.get('distance_km')} km")
+                        else:
+                            print(f"[alisa] route geocode FAILED: {origin} -> {dest} | {result.get('error')}")
+                    elif fn == "remember":
+                        saved_keys = []
+                        for fld in ("route_from", "route_to", "pickup_date", "pickup_time", "pax_count", "car_class"):
+                            v = args.get(fld)
+                            if v not in (None, ""):
+                                memory[fld] = v
+                                update_session_meta(cur, session_id, **{fld: v})
+                                saved_keys.append(fld)
+                        # extras — накапливаем
+                        new_extras = args.get("extras")
+                        if new_extras:
+                            old = memory.get("extras") or ""
+                            combined = (old + "; " + new_extras).strip("; ").strip() if old else new_extras
+                            memory["extras"] = combined[:500]
+                            update_session_meta(cur, session_id, extras=memory["extras"])
+                            saved_keys.append("extras")
+                        print(f"[alisa] remember: {saved_keys}")
+                        result = {"ok": True, "saved": saved_keys, "memory_now": {k: v for k, v in memory.items() if v is not None}}
+                    elif fn == "handoff_to_operator":
+                        reason = args.get("reason", "")
+                        ctx = args.get("context", "")
+                        # Уведомляем диспетчера в Telegram
+                        tg_lines = ["<b>🆘 АЛИСА ПРОСИТ ПОДКЛЮЧИТЬСЯ</b>", "—"]
+                        if reason:
+                            tg_lines.append(f"<b>Причина:</b> {reason}")
+                        if ctx:
+                            tg_lines.append(f"<b>Контекст:</b> {ctx}")
+                        if memory.get("route_from") or memory.get("route_to"):
+                            tg_lines.append(
+                                f"<b>Маршрут:</b> {memory.get('route_from','?')} → {memory.get('route_to','?')}"
+                            )
+                        if memory.get("phone"):
+                            tg_lines.append(f"<b>Телефон клиента:</b> +{memory.get('phone')}")
+                        tg_lines.append(f"session: <code>{session_id[:12]}</code>")
+                        telegram_send("\n".join(tg_lines))
+                        try:
+                            update_session_meta(cur, session_id, drop_stage=f"handoff: {reason}"[:500])
+                        except Exception:
+                            pass
+                        result = {
+                            "ok": True,
+                            "operator_phone": "8 995 645 51 25",
+                            "operator_phone_link": "+79956455125",
+                            "instruction": "Сразу скажи клиенту: «Передаю вас нашему диспетчеру — он на связи: 8 995 645 51 25». Никаких лишних слов. Если человек хочет — может позвонить сам или диспетчер свяжется через минуту.",
+                        }
+                        print(f"[alisa] handoff: {reason}")
                     elif fn == "create_order":
                         # МЕРДЖИМ: если LLM не передал поле — берём из памяти
                         merged = dict(args)
