@@ -311,8 +311,8 @@ def deepseek_chat(messages, tools=None):
         payload["tools"] = tools
         payload["tool_choice"] = "auto"
     status, data = https_post_json(
-        "api.deepseek.com",
-        "/chat/completions",
+        "api.proxyapi.ru",
+        "/deepseek/v1/chat/completions",
         payload,
         {"Authorization": f"Bearer {DEEPSEEK_API_KEY}"},
         timeout=60,
