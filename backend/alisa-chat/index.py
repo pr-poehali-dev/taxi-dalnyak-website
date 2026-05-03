@@ -426,9 +426,12 @@ def run_chat(session_id, user_message, utm, user_agent, ip):
 
         # Multi-step: до 3 итераций tool calls
         final_text = None
+        last_err = None
         for _ in range(4):
             msg, err = deepseek_chat(messages, tools=TOOLS)
             if err or msg is None:
+                last_err = err or "no_msg"
+                print(f"[alisa] deepseek error: {last_err}")
                 final_text = "Извините, на секунду пропала связь. Повторите, пожалуйста, ваш маршрут?"
                 break
 
@@ -468,6 +471,13 @@ def run_chat(session_id, user_message, utm, user_agent, ip):
         if not final_text:
             final_text = "Расскажите, откуда и куда нужна машина — посчитаю стоимость 🚗"
 
+        # Сохраняем последнюю ошибку в meta для диагностики
+        if last_err:
+            try:
+                update_session_meta(cur, session_id, drop_stage=str(last_err)[:500])
+            except Exception:
+                pass
+
         save_message(cur, session_id, "assistant", final_text)
         update_session_meta(cur, session_id, last_assistant_message=final_text[:2000])
         cur.execute(
@@ -480,7 +490,8 @@ def run_chat(session_id, user_message, utm, user_agent, ip):
         return {"reply": final_text, "session_id": session_id}
     except Exception as e:
         conn.rollback()
-        return {"reply": "Что-то пошло не так на нашей стороне. Попробуйте ещё раз через минуту 🙏", "error": str(e)[:200]}
+        print(f"[alisa] fatal: {e}")
+        return {"reply": "Что-то пошло не так на нашей стороне. Попробуйте ещё раз через минуту 🙏"}
     finally:
         conn.close()
 
