@@ -1,5 +1,30 @@
 export const HERO_BG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/5b51c7b0-9a76-4168-9d48-1f212a2618c4.jpg";
 export const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/eed871f1-fcfc-4342-ba10-6d3337b98fe4.jpg";
+export const CAR_IMG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/c9beeef8-2aa7-49f3-b8b4-e8937eae11a5.jpg";
+
+export const NAV = [
+  { id: "hero",     label: "Главная" },
+  { id: "tariffs",  label: "Тарифы" },
+  { id: "why",      label: "Почему мы" },
+  { id: "reviews",  label: "Отзывы" },
+  { id: "contacts", label: "Контакты" },
+];
+
+export const WHY = [
+  { icon: "ShieldCheck",  title: "Цена не растёт в пути",   text: "Назвали стоимость — она зафиксирована. Никаких сюрпризов в дороге." },
+  { icon: "Clock",        title: "Подача вовремя",          text: "Водитель приезжает за 15 минут до назначенного времени." },
+  { icon: "Car",          title: "Авто не старше 3 лет",    text: "Все машины проходят техосмотр и содержатся в идеальном состоянии." },
+  { icon: "Headphones",   title: "Поддержка 24/7",          text: "Если что-то пошло не так — оператор поможет в любое время дня и ночи." },
+  { icon: "MapPin",       title: "Вся Россия + новые территории", text: "Возим куда нужно, включая ЛНР, ДНР, Запорожскую и Херсонскую области." },
+  { icon: "Receipt",      title: "Чеки и документы",        text: "Чек с QR-кодом для отчётности — по запросу, удобно для бухгалтерии." },
+];
+
+export const REVIEWS = [
+  { name: "Андрей",   city: "Ростов → Москва",   stars: 5, text: "Машина пришла раньше времени, водитель адекватный. Цена не выросла, как обещали. Поедем ещё." },
+  { name: "Светлана", city: "Краснодар → Сочи",  stars: 5, text: "Ехали с двумя детьми, кресло предоставили бесплатно. В салоне чисто, кондиционер работал отлично." },
+  { name: "Игорь",    city: "Воронеж → Луганск", stars: 5, text: "Возят на новые территории без проблем. Договорились по цене, всё чётко по сумме." },
+  { name: "Марина",   city: "Москва → Анапа",    stars: 5, text: "Заказывала через сайт, Алиса всё посчитала за пару минут. Удобно, без звонков диспетчеру." },
+];
 
 export const IMG_SOLARIS = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/50fbc92b-0398-4145-abda-af1256d79d90.jpg";
 export const IMG_K5      = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/c9beeef8-2aa7-49f3-b8b4-e8937eae11a5.jpg";
