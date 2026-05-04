@@ -76,8 +76,11 @@ export function Header({
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
-            <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1.5 bg-[#005FF9] hover:bg-[#1a70ff] text-white font-bold text-xs px-3 py-2 rounded-xl transition" style={{ fontFamily: "Oswald" }}>
-              MAX — написать
+            <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" aria-label="Написать в MAX" className="hidden sm:flex items-center gap-1.5 bg-[#005FF9] hover:bg-[#1a70ff] text-white font-bold text-xs px-3 py-2 rounded-xl transition" style={{ fontFamily: "Oswald" }}>
+              MAX
+            </a>
+            <a href={TG_HREF} target="_blank" rel="noopener noreferrer" aria-label="Написать в Telegram" className="hidden sm:flex items-center gap-1.5 bg-[#229ED9] hover:bg-[#2eaee9] text-white font-bold text-xs px-3 py-2 rounded-xl transition" style={{ fontFamily: "Oswald" }}>
+              <Icon name="Send" size={13} />Telegram
             </a>
             <a href={PHONE_HREF} className="hidden sm:flex items-center gap-1.5 bg-amber text-coal font-bold text-xs px-3 py-2 rounded-xl transition hover:bg-amber/90" style={{ fontFamily: "Oswald" }}>
               <Icon name="Phone" size={13} />{PHONE}
