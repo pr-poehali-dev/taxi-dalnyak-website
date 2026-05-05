@@ -175,97 +175,113 @@ export default function Index() {
   const fromGen = route.from ? tcase(genitive(route.from)) : "";
   const toAcc = route.to ? tcase(accusative(route.to)) : "";
 
-  const headline = useMemo(() => {
-    if (fromNom && toNom)
-      return { kicker: "Подаём машину сейчас", top: `${fromNom} — ${toNom}`, sub: "Едем по фиксированной цене" };
-    if (fromGen)
-      return { kicker: "Подаём машину сейчас", top: `Из ${fromGen}`, sub: "Куда ехать — скажете водителю" };
-    if (toAcc)
-      return { kicker: "Подаём машину сейчас", top: `В ${toAcc}`, sub: "Откуда забрать — скажете водителю" };
-    return { kicker: "Межгород по всей России", top: "Заказать такси", sub: "Фиксированная цена · без предоплаты" };
+  const routeLabel = useMemo(() => {
+    if (fromNom && toNom) return `${fromNom} — ${toNom}`;
+    if (fromGen) return `из ${fromGen}`;
+    if (toAcc) return `в ${toAcc}`;
+    return "межгород";
   }, [fromNom, toNom, fromGen, toAcc]);
 
+  const hasRoute = !!(fromNom && toNom) || !!fromGen || !!toAcc;
+
+  const headline = useMemo(() => {
+    if (hasRoute) {
+      return {
+        kicker: "Хватит листать выдачу",
+        pre: `Устали искать такси ${routeLabel}?`,
+        big: "Вот оно.",
+        sub: "Фикс цена · подача от 30 минут · без предоплаты",
+      };
+    }
+    return {
+      kicker: "Едете в другой город?",
+      pre: "Только вы и дорога.",
+      big: "Доедем за фикс цену.",
+      sub: "По всей России · без предоплаты · подача от 30 минут",
+    };
+  }, [hasRoute, routeLabel]);
+
   useEffect(() => {
-    let phrase = "межгород";
-    if (fromNom && toNom) phrase = `${fromNom} — ${toNom}`;
-    else if (fromGen) phrase = `из ${fromGen}`;
-    else if (toAcc) phrase = `в ${toAcc}`;
-    document.title = `Заказать такси ${phrase} — фикс. цена | Такси Дальняк`;
-  }, [fromNom, toNom, fromGen, toAcc]);
+    document.title = `Такси ${routeLabel} — фикс цена, без предоплаты | Дальняк`;
+  }, [routeLabel]);
 
   return (
     <>
       <Splash visible={splash} />
 
-      <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[#0a0a0a] text-white pb-24 sm:pb-0">
-        <img src={CAR_BG} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-black" />
-        <div className="pointer-events-none absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full bg-amber-400/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-amber-500/10 blur-3xl" />
+      <div className="relative min-h-[100dvh] w-full overflow-hidden bg-gradient-to-b from-amber-50 via-white to-amber-100 text-slate-900 pb-24 sm:pb-0">
+        <div className="pointer-events-none absolute -top-40 -right-40 w-[520px] h-[520px] rounded-full bg-amber-300/40 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 -left-40 w-[520px] h-[520px] rounded-full bg-orange-200/50 blur-3xl" />
+        <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-amber-400/15 blur-3xl" />
 
         <div className="relative z-10 min-h-[100dvh] flex flex-col">
           <header className="px-5 pt-5 sm:pt-7 flex items-center gap-3">
-            <img src={LOGO} alt="Дальняк" className="w-11 h-11 rounded-xl object-cover ring-1 ring-white/10" />
+            <img src={LOGO} alt="Дальняк" className="w-11 h-11 rounded-xl object-cover ring-1 ring-slate-900/10 shadow-md" />
             <div className="leading-tight">
-              <div className="text-[11px] uppercase tracking-[0.25em] text-amber-300/80 font-bold" style={{ fontFamily: "Oswald" }}>Такси</div>
-              <div className="text-lg font-black uppercase tracking-wider" style={{ fontFamily: "Oswald" }}>Дальняк</div>
+              <div className="text-[11px] uppercase tracking-[0.25em] text-amber-600 font-bold" style={{ fontFamily: "Oswald" }}>Такси</div>
+              <div className="text-lg font-black uppercase tracking-wider text-slate-900" style={{ fontFamily: "Oswald" }}>Дальняк</div>
             </div>
-            <div className="ml-auto flex items-center gap-1.5 text-[11px] text-white/70 border border-emerald-400/30 bg-emerald-400/10 rounded-full px-3 py-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="ml-auto flex items-center gap-1.5 text-[11px] text-emerald-700 border border-emerald-500/40 bg-emerald-50 rounded-full px-3 py-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="font-semibold">Свободно сейчас</span>
             </div>
           </header>
 
           <main className="flex-1 flex flex-col justify-center px-5 py-6 sm:py-10">
             <div className="max-w-xl mx-auto w-full text-center">
-              <div className="inline-flex items-center gap-2 border border-amber-300/30 bg-amber-300/10 rounded-full px-4 py-1.5 mb-4">
-                <Icon name="ShieldCheck" size={13} className="text-amber-300" />
-                <span className="text-[11px] sm:text-xs uppercase tracking-widest text-amber-200 font-bold">
+              <div className="inline-flex items-center gap-2 border border-amber-500/40 bg-amber-400/20 rounded-full px-4 py-1.5 mb-5 shadow-sm">
+                <Icon name="Sparkles" size={13} className="text-amber-600" />
+                <span className="text-[11px] sm:text-xs uppercase tracking-widest text-amber-800 font-bold">
                   {headline.kicker}
                 </span>
               </div>
 
-              <h1 className="font-black uppercase leading-[0.95] tracking-tight" style={{ fontFamily: "Oswald", fontSize: "clamp(40px, 10vw, 80px)" }}>
-                <span className="block text-white drop-shadow-2xl">Заказать такси</span>
-                <span className="block text-amber-300 drop-shadow-2xl">{headline.top}</span>
+              <p className="text-slate-700 text-lg sm:text-xl font-semibold mb-2" style={{ fontFamily: "Oswald" }}>
+                {headline.pre}
+              </p>
+
+              <h1 className="font-black uppercase leading-[0.95] tracking-tight" style={{ fontFamily: "Oswald", fontSize: "clamp(44px, 11vw, 88px)" }}>
+                <span className="block bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 bg-clip-text text-transparent drop-shadow-sm">
+                  {headline.big}
+                </span>
               </h1>
 
-              <p className="mt-3 text-amber-100/90 text-base sm:text-lg font-semibold">
+              <p className="mt-4 inline-block bg-slate-900 text-amber-300 px-4 py-2 rounded-xl text-sm sm:text-base font-bold shadow-lg" style={{ fontFamily: "Oswald" }}>
                 {headline.sub}
               </p>
 
-              <div className="mt-5 grid grid-cols-3 gap-2 max-w-md mx-auto text-[11px] sm:text-xs">
-                <div className="flex flex-col items-center gap-1 bg-white/5 border border-white/10 rounded-xl py-2.5 px-1">
-                  <Icon name="BadgeRussianRuble" size={18} className="text-amber-300" />
-                  <span className="text-white/85 font-semibold leading-tight">Фикс цена<br/>без сюрпризов</span>
+              <div className="mt-6 grid grid-cols-3 gap-2 max-w-md mx-auto text-[11px] sm:text-xs">
+                <div className="flex flex-col items-center gap-1 bg-white border border-amber-200 rounded-xl py-2.5 px-1 shadow-sm">
+                  <Icon name="BadgeRussianRuble" size={20} className="text-amber-600" />
+                  <span className="text-slate-800 font-bold leading-tight">Фикс цена<br/>без сюрпризов</span>
                 </div>
-                <div className="flex flex-col items-center gap-1 bg-white/5 border border-white/10 rounded-xl py-2.5 px-1">
-                  <Icon name="Wallet" size={18} className="text-amber-300" />
-                  <span className="text-white/85 font-semibold leading-tight">Без<br/>предоплаты</span>
+                <div className="flex flex-col items-center gap-1 bg-white border border-amber-200 rounded-xl py-2.5 px-1 shadow-sm">
+                  <Icon name="Wallet" size={20} className="text-amber-600" />
+                  <span className="text-slate-800 font-bold leading-tight">Без<br/>предоплаты</span>
                 </div>
-                <div className="flex flex-col items-center gap-1 bg-white/5 border border-white/10 rounded-xl py-2.5 px-1">
-                  <Icon name="Clock4" size={18} className="text-amber-300" />
-                  <span className="text-white/85 font-semibold leading-tight">Подача<br/>от 15 минут</span>
+                <div className="flex flex-col items-center gap-1 bg-white border border-amber-200 rounded-xl py-2.5 px-1 shadow-sm">
+                  <Icon name="Clock4" size={20} className="text-amber-600" />
+                  <span className="text-slate-800 font-bold leading-tight">Подача<br/>от 30 минут</span>
                 </div>
               </div>
 
               <div className="mt-6 flex flex-col gap-2.5 max-w-sm mx-auto">
                 <a
                   href={PHONE_HREF}
-                  className="group relative flex items-center justify-center gap-3 bg-amber-400 hover:bg-amber-300 text-[#0a0a0a] font-black text-lg py-4 rounded-2xl shadow-xl shadow-amber-500/30 active:scale-[0.98] transition overflow-hidden"
+                  className="group relative flex items-center justify-center gap-3 bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-900 font-black text-lg py-4 rounded-2xl shadow-xl shadow-amber-500/40 active:scale-[0.98] transition overflow-hidden cta-pulse"
                   style={{ fontFamily: "Oswald" }}
                 >
-                  <span className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  <span className="absolute inset-0 bg-white/30 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                   <Icon name="PhoneCall" size={20} />
                   <span className="tracking-wide">Позвонить · {PHONE}</span>
                 </a>
-                <div className="text-[11px] text-white/55 -mt-1">Ответим за 30 секунд · рассчитаем цену сразу</div>
+                <div className="text-[12px] text-slate-700 -mt-1 font-semibold">Ответим за 30 секунд · цену скажем сразу</div>
 
                 <a
                   href={TG_HREF}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 bg-[#229ED9] hover:bg-[#2eaee9] text-white font-bold text-base py-3.5 rounded-2xl shadow-lg shadow-[#229ED9]/25 active:scale-[0.98] transition"
+                  className="flex items-center justify-center gap-3 bg-[#229ED9] hover:bg-[#2eaee9] text-white font-bold text-base py-3.5 rounded-2xl shadow-lg shadow-[#229ED9]/30 active:scale-[0.98] transition"
                   style={{ fontFamily: "Oswald" }}
                 >
                   <Icon name="Send" size={17} />
@@ -276,7 +292,7 @@ export default function Index() {
                   href={MAX_HREF}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 bg-white/95 hover:bg-white text-[#0a0a0a] font-bold text-base py-3.5 rounded-2xl shadow-lg shadow-black/30 active:scale-[0.98] transition"
+                  className="flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-base py-3.5 rounded-2xl shadow-lg shadow-slate-900/30 active:scale-[0.98] transition"
                   style={{ fontFamily: "Oswald" }}
                 >
                   <img src={MAX_LOGO} alt="" className="w-5 h-5 rounded object-cover" />
@@ -284,34 +300,42 @@ export default function Index() {
                 </a>
               </div>
 
-              <div className="mt-6 flex items-center justify-center gap-4 text-[11px] sm:text-xs text-white/65">
+              <div className="mt-6 flex items-center justify-center gap-4 text-[11px] sm:text-xs text-slate-700">
                 <div className="flex items-center gap-1.5">
-                  <Icon name="Star" size={13} className="text-amber-300 fill-amber-300" />
-                  <span><b className="text-white">4,9</b> · 1200+ отзывов</span>
+                  <Icon name="Star" size={14} className="text-amber-500 fill-amber-500" />
+                  <span><b className="text-slate-900">4,9</b> · 1200+ отзывов</span>
                 </div>
-                <div className="w-1 h-1 rounded-full bg-white/30" />
+                <div className="w-1 h-1 rounded-full bg-slate-400" />
                 <div className="flex items-center gap-1.5">
-                  <Icon name="ShieldCheck" size={13} className="text-emerald-400" />
-                  <span>Договор · ИП</span>
+                  <Icon name="ShieldCheck" size={14} className="text-emerald-600" />
+                  <span className="font-semibold">Договор · ИП</span>
                 </div>
-                <div className="w-1 h-1 rounded-full bg-white/30 hidden sm:block" />
+                <div className="w-1 h-1 rounded-full bg-slate-400 hidden sm:block" />
                 <div className="hidden sm:flex items-center gap-1.5">
-                  <Icon name="Calendar" size={13} className="text-white/70" />
-                  <span>с 2014 г.</span>
+                  <Icon name="Calendar" size={14} className="text-slate-600" />
+                  <span className="font-semibold">с 2014 г.</span>
                 </div>
               </div>
             </div>
           </main>
 
-          <footer className="px-5 pb-6 text-center text-[11px] text-white/40 hidden sm:block">
+          <footer className="px-5 pb-6 text-center text-[11px] text-slate-500 hidden sm:block">
             © {new Date().getFullYear()} Такси «Дальняк» · Межгород по всей России · Работаем 24/7
           </footer>
         </div>
 
-        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-md border-t border-white/10 px-3 py-2.5 flex gap-2">
+        <style>{`
+          @keyframes ctaPulse {
+            0%, 100% { box-shadow: 0 10px 25px -5px rgba(245,158,11,0.5), 0 0 0 0 rgba(245,158,11,0.5); }
+            50% { box-shadow: 0 10px 25px -5px rgba(245,158,11,0.7), 0 0 0 14px rgba(245,158,11,0); }
+          }
+          .cta-pulse { animation: ctaPulse 2.2s ease-out infinite; }
+        `}</style>
+
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-amber-200 px-3 py-2.5 flex gap-2 shadow-[0_-8px_24px_-8px_rgba(0,0,0,0.15)]">
           <a
             href={PHONE_HREF}
-            className="flex-[2] flex items-center justify-center gap-2 bg-amber-400 active:bg-amber-300 text-[#0a0a0a] font-black text-sm py-3 rounded-xl shadow-lg shadow-amber-500/30 active:scale-[0.98] transition"
+            className="flex-[2] flex items-center justify-center gap-2 bg-gradient-to-br from-amber-400 to-orange-500 active:from-amber-300 active:to-orange-400 text-slate-900 font-black text-sm py-3 rounded-xl shadow-lg shadow-amber-500/40 active:scale-[0.98] transition"
             style={{ fontFamily: "Oswald" }}
           >
             <Icon name="PhoneCall" size={16} />
