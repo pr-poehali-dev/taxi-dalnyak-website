@@ -90,10 +90,19 @@ export default function Index() {
   }, []);
 
   const headline = useMemo(() => {
-    if (route.from && route.to) return { top: `Из ${route.from}`, bottom: `в ${route.to}` };
-    if (route.from) return { top: "Межгород", bottom: `из ${route.from}` };
-    if (route.to) return { top: "Межгород", bottom: `в ${route.to}` };
-    return { top: "Межгород", bottom: "по всей России" };
+    if (route.from && route.to) return { top: "Заказать такси", bottom: `${route.from} — ${route.to}` };
+    if (route.from) return { top: "Заказать такси", bottom: `из ${route.from}` };
+    if (route.to) return { top: "Заказать такси", bottom: `в ${route.to}` };
+    return { top: "Заказать такси", bottom: "межгород" };
+  }, [route]);
+
+  useEffect(() => {
+    const parts: string[] = ["Заказать такси"];
+    if (route.from && route.to) parts.push(`${route.from} — ${route.to}`);
+    else if (route.from) parts.push(`из ${route.from}`);
+    else if (route.to) parts.push(`в ${route.to}`);
+    else parts.push("межгород");
+    document.title = `${parts.join(" ")} | Такси Дальняк`;
   }, [route]);
 
   return (
