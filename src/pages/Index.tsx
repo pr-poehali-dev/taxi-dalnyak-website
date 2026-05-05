@@ -99,7 +99,7 @@ function Splash({ visible }: { visible: boolean }) {
         <div style={{ fontFamily: "Oswald" }}>
           <div className="text-[12px] uppercase tracking-[0.4em] text-[#F5A800] font-bold">Такси Дальняк</div>
           <div className="text-2xl font-black uppercase text-gray-900 mt-1">Надёжно с 2014 года</div>
-          <div className="text-sm text-gray-500 mt-1">12 000+ поездок · договор · ИП</div>
+          <div className="text-sm text-gray-500 mt-1">12 000+ поездок · договор</div>
         </div>
         <div className="w-40 h-[3px] bg-gray-100 rounded-full overflow-hidden mt-1">
           <div className="h-full bg-[#F5A800] splash-bar" />
@@ -128,10 +128,10 @@ export default function Index() {
   const { from, to } = route;
 
   const headline = useMemo(() => {
-    if (from && to) return { top: `Устали искать такси ${from} – ${to}?`, bottom: "Вот оно." };
-    if (from) return { top: `Такси из ${from}?`, bottom: "Вот оно." };
-    if (to) return { top: `Такси в ${to}?`, bottom: "Вот оно." };
-    return { top: "Устали искать такси?", bottom: "Вот оно." };
+    if (from && to) return `Устали искать такси ${from} – ${to}? Вот оно: фикс. цена, подача от 30 минут`;
+    if (from) return `Устали искать такси из ${from}? Вот оно: фикс. цена, подача от 30 минут`;
+    if (to) return `Устали искать такси в ${to}? Вот оно: фикс. цена, подача от 30 минут`;
+    return "Устали искать такси? Вот оно: фикс. цена, подача от 30 минут";
   }, [from, to]);
 
   const routeLabel = useMemo(() => {
@@ -149,7 +149,7 @@ export default function Index() {
     <>
       <Splash visible={splash} />
 
-      <div className="min-h-[100dvh] w-full bg-white text-gray-900 flex flex-col overflow-hidden pb-24 sm:pb-0">
+      <div className="min-h-[100dvh] w-full bg-white text-gray-900 flex flex-col overflow-hidden">
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700;800&display=swap');
           @keyframes ctaPulse {
@@ -174,111 +174,101 @@ export default function Index() {
           </div>
         </div>
 
-        {/* ── ЗАГОЛОВОК (жёлтая полоса) ── */}
+        {/* ── ЖЁЛТАЯ ПОЛОСА — ВЕСЬ ЗАГОЛОВОК ── */}
         <div className="bg-[#F5A800] px-4 py-3 sm:py-4">
-          <h1 style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: "clamp(18px,5vw,34px)", lineHeight: 1.1, textTransform: "uppercase", color: "#1a1a2e", letterSpacing: "-0.01em" }}>
-            {headline.top}
+          <h1 style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: "clamp(16px,4.5vw,30px)", lineHeight: 1.15, textTransform: "uppercase", color: "#1a1a2e", letterSpacing: "-0.01em" }}>
+            {headline}
           </h1>
         </div>
 
-        {/* ── ОСНОВНОЙ БЛОК: машина + левая колонка ── */}
-        <div className="flex-1 relative bg-gradient-to-b from-[#e8f4fd] via-white to-white overflow-hidden">
+        {/* ── ОСНОВНОЙ БЛОК ── */}
+        <div className="flex-1 relative overflow-hidden" style={{ minHeight: "300px" }}>
 
-          {/* машина справа */}
-          <div className="absolute right-0 bottom-0 w-[62%] sm:w-[52%] h-full flex items-end pointer-events-none select-none">
-            <img
-              src={CAR_IMG}
-              alt="Такси межгород"
-              className="w-full object-cover object-left-bottom"
-              style={{ maskImage: "linear-gradient(to left, black 60%, transparent 100%)", WebkitMaskImage: "linear-gradient(to left, black 60%, transparent 100%)" }}
-            />
+          {/* фото машины — на весь блок */}
+          <img
+            src={CAR_IMG}
+            alt="Такси межгород"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+          />
+
+          {/* затемнение слева для читабельности текста */}
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(26,26,46,0.85) 0%, rgba(26,26,46,0.5) 45%, transparent 75%)" }} />
+
+          {/* логотип на машине — правый нижний угол */}
+          <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-[#1a1a2e]/80 backdrop-blur-sm rounded-xl px-3 py-2 border border-[#F5A800]/40">
+            <img src={LOGO} alt="Такси Дальняк" className="w-9 h-9 rounded-lg object-cover" />
+            <div style={{ fontFamily: "Oswald" }}>
+              <div className="text-[9px] uppercase tracking-[0.3em] text-[#F5A800] font-bold leading-none">Такси</div>
+              <div className="text-base font-black uppercase text-white leading-none mt-0.5">Дальняк</div>
+            </div>
           </div>
 
-          {/* левая колонка */}
-          <div className="relative z-10 flex flex-col gap-4 px-4 pt-5 pb-6 max-w-[58%] sm:max-w-[50%]">
+          {/* левая колонка с УТП */}
+          <div className="relative z-10 flex flex-col gap-3 px-4 pt-5 pb-6 max-w-[55%] sm:max-w-[45%]">
 
-            {/* большой слоган */}
-            <div style={{ fontFamily: "Oswald" }}>
-              <div className="text-[#1a1a2e] font-black uppercase" style={{ fontSize: "clamp(32px,9vw,68px)", lineHeight: 0.95 }}>
-                {headline.bottom}
-              </div>
-            </div>
-
-            {/* УТП-строка */}
-            <div className="bg-[#1a1a2e] rounded-xl px-3 py-2.5 shadow-lg">
-              <div className="text-[#F5A800] font-black uppercase" style={{ fontFamily: "Oswald", fontSize: "clamp(11px,3vw,15px)", lineHeight: 1.4 }}>
+            {/* УТП-плашка */}
+            <div className="bg-[#F5A800] rounded-xl px-3 py-3 shadow-lg">
+              <div className="text-[#1a1a2e] font-black uppercase" style={{ fontFamily: "Oswald", fontSize: "clamp(12px,3.2vw,17px)", lineHeight: 1.4 }}>
                 Фикс цена · подача от 30 мин · без предоплаты
               </div>
             </div>
 
             {/* метки доверия */}
-            <div className="flex flex-col gap-1.5 text-[11px] sm:text-xs text-gray-700">
-              <div className="flex items-center gap-1.5">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2 bg-[#1a1a2e]/70 backdrop-blur-sm rounded-lg px-2.5 py-1.5">
                 <Icon name="Star" size={14} className="text-[#F5A800] fill-[#F5A800] shrink-0" />
-                <span><b>4,9</b> · 1 200+ поездок</span>
+                <span className="text-white font-bold text-[11px]">4,9 · 1 200+ поездок</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Icon name="ShieldCheck" size={14} className="text-green-600 shrink-0" />
-                <span>Работаем по договору · ИП</span>
+              <div className="flex items-center gap-2 bg-[#1a1a2e]/70 backdrop-blur-sm rounded-lg px-2.5 py-1.5">
+                <Icon name="ShieldCheck" size={14} className="text-green-400 shrink-0" />
+                <span className="text-white font-bold text-[11px]">Работаем по договору</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Icon name="CalendarCheck" size={14} className="text-blue-500 shrink-0" />
-                <span>На рынке с 2014 года</span>
+              <div className="flex items-center gap-2 bg-[#1a1a2e]/70 backdrop-blur-sm rounded-lg px-2.5 py-1.5">
+                <Icon name="CalendarCheck" size={14} className="text-blue-400 shrink-0" />
+                <span className="text-white font-bold text-[11px]">На рынке с 2014 года</span>
               </div>
             </div>
-
           </div>
         </div>
 
-        {/* ── НИЖНИЙ БЛОК: кнопки ── */}
-        <div className="bg-[#1a1a2e] px-4 py-4 flex flex-col gap-2.5 sm:flex-row sm:gap-3 sm:items-center sm:justify-between">
+        {/* ── НИЖНИЙ БЛОК: 3 кнопки одинакового размера ── */}
+        <div className="bg-[#1a1a2e] px-3 py-3 grid grid-cols-3 gap-2">
 
-          {/* телефон и иконки */}
-          <div className="flex items-center gap-3">
-            <a href={PHONE_HREF} className="flex items-center gap-1.5 bg-[#F5A800]/20 border border-[#F5A800]/40 rounded-full p-2.5">
-              <Icon name="Phone" size={18} className="text-[#F5A800]" />
-            </a>
-            <a href={TG_HREF} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 bg-[#229ED9]/20 border border-[#229ED9]/40 rounded-full p-2.5">
-              <Icon name="Send" size={18} className="text-[#229ED9]" />
-            </a>
-            <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full p-1.5">
-              <img src={MAX_LOGO} alt="МАКС" className="w-6 h-6 rounded-full object-cover" />
-            </a>
-            <a href={PHONE_HREF} style={{ fontFamily: "Oswald", fontSize: "clamp(18px,5vw,28px)" }} className="font-black text-white tracking-tight hover:text-[#F5A800] transition">
-              {PHONE}
-            </a>
-          </div>
-
-          {/* главная кнопка */}
+          {/* Позвонить */}
           <a
             href={PHONE_HREF}
-            className="cta-pulse flex items-center justify-center gap-2 bg-[#F5A800] hover:bg-amber-400 text-[#1a1a2e] font-black py-3.5 px-6 rounded-2xl shadow-xl active:scale-[0.97] transition sm:min-w-[200px]"
-            style={{ fontFamily: "Oswald", fontSize: "clamp(14px,4vw,18px)", textTransform: "uppercase", letterSpacing: "0.05em" }}
+            className="cta-pulse flex flex-col items-center justify-center gap-1 bg-[#F5A800] hover:bg-amber-400 active:scale-[0.97] text-[#1a1a2e] font-black py-3.5 rounded-2xl transition"
+            style={{ fontFamily: "Oswald" }}
           >
-            <Icon name="PhoneCall" size={20} />
-            Позвонить сейчас
+            <Icon name="PhoneCall" size={22} />
+            <span className="text-xs uppercase tracking-wide leading-none">Позвонить</span>
+            <span className="text-[10px] font-bold leading-none opacity-80">{PHONE}</span>
           </a>
-        </div>
 
-        {/* ── МОБИЛЬНЫЙ STICKY СНИЗУ ── */}
-        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1a1a2e] border-t border-[#F5A800]/30 px-3 py-2.5 flex gap-2 shadow-[0_-4px_24px_rgba(0,0,0,0.4)]">
-          <a
-            href={PHONE_HREF}
-            className="cta-pulse flex-[2] flex items-center justify-center gap-2 bg-[#F5A800] active:bg-amber-400 text-[#1a1a2e] font-black text-sm py-3.5 rounded-xl active:scale-[0.97] transition"
-            style={{ fontFamily: "Oswald", textTransform: "uppercase", letterSpacing: "0.05em" }}
-          >
-            <Icon name="PhoneCall" size={17} />
-            Позвонить · {PHONE}
-          </a>
+          {/* Telegram */}
           <a
             href={TG_HREF}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 bg-[#229ED9] text-white font-bold text-sm py-3.5 px-4 rounded-xl active:scale-[0.97] transition"
+            className="flex flex-col items-center justify-center gap-1 bg-[#229ED9] hover:bg-sky-400 active:scale-[0.97] text-white font-black py-3.5 rounded-2xl transition"
             style={{ fontFamily: "Oswald" }}
           >
-            <Icon name="Send" size={17} />
+            <Icon name="Send" size={22} />
+            <span className="text-xs uppercase tracking-wide leading-none">Telegram</span>
           </a>
+
+          {/* МАКС */}
+          <a
+            href={MAX_HREF}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center justify-center gap-1 bg-[#0077FF] hover:bg-blue-500 active:scale-[0.97] text-white font-black py-3.5 rounded-2xl transition"
+            style={{ fontFamily: "Oswald" }}
+          >
+            <img src={MAX_LOGO} alt="МАКС" className="w-7 h-7 rounded-full object-cover" />
+            <span className="text-xs uppercase tracking-wide leading-none">МАКС</span>
+          </a>
+
         </div>
       </div>
     </>
