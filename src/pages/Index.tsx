@@ -17,43 +17,78 @@ const STOP = new Set([
   "из", "в", "во", "до", "со", "с", "на", "по", "и", "от", "к", "ко",
 ]);
 
-const KEEP = new Set(["москва", "уфа", "анапа", "ялта", "сочи", "тверь", "пермь", "тула", "рязань", "казань", "самара", "пенза", "элиста"]);
+const CITIES: { stem: string; nom: string }[] = [
+  { stem: "москв", nom: "москва" },
+  { stem: "питер", nom: "санкт-петербург" },
+  { stem: "санкт", nom: "санкт-петербург" },
+  { stem: "петербург", nom: "санкт-петербург" },
+  { stem: "ростов", nom: "ростов" },
+  { stem: "воронеж", nom: "воронеж" },
+  { stem: "краснодар", nom: "краснодар" },
+  { stem: "ставропол", nom: "ставрополь" },
+  { stem: "волгоград", nom: "волгоград" },
+  { stem: "саратов", nom: "саратов" },
+  { stem: "самар", nom: "самара" },
+  { stem: "казан", nom: "казань" },
+  { stem: "уф", nom: "уфа" },
+  { stem: "пенз", nom: "пенза" },
+  { stem: "перм", nom: "пермь" },
+  { stem: "твер", nom: "тверь" },
+  { stem: "тул", nom: "тула" },
+  { stem: "рязан", nom: "рязань" },
+  { stem: "ижевск", nom: "ижевск" },
+  { stem: "ижевс", nom: "ижевск" },
+  { stem: "элист", nom: "элиста" },
+  { stem: "астрахан", nom: "астрахань" },
+  { stem: "новочеркасск", nom: "новочеркасск" },
+  { stem: "таганрог", nom: "таганрог" },
+  { stem: "шахт", nom: "шахты" },
+  { stem: "сочи", nom: "сочи" },
+  { stem: "анап", nom: "анапа" },
+  { stem: "ялт", nom: "ялта" },
+  { stem: "геленджик", nom: "геленджик" },
+  { stem: "новороссийск", nom: "новороссийск" },
+  { stem: "пятигорск", nom: "пятигорск" },
+  { stem: "кисловодск", nom: "кисловодск" },
+  { stem: "минеральн", nom: "минеральные воды" },
+  { stem: "махачкал", nom: "махачкала" },
+  { stem: "грозн", nom: "грозный" },
+  { stem: "нальчик", nom: "нальчик" },
+  { stem: "владикавказ", nom: "владикавказ" },
+];
 
 function normCity(w: string): string {
-  if (w.length <= 3) return w;
-  if (KEEP.has(w)) return w;
-  if (w.startsWith("москв")) return "москва";
-  if (w.startsWith("ростов")) return "ростов";
-  if (w.startsWith("воронеж")) return "воронеж";
-  if (w.startsWith("краснодар")) return "краснодар";
-  if (w.startsWith("ставропол")) return "ставрополь";
-  if (w.startsWith("волгоград")) return "волгоград";
-  if (w.startsWith("саратов")) return "саратов";
-  if (w.startsWith("астрахан")) return "астрахань";
-  if (w.startsWith("новочеркасск")) return "новочеркасск";
-  if (w.startsWith("таганрог")) return "таганрог";
-  if (w.startsWith("шахт")) return "шахты";
-  if (w.startsWith("сочи")) return "сочи";
-  if (w.startsWith("анап")) return "анапа";
-  if (w.startsWith("геленджик")) return "геленджик";
-  if (w.startsWith("новороссийск")) return "новороссийск";
-  if (w.startsWith("пятигорск")) return "пятигорск";
-  if (w.startsWith("кисловодск")) return "кисловодск";
-  if (w.startsWith("минеральн")) return "минеральные воды";
-  if (w.startsWith("махачкал")) return "махачкала";
-  if (w.startsWith("грозн")) return "грозный";
-  if (w.startsWith("нальчик")) return "нальчик";
-  if (w.startsWith("владикавказ")) return "владикавказ";
-  if (w.startsWith("санкт") || w.startsWith("питер") || w.startsWith("петербург")) return "санкт-петербург";
-  const sufs = ["ского", "ская", "скую", "ский", "ское", "ому", "ему", "ого", "его", "ой", "ей", "ом", "ами", "ями", "ах", "ях", "ы", "и", "у", "ю", "е", "а", "я"];
-  for (const s of sufs) {
-    if (w.length - s.length >= 3 && w.endsWith(s)) return w.slice(0, -s.length);
+  if (!w) return w;
+  for (const c of CITIES) {
+    if (w.startsWith(c.stem)) return c.nom;
   }
   return w;
 }
 
+const VOWELS = new Set(["а", "е", "ё", "и", "о", "у", "ы", "э", "ю", "я"]);
+
+function genitive(nom: string): string {
+  if (!nom) return nom;
+  if (nom === "санкт-петербург") return "санкт-петербурга";
+  if (nom === "минеральные воды") return "минеральных вод";
+  if (nom === "шахты") return "шахт";
+  const last = nom.slice(-1);
+  if (last === "а") return nom.slice(0, -1) + "ы";
+  if (last === "я") return nom.slice(0, -1) + "и";
+  if (last === "ь") return nom.slice(0, -1) + "и";
+  if (last === "й") return nom.slice(0, -1) + "я";
+  if (VOWELS.has(last)) return nom;
+  return nom + "а";
+}
+
+function accusative(nom: string): string {
+  if (!nom) return nom;
+  if (nom === "минеральные воды") return "минеральные воды";
+  return nom;
+}
+
 function tcase(w: string): string {
-  return w.split(/[-\s]/).map((p) => (p ? p[0].toUpperCase() + p.slice(1) : p)).join(w.includes("-") ? "-" : " ");
+  return w.split(/(\s|-)/).map((p) => (p && /[а-яёa-z]/i.test(p[0]) ? p[0].toUpperCase() + p.slice(1) : p)).join("");
 }
 
 function parseRoute(term: string): { from: string; to: string } {
@@ -77,7 +112,7 @@ function parseRoute(term: string): { from: string; to: string } {
   if (!from && uniq[0]) from = uniq[0];
   if (!to && uniq[1]) to = uniq[1];
 
-  return { from: from ? tcase(from) : "", to: to ? tcase(to) : "" };
+  return { from, to };
 }
 
 export default function Index() {
@@ -90,19 +125,26 @@ export default function Index() {
   }, []);
 
   const headline = useMemo(() => {
-    if (route.from && route.to) return { top: "Заказать такси", bottom: `${route.from} — ${route.to}` };
-    if (route.from) return { top: "Заказать такси", bottom: `из ${route.from}` };
-    if (route.to) return { top: "Заказать такси", bottom: `в ${route.to}` };
+    const fromNom = route.from ? tcase(route.from) : "";
+    const toNom = route.to ? tcase(route.to) : "";
+    const fromGen = route.from ? tcase(genitive(route.from)) : "";
+    const toAcc = route.to ? tcase(accusative(route.to)) : "";
+    if (fromNom && toNom) return { top: "Заказать такси", bottom: `${fromNom} — ${toNom}` };
+    if (fromGen) return { top: "Заказать такси", bottom: `из ${fromGen}` };
+    if (toAcc) return { top: "Заказать такси", bottom: `в ${toAcc}` };
     return { top: "Заказать такси", bottom: "межгород" };
   }, [route]);
 
   useEffect(() => {
-    const parts: string[] = ["Заказать такси"];
-    if (route.from && route.to) parts.push(`${route.from} — ${route.to}`);
-    else if (route.from) parts.push(`из ${route.from}`);
-    else if (route.to) parts.push(`в ${route.to}`);
-    else parts.push("межгород");
-    document.title = `${parts.join(" ")} | Такси Дальняк`;
+    const fromNom = route.from ? tcase(route.from) : "";
+    const toNom = route.to ? tcase(route.to) : "";
+    const fromGen = route.from ? tcase(genitive(route.from)) : "";
+    const toAcc = route.to ? tcase(accusative(route.to)) : "";
+    let phrase = "межгород";
+    if (fromNom && toNom) phrase = `${fromNom} — ${toNom}`;
+    else if (fromGen) phrase = `из ${fromGen}`;
+    else if (toAcc) phrase = `в ${toAcc}`;
+    document.title = `Заказать такси ${phrase} | Такси Дальняк`;
   }, [route]);
 
   return (
