@@ -133,7 +133,7 @@ function Splash({ visible }: { visible: boolean }) {
       </div>
       <style>{`
         @keyframes splashBar { from { transform:translateX(-100%) } to { transform:translateX(0) } }
-        .splash-bar { animation: splashBar 1.1s ease-out forwards; }
+        .splash-bar { animation: splashBar 2.4s ease-out forwards; }
       `}</style>
     </div>
   );
@@ -147,7 +147,7 @@ export default function Index() {
     const p = new URLSearchParams(window.location.search);
     const term = p.get("utm_term") || p.get("keyword") || "";
     setRoute(parseRoute(term));
-    const t = setTimeout(() => setSplash(false), 1300);
+    const t = setTimeout(() => setSplash(false), 2800);
     return () => clearTimeout(t);
   }, []);
 
@@ -292,44 +292,45 @@ export default function Index() {
 
         {/* КНОПКИ — sticky внизу */}
         <div className="sticky bottom-0 bg-[#1a1a2e] border-t border-white/10 px-3 py-3 shadow-[0_-8px_32px_rgba(0,0,0,0.6)]">
-          <div className="text-center mb-2">
-            <span className="text-white/40 text-[11px]">Свяжитесь любым удобным способом</span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
 
-            <a
-              href={PHONE_HREF}
-              className="cta-pulse flex flex-col items-center justify-center gap-1.5 bg-[#F5A800] hover:bg-amber-400 active:scale-95 text-[#1a1a2e] font-black py-3.5 rounded-2xl transition"
-              style={{ fontFamily: "Oswald" }}
-            >
-              <Icon name="PhoneCall" size={21} />
-              <span className="text-[11px] uppercase tracking-wide leading-none">Позвонить</span>
-              <span className="text-[9px] font-bold leading-none opacity-70">{PHONE}</span>
-            </a>
+          {/* большая кнопка позвонить */}
+          <a
+            href={PHONE_HREF}
+            className="cta-pulse flex items-center justify-center gap-3 w-full bg-[#F5A800] hover:bg-amber-400 active:scale-[0.98] text-[#1a1a2e] font-black py-4 rounded-2xl transition mb-2"
+            style={{ fontFamily: "Oswald" }}
+          >
+            <Icon name="PhoneCall" size={24} />
+            <div className="flex flex-col items-start leading-none">
+              <span style={{ fontSize: "clamp(16px,4.5vw,20px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Позвонить</span>
+              <span className="text-[12px] font-bold opacity-70 mt-0.5">{PHONE}</span>
+            </div>
+          </a>
 
+          {/* две кнопки мессенджеров */}
+          <div className="grid grid-cols-2 gap-2">
             <a
               href={TG_HREF}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-col items-center justify-center gap-1.5 bg-[#229ED9] hover:bg-sky-400 active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
+              className="flex items-center justify-center gap-2 bg-[#229ED9] hover:bg-sky-400 active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
               style={{ fontFamily: "Oswald" }}
             >
-              <Icon name="Send" size={21} />
-              <span className="text-[11px] uppercase tracking-wide leading-none">Telegram</span>
+              <Icon name="Send" size={20} />
+              <span style={{ fontSize: "clamp(13px,3.5vw,16px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Telegram</span>
             </a>
 
             <a
               href={MAX_HREF}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-col items-center justify-center gap-1.5 bg-[#0077FF] hover:bg-blue-500 active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
+              className="flex items-center justify-center gap-2 bg-[#0077FF] hover:bg-blue-500 active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
               style={{ fontFamily: "Oswald" }}
             >
-              <img src={MAX_LOGO} alt="МАКС" className="w-6 h-6 rounded-full object-cover" />
-              <span className="text-[11px] uppercase tracking-wide leading-none">МАКС</span>
+              <img src={MAX_LOGO} alt="МАКС" className="w-6 h-6 rounded-full object-cover shrink-0" />
+              <span style={{ fontSize: "clamp(13px,3.5vw,16px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>МАКС</span>
             </a>
-
           </div>
+
         </div>
       </div>
     </>
