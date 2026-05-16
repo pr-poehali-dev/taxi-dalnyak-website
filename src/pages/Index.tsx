@@ -3,7 +3,57 @@ import Icon from "@/components/ui/icon";
 
 const CAR_IMG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/091d3d1c-1649-4d9e-8958-1a624bf8f371.jpg";
 const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
-const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/c12972fd-7c56-4a6f-9266-e44e65c003fa.jpeg";
+const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
+
+const TARIFFS = [
+  {
+    id: "standart",
+    name: "Стандарт",
+    desc: "Рио · Поло · Солярис",
+    seats: 4,
+    luggage: "1–2 сумки",
+    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/39d043f8-acde-4a27-a69c-ebe03e8bd403.jpg",
+    badge: "",
+    color: "#F5A800",
+  },
+  {
+    id: "comfort",
+    name: "Комфорт",
+    desc: "Хавал Джулиан",
+    seats: 4,
+    luggage: "2–3 сумки",
+    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/8c35962c-ffdc-47cf-82d5-1a2524133a71.jpg",
+    badge: "Популярный",
+    color: "#22D3EE",
+  },
+  {
+    id: "comfortplus",
+    name: "Комфорт+",
+    desc: "Тойота 70 кузов",
+    seats: 4,
+    luggage: "3–4 сумки",
+    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/0e102e72-c2a7-4ca4-9f36-94c056c95970.jpg",
+    badge: "Бизнес",
+    color: "#A78BFA",
+  },
+  {
+    id: "minivan",
+    name: "Минивэн",
+    desc: "Хендай Стария",
+    seats: 7,
+    luggage: "Много багажа",
+    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/66ef40b9-0841-4ec5-b798-5f26bc98d18d.jpg",
+    badge: "Группа",
+    color: "#34D399",
+  },
+];
+
+const ROUTES = [
+  "Донецк – Череповец","Тюмень – Челябинск","Питер – Кострома","Курск – Псков",
+  "Кириловка – Москва","Адлер – Севастополь","Ковров – Менделеевск","Чебаркуль – Екатеринбург",
+  "Тамбов – Волгоград","Чебоксары – Питер","Ростов – Симферополь","Таганрог – Краснодар",
+  "Белгород – Ростов","Ярославль – Питер","Екатеринбург – Донецк","Воронеж – Домодедово",
+];
 
 const REVIEW_1 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/b0eb5050-a05a-4647-8442-4b839d45161f.jpg";
 const REVIEW_2 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/fedc4281-a106-4024-9369-8a03712c92a3.jpg";
@@ -253,6 +303,80 @@ export default function Index() {
                 <span className="text-white text-[11px] font-semibold leading-tight">{item.text}</span>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* ТАРИФЫ */}
+        <div className="px-4 pb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Icon name="Car" size={15} className="text-[#F5A800]" />
+            <span style={{ fontFamily: "Oswald" }} className="text-white font-bold uppercase tracking-wide text-sm">Наш автопарк</span>
+          </div>
+          <div className="flex flex-col gap-3">
+            {TARIFFS.map((t) => (
+              <div key={t.id} className="bg-[#1a1a2e] rounded-2xl overflow-hidden border border-white/5 flex" style={{ borderLeft: `3px solid ${t.color}` }}>
+                <img src={t.img} alt={t.name} className="w-[110px] shrink-0 object-cover object-center" />
+                <div className="flex flex-col justify-center p-3 min-w-0 gap-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span style={{ fontFamily: "Oswald", color: t.color, fontSize: "17px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em" }}>{t.name}</span>
+                    {t.badge && (
+                      <span className="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: `${t.color}25`, color: t.color }}>{t.badge}</span>
+                    )}
+                  </div>
+                  <div className="text-white/60 text-[11px] leading-snug">{t.desc}</div>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="flex items-center gap-1 text-white/50 text-[11px]">
+                      <Icon name="Users" size={11} className="shrink-0" />{t.seats} пасс.
+                    </span>
+                    <span className="flex items-center gap-1 text-white/50 text-[11px]">
+                      <Icon name="Briefcase" size={11} className="shrink-0" />{t.luggage}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 bg-[#F5A800]/10 border border-[#F5A800]/20 rounded-xl px-3 py-2.5 flex items-center gap-2">
+            <Icon name="Tag" size={14} className="text-[#F5A800] shrink-0" />
+            <span className="text-[#F5A800] text-[11.5px] font-bold">Фиксированная стоимость — без счётчика и сюрпризов</span>
+          </div>
+        </div>
+
+        {/* МАРШРУТЫ */}
+        <div className="px-4 pb-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Icon name="Route" size={15} className="text-[#F5A800]" />
+            <span style={{ fontFamily: "Oswald" }} className="text-white font-bold uppercase tracking-wide text-sm">Выполненные рейсы</span>
+          </div>
+          <p className="text-white/40 text-[11px] mb-3 italic">Это лишь малая часть поездок — каждый день новый маршрут</p>
+          <div className="flex flex-wrap gap-2">
+            {ROUTES.map((r) => (
+              <span key={r} className="flex items-center gap-1 bg-[#1a1a2e] border border-white/8 rounded-full px-3 py-1.5 text-[11px] text-white/70 font-semibold">
+                <Icon name="MapPin" size={10} className="text-[#F5A800] shrink-0" />{r}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* НАС РЕКОМЕНДУЮТ */}
+        <div className="px-4 pb-6">
+          <div className="bg-gradient-to-br from-[#1a1a2e] to-[#141422] rounded-2xl border border-[#F5A800]/15 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Icon name="ThumbsUp" size={16} className="text-[#F5A800]" />
+              <span style={{ fontFamily: "Oswald" }} className="text-[#F5A800] font-bold uppercase tracking-wide text-sm">Нас рекомендуют</span>
+            </div>
+            <p className="text-white/80 text-[12.5px] leading-relaxed mb-3">
+              Нас выбирают <span className="text-white font-bold">не из-за цены</span> — а из-за <span className="text-[#F5A800] font-bold">фиксированной стоимости</span> и умения решить задачу.
+            </p>
+            <p className="text-white/60 text-[12px] leading-relaxed mb-3">
+              Мы не просто перевозим пассажиров — мы помогаем людям качественно получить услугу. Об этом говорят наши отзывы и постоянные клиенты, которые обращаются снова и снова.
+            </p>
+            <div className="flex items-center gap-3 pt-2 border-t border-white/8">
+              <div className="flex gap-0.5">
+                {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={12} className="text-[#F5A800] fill-[#F5A800]" />)}
+              </div>
+              <span className="text-white/50 text-[11px]">Работаем с 2014 года · Тысячи довольных пассажиров</span>
+            </div>
           </div>
         </div>
 
