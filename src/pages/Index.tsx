@@ -183,7 +183,7 @@ function Splash({ visible }: { visible: boolean }) {
       </div>
       <style>{`
         @keyframes splashBar { from { transform:translateX(-100%) } to { transform:translateX(0) } }
-        .splash-bar { animation: splashBar 2.4s ease-out forwards; }
+        .splash-bar { animation: splashBar 1.0s ease-out forwards; }
       `}</style>
     </div>
   );
@@ -197,7 +197,7 @@ export default function Index() {
     const p = new URLSearchParams(window.location.search);
     const term = p.get("utm_term") || p.get("keyword") || "";
     setRoute(parseRoute(term));
-    const t = setTimeout(() => setSplash(false), 2800);
+    const t = setTimeout(() => setSplash(false), 1200);
     return () => clearTimeout(t);
   }, []);
 
@@ -227,7 +227,6 @@ export default function Index() {
 
       <div className="min-h-[100dvh] w-full bg-[#0f0f1a] text-white flex flex-col">
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700;800&display=swap');
           @keyframes ctaPulse {
             0%,100% { box-shadow: 0 4px 20px rgba(245,168,0,0.4), 0 0 0 0 rgba(245,168,0,0.3); }
             50%      { box-shadow: 0 4px 20px rgba(245,168,0,0.7), 0 0 0 10px rgba(245,168,0,0); }
@@ -255,6 +254,7 @@ export default function Index() {
           <img
             src={CAR_IMG}
             alt="Такси межгород"
+            fetchPriority="high"
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #0f0f1a 0%, rgba(15,15,26,0.5) 50%, transparent 100%)" }} />
@@ -319,6 +319,7 @@ export default function Index() {
                 <img
                   src={t.img}
                   alt={t.name}
+                  loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover object-center"
                 />
                 {/* градиент снизу */}
@@ -406,6 +407,7 @@ export default function Index() {
                 <img
                   src={r.img}
                   alt={`Отзыв ${r.name}`}
+                  loading="lazy"
                   className="w-[90px] shrink-0 object-cover object-top self-stretch"
                 />
                 <div className="flex flex-col justify-between p-3 min-w-0">
