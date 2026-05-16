@@ -189,14 +189,38 @@ function Splash({ visible }: { visible: boolean }) {
   );
 }
 
+declare global { interface Window { ym?: (id: number, action: string, goal: string, params?: Record<string, string>) => void; } }
+
+function ymGoal(goal: string, params: Record<string, string>) {
+  if (typeof window.ym === "function") window.ym(108400932, "reachGoal", goal, params);
+}
+
+function buildTgUrl(base: string, utmSource: string, utmMedium: string, utmCampaign: string, utmContent: string) {
+  const params = new URLSearchParams({
+    utm_source: utmSource,
+    utm_medium: utmMedium,
+    utm_campaign: utmCampaign,
+    utm_content: utmContent,
+  });
+  return `${base}?start=${encodeURIComponent(params.toString())}`;
+}
+
 export default function Index() {
   const [route, setRoute] = useState<{ from: string; to: string }>({ from: "", to: "" });
   const [splash, setSplash] = useState(true);
+  const [utmParams, setUtmParams] = useState({ source: "direct", medium: "none", campaign: "none", term: "", content: "none" });
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     const term = p.get("utm_term") || p.get("keyword") || "";
     setRoute(parseRoute(term));
+    setUtmParams({
+      source:   p.get("utm_source")   || "direct",
+      medium:   p.get("utm_medium")   || "none",
+      campaign: p.get("utm_campaign") || "none",
+      term:     term,
+      content:  p.get("utm_content")  || "none",
+    });
     const t = setTimeout(() => setSplash(false), 1200);
     return () => clearTimeout(t);
   }, []);
@@ -220,6 +244,39 @@ export default function Index() {
   useEffect(() => {
     document.title = `${headline} — Такси Дальняк`;
   }, [headline]);
+
+  const phoneHref = useMemo(() => {
+    const p = new URLSearchParams({
+      utm_source: utmParams.source,
+      utm_medium: utmParams.medium,
+      utm_campaign: utmParams.campaign,
+      utm_content: "call_button",
+      utm_term: utmParams.term,
+    });
+    // для tel: UTM не нужны, но фиксируем клик через data-атрибут
+    // реальный трекинг — через Яндекс.Метрику цель "phone_click"
+    return PHONE_HREF;
+  }, [utmParams]);
+
+  const tgHref = useMemo(() => {
+    return buildTgUrl(
+      TG_HREF,
+      utmParams.source,
+      utmParams.medium,
+      utmParams.campaign,
+      "tg_button",
+    );
+  }, [utmParams]);
+
+  const maxHref = useMemo(() => {
+    const u = new URL(MAX_HREF);
+    u.searchParams.set("utm_source", utmParams.source);
+    u.searchParams.set("utm_medium", utmParams.medium);
+    u.searchParams.set("utm_campaign", utmParams.campaign);
+    u.searchParams.set("utm_content", "max_button");
+    u.searchParams.set("utm_term", utmParams.term);
+    return u.toString();
+  }, [utmParams]);
 
   return (
     <>
@@ -432,7 +489,8 @@ export default function Index() {
 
           {/* большая кнопка позвонить */}
           <a
-            href={PHONE_HREF}
+            href={phoneHref}
+            onClick={() => ymGoal("phone_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign })}
             className="cta-pulse flex items-center justify-center gap-3 w-full bg-[#F5A800] hover:bg-amber-400 active:scale-[0.98] text-[#1a1a2e] font-black py-4 rounded-2xl transition mb-2"
             style={{ fontFamily: "Oswald" }}
           >
@@ -446,9 +504,10 @@ export default function Index() {
           {/* две кнопки мессенджеров */}
           <div className="grid grid-cols-2 gap-2">
             <a
-              href={TG_HREF}
+              href={tgHref}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => ymGoal("telegram_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign })}
               className="flex items-center justify-center gap-2 bg-[#229ED9] hover:bg-sky-400 active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
               style={{ fontFamily: "Oswald" }}
             >
@@ -457,9 +516,10 @@ export default function Index() {
             </a>
 
             <a
-              href={MAX_HREF}
+              href={maxHref}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => ymGoal("max_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign })}
               className="flex items-center justify-center gap-2 bg-[#0077FF] hover:bg-blue-500 active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
               style={{ fontFamily: "Oswald" }}
             >
