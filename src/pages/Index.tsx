@@ -19,30 +19,30 @@ const TARIFFS = [
   {
     id: "comfort",
     name: "Комфорт",
-    desc: "Хавал Джулиан",
+    desc: "Хавал Джулиан 2025",
     seats: 4,
     luggage: "2–3 сумки",
-    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/8c35962c-ffdc-47cf-82d5-1a2524133a71.jpg",
+    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/238966ba-ee86-4f06-bc36-0872f043ebfb.jpg",
     badge: "Популярный",
     color: "#22D3EE",
   },
   {
     id: "comfortplus",
     name: "Комфорт+",
-    desc: "Тойота 70 кузов",
+    desc: "Toyota Camry 70 кузов",
     seats: 4,
     luggage: "3–4 сумки",
-    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/0e102e72-c2a7-4ca4-9f36-94c056c95970.jpg",
+    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/38f8c2aa-ebc6-4a58-bedb-3322efbce272.jpg",
     badge: "Бизнес",
     color: "#A78BFA",
   },
   {
     id: "minivan",
     name: "Минивэн",
-    desc: "Хендай Стария",
+    desc: "Hyundai Staria 2022",
     seats: 7,
     luggage: "Много багажа",
-    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/66ef40b9-0841-4ec5-b798-5f26bc98d18d.jpg",
+    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/92a14984-9eac-4b0c-aa50-8c49af1c12b7.jpg",
     badge: "Группа",
     color: "#34D399",
   },
@@ -308,28 +308,39 @@ export default function Index() {
 
         {/* ТАРИФЫ */}
         <div className="px-4 pb-6">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-4">
             <Icon name="Car" size={15} className="text-[#F5A800]" />
             <span style={{ fontFamily: "Oswald" }} className="text-white font-bold uppercase tracking-wide text-sm">Наш автопарк</span>
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {TARIFFS.map((t) => (
-              <div key={t.id} className="bg-[#1a1a2e] rounded-2xl overflow-hidden border border-white/5 flex" style={{ borderLeft: `3px solid ${t.color}` }}>
-                <img src={t.img} alt={t.name} className="w-[110px] shrink-0 object-cover object-center" />
-                <div className="flex flex-col justify-center p-3 min-w-0 gap-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span style={{ fontFamily: "Oswald", color: t.color, fontSize: "17px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em" }}>{t.name}</span>
-                    {t.badge && (
-                      <span className="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: `${t.color}25`, color: t.color }}>{t.badge}</span>
-                    )}
+              <div key={t.id} className="relative rounded-2xl overflow-hidden flex flex-col" style={{ aspectRatio: "1/1.05" }}>
+                {/* фото на весь фон */}
+                <img
+                  src={t.img}
+                  alt={t.name}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                />
+                {/* градиент снизу */}
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(10,10,20,0.97) 0%, rgba(10,10,20,0.5) 52%, rgba(10,10,20,0.1) 100%)" }} />
+                {/* цветная полоска сверху */}
+                <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: t.color }} />
+                {/* бейдж */}
+                {t.badge && (
+                  <div className="absolute top-3 right-3">
+                    <span className="text-[9px] font-black uppercase tracking-wide px-2 py-1 rounded-full backdrop-blur-sm" style={{ background: `${t.color}30`, color: t.color, border: `1px solid ${t.color}50` }}>{t.badge}</span>
                   </div>
-                  <div className="text-white/60 text-[11px] leading-snug">{t.desc}</div>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="flex items-center gap-1 text-white/50 text-[11px]">
-                      <Icon name="Users" size={11} className="shrink-0" />{t.seats} пасс.
+                )}
+                {/* текст снизу */}
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                  <div style={{ fontFamily: "Oswald", color: t.color, fontSize: "16px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", lineHeight: 1 }}>{t.name}</div>
+                  <div className="text-white/70 text-[10px] leading-snug mt-0.5">{t.desc}</div>
+                  <div className="flex items-center gap-2.5 mt-2">
+                    <span className="flex items-center gap-1 text-white/50 text-[10px]">
+                      <Icon name="Users" size={10} className="shrink-0" />{t.seats} пасс.
                     </span>
-                    <span className="flex items-center gap-1 text-white/50 text-[11px]">
-                      <Icon name="Briefcase" size={11} className="shrink-0" />{t.luggage}
+                    <span className="flex items-center gap-1 text-white/50 text-[10px]">
+                      <Icon name="Briefcase" size={10} className="shrink-0" />{t.luggage}
                     </span>
                   </div>
                 </div>
