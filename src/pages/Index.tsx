@@ -411,6 +411,35 @@ export default function Index() {
           </div>
         </div>
 
+        {/* БАННЕР ДЛЯ ВОЕННЫХ */}
+        <div className="px-4 pb-6">
+          <a
+            href="/voennye"
+            className="relative flex items-center gap-4 rounded-2xl overflow-hidden border border-white/10 active:scale-[0.98] transition-transform"
+            style={{ background: "linear-gradient(120deg, #0f1a0f 0%, #1a2a0a 50%, #0f1a0f 100%)" }}
+          >
+            {/* зелёная полоска слева */}
+            <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-[#4ade80] via-[#22c55e] to-[#4ade80]" />
+            {/* мигающая точка */}
+            <div className="absolute top-3 right-3 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-green-400 text-[10px] font-bold uppercase tracking-wider">Спецраздел</span>
+            </div>
+            <div className="pl-5 pr-4 py-4 flex items-center gap-3 w-full">
+              <div className="w-11 h-11 rounded-xl bg-green-500/15 border border-green-500/25 flex items-center justify-center shrink-0">
+                <Icon name="Shield" size={22} className="text-green-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div style={{ fontFamily: "Oswald", fontSize: "16px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#fff", lineHeight: 1.1 }}>
+                  Едешь из зоны СВО?
+                </div>
+                <div className="text-green-400/80 text-[11px] mt-0.5 font-semibold">Специальные условия для военных →</div>
+              </div>
+              <Icon name="ChevronRight" size={18} className="text-white/30 shrink-0" />
+            </div>
+          </a>
+        </div>
+
         {/* МАРШРУТЫ */}
         <div className="px-4 pb-6">
           <div className="flex items-center gap-2 mb-1">
