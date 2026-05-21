@@ -178,7 +178,7 @@ export default function Quick() {
         </div>
 
         {/* ── ЗАГОЛОВОК ── */}
-        <div className="mb-5">
+        <div className="mb-6">
           <div className="text-[#F5A800] text-[10px] font-black uppercase tracking-[0.28em] mb-2">
             Межгород · от 200 км · Россия и Новые территории
           </div>
@@ -186,23 +186,34 @@ export default function Quick() {
             Заказать такси<br />
             <span style={{ color: "#F5A800" }}>из города в город</span>
           </h1>
-          {/* ключевая фраза — сервис, не попутка */}
-          <div className="mt-3 flex items-start gap-2">
-            <div className="w-[3px] self-stretch rounded-full bg-[#F5A800] shrink-0 mt-0.5" />
-            <p className="text-white/60 text-[13px] leading-relaxed">
-              Профессиональный водитель, чистый салон,<br />
-              <span className="text-white/85 font-semibold">фиксированная цена без торгов</span>
-            </p>
-          </div>
+          <p className="text-white/50 text-[13px] mt-2 leading-relaxed">
+            Звони или пиши — ответим сразу, назовём цену
+          </p>
+        </div>
+
+        {/* ── ТРИ ФАКТА — почему это не попутка ── */}
+        <div className="grid grid-cols-3 gap-2 mb-6">
+          {[
+            { top: "Лицензия", bot: "и страховка", icon: "BadgeCheck" },
+            { top: "Новые авто", bot: "2022–2025 г.", icon: "Car" },
+            { top: "12 лет", bot: "на рынке", icon: "Trophy" },
+          ].map(item => (
+            <div key={item.top} className="flex flex-col items-center rounded-2xl py-3 px-2 gap-1"
+              style={{ background: "#161520", border: "1px solid rgba(245,168,0,0.2)" }}>
+              <Icon name={item.icon as "Car"} size={18} className="text-[#F5A800] mb-0.5" />
+              <span style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 13, color: "#fff", textAlign: "center", lineHeight: 1.1 }}>{item.top}</span>
+              <span className="text-white/40 text-[10px] text-center leading-tight">{item.bot}</span>
+            </div>
+          ))}
         </div>
 
         {/* ── БЕЙДЖИ ── */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {[
-            { icon: "Zap",         text: "Срочная подача",       accent: false },
-            { icon: "ShieldCheck", text: "С 2014 года",          accent: false },
-            { icon: "MapPin",      text: "Вся Россия",           accent: false },
-            { icon: "Flag",        text: "Новые территории",     accent: true  },
+            { icon: "Zap",         text: "Срочная подача", accent: false },
+            { icon: "ShieldCheck", text: "С 2014 года",    accent: false },
+            { icon: "MapPin",      text: "Вся Россия",     accent: false },
+            { icon: "Flag",        text: "Новые территории", accent: true },
           ].map(item => (
             <div
               key={item.text}
@@ -212,10 +223,17 @@ export default function Quick() {
                 : { background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.08)" }
               }
             >
-              <Icon name={item.icon as "Zap"} size={11} className={item.accent ? "text-[#F5A800]" : "text-[#F5A800]"} />
+              <Icon name={item.icon as "Zap"} size={11} className="text-[#F5A800]" />
               <span className={`text-[11px] font-semibold ${item.accent ? "text-[#F5A800]" : "text-white/65"}`}>{item.text}</span>
             </div>
           ))}
+        </div>
+
+        {/* ── СТРОКА-ЯКОРЬ: не попутка ── */}
+        <div className="flex items-center gap-2 mb-3 px-1">
+          <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.07)" }} />
+          <span className="text-white/35 text-[11px] font-semibold tracking-wide">Такси. Не попутка. Не доставка.</span>
+          <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.07)" }} />
         </div>
 
         {/* ── КНОПКА ПОЗВОНИТЬ ── */}
