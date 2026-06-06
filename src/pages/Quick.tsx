@@ -13,6 +13,12 @@ const PHONE_HREF = "tel:+79956455125";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
 
+const REVIEWS = [
+  { name: "Валерия", route: "Москва – Новомичуринск", img: REVIEW_1 },
+  { name: "Ирина",   route: "Лен. область – СПб",     img: REVIEW_3 },
+  { name: "Евгений", route: "Межгород по России",     img: REVIEW_2 },
+];
+
 function getStartCount() {
   const d = new Date();
   const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
@@ -28,6 +34,10 @@ export default function Quick() {
   const [pulse, setPulse] = useState(false);
   const [count, setCount] = useState(getStartCount());
   const [mins, setMins]   = useState(7);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [showIosHint, setShowIosHint] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
     document.title = "Такси Дальняк — Межгород по России";
@@ -37,8 +47,34 @@ export default function Quick() {
       setMins(Math.floor(Math.random() * 11) + 2);
     }, (Math.random() * 3 + 2) * 60000);
     const m = setInterval(() => setMins(v => v >= 40 ? 5 : v + 1), 60000);
-    return () => { clearInterval(p); clearInterval(c); clearInterval(m); };
+
+    const standalone = window.matchMedia("(display-mode: standalone)").matches
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      || (window.navigator as any).standalone === true;
+    if (standalone) setIsInstalled(true);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onPrompt = (e: any) => { e.preventDefault(); setInstallPrompt(e); };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", () => setIsInstalled(true));
+
+    return () => {
+      clearInterval(p); clearInterval(c); clearInterval(m);
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+    };
   }, []);
+
+  async function handleInstall() {
+    ymGoal("install_click");
+    if (installPrompt) {
+      installPrompt.prompt();
+      await installPrompt.userChoice;
+      setInstallPrompt(null);
+      return;
+    }
+    // iOS Safari — нет API, показываем инструкцию
+    setShowIosHint(true);
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#09090e" }}>
@@ -81,6 +117,24 @@ export default function Quick() {
             <div className="text-[#F5A800] text-[11px] font-bold">{mins} мин назад</div>
           </div>
         </div>
+
+        {/* КНОПКА: ДОБАВИТЬ НА ЭКРАН */}
+        {!isInstalled && (
+          <button
+            onClick={handleInstall}
+            className="flex items-center gap-3 w-full rounded-2xl px-4 py-3 mb-7 active:scale-[0.98] transition-transform text-left"
+            style={{ background: "rgba(245,168,0,0.08)", border: "1px solid rgba(245,168,0,0.3)" }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#F5A800" }}>
+              <Icon name="Download" size={18} className="text-[#09090e]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-white font-bold text-[13px]">Добавить на главный экран</div>
+              <div className="text-white/45 text-[11px]">Чтобы не потерять — в один тап как приложение</div>
+            </div>
+            <Icon name="ChevronRight" size={16} className="text-[#F5A800] shrink-0" />
+          </button>
+        )}
 
         {/* ЗАГОЛОВОК */}
         <div className="mb-4">
@@ -172,7 +226,7 @@ export default function Quick() {
           <span className="text-white/25 text-[10px] font-bold uppercase tracking-wider">Хочу узнать подробнее</span>
           <div className="flex-1 h-px bg-white/7" />
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 mb-9">
           {[
             { label: "Калькулятор", icon: "Calculator", href: "/calc" },
             { label: "Тарифы",      icon: "Car",         href: "/tariffs" },
@@ -184,6 +238,33 @@ export default function Quick() {
               <Icon name={l.icon as "Car"} size={18} className="text-white/40" />
               <span className="text-white/45 text-[11px] font-semibold text-center leading-tight">{l.label}</span>
             </a>
+          ))}
+        </div>
+
+        {/* ОТЗЫВЫ на главной */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Icon name="Star" size={15} className="text-[#F5A800]" />
+            <span style={{ fontFamily: "Oswald" }} className="text-white font-bold uppercase tracking-wide text-sm">Отзывы пассажиров</span>
+          </div>
+          <a href="/reviews" className="text-[#F5A800] text-[11px] font-bold flex items-center gap-0.5">
+            Все <Icon name="ChevronRight" size={12} />
+          </a>
+        </div>
+        <div className="space-y-4">
+          {REVIEWS.map(r => (
+            <div key={r.name} className="rounded-2xl overflow-hidden" style={{ background: "#111018", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div className="flex items-center justify-between px-4 pt-3 pb-2.5">
+                <div>
+                  <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 15, color: "#fff" }}>{r.name}</div>
+                  <div className="text-white/40 text-[11px]">{r.route}</div>
+                </div>
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, i) => <Icon key={i} name="Star" size={11} className="text-[#F5A800]" />)}
+                </div>
+              </div>
+              <img src={r.img} alt={`Отзыв ${r.name}`} className="w-full h-auto block" style={{ background: "#0d0d12" }} />
+            </div>
           ))}
         </div>
 
@@ -212,6 +293,45 @@ export default function Quick() {
           </a>
         </div>
       </div>
+
+      {/* МОДАЛКА: инструкция для iPhone */}
+      {showIosHint && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center px-4 pb-6"
+          style={{ background: "rgba(0,0,0,0.7)" }} onClick={() => setShowIosHint(false)}>
+          <div className="max-w-sm w-full rounded-3xl p-5" style={{ background: "#15141c", border: "1px solid rgba(245,168,0,0.25)" }}
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Icon name="Smartphone" size={18} className="text-[#F5A800]" />
+                <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 16, color: "#fff", textTransform: "uppercase" }}>Установка на iPhone</span>
+              </div>
+              <button onClick={() => setShowIosHint(false)} className="text-white/40">
+                <Icon name="X" size={20} />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {[
+                { n: "1", text: "Нажмите кнопку «Поделиться»", icon: "Share" },
+                { n: "2", text: "Выберите «На экран Домой»", icon: "SquarePlus" },
+                { n: "3", text: "Нажмите «Добавить» — готово!", icon: "Check" },
+              ].map(s => (
+                <div key={s.n} className="flex items-center gap-3 rounded-2xl px-3 py-2.5" style={{ background: "rgba(255,255,255,0.04)" }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "#F5A800" }}>
+                    <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 14, color: "#09090e" }}>{s.n}</span>
+                  </div>
+                  <span className="text-white/75 text-[13px] flex-1">{s.text}</span>
+                  <Icon name={s.icon as "Share"} size={16} className="text-[#F5A800] shrink-0" />
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setShowIosHint(false)}
+              className="w-full mt-4 rounded-2xl py-3 active:scale-[0.98] transition-transform"
+              style={{ background: "#F5A800", fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: "#09090e", textTransform: "uppercase" }}>
+              Понятно
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

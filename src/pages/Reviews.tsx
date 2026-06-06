@@ -59,22 +59,20 @@ export default function Reviews() {
         <div className="space-y-5 mb-6">
           {REVIEWS.map(r => (
             <div key={r.name} className="rounded-2xl overflow-hidden" style={{ background: "#111018", border: "1px solid rgba(255,255,255,0.07)" }}>
-              {/* большое фото */}
-              <div className="relative w-full" style={{ height: 200 }}>
-                <img src={r.img} alt={r.name} className="w-full h-full object-cover" />
-                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 35%, #111018 100%)" }} />
-                <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
-                  <div>
-                    <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 18, color: "#fff" }}>{r.name}</div>
-                    <div className="text-white/45 text-[11px]">{r.route}</div>
-                  </div>
-                  <div className="flex gap-0.5">
-                    {[...Array(5)].map((_, i) => <Icon key={i} name="Star" size={12} className="text-[#F5A800]" />)}
-                  </div>
+              {/* шапка с именем */}
+              <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5">
+                <div>
+                  <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 16, color: "#fff" }}>{r.name}</div>
+                  <div className="text-white/40 text-[11px]">{r.route}</div>
+                </div>
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, i) => <Icon key={i} name="Star" size={12} className="text-[#F5A800]" />)}
                 </div>
               </div>
-              <div className="px-4 py-4">
-                <p className="text-white/60 text-[13px] leading-relaxed">«{r.text}»</p>
+              {/* скриншот отзыва — целиком, без обрезки */}
+              <img src={r.img} alt={`Отзыв ${r.name}`} className="w-full h-auto block" style={{ background: "#0d0d12" }} />
+              <div className="px-4 py-3.5">
+                <p className="text-white/55 text-[12.5px] leading-relaxed">«{r.text}»</p>
               </div>
             </div>
           ))}

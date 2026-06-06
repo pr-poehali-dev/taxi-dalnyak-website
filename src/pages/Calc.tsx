@@ -78,7 +78,7 @@ export default function Calc() {
                   от {price.toLocaleString("ru")} ₽
                 </div>
                 <div className="text-white/28 text-[11px] mt-1">
-                  {from && to ? `${from} → ${to} · ` : ""}{km} км · тариф Стандарт · фикс. цена
+                  {from && to ? `${from} → ${to} · ` : ""}{km} км · фиксированная цена
                 </div>
               </div>
             ) : (
@@ -87,18 +87,16 @@ export default function Calc() {
               </div>
             )}
 
-            {/* тарифная сетка */}
-            <div className="rounded-xl px-3 py-3 space-y-1.5" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div className="text-white/25 text-[10px] font-bold uppercase tracking-wider mb-2">Тарифная сетка</div>
+            {/* преимущества вместо формулы */}
+            <div className="rounded-xl px-3 py-3 space-y-2" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
               {[
-                { range: "до 200 км",    rate: "30 ₽/км + 15%" },
-                { range: "200 – 500 км", rate: "27 ₽/км + 15%" },
-                { range: "от 500 км",    rate: "26 ₽/км + 15%" },
-                { range: "Новые территории", rate: "75 ₽/км" },
-              ].map(r => (
-                <div key={r.range} className="flex items-center justify-between">
-                  <span className="text-white/45 text-[12px]">{r.range}</span>
-                  <span className="text-white/75 text-[12px] font-bold">{r.rate}</span>
+                { icon: "BadgeCheck", text: "Точную цену назовём заранее при заказе" },
+                { icon: "Route",      text: "Подача в любую точку города" },
+                { icon: "Clock",      text: "Работаем круглосуточно, без выходных" },
+              ].map(a => (
+                <div key={a.text} className="flex items-center gap-2.5">
+                  <Icon name={a.icon as "BadgeCheck"} size={14} className="text-[#F5A800] shrink-0" />
+                  <span className="text-white/55 text-[12px]">{a.text}</span>
                 </div>
               ))}
             </div>
