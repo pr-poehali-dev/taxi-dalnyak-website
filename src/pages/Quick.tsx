@@ -172,9 +172,9 @@ export default function Quick() {
                 Межгород · Россия
               </span>
             </div>
-            <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(38px,11vw,58px)", lineHeight: 0.95, color: "#fff", textTransform: "uppercase", letterSpacing: "-0.01em" }}>
-              Такси<br />
-              <span style={{ color: GOLD, WebkitTextStroke: "0px" }}>Дальняк</span>
+            <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(34px,10vw,52px)", lineHeight: 0.95, color: "#fff", textTransform: "uppercase", letterSpacing: "-0.01em" }}>
+              Заказать такси<br />
+              <span style={{ color: GOLD }}>из города в город</span>
             </h1>
             <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, marginTop: 14, lineHeight: 1.6, maxWidth: 280 }}>
               Межгородные поездки от 200 км по всей России.<br />
