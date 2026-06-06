@@ -16,7 +16,7 @@ const TARIFF_IMGS = {
 const TARIFFS = [
   {
     id: "standart", name: "Стандарт", desc: "Рио · Поло · Солярис",
-    seats: 4, luggage: "1–2 сумки", color: "#F5A800",
+    seats: 4, luggage: "1–2 сумки", color: "#f59e0b",
     features: ["Кондиционер", "Музыка", "Зарядка USB"],
   },
   {
@@ -45,54 +45,54 @@ export default function Tariffs() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#09090e" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#f5f4f0" }}>
       <div className="max-w-sm mx-auto w-full px-4 pt-6 pb-28">
 
-        <button onClick={() => navigate("/")} className="flex items-center gap-2 mb-6 text-white/40 active:text-white/80 transition-colors">
+        <button onClick={() => navigate("/")} className="flex items-center gap-2 mb-6 text-gray-400 active:text-gray-600 transition-colors">
           <Icon name="ChevronLeft" size={18} />
           <span className="text-[13px] font-semibold">Назад</span>
         </button>
 
         <div className="flex items-center gap-2 mb-2">
-          <Icon name="Car" size={18} className="text-[#F5A800]" />
-          <h1 style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 22, color: "#fff", textTransform: "uppercase" }}>
+          <Icon name="Car" size={18} className="text-amber-500" />
+          <h1 style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 22, color: "#1a1a1a", textTransform: "uppercase" }}>
             Тарифы
           </h1>
         </div>
-        <p className="text-white/35 text-[12px] mb-5">Все автомобили не старше 10 лет</p>
+        <p className="text-gray-400 text-[12px] mb-5">Все автомобили не старше 10 лет</p>
 
         <div className="space-y-4 mb-6">
           {TARIFFS.map(t => (
-            <div key={t.id} className="rounded-2xl overflow-hidden" style={{ background: "#111018", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div key={t.id} className="rounded-2xl overflow-hidden shadow-sm" style={{ background: "#fff", border: "1px solid #e8e6e0" }}>
               {/* фото авто */}
               <div className="relative w-full" style={{ height: 150 }}>
                 <img src={TARIFF_IMGS[t.id as keyof typeof TARIFF_IMGS]} alt={t.name}
                   className="w-full h-full object-cover" />
-                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 30%, #111018 100%)" }} />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 30%, rgba(255,255,255,0.85) 100%)" }} />
                 {t.badge && (
                   <div className="absolute top-3 left-3 rounded-full px-2.5 py-1"
-                    style={{ background: `${t.color}22`, border: `1px solid ${t.color}55` }}>
+                    style={{ background: `${t.color}22`, border: `1px solid ${t.color}66` }}>
                     <span style={{ color: t.color, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>{t.badge}</span>
                   </div>
                 )}
               </div>
               <div className="px-4 pb-4">
-                <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 18, color: "#fff" }}>{t.name}</div>
-                <div className="text-white/40 text-[12px] mb-3">{t.desc}</div>
+                <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 18, color: "#1a1a1a" }}>{t.name}</div>
+                <div className="text-gray-400 text-[12px] mb-3">{t.desc}</div>
                 <div className="flex gap-4 mb-3">
                   <div className="flex items-center gap-1.5">
                     <Icon name="Users" size={13} style={{ color: t.color }} />
                     <span className="text-[12px] font-semibold" style={{ color: t.color }}>{t.seats} места</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Icon name="Luggage" size={13} className="text-white/35" />
-                    <span className="text-white/45 text-[12px]">{t.luggage}</span>
+                    <Icon name="Luggage" size={13} className="text-gray-400" />
+                    <span className="text-gray-500 text-[12px]">{t.luggage}</span>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {t.features.map(f => (
                     <span key={f} className="text-[10px] font-semibold rounded-full px-2.5 py-1"
-                      style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.45)" }}>
+                      style={{ background: "#f5f4f0", color: "#6b7280", border: "1px solid #e8e6e0" }}>
                       {f}
                     </span>
                   ))}
@@ -102,31 +102,31 @@ export default function Tariffs() {
           ))}
         </div>
 
-        <div className="rounded-2xl px-4 py-3 mb-6 flex items-center gap-2"
-          style={{ background: "rgba(245,168,0,0.07)", border: "1px solid rgba(245,168,0,0.18)" }}>
-          <Icon name="Tag" size={14} className="text-[#F5A800] shrink-0" />
-          <span className="text-[#F5A800] text-[12px] font-bold">Фиксированная стоимость — без счётчика и сюрпризов</span>
+        <div className="rounded-2xl px-4 py-3 mb-6 flex items-center gap-2 shadow-sm"
+          style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.28)" }}>
+          <Icon name="Tag" size={14} className="text-amber-500 shrink-0" />
+          <span className="text-amber-600 text-[12px] font-bold">Фиксированная стоимость — без счётчика и сюрпризов</span>
         </div>
       </div>
 
       {/* нижняя панель */}
       <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-5 pt-3"
-        style={{ background: "linear-gradient(to top,#09090e 70%,transparent)" }}>
+        style={{ background: "linear-gradient(to top,#f5f4f0 70%,rgba(245,244,240,0))" }}>
         <div className="max-w-sm mx-auto grid grid-cols-3 gap-2">
           <a href={PHONE_HREF} onClick={() => ymGoal("tariffs_phone")}
-            className="flex flex-col items-center justify-center rounded-2xl py-3 gap-1 active:scale-[0.97] transition-transform"
-            style={{ background: "#F5A800", boxShadow: "0 4px 20px rgba(245,168,0,0.4)" }}>
-            <Icon name="Phone" size={18} className="text-[#09090e]" />
-            <span style={{ fontFamily: "Oswald", fontSize: 12, color: "#09090e", fontWeight: 800, textTransform: "uppercase" }}>Звонок</span>
+            className="flex flex-col items-center justify-center rounded-2xl py-3 gap-1 active:scale-[0.97] transition-transform shadow-md"
+            style={{ background: "linear-gradient(135deg,#f59e0b,#fbbf24)" }}>
+            <Icon name="Phone" size={18} className="text-white" />
+            <span style={{ fontFamily: "Oswald", fontSize: 12, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Звонок</span>
           </a>
           <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("tariffs_max")}
-            className="flex flex-col items-center justify-center rounded-2xl py-3 gap-1 active:scale-[0.97] transition-transform"
+            className="flex flex-col items-center justify-center rounded-2xl py-3 gap-1 active:scale-[0.97] transition-transform shadow-md"
             style={{ background: "linear-gradient(135deg,#002d60,#004aad)", border: "1px solid rgba(0,119,255,0.4)" }}>
             <img src={MAX_LOGO} alt="MAX" className="h-5 object-contain" />
             <span style={{ fontFamily: "Oswald", fontSize: 12, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>MAX</span>
           </a>
           <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("tariffs_tg")}
-            className="flex flex-col items-center justify-center rounded-2xl py-3 gap-1 active:scale-[0.97] transition-transform"
+            className="flex flex-col items-center justify-center rounded-2xl py-3 gap-1 active:scale-[0.97] transition-transform shadow-md"
             style={{ background: "linear-gradient(135deg,#0a3d54,#0f6090)", border: "1px solid rgba(34,158,217,0.3)" }}>
             <Icon name="Send" size={18} className="text-[#4fc3f7]" />
             <span style={{ fontFamily: "Oswald", fontSize: 12, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>

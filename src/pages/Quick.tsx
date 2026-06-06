@@ -13,10 +13,19 @@ const PHONE_HREF = "tel:+79956455125";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
 
+const CITIES = [
+  "Москва", "Санкт-Петербург", "Белгород", "Брянск", "Владимир",
+  "Воронеж", "Калуга", "Кострома", "Курск", "Липецк",
+  "Рязань", "Тамбов", "Тверь", "Тула", "Ярославль",
+  "Вологда", "Нижний Новгород", "Ижевск", "Новосибирск",
+  "Омск", "Екатеринбург", "Тюмень", "Челябинск",
+  "Богучарский р-н", "Тоцкий р-н", "Новые территории",
+];
+
 const REVIEWS = [
   { name: "Валерия", route: "Москва – Новомичуринск", img: REVIEW_1 },
   { name: "Ирина",   route: "Лен. область – СПб",     img: REVIEW_3 },
-  { name: "Евгений", route: "Межгород по России",     img: REVIEW_2 },
+  { name: "Евгений", route: "Межгород по России",      img: REVIEW_2 },
 ];
 
 function getStartCount() {
@@ -36,8 +45,8 @@ export default function Quick() {
   const [mins, setMins]   = useState(7);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [installPrompt, setInstallPrompt] = useState<any>(null);
-  const [showIosHint, setShowIosHint] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [showIosHint, setShowIosHint]     = useState(false);
+  const [isInstalled, setIsInstalled]     = useState(false);
 
   useEffect(() => {
     document.title = "Такси Дальняк — Межгород по России";
@@ -72,261 +81,274 @@ export default function Quick() {
       setInstallPrompt(null);
       return;
     }
-    // iOS Safari — нет API, показываем инструкцию
     setShowIosHint(true);
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#09090e" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#f5f4f0" }}>
 
-      {/* фон */}
+      {/* фоновое фото — очень слабо, только текстура */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <img src={CAR_IMG} alt="" className="w-full h-full object-cover opacity-[0.14]" style={{ objectPosition: "center 38%" }} />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom,rgba(9,9,14,0.4) 0%,rgba(9,9,14,0.85) 50%,#09090e 100%)" }} />
+        <img src={CAR_IMG} alt="" className="w-full h-full object-cover opacity-[0.04]" style={{ objectPosition: "center 38%" }} />
       </div>
 
-      <div className="relative z-10 flex flex-col max-w-sm mx-auto w-full px-4 pt-8 pb-36">
+      <div className="relative z-10 flex flex-col max-w-sm mx-auto w-full px-4 pt-7 pb-36">
 
-        {/* ШАПКА */}
-        <div className="flex items-center gap-3 mb-6">
-          <img src={LOGO} alt="Дальняк" className="w-11 h-11 rounded-2xl object-cover shrink-0" style={{ boxShadow: "0 0 0 2px rgba(245,168,0,0.5)" }} />
-          <div>
-            <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 17, color: "#fff", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        {/* ── ШАПКА ── */}
+        <div className="flex items-center gap-3 mb-5">
+          <img src={LOGO} alt="Дальняк" className="w-12 h-12 rounded-2xl object-cover shrink-0 shadow-md" />
+          <div className="flex-1">
+            <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 18, color: "#1a1a1a", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               Такси Дальняк
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className={`w-1.5 h-1.5 rounded-full bg-green-400 transition-opacity duration-700 ${pulse ? "opacity-100" : "opacity-25"}`} />
-              <span className="text-green-400 text-[10px] font-bold uppercase tracking-wider">Диспетчер на связи</span>
+              <span className={`w-1.5 h-1.5 rounded-full bg-emerald-500 transition-opacity duration-700 ${pulse ? "opacity-100" : "opacity-30"}`} />
+              <span className="text-emerald-600 text-[10px] font-bold uppercase tracking-wider">Диспетчер на связи</span>
             </div>
           </div>
         </div>
 
-        {/* СЧЁТЧИК */}
-        <div className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-7" style={{ background: "#111018", border: "1px solid rgba(255,255,255,0.07)" }}>
+        {/* ── СЧЁТЧИК ── */}
+        <div className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-5 shadow-sm"
+          style={{ background: "#fff", border: "1px solid #e8e6e0" }}>
           <div className="flex -space-x-2 shrink-0">
             {[REVIEW_1, REVIEW_2, REVIEW_3].map((img, i) => (
-              <img key={i} src={img} alt="" className="w-7 h-7 rounded-full object-cover" style={{ border: "2px solid #09090e" }} />
+              <img key={i} src={img} alt="" className="w-7 h-7 rounded-full object-cover" style={{ border: "2px solid #fff" }} />
             ))}
           </div>
           <div className="flex-1 min-w-0">
-            <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: "#fff" }}>{count} пассажира</span>
-            <span className="text-white/40 text-[12px]"> сегодня доехали с нами</span>
+            <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: "#1a1a1a" }}>{count} пассажира</span>
+            <span className="text-gray-500 text-[12px]"> сегодня доехали с нами</span>
           </div>
           <div className="text-right shrink-0">
-            <div className="text-white/25 text-[10px]">помогли</div>
-            <div className="text-[#F5A800] text-[11px] font-bold">{mins} мин назад</div>
+            <div className="text-gray-400 text-[10px]">последний</div>
+            <div className="text-amber-600 text-[11px] font-bold">{mins} мин назад</div>
           </div>
         </div>
 
-        {/* КНОПКА: ДОБАВИТЬ НА ЭКРАН */}
+        {/* ── КНОПКА УСТАНОВКИ ── */}
         {!isInstalled && (
-          <button
-            onClick={handleInstall}
-            className="flex items-center gap-3 w-full rounded-2xl px-4 py-3 mb-7 active:scale-[0.98] transition-transform text-left"
-            style={{ background: "rgba(245,168,0,0.08)", border: "1px solid rgba(245,168,0,0.3)" }}
-          >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#F5A800" }}>
-              <Icon name="Download" size={18} className="text-[#09090e]" />
+          <button onClick={handleInstall}
+            className="flex items-center gap-3 w-full rounded-2xl px-4 py-3 mb-5 shadow-sm text-left active:scale-[0.98] transition-transform"
+            style={{ background: "#fff", border: "1px solid #e8e6e0" }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-amber-500">
+              <Icon name="Download" size={18} className="text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-white font-bold text-[13px]">Добавить на главный экран</div>
-              <div className="text-white/45 text-[11px]">Чтобы не потерять — в один тап как приложение</div>
+              <div className="text-gray-800 font-bold text-[13px]">Добавить на главный экран</div>
+              <div className="text-gray-400 text-[11px]">Чтобы не потерять — в один тап</div>
             </div>
-            <Icon name="ChevronRight" size={16} className="text-[#F5A800] shrink-0" />
+            <Icon name="ChevronRight" size={16} className="text-amber-500 shrink-0" />
           </button>
         )}
 
-        {/* ЗАГОЛОВОК */}
+        {/* ── ЗАГОЛОВОК ── */}
         <div className="mb-4">
-          <div className="text-[#F5A800] text-[10px] font-black uppercase tracking-[0.28em] mb-2">
+          <div className="text-amber-600 text-[10px] font-black uppercase tracking-[0.25em] mb-2">
             Межгород · от 200 км · Россия и Новые территории
           </div>
-          <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(34px,10vw,50px)", lineHeight: 1.0, color: "#fff", textTransform: "uppercase" }}>
+          <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(32px,9.5vw,48px)", lineHeight: 1.05, color: "#1a1a1a", textTransform: "uppercase" }}>
             Заказать такси<br />
-            <span style={{ color: "#F5A800" }}>из города в город</span>
+            <span style={{ color: "#d97706" }}>из города в город</span>
           </h1>
-          <p className="text-white/45 text-[13px] mt-2 leading-relaxed">
+          <p className="text-gray-500 text-[13px] mt-2.5 leading-relaxed">
             Звони или пиши — ответим сразу, назовём цену
           </p>
         </div>
 
-        {/* ФАКТЫ */}
+        {/* ── 3 ФАКТА ── */}
         <div className="grid grid-cols-3 gap-2 mb-4">
           {[
-            { top: "Новые авто", bot: "не старше 10 лет", icon: "Car" },
-            { top: "12 лет",     bot: "на рынке",         icon: "Trophy" },
-            { top: "Фикс. цена", bot: "без счётчика",     icon: "BadgeCheck" },
+            { top: "Новые авто",  bot: "до 10 лет",    icon: "Car" },
+            { top: "12 лет",      bot: "на рынке",      icon: "Trophy" },
+            { top: "Фикс. цена",  bot: "без счётчика",  icon: "BadgeCheck" },
           ].map(f => (
-            <div key={f.top} className="flex flex-col items-center rounded-2xl py-3 px-2 gap-1"
-              style={{ background: "#161520", border: "1px solid rgba(245,168,0,0.2)" }}>
-              <Icon name={f.icon as "Car"} size={18} className="text-[#F5A800] mb-0.5" />
-              <span style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 12, color: "#fff", textAlign: "center", lineHeight: 1.1 }}>{f.top}</span>
-              <span className="text-white/38 text-[10px] text-center leading-tight">{f.bot}</span>
+            <div key={f.top} className="flex flex-col items-center rounded-2xl py-3 px-2 gap-1 shadow-sm"
+              style={{ background: "#fff", border: "1px solid #e8e6e0" }}>
+              <Icon name={f.icon as "Car"} size={18} className="text-amber-500 mb-0.5" />
+              <span style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 12, color: "#1a1a1a", textAlign: "center", lineHeight: 1.1 }}>{f.top}</span>
+              <span className="text-gray-400 text-[10px] text-center leading-tight">{f.bot}</span>
             </div>
           ))}
         </div>
 
-        {/* ЯКОРЬ */}
+        {/* ── ЯКОРЬ ── */}
         <div className="flex items-center gap-2 mb-5">
-          <div className="flex-1 h-px bg-white/7" />
-          <span className="text-white/30 text-[11px] font-semibold">Такси. Не попутка. Не доставка.</span>
-          <div className="flex-1 h-px bg-white/7" />
+          <div className="flex-1 h-px bg-gray-200" />
+          <span className="text-gray-400 text-[11px] font-semibold">Такси. Не попутка. Не доставка.</span>
+          <div className="flex-1 h-px bg-gray-200" />
         </div>
 
-        {/* КНОПКА ЗВОНОК */}
-        <a
-          href={PHONE_HREF}
-          onClick={() => ymGoal("phone_click")}
+        {/* ── КНОПКА ПОЗВОНИТЬ ── */}
+        <a href={PHONE_HREF} onClick={() => ymGoal("phone_click")}
           className="relative flex flex-col items-center justify-center w-full rounded-3xl py-6 mb-3 active:scale-[0.97] transition-transform select-none overflow-hidden"
-          style={{ background: "linear-gradient(135deg,#F5A800,#ffba00)", boxShadow: "0 0 50px rgba(245,168,0,0.45), 0 6px 24px rgba(0,0,0,0.5)" }}
-        >
-          <div className="absolute inset-0 rounded-3xl" style={{ boxShadow: pulse ? "0 0 0 12px rgba(245,168,0,0.1)" : "0 0 0 0px rgba(245,168,0,0)", transition: "box-shadow 0.8s ease" }} />
+          style={{ background: "linear-gradient(135deg,#f59e0b,#fbbf24)", boxShadow: "0 4px 20px rgba(245,158,11,0.35), 0 2px 8px rgba(0,0,0,0.1)" }}>
+          <div className="absolute inset-0 rounded-3xl" style={{ boxShadow: pulse ? "0 0 0 10px rgba(245,158,11,0.12)" : "0 0 0 0px rgba(245,158,11,0)", transition: "box-shadow 0.8s ease" }} />
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-2xl bg-black/20 flex items-center justify-center">
-              <Icon name="PhoneCall" size={22} className="text-[#09090e]" />
+            <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+              <Icon name="PhoneCall" size={22} className="text-white" />
             </div>
-            <div style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 30, color: "#09090e", textTransform: "uppercase" }}>
+            <div style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 28, color: "#fff", textTransform: "uppercase" }}>
               Позвонить
             </div>
           </div>
-          <div className="text-[#09090e]/60 text-[13px] font-bold">{PHONE}</div>
+          <div className="text-white/80 text-[13px] font-bold">{PHONE}</div>
         </a>
 
-        {/* разделитель */}
+        {/* ── ИЛИ НАПИШИ ── */}
         <div className="flex items-center gap-3 mb-3">
-          <div className="flex-1 h-px bg-white/8" />
-          <span className="text-white/22 text-[10px] font-bold uppercase tracking-wider">или напиши</span>
-          <div className="flex-1 h-px bg-white/8" />
+          <div className="flex-1 h-px bg-gray-200" />
+          <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">или напиши</span>
+          <div className="flex-1 h-px bg-gray-200" />
         </div>
 
-        {/* MAX + TG */}
-        <div className="grid grid-cols-2 gap-3 mb-8">
-          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer"
-            onClick={() => ymGoal("max_click")}
-            className="relative flex flex-col items-center justify-center rounded-2xl py-5 gap-2 active:scale-[0.97] transition-transform"
-            style={{ background: "linear-gradient(135deg,#002d60,#004aad)", border: "1px solid rgba(0,119,255,0.45)", boxShadow: "0 4px 24px rgba(0,119,255,0.3)" }}>
-            <div className="absolute top-2 right-2 rounded-full px-1.5 py-0.5" style={{ background: "#F5A800" }}>
-              <span className="text-[8px] font-black text-[#09090e] uppercase tracking-wide">Чаще пишут</span>
+        {/* ── MAX + TG ── */}
+        <div className="grid grid-cols-2 gap-3 mb-7">
+          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("max_click")}
+            className="relative flex flex-col items-center justify-center rounded-2xl py-5 gap-2 active:scale-[0.97] transition-transform shadow-sm"
+            style={{ background: "linear-gradient(135deg,#002d60,#0046a8)", border: "1px solid rgba(0,70,168,0.3)" }}>
+            <div className="absolute top-2 right-2 rounded-full px-1.5 py-0.5 bg-amber-400">
+              <span className="text-[8px] font-black text-white uppercase tracking-wide">Чаще пишут</span>
             </div>
             <img src={MAX_LOGO} alt="MAX" className="h-7 object-contain" />
-            <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em" }}>Написать в MAX</div>
+            <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: "#fff", textTransform: "uppercase" }}>Написать в MAX</div>
           </a>
-          <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
-            onClick={() => ymGoal("tg_click")}
-            className="flex flex-col items-center justify-center rounded-2xl py-5 gap-2 active:scale-[0.97] transition-transform"
-            style={{ background: "linear-gradient(135deg,#0a3d54,#0f6090)", border: "1px solid rgba(34,158,217,0.3)" }}>
-            <Icon name="Send" size={26} className="text-[#4fc3f7]" />
-            <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em" }}>Telegram</div>
+          <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("tg_click")}
+            className="flex flex-col items-center justify-center rounded-2xl py-5 gap-2 active:scale-[0.97] transition-transform shadow-sm"
+            style={{ background: "linear-gradient(135deg,#0a6ebd,#1c8fd8)", border: "1px solid rgba(28,143,216,0.3)" }}>
+            <Icon name="Send" size={26} className="text-white" />
+            <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: "#fff", textTransform: "uppercase" }}>Telegram</div>
           </a>
         </div>
 
-        {/* ССЫЛКИ — для тех кто хочет почитать */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="flex-1 h-px bg-white/7" />
-          <span className="text-white/25 text-[10px] font-bold uppercase tracking-wider">Хочу узнать подробнее</span>
-          <div className="flex-1 h-px bg-white/7" />
+        {/* ── ГОРОДА ПРИСУТСТВИЯ ── */}
+        <div className="mb-7">
+          <div className="flex items-center gap-2 mb-3">
+            <Icon name="MapPin" size={15} className="text-amber-500" />
+            <span style={{ fontFamily: "Oswald" }} className="text-gray-800 font-bold uppercase tracking-wide text-sm">Города присутствия</span>
+          </div>
+          <div className="rounded-2xl px-4 py-4 shadow-sm" style={{ background: "#fff", border: "1px solid #e8e6e0" }}>
+            <div className="flex flex-wrap gap-2">
+              {CITIES.map(city => (
+                <span key={city}
+                  className={`text-[11px] font-semibold rounded-full px-2.5 py-1 ${city === "Новые территории" ? "bg-amber-100 text-amber-700 border border-amber-200" : "bg-gray-100 text-gray-600"}`}>
+                  {city}
+                </span>
+              ))}
+            </div>
+            <p className="text-gray-400 text-[11px] mt-3">
+              Подбираем маршрут из любой точки — уточните у диспетчера
+            </p>
+          </div>
         </div>
-        <div className="grid grid-cols-3 gap-2 mb-9">
+
+        {/* ── ССЫЛКИ ── */}
+        <div className="flex items-center gap-2 mb-3">
+          <div className="flex-1 h-px bg-gray-200" />
+          <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Хочу узнать подробнее</span>
+          <div className="flex-1 h-px bg-gray-200" />
+        </div>
+        <div className="grid grid-cols-3 gap-2 mb-8">
           {[
             { label: "Калькулятор", icon: "Calculator", href: "/calc" },
-            { label: "Тарифы",      icon: "Car",         href: "/tariffs" },
-            { label: "Отзывы",      icon: "Star",        href: "/reviews" },
+            { label: "Тарифы",      icon: "Car",        href: "/tariffs" },
+            { label: "Отзывы",      icon: "Star",       href: "/reviews" },
           ].map(l => (
             <a key={l.href} href={l.href}
-              className="flex flex-col items-center gap-1.5 rounded-2xl py-3 active:scale-[0.97] transition-transform"
-              style={{ background: "#111018", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <Icon name={l.icon as "Car"} size={18} className="text-white/40" />
-              <span className="text-white/45 text-[11px] font-semibold text-center leading-tight">{l.label}</span>
+              className="flex flex-col items-center gap-1.5 rounded-2xl py-3 shadow-sm active:scale-[0.97] transition-transform"
+              style={{ background: "#fff", border: "1px solid #e8e6e0" }}>
+              <Icon name={l.icon as "Car"} size={18} className="text-amber-500" />
+              <span className="text-gray-600 text-[11px] font-semibold text-center leading-tight">{l.label}</span>
             </a>
           ))}
         </div>
 
-        {/* ОТЗЫВЫ на главной */}
+        {/* ── ОТЗЫВЫ НА ГЛАВНОЙ ── */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Icon name="Star" size={15} className="text-[#F5A800]" />
-            <span style={{ fontFamily: "Oswald" }} className="text-white font-bold uppercase tracking-wide text-sm">Отзывы пассажиров</span>
+            <Icon name="Star" size={15} className="text-amber-500" />
+            <span style={{ fontFamily: "Oswald" }} className="text-gray-800 font-bold uppercase tracking-wide text-sm">Отзывы пассажиров</span>
           </div>
-          <a href="/reviews" className="text-[#F5A800] text-[11px] font-bold flex items-center gap-0.5">
+          <a href="/reviews" className="text-amber-600 text-[11px] font-bold flex items-center gap-0.5">
             Все <Icon name="ChevronRight" size={12} />
           </a>
         </div>
         <div className="space-y-4">
           {REVIEWS.map(r => (
-            <div key={r.name} className="rounded-2xl overflow-hidden" style={{ background: "#111018", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div key={r.name} className="rounded-2xl overflow-hidden shadow-sm" style={{ background: "#fff", border: "1px solid #e8e6e0" }}>
               <div className="flex items-center justify-between px-4 pt-3 pb-2.5">
                 <div>
-                  <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 15, color: "#fff" }}>{r.name}</div>
-                  <div className="text-white/40 text-[11px]">{r.route}</div>
+                  <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 15, color: "#1a1a1a" }}>{r.name}</div>
+                  <div className="text-gray-400 text-[11px]">{r.route}</div>
                 </div>
                 <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => <Icon key={i} name="Star" size={11} className="text-[#F5A800]" />)}
+                  {[...Array(5)].map((_, i) => <Icon key={i} name="Star" size={11} className="text-amber-400" />)}
                 </div>
               </div>
-              <img src={r.img} alt={`Отзыв ${r.name}`} className="w-full h-auto block" style={{ background: "#0d0d12" }} />
+              <img src={r.img} alt={`Отзыв ${r.name}`} className="w-full h-auto block bg-gray-50" />
             </div>
           ))}
         </div>
 
       </div>
 
-      {/* НИЖНЯЯ ПАНЕЛЬ */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-5 pt-3" style={{ background: "linear-gradient(to top,#09090e 70%,transparent)" }}>
+      {/* ── НИЖНЯЯ ПАНЕЛЬ ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-5 pt-3"
+        style={{ background: "linear-gradient(to top,#f5f4f0 70%,rgba(245,244,240,0))" }}>
         <div className="max-w-sm mx-auto grid grid-cols-3 gap-2">
           <a href={PHONE_HREF} onClick={() => ymGoal("bottom_phone")}
-            className="flex flex-col items-center justify-center rounded-2xl py-3 gap-1 active:scale-[0.97] transition-transform"
-            style={{ background: "#F5A800", boxShadow: "0 4px 20px rgba(245,168,0,0.4)" }}>
-            <Icon name="Phone" size={18} className="text-[#09090e]" />
-            <span style={{ fontFamily: "Oswald", fontSize: 12, color: "#09090e", fontWeight: 800, textTransform: "uppercase" }}>Звонок</span>
+            className="flex flex-col items-center justify-center rounded-2xl py-3 gap-1 active:scale-[0.97] transition-transform shadow-md"
+            style={{ background: "linear-gradient(135deg,#f59e0b,#fbbf24)" }}>
+            <Icon name="Phone" size={18} className="text-white" />
+            <span style={{ fontFamily: "Oswald", fontSize: 12, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Звонок</span>
           </a>
           <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("bottom_max")}
-            className="flex flex-col items-center justify-center rounded-2xl py-3 gap-1 active:scale-[0.97] transition-transform"
-            style={{ background: "linear-gradient(135deg,#002d60,#004aad)", border: "1px solid rgba(0,119,255,0.4)", boxShadow: "0 4px 16px rgba(0,100,255,0.25)" }}>
+            className="flex flex-col items-center justify-center rounded-2xl py-3 gap-1 active:scale-[0.97] transition-transform shadow-md"
+            style={{ background: "linear-gradient(135deg,#002d60,#0046a8)" }}>
             <img src={MAX_LOGO} alt="MAX" className="h-5 object-contain" />
             <span style={{ fontFamily: "Oswald", fontSize: 12, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>MAX</span>
           </a>
           <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("bottom_tg")}
-            className="flex flex-col items-center justify-center rounded-2xl py-3 gap-1 active:scale-[0.97] transition-transform"
-            style={{ background: "linear-gradient(135deg,#0a3d54,#0f6090)", border: "1px solid rgba(34,158,217,0.3)" }}>
-            <Icon name="Send" size={18} className="text-[#4fc3f7]" />
+            className="flex flex-col items-center justify-center rounded-2xl py-3 gap-1 active:scale-[0.97] transition-transform shadow-md"
+            style={{ background: "linear-gradient(135deg,#0a6ebd,#1c8fd8)" }}>
+            <Icon name="Send" size={18} className="text-white" />
             <span style={{ fontFamily: "Oswald", fontSize: 12, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>
           </a>
         </div>
       </div>
 
-      {/* МОДАЛКА: инструкция для iPhone */}
+      {/* ── МОДАЛКА iOS ── */}
       {showIosHint && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center px-4 pb-6"
-          style={{ background: "rgba(0,0,0,0.7)" }} onClick={() => setShowIosHint(false)}>
-          <div className="max-w-sm w-full rounded-3xl p-5" style={{ background: "#15141c", border: "1px solid rgba(245,168,0,0.25)" }}
-            onClick={e => e.stopPropagation()}>
+          style={{ background: "rgba(0,0,0,0.45)" }} onClick={() => setShowIosHint(false)}>
+          <div className="max-w-sm w-full rounded-3xl p-5 shadow-xl bg-white" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Icon name="Smartphone" size={18} className="text-[#F5A800]" />
-                <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 16, color: "#fff", textTransform: "uppercase" }}>Установка на iPhone</span>
+                <Icon name="Smartphone" size={18} className="text-amber-500" />
+                <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 16, color: "#1a1a1a", textTransform: "uppercase" }}>Установка на iPhone</span>
               </div>
-              <button onClick={() => setShowIosHint(false)} className="text-white/40">
+              <button onClick={() => setShowIosHint(false)} className="text-gray-400">
                 <Icon name="X" size={20} />
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {[
                 { n: "1", text: "Нажмите кнопку «Поделиться»", icon: "Share" },
-                { n: "2", text: "Выберите «На экран Домой»", icon: "SquarePlus" },
+                { n: "2", text: "Выберите «На экран Домой»",   icon: "SquarePlus" },
                 { n: "3", text: "Нажмите «Добавить» — готово!", icon: "Check" },
               ].map(s => (
-                <div key={s.n} className="flex items-center gap-3 rounded-2xl px-3 py-2.5" style={{ background: "rgba(255,255,255,0.04)" }}>
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "#F5A800" }}>
-                    <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 14, color: "#09090e" }}>{s.n}</span>
+                <div key={s.n} className="flex items-center gap-3 rounded-2xl px-3 py-2.5 bg-gray-50">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-amber-500">
+                    <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 14, color: "#fff" }}>{s.n}</span>
                   </div>
-                  <span className="text-white/75 text-[13px] flex-1">{s.text}</span>
-                  <Icon name={s.icon as "Share"} size={16} className="text-[#F5A800] shrink-0" />
+                  <span className="text-gray-700 text-[13px] flex-1">{s.text}</span>
+                  <Icon name={s.icon as "Share"} size={16} className="text-amber-500 shrink-0" />
                 </div>
               ))}
             </div>
             <button onClick={() => setShowIosHint(false)}
-              className="w-full mt-4 rounded-2xl py-3 active:scale-[0.98] transition-transform"
-              style={{ background: "#F5A800", fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: "#09090e", textTransform: "uppercase" }}>
+              className="w-full mt-4 rounded-2xl py-3 active:scale-[0.98] transition-transform bg-amber-500"
+              style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: "#fff", textTransform: "uppercase" }}>
               Понятно
             </button>
           </div>
