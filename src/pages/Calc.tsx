@@ -4,6 +4,14 @@ import Icon from "@/components/ui/icon";
 
 const PHONE_HREF = "tel:+79956455125";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
+const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
+const MAX_LOGO   = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
+
+const NAVY  = "#0a0f1e";
+const CARD  = "#131b2e";
+const GOLD  = "#c9a84c";
+const GOLD2 = "#e8c96a";
+const BORDER = "rgba(201,168,76,0.18)";
 
 function ymGoal(goal: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,9 +26,9 @@ function calcPrice(km: number) {
 
 export default function Calc() {
   const navigate = useNavigate();
-  const [km, setKm]   = useState("");
+  const [km, setKm]     = useState("");
   const [from, setFrom] = useState("");
-  const [to, setTo]   = useState("");
+  const [to, setTo]     = useState("");
 
   const price = useMemo(() => calcPrice(parseInt(km, 10)), [km]);
 
@@ -29,95 +37,146 @@ export default function Calc() {
     : encodeURIComponent("Хочу заказать межгородное такси");
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#f5f4f0" }}>
-      <div className="max-w-sm mx-auto w-full px-4 pt-6 pb-10">
+    <div className="min-h-screen flex flex-col" style={{ background: NAVY, fontFamily: "Inter, sans-serif" }}>
 
-        {/* шапка */}
-        <button onClick={() => navigate("/")} className="flex items-center gap-2 mb-6 text-gray-400 active:text-gray-600 transition-colors">
+      {/* ХЕДЕР */}
+      <div className="max-w-sm mx-auto w-full px-4 pt-5 pb-28">
+        <button onClick={() => navigate("/")}
+          className="flex items-center gap-2 mb-6 active:opacity-60 transition-opacity"
+          style={{ color: "rgba(255,255,255,0.4)" }}>
           <Icon name="ChevronLeft" size={18} />
-          <span className="text-[13px] font-semibold">Назад</span>
+          <span style={{ fontSize: 13, fontWeight: 600 }}>Назад</span>
         </button>
 
-        <div className="flex items-center gap-2 mb-5">
-          <Icon name="Calculator" size={18} className="text-amber-500" />
-          <h1 style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 22, color: "#1a1a1a", textTransform: "uppercase" }}>
-            Калькулятор стоимости
+        {/* заголовок */}
+        <div className="mb-6">
+          <div style={{ color: GOLD, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.3em" }} className="mb-2">
+            Стоимость поездки
+          </div>
+          <h1 style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 28, color: "#fff", textTransform: "uppercase" }}>
+            Калькулятор
           </h1>
+          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, marginTop: 4 }}>
+            Введите маршрут — получите ориентировочную стоимость
+          </p>
         </div>
 
-        <div className="rounded-2xl overflow-hidden mb-4 shadow-sm" style={{ background: "#fff", border: "1px solid #e8e6e0" }}>
-          <div className="px-4 pt-4 pb-4 space-y-3">
+        {/* форма */}
+        <div className="rounded-2xl overflow-hidden mb-4" style={{ background: CARD, border: BORDER }}>
+          <div className="px-4 pt-5 pb-5 space-y-4">
 
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-gray-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Откуда</label>
-                <input value={from} onChange={e => setFrom(e.target.value)} placeholder="Москва"
-                  className="w-full rounded-xl px-3 py-2.5 text-gray-800 text-[14px] placeholder-gray-300 focus:outline-none"
-                  style={{ background: "#f9f8f6", border: "1px solid #e8e6e0" }} />
-              </div>
-              <div>
-                <label className="text-gray-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Куда</label>
-                <input value={to} onChange={e => setTo(e.target.value)} placeholder="Краснодар"
-                  className="w-full rounded-xl px-3 py-2.5 text-gray-800 text-[14px] placeholder-gray-300 focus:outline-none"
-                  style={{ background: "#f9f8f6", border: "1px solid #e8e6e0" }} />
-              </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Откуда", val: from, set: setFrom, ph: "Москва" },
+                { label: "Куда",   val: to,   set: setTo,   ph: "Краснодар" },
+              ].map(f => (
+                <div key={f.label}>
+                  <label style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em" }}
+                    className="block mb-1.5">{f.label}</label>
+                  <input value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph}
+                    className="w-full rounded-xl px-3 py-3 focus:outline-none transition-colors"
+                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 14 }}
+                    onFocus={e => e.currentTarget.style.borderColor = GOLD}
+                    onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"} />
+                </div>
+              ))}
             </div>
 
             <div>
-              <label className="text-gray-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Расстояние (км)</label>
-              <input value={km} onChange={e => setKm(e.target.value.replace(/\D/g, ""))} placeholder="Например, 350" inputMode="numeric"
-                className="w-full rounded-xl px-3 py-2.5 text-gray-800 text-[14px] placeholder-gray-300 focus:outline-none"
-                style={{ background: "#f9f8f6", border: "1px solid #e8e6e0" }} />
-              <p className="text-gray-400 text-[10px] mt-1">Расстояние по трассе можно посмотреть в Яндекс.Картах</p>
+              <label style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em" }}
+                className="block mb-1.5">Расстояние по трассе (км)</label>
+              <input value={km} onChange={e => setKm(e.target.value.replace(/\D/g, ""))}
+                placeholder="Например, 450" inputMode="numeric"
+                className="w-full rounded-xl px-3 py-3 focus:outline-none transition-colors"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 14 }}
+                onFocus={e => e.currentTarget.style.borderColor = GOLD}
+                onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"} />
+              <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 10, marginTop: 5 }}>
+                Расстояние по трассе — в Яндекс.Картах или 2ГИС
+              </p>
             </div>
 
+            {/* результат */}
             {price ? (
-              <div className="rounded-xl px-4 py-4" style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.28)" }}>
-                <div className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">Стоимость поездки</div>
-                <div style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 32, color: "#f59e0b" }}>
-                  от {price.toLocaleString("ru")} ₽
+              <div className="rounded-xl px-4 py-4" style={{ background: `linear-gradient(135deg, rgba(201,168,76,0.12), rgba(201,168,76,0.06))`, border: `1px solid rgba(201,168,76,0.35)` }}>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 6 }}>
+                  Стоимость поездки от
                 </div>
-                <div className="text-gray-400 text-[11px] mt-1">
-                  {from && to ? `${from} → ${to} · ` : ""}{km} км · фиксированная цена
+                <div style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 40, color: GOLD, lineHeight: 1 }}>
+                  {price.toLocaleString("ru")} ₽
+                </div>
+                {(from || to) && (
+                  <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginTop: 6 }}>
+                    {from && to ? `${from} → ${to}` : from || to} · {km} км
+                  </div>
+                )}
+                <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 10, marginTop: 3 }}>
+                  Точную цену назовём при заказе
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl px-4 py-4 text-center text-gray-400 text-[13px]" style={{ background: "#f9f8f6", border: "1px solid #e8e6e0" }}>
-                Введите расстояние — цена появится сразу
+              <div className="rounded-xl px-4 py-5 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <Icon name="Calculator" size={28} style={{ color: "rgba(255,255,255,0.12)", margin: "0 auto 8px" }} />
+                <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 13 }}>
+                  Введите расстояние — цена появится сразу
+                </div>
               </div>
             )}
 
-            {/* преимущества вместо формулы */}
-            <div className="rounded-xl px-3 py-3 space-y-2" style={{ background: "#f9f8f6", border: "1px solid #e8e6e0" }}>
+            {/* преимущества */}
+            <div className="space-y-2 pt-1">
               {[
-                { icon: "BadgeCheck", text: "Точную цену назовём заранее при заказе" },
+                { icon: "BadgeCheck", text: "Точную цену называем до поездки" },
                 { icon: "Route",      text: "Подача в любую точку города" },
-                { icon: "Clock",      text: "Работаем круглосуточно, без выходных" },
+                { icon: "Clock",      text: "Работаем 24/7, без выходных" },
               ].map(a => (
                 <div key={a.text} className="flex items-center gap-2.5">
-                  <Icon name={a.icon as "BadgeCheck"} size={14} className="text-amber-500 shrink-0" />
-                  <span className="text-gray-500 text-[12px]">{a.text}</span>
+                  <Icon name={a.icon as "BadgeCheck"} size={14} style={{ color: GOLD, flexShrink: 0 }} />
+                  <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>{a.text}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {price && (
+        {/* кнопки заказа */}
+        <div className="space-y-3">
+          <a href={PHONE_HREF} onClick={() => ymGoal("calc_phone")}
+            className="flex items-center justify-center gap-3 w-full rounded-2xl py-4 active:scale-[0.97] transition-transform"
+            style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 20px rgba(201,168,76,0.4)" }}>
+            <Icon name="Phone" size={18} style={{ color: NAVY }} />
+            <span style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 17, color: NAVY, textTransform: "uppercase" }}>
+              {price ? `Заказать за ${price.toLocaleString("ru")} ₽` : "Позвонить диспетчеру"}
+            </span>
+          </a>
           <div className="grid grid-cols-2 gap-3">
-            <a href={`${TG_HREF}?text=${tgMsg}`} target="_blank" rel="noopener noreferrer"
-              onClick={() => ymGoal("calc_tg")}
-              className="flex items-center justify-center gap-2 rounded-2xl py-4 text-white font-bold uppercase active:scale-[0.97] transition-transform"
-              style={{ fontFamily: "Oswald", fontSize: 15, background: "#1a8abf" }}>
-              <Icon name="Send" size={16} /> Telegram
+            <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("calc_max")}
+              className="flex items-center justify-center gap-2 rounded-2xl py-3 active:scale-[0.97] transition-transform"
+              style={{ background: "linear-gradient(135deg,#001a3d,#003080)", border: "1px solid rgba(0,80,200,0.4)" }}>
+              <img src={MAX_LOGO} alt="MAX" className="h-5 object-contain" />
+              <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>MAX</span>
             </a>
-            <a href={PHONE_HREF} onClick={() => ymGoal("calc_phone")}
-              className="flex items-center justify-center gap-2 rounded-2xl py-4 text-white font-bold uppercase active:scale-[0.97] transition-transform"
-              style={{ fontFamily: "Oswald", fontSize: 15, background: "linear-gradient(135deg,#f59e0b,#fbbf24)" }}>
-              <Icon name="Phone" size={16} /> Позвонить
+            <a href={`${TG_HREF}?text=${tgMsg}`} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("calc_tg")}
+              className="flex items-center justify-center gap-2 rounded-2xl py-3 active:scale-[0.97] transition-transform"
+              style={{ background: "linear-gradient(135deg,#005f8e,#0088cc)", border: "1px solid rgba(0,136,204,0.35)" }}>
+              <Icon name="Send" size={15} className="text-white" />
+              <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>
             </a>
           </div>
-        )}
+        </div>
+      </div>
+
+      {/* нижняя панель */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-5 pt-2"
+        style={{ background: `linear-gradient(to top, ${NAVY} 65%, transparent)` }}>
+        <div className="max-w-sm mx-auto">
+          <a href={PHONE_HREF} onClick={() => ymGoal("calc_bottom_phone")}
+            className="flex items-center justify-center gap-2 w-full rounded-2xl py-4 active:scale-[0.97] transition-transform"
+            style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 20px rgba(201,168,76,0.4)" }}>
+            <Icon name="Phone" size={18} style={{ color: NAVY }} />
+            <span style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 17, color: NAVY, textTransform: "uppercase" }}>Позвонить диспетчеру</span>
+          </a>
+        </div>
       </div>
     </div>
   );
