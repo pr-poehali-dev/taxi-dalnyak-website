@@ -13,7 +13,7 @@ const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 
 const PHONE = "+7 (931) 009-81-76";
 const PHONE_HREF = "tel:+79310098176";
-const TG_HREF = "https://t.me/Mezhgorod1816";
+const VK_HREF = "https://vk.com/dalnyack";
 const MAX_HREF = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
 
 const GUARANTEES = [
@@ -207,15 +207,15 @@ export default function Military() {
 
           <div className="grid grid-cols-2 gap-2">
             <a
-              href={TG_HREF}
+              href={VK_HREF}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => ymGoal("military_telegram_click")}
-              className="flex items-center justify-center gap-2 bg-[#229ED9] hover:bg-sky-400 active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
-              style={{ fontFamily: "Oswald" }}
+              onClick={() => ymGoal("military_vk_click")}
+              className="flex items-center justify-center gap-2 active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
+              style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#1a3a6b,#2456a4)" }}
             >
-              <Icon name="Send" size={20} />
-              <span style={{ fontSize: "clamp(13px,3.5vw,16px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Telegram</span>
+              <Icon name="Users" size={20} />
+              <span style={{ fontSize: "clamp(13px,3.5vw,16px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>ВКонтакте</span>
             </a>
 
             <a

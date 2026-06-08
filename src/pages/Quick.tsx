@@ -10,7 +10,7 @@ const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 
 const PHONE      = "+7 (931) 009-81-76";
 const PHONE_HREF = "tel:+79310098176";
-const TG_HREF    = "https://t.me/Mezhgorod1816";
+const VK_HREF    = "https://vk.com/dalnyack";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
 
 const NAVY   = "#0a0f1e";
@@ -58,6 +58,11 @@ function getStartCount() {
 function ymGoal(goal: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).ym?.(98584604, "reachGoal", goal);
+}
+
+function ymLead(channel: string) {
+  ymGoal("lead");
+  ymGoal(`lead_${channel}`);
 }
 
 export default function Quick() {
@@ -133,11 +138,11 @@ export default function Quick() {
               <Icon name="Phone" size={15} style={{ color: NAVY }} />
               <span style={{ fontFamily: "Oswald", fontSize: 14, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Позвонить</span>
             </a>
-            <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("header_tg")}
+            <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("header_vk")}
               className="flex items-center gap-2 rounded-xl px-4 py-3 transition-transform hover:scale-105"
-              style={{ background: "linear-gradient(135deg,#005f8e,#0088cc)" }}>
-              <Icon name="Send" size={15} className="text-white" />
-              <span style={{ fontFamily: "Oswald", fontSize: 14, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>
+              style={{ background: "linear-gradient(135deg,#1a3a6b,#2456a4)" }}>
+              <Icon name="Users" size={15} className="text-white" />
+              <span style={{ fontFamily: "Oswald", fontSize: 14, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>ВКонтакте</span>
             </a>
           </div>
           {/* мобилка — только кнопка звонка */}
@@ -196,9 +201,9 @@ export default function Quick() {
 
               {/* ГЛАВНЫЙ ЗАГОЛОВОК */}
               <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(36px,5.5vw,72px)", lineHeight: 0.95, color: "#fff", textTransform: "uppercase", letterSpacing: "-0.01em" }}>
-                Такси для<br />
-                дальних поездок<br />
-                <span style={{ color: GOLD }}>от 200 км</span>
+                Заказать такси<br />
+                для дальних<br />
+                <span style={{ color: GOLD }}>поездок</span>
               </h1>
 
               <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "clamp(13px,1.2vw,16px)", marginTop: 18, lineHeight: 1.7, maxWidth: 480 }}>
@@ -219,7 +224,7 @@ export default function Quick() {
 
               {/* кнопки */}
               <div className="space-y-3 md:max-w-lg">
-                <a href={PHONE_HREF} onClick={() => ymGoal("hero_phone")}
+                <a href={PHONE_HREF} onClick={() => { ymGoal("hero_phone"); ymLead("phone"); }}
                   className="flex items-center justify-center gap-3 w-full rounded-2xl py-5 transition-transform hover:scale-[1.02] active:scale-[0.97]"
                   style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 8px 32px rgba(201,168,76,0.45)" }}>
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(10,15,30,0.2)" }}>
@@ -234,7 +239,7 @@ export default function Quick() {
                 </a>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("hero_max")}
+                  <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_max"); ymLead("max"); }}
                     className="relative flex flex-col items-center justify-center rounded-2xl py-4 gap-1.5 transition-transform hover:scale-[1.02] active:scale-[0.97] overflow-hidden"
                     style={{ background: "linear-gradient(135deg,#001a3d,#003080)", border: "1px solid rgba(0,90,210,0.4)" }}>
                     <div className="absolute top-1.5 right-1.5 rounded-full px-1.5 py-0.5"
@@ -244,11 +249,11 @@ export default function Quick() {
                     <img src={MAX_LOGO} alt="MAX" className="h-6 object-contain" />
                     <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Написать в MAX</span>
                   </a>
-                  <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("hero_tg")}
+                  <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_vk"); ymLead("vk"); }}
                     className="flex flex-col items-center justify-center rounded-2xl py-4 gap-1.5 transition-transform hover:scale-[1.02] active:scale-[0.97]"
-                    style={{ background: "linear-gradient(135deg,#005f8e,#0088cc)", border: "1px solid rgba(0,136,204,0.35)" }}>
-                    <Icon name="Send" size={22} className="text-white" />
-                    <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>
+                    style={{ background: "linear-gradient(135deg,#1a3a6b,#2456a4)", border: "1px solid rgba(36,86,164,0.5)" }}>
+                    <Icon name="Users" size={22} className="text-white" />
+                    <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>ВКонтакте</span>
                   </a>
                 </div>
               </div>
@@ -444,24 +449,24 @@ export default function Quick() {
       ══════════════════════════════════════ */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-5 pt-3"
         style={{ background: `linear-gradient(to top,${NAVY} 65%,transparent)` }}>
-        <a href={PHONE_HREF} onClick={() => ymGoal("bottom_phone")}
+        <a href={PHONE_HREF} onClick={() => { ymGoal("bottom_phone"); ymLead("phone"); }}
           className="flex items-center justify-center gap-3 w-full rounded-2xl py-4 mb-2.5 active:scale-[0.97] transition-transform"
           style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 24px rgba(201,168,76,0.5)" }}>
           <Icon name="Phone" size={18} style={{ color: NAVY }} />
           <div style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 18, color: NAVY, textTransform: "uppercase" }}>Позвонить диспетчеру</div>
         </a>
         <div className="grid grid-cols-2 gap-2">
-          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("bottom_max")}
+          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("bottom_max"); ymLead("max"); }}
             className="flex items-center justify-center gap-2 rounded-2xl py-3 active:scale-[0.97] transition-transform"
             style={{ background: "linear-gradient(135deg,#001a3d,#003080)", border: "1px solid rgba(0,80,200,0.4)" }}>
             <img src={MAX_LOGO} alt="MAX" className="h-5 object-contain" />
             <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>MAX</span>
           </a>
-          <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("bottom_tg")}
+          <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("bottom_vk"); ymLead("vk"); }}
             className="flex items-center justify-center gap-2 rounded-2xl py-3 active:scale-[0.97] transition-transform"
-            style={{ background: "linear-gradient(135deg,#005f8e,#0088cc)", border: "1px solid rgba(0,136,204,0.35)" }}>
-            <Icon name="Send" size={16} className="text-white" />
-            <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>
+            style={{ background: "linear-gradient(135deg,#1a3a6b,#2456a4)", border: "1px solid rgba(36,86,164,0.5)" }}>
+            <Icon name="Users" size={16} className="text-white" />
+            <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>ВКонтакте</span>
           </a>
         </div>
       </div>
@@ -486,11 +491,11 @@ export default function Quick() {
               <Icon name="Phone" size={15} style={{ color: NAVY }} />
               <span style={{ fontFamily: "Oswald", fontSize: 14, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Позвонить</span>
             </a>
-            <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
+            <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("footer_vk")}
               className="flex items-center gap-2 rounded-xl px-4 py-3 transition-transform hover:scale-105"
-              style={{ background: "linear-gradient(135deg,#005f8e,#0088cc)" }}>
-              <Icon name="Send" size={15} className="text-white" />
-              <span style={{ fontFamily: "Oswald", fontSize: 14, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>
+              style={{ background: "linear-gradient(135deg,#1a3a6b,#2456a4)" }}>
+              <Icon name="Users" size={15} className="text-white" />
+              <span style={{ fontFamily: "Oswald", fontSize: 14, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>ВКонтакте</span>
             </a>
           </div>
         </div>

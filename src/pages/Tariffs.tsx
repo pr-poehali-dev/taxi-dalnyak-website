@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
 const PHONE_HREF = "tel:+79956455125";
-const TG_HREF    = "https://t.me/Mezhgorod1816";
+const VK_HREF    = "https://vk.com/dalnyack";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
 const MAX_LOGO   = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
 
@@ -161,11 +161,11 @@ export default function Tariffs() {
               <img src={MAX_LOGO} alt="MAX" className="h-5 object-contain" />
               <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>MAX</span>
             </a>
-            <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("tariffs_tg")}
+            <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("tariffs_vk")}
               className="flex items-center justify-center gap-2 rounded-2xl py-3 active:scale-[0.97] transition-transform"
-              style={{ background: "linear-gradient(135deg,#005f8e,#0088cc)", border: "1px solid rgba(0,136,204,0.35)" }}>
-              <Icon name="Send" size={15} className="text-white" />
-              <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>
+              style={{ background: "linear-gradient(135deg,#1a3a6b,#2456a4)", border: "1px solid rgba(36,86,164,0.5)" }}>
+              <Icon name="Users" size={15} className="text-white" />
+              <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>ВКонтакте</span>
             </a>
           </div>
         </div>

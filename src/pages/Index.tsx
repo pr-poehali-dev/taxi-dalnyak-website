@@ -61,7 +61,7 @@ const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 
 const PHONE = "+7 (931) 009-81-76";
 const PHONE_HREF = "tel:+79310098176";
-const TG_HREF = "https://t.me/Mezhgorod1816";
+const VK_HREF = "https://vk.com/dalnyack";
 const MAX_HREF = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
 
 const STOP = new Set([
@@ -180,7 +180,7 @@ function calcPrice(km: number): { min: number; max: number } | null {
   return { min: minPrice, max: maxPrice };
 }
 
-function PriceCalc({ phoneHref, tgHref }: { phoneHref: string; tgHref: string }) {
+function PriceCalc({ phoneHref, vkHref }: { phoneHref: string; vkHref: string }) {
   const [km, setKm] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -189,10 +189,6 @@ function PriceCalc({ phoneHref, tgHref }: { phoneHref: string; tgHref: string })
     const n = parseInt(km.replace(/\D/g, ""), 10);
     return calcPrice(n);
   }, [km]);
-
-  const tgMsg = price
-    ? encodeURIComponent(`Привет! Хочу заказать такси ${from ? `из ${from}` : ""}${to ? ` в ${to}` : ""}, расстояние ~${km} км. Стоимость по калькулятору от ${price.min.toLocaleString("ru")} ₽`)
-    : encodeURIComponent("Привет! Хочу узнать стоимость поездки");
 
   return (
     <div className="px-4 pb-6">
@@ -260,14 +256,14 @@ function PriceCalc({ phoneHref, tgHref }: { phoneHref: string; tgHref: string })
           {price && (
             <div className="grid grid-cols-2 gap-2 pt-1">
               <a
-                href={`${tgHref}?text=${tgMsg}`}
+                href={vkHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-white text-[12px] font-bold uppercase"
-                style={{ background: "#229ED9" }}
+                style={{ background: "linear-gradient(135deg,#1a3a6b,#2456a4)" }}
               >
-                <Icon name="Send" size={13} />
-                Telegram
+                <Icon name="Users" size={13} />
+                ВКонтакте
               </a>
               <a
                 href={phoneHref}
@@ -307,21 +303,35 @@ function Splash({ visible }: { visible: boolean }) {
   );
 }
 
-declare global { interface Window { ym?: (id: number, action: string, goal: string, params?: Record<string, string>) => void; } }
-
-function ymGoal(goal: string, params: Record<string, string>) {
-  if (typeof window.ym === "function") window.ym(108400932, "reachGoal", goal, params);
+declare global {
+  interface Window {
+    ym?: (id: number, action: string, goal: string, params?: Record<string, unknown>) => void;
+    dataLayer?: unknown[];
+  }
 }
 
-function buildTgUrl(base: string, utmSource: string, utmMedium: string, utmCampaign: string, utmContent: string) {
-  const params = new URLSearchParams({
-    utm_source: utmSource,
-    utm_medium: utmMedium,
-    utm_campaign: utmCampaign,
-    utm_content: utmContent,
+function ymGoal(goal: string, params: Record<string, string> = {}) {
+  if (typeof window.ym === "function") {
+    window.ym(108400932, "reachGoal", goal, params);
+  }
+}
+
+function ymLead(channel: string, utmParams: { source: string; medium: string; campaign: string; term: string }) {
+  ymGoal("lead", {
+    channel,
+    utm_source: utmParams.source,
+    utm_medium: utmParams.medium,
+    utm_campaign: utmParams.campaign,
+    utm_term: utmParams.term,
   });
-  return `${base}?start=${encodeURIComponent(params.toString())}`;
+  ymGoal(`lead_${channel}`, {
+    utm_source: utmParams.source,
+    utm_medium: utmParams.medium,
+    utm_campaign: utmParams.campaign,
+  });
 }
+
+
 
 export default function Index() {
   const [route, setRoute] = useState<{ from: string; to: string }>({ from: "", to: "" });
@@ -376,14 +386,14 @@ export default function Index() {
     return PHONE_HREF;
   }, [utmParams]);
 
-  const tgHref = useMemo(() => {
-    return buildTgUrl(
-      TG_HREF,
-      utmParams.source,
-      utmParams.medium,
-      utmParams.campaign,
-      "tg_button",
-    );
+  const vkHref = useMemo(() => {
+    const u = new URL(VK_HREF);
+    u.searchParams.set("utm_source", utmParams.source);
+    u.searchParams.set("utm_medium", utmParams.medium);
+    u.searchParams.set("utm_campaign", utmParams.campaign);
+    u.searchParams.set("utm_content", "vk_button");
+    u.searchParams.set("utm_term", utmParams.term);
+    return u.toString();
   }, [utmParams]);
 
   const maxHref = useMemo(() => {
@@ -482,7 +492,7 @@ export default function Index() {
         </div>
 
         {/* КАЛЬКУЛЯТОР ЦЕНЫ */}
-        <PriceCalc phoneHref={PHONE_HREF} tgHref={TG_HREF} />
+        <PriceCalc phoneHref={PHONE_HREF} vkHref={VK_HREF} />
 
         {/* ТАРИФЫ */}
         <div className="px-4 pb-6">
@@ -611,7 +621,7 @@ export default function Index() {
           {/* большая кнопка позвонить */}
           <a
             href={phoneHref}
-            onClick={() => ymGoal("phone_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign })}
+            onClick={() => { ymGoal("phone_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign }); ymLead("phone", utmParams); }}
             className="cta-pulse flex items-center justify-center gap-3 w-full bg-[#F5A800] hover:bg-amber-400 active:scale-[0.98] text-[#1a1a2e] font-black py-4 rounded-2xl transition mb-2"
             style={{ fontFamily: "Oswald" }}
           >
@@ -625,22 +635,22 @@ export default function Index() {
           {/* две кнопки мессенджеров */}
           <div className="grid grid-cols-2 gap-2">
             <a
-              href={tgHref}
+              href={vkHref}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => ymGoal("telegram_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign })}
-              className="flex items-center justify-center gap-2 bg-[#229ED9] hover:bg-sky-400 active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
-              style={{ fontFamily: "Oswald" }}
+              onClick={() => { ymGoal("vk_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign }); ymLead("vk", utmParams); }}
+              className="flex items-center justify-center gap-2 active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
+              style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#1a3a6b,#2456a4)" }}
             >
-              <Icon name="Send" size={20} />
-              <span style={{ fontSize: "clamp(13px,3.5vw,16px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Telegram</span>
+              <Icon name="Users" size={20} />
+              <span style={{ fontSize: "clamp(13px,3.5vw,16px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>ВКонтакте</span>
             </a>
 
             <a
               href={maxHref}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => ymGoal("max_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign })}
+              onClick={() => { ymGoal("max_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign }); ymLead("max", utmParams); }}
               className="flex items-center justify-center gap-2 bg-[#0077FF] hover:bg-blue-500 active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
               style={{ fontFamily: "Oswald" }}
             >
