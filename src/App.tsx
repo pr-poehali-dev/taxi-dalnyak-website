@@ -10,6 +10,7 @@ import Calc from "./pages/Calc";
 import Tariffs from "./pages/Tariffs";
 import Reviews from "./pages/Reviews";
 import NotFound from "./pages/NotFound";
+import KPP from "./pages/KPP";
 import Moscow from "./pages/regions/Moscow";
 import Belgorod from "./pages/regions/Belgorod";
 import Boguchar from "./pages/regions/Boguchar";
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/" element={<Quick />} />
           <Route path="/info" element={<Index />} />
           <Route path="/voennye" element={<Military />} />
+          <Route path="/kpp" element={<KPP />} />
           <Route path="/zvoni" element={<Quick />} />
           <Route path="/calc" element={<Calc />} />
           <Route path="/tariffs" element={<Tariffs />} />

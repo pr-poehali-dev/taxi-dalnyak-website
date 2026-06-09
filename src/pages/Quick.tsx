@@ -390,6 +390,25 @@ export default function Quick() {
       ══════════════════════════════════════ */}
       <div style={{ background: "#080d1a" }}>
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
+          {/* КПП-баннер */}
+          <a href="/kpp"
+            className="flex items-center gap-4 w-full rounded-2xl px-5 py-4 mb-4 transition-transform hover:scale-[1.01] active:scale-[0.98]"
+            style={{ background: "linear-gradient(135deg,#0d1018 0%,#121620 100%)", border: `1px solid rgba(201,168,76,0.25)`, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(to right,${GOLD},${GOLD2},transparent)` }} />
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,rgba(201,168,76,0.2),rgba(201,168,76,0.08))`, border: `1px solid rgba(201,168,76,0.2)` }}>
+              <Icon name="MapPin" size={20} style={{ color: GOLD }} />
+            </div>
+            <div className="flex-1">
+              <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: "clamp(14px,2vw,17px)", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.03em", lineHeight: 1.1 }}>
+                Поездка до КПП
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 3 }}>
+                Машина точно приедет · 24/7 · Без лишних вопросов
+              </div>
+            </div>
+            <Icon name="ChevronRight" size={18} style={{ color: GOLD, flexShrink: 0 }} />
+          </a>
+
           <div className="grid grid-cols-3 gap-3">
             {[
               { label: "Калькулятор", icon: "Calculator", href: "/calc",   sub: "Узнай цену" },
