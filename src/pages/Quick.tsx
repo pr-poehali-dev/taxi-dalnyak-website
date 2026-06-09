@@ -405,6 +405,44 @@ export default function Quick() {
               </a>
             ))}
           </div>
+
+          {/* РЕГИОНАЛЬНЫЕ ПОСАДОЧНЫЕ СТРАНИЦЫ */}
+          <div className="mt-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.06)" }} />
+              <div className="flex items-center gap-1.5">
+                <Icon name="Globe" size={12} style={{ color: GOLD }} />
+                <span style={{ color: GOLD, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em" }}>Ваш город</span>
+              </div>
+              <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.06)" }} />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: "Москва и МО",     href: "/moskva" },
+                { label: "Белгород",        href: "/belgorod" },
+                { label: "Богучары",        href: "/boguchar" },
+                { label: "Воронеж",         href: "/voronezh" },
+                { label: "Курск",           href: "/kursk" },
+                { label: "Рязань",          href: "/ryazan" },
+                { label: "Санкт-Петербург", href: "/spb" },
+                { label: "Нижний Новгород", href: "/nizhniy" },
+                { label: "Ижевск",          href: "/izhevsk" },
+                { label: "Краснодар",       href: "/krasnodar" },
+                { label: "Ростов-на-Дону",  href: "/rostov" },
+                { label: "Ставрополь",      href: "/stavropol" },
+                { label: "Новосибирск",     href: "/novosibirsk" },
+                { label: "Тюмень",          href: "/tyumen" },
+                { label: "Челябинск",       href: "/chelyabinsk" },
+                { label: "Екатеринбург",    href: "/ekaterinburg" },
+              ].map(r => (
+                <a key={r.href} href={r.href}
+                  className="rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all hover:scale-[1.03] active:scale-[0.97]"
+                  style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", color: "rgba(255,255,255,0.65)" }}>
+                  {r.label}
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
