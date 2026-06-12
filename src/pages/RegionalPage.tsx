@@ -12,6 +12,7 @@ const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 const PHONE      = "+7 (931) 009-81-76";
 const PHONE_HREF = "tel:+79310098176";
 const VK_HREF    = "https://vk.com/dalnyack";
+const TG_HREF    = "https://t.me/Mezhgorod1816";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
 const YM_ID      = 108400932;
 
@@ -508,17 +509,23 @@ export default function RegionalPage({ config }: { config: RegionConfig }) {
                 <span style={{ fontSize: 11, color: "rgba(10,15,30,0.6)", fontWeight: 700, marginTop: 2 }}>{PHONE}</span>
               </div>
             </a>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
+              <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
+                onClick={() => { ymGoal("tg_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign, city: config.slug }); ymLead("tg", utmParams); }}
+                className="flex items-center justify-center gap-1.5 rounded-2xl py-3.5 active:scale-95 transition-transform"
+                style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#0e6da8,#1a8fc2)", color: "#fff", fontWeight: 800, fontSize: "clamp(11px,2.5vw,14px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                <Icon name="Send" size={15} /> TG
+              </a>
               <a href={vkHref} target="_blank" rel="noopener noreferrer"
                 onClick={() => { ymGoal("vk_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign, city: config.slug }); ymLead("vk", utmParams); }}
-                className="flex items-center justify-center gap-2 rounded-2xl py-3.5 active:scale-95 transition-transform"
-                style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#1a3a6b,#2456a4)", color: "#fff", fontWeight: 800, fontSize: "clamp(12px,3vw,15px)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                <Icon name="Users" size={17} /> ВКонтакте
+                className="flex items-center justify-center gap-1.5 rounded-2xl py-3.5 active:scale-95 transition-transform"
+                style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#1a3a6b,#2456a4)", color: "#fff", fontWeight: 800, fontSize: "clamp(11px,2.5vw,14px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                <Icon name="Users" size={15} /> ВК
               </a>
               <a href={maxHref} target="_blank" rel="noopener noreferrer"
                 onClick={() => { ymGoal("max_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign, city: config.slug }); ymLead("max", utmParams); }}
-                className="flex items-center justify-center gap-2 rounded-2xl py-3.5 active:scale-95 transition-transform"
-                style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#003a9e,#0055e5)", color: "#fff", fontWeight: 800, fontSize: "clamp(12px,3vw,15px)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                className="flex items-center justify-center gap-1.5 rounded-2xl py-3.5 active:scale-95 transition-transform"
+                style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#003a9e,#0055e5)", color: "#fff", fontWeight: 800, fontSize: "clamp(11px,2.5vw,14px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 <img src={MAX_LOGO} alt="MAX" className="w-5 h-5 rounded-full object-cover" /> МАКС
               </a>
             </div>
