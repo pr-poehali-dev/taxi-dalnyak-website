@@ -258,7 +258,7 @@ export default function RegionalPage({ config }: { config: RegionConfig }) {
             </div>
 
             <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(24px,6vw,52px)", lineHeight: 1.0, textTransform: "uppercase", color: "#fff", letterSpacing: "-0.01em", marginBottom: 10 }}>
-              Заказать автомобиль с водителем{" "}
+              Заказать междугороднее такси{" "}
               <span style={{ color: GOLD }}>из {config.cityRod}</span>{" "}
               в другой город
             </h1>
