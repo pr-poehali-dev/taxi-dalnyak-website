@@ -144,6 +144,7 @@ export interface RegionConfig {
   slug: string;
   city: string;
   cityRod: string;
+  h1?: string;
   routes: string[];
   about: string;
   features: string[];
@@ -258,9 +259,11 @@ export default function RegionalPage({ config }: { config: RegionConfig }) {
             </div>
 
             <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(24px,6vw,52px)", lineHeight: 1.0, textTransform: "uppercase", color: "#fff", letterSpacing: "-0.01em", marginBottom: 10 }}>
-              Заказать автомобиль с водителем{" "}
-              <span style={{ color: GOLD }}>из {config.cityRod}</span>{" "}
-              в другой город
+              {config.h1 ? (
+                <span dangerouslySetInnerHTML={{ __html: config.h1.replace(/\[gold\](.*?)\[\/gold\]/g, `<span style="color:${GOLD}">$1</span>`) }} />
+              ) : (
+                <>Заказать автомобиль с водителем{" "}<span style={{ color: GOLD }}>из {config.cityRod}</span>{" "}в другой город</>
+              )}
             </h1>
 
             <p style={{ fontFamily: "Oswald", color: GOLD2, fontSize: "clamp(13px,2.5vw,18px)", fontWeight: 600, marginBottom: 4 }}>

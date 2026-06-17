@@ -202,10 +202,9 @@ export default function Quick() {
 
               {/* ГЛАВНЫЙ ЗАГОЛОВОК */}
               <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(32px,5vw,66px)", lineHeight: 0.95, color: "#fff", textTransform: "uppercase", letterSpacing: "-0.01em" }}>
-                Заказать автомобиль<br />
-                с водителем<br />
-                в другой город<br />
-                <span style={{ color: GOLD }}>От 200 км</span>
+                Такси в другой город<br />
+                от 200 км —<br />
+                <span style={{ color: GOLD }}>фиксированная цена</span>
               </h1>
 
               <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "clamp(13px,1.2vw,16px)", marginTop: 18, lineHeight: 1.7, maxWidth: 480 }}>
