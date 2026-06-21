@@ -731,7 +731,7 @@ export default function Quick() {
           <div className="space-y-4">
             {REVIEWS.map(r => (
               <div key={r.name} className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <img src={r.img} alt={r.name} loading="lazy" className="w-full block" style={{ maxHeight: 340, objectFit: "cover", objectPosition: "top" }} />
+                <img src={r.img} alt={r.name} loading="lazy" className="w-full block" />
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div>
