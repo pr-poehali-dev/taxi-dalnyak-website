@@ -424,16 +424,22 @@ export default function Quick() {
                   </div>
                 </a>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
+                  <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_tg"); ymLead("tg"); }}
+                    className="flex flex-col items-center justify-center rounded-2xl py-4 gap-1.5 transition-transform hover:scale-[1.02] active:scale-[0.97]"
+                    style={{ background: "linear-gradient(135deg,#0e6da8,#1a8fc2)", border: "1px solid rgba(26,143,194,0.5)" }}>
+                    <Icon name="Send" size={22} className="text-white" />
+                    <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>
+                  </a>
                   <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_max"); ymLead("max"); }}
                     className="relative flex flex-col items-center justify-center rounded-2xl py-4 gap-1.5 transition-transform hover:scale-[1.02] active:scale-[0.97] overflow-hidden"
                     style={{ background: "linear-gradient(135deg,#001a3d,#003080)", border: "1px solid rgba(0,90,210,0.4)" }}>
                     <div className="absolute top-1.5 right-1.5 rounded-full px-1.5 py-0.5"
                       style={{ background: GOLD, fontSize: 8, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>
-                      популярно
+                      топ
                     </div>
                     <img src={MAX_LOGO} alt="MAX" className="h-6 object-contain" />
-                    <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Написать в MAX</span>
+                    <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>MAX</span>
                   </a>
                   <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_vk"); ymLead("vk"); }}
                     className="flex flex-col items-center justify-center rounded-2xl py-4 gap-1.5 transition-transform hover:scale-[1.02] active:scale-[0.97]"
