@@ -478,21 +478,21 @@ export default function RegionalPage({ config }: { config: RegionConfig }) {
             <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(${GOLD},${GOLD2})` }} />
             <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>Отзывы пассажиров</span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {reviews.map(r => (
-              <div key={r.name} className="rounded-2xl overflow-hidden flex" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <img src={r.img} alt={r.name} loading="lazy" className="w-[78px] shrink-0 object-cover object-top" />
-                <div className="flex flex-col justify-between p-4 min-w-0">
-                  <div>
-                    <div className="flex gap-0.5 mb-2">
-                      {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={10} style={{ color: GOLD }} className="fill-[#c9a84c]" />)}
+              <div key={r.name} className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <img src={r.img} alt={r.name} loading="lazy" className="w-full block" style={{ maxHeight: 340, objectFit: "cover", objectPosition: "top" }} />
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{r.name}</div>
+                      <div style={{ color: GOLD, fontSize: 11, marginTop: 1 }}>{r.route}</div>
                     </div>
-                    <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, lineHeight: 1.6 }} className="line-clamp-4">{r.text}</p>
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={13} style={{ color: GOLD }} className="fill-[#c9a84c]" />)}
+                    </div>
                   </div>
-                  <div className="mt-2.5">
-                    <div style={{ color: "#fff", fontWeight: 700, fontSize: 12 }}>{r.name}</div>
-                    <div style={{ color: GOLD, fontSize: 10, marginTop: 1 }}>{r.route}</div>
-                  </div>
+                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 13, lineHeight: 1.7 }}>{r.text}</p>
                 </div>
               </div>
             ))}

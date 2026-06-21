@@ -252,8 +252,9 @@ export default function Quick() {
       ══════════════════════════════════════ */}
       <div ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "100svh" }}>
         <img src={CAR_IMG} alt="Такси для дальних поездок"
+          fetchPriority="high"
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ objectPosition: "center 45%", transform: "scale(1.05)" }} />
+          style={{ objectPosition: "center 45%" }} />
         <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,rgba(10,15,30,0.88) 0%,rgba(10,15,30,0.5) 40%,rgba(10,15,30,0.93) 100%)" }} />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom,rgba(10,15,30,0) 50%,${NAVY} 100%)` }} />
 
@@ -267,7 +268,7 @@ export default function Quick() {
             style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)" }}>
             <div className="flex -space-x-1.5">
               {[REVIEW_1, REVIEW_2, REVIEW_3].map((img, i) => (
-                <img key={i} src={img} alt="" className="w-5 h-5 rounded-full object-cover" style={{ border: `1.5px solid ${NAVY}` }} />
+                <img key={i} src={img} alt="" loading="lazy" className="w-5 h-5 rounded-full object-cover" style={{ border: `1.5px solid ${NAVY}` }} />
               ))}
             </div>
             <span style={{ color: GOLD2, fontSize: 11, fontWeight: 700 }}>{count.toLocaleString("ru")} поездок сегодня</span>
@@ -288,9 +289,9 @@ export default function Quick() {
 
               {/* ГЛАВНЫЙ ЗАГОЛОВОК */}
               <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(32px,5vw,66px)", lineHeight: 0.95, color: "#fff", textTransform: "uppercase", letterSpacing: "-0.01em" }}>
-                Такси в другой город<br />
-                от 200 км —<br />
-                <span style={{ color: GOLD }}>фиксированная цена</span>
+                Заказать такси<br />
+                из города в город<br />
+                <span style={{ color: GOLD }}>от 200 км</span>
               </h1>
 
               <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "clamp(13px,1.2vw,16px)", marginTop: 18, lineHeight: 1.7, maxWidth: 480 }}>
@@ -727,21 +728,21 @@ export default function Quick() {
               <Icon name="ChevronRight" size={13} style={{ color: GOLD }} />
             </a>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {REVIEWS.map(r => (
-              <div key={r.name} className="rounded-2xl overflow-hidden flex" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <img src={r.img} alt={r.name} loading="lazy" className="w-[78px] shrink-0 object-cover object-top" />
-                <div className="flex flex-col justify-between p-4 min-w-0">
-                  <div>
-                    <div className="flex gap-0.5 mb-2">
-                      {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={10} style={{ color: GOLD }} className="fill-[#c9a84c]" />)}
+              <div key={r.name} className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <img src={r.img} alt={r.name} loading="lazy" className="w-full block" style={{ maxHeight: 340, objectFit: "cover", objectPosition: "top" }} />
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{r.name}</div>
+                      <div style={{ color: GOLD, fontSize: 11, marginTop: 1 }}>{r.route}</div>
                     </div>
-                    <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, lineHeight: 1.6 }} className="line-clamp-4">{r.text}</p>
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={13} style={{ color: GOLD }} className="fill-[#c9a84c]" />)}
+                    </div>
                   </div>
-                  <div className="mt-2.5">
-                    <div style={{ color: "#fff", fontWeight: 700, fontSize: 12 }}>{r.name}</div>
-                    <div style={{ color: GOLD, fontSize: 10, marginTop: 1 }}>{r.route}</div>
-                  </div>
+                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 13, lineHeight: 1.7 }}>{r.text}</p>
                 </div>
               </div>
             ))}
