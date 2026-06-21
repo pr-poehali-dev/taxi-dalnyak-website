@@ -154,12 +154,12 @@ function ymLead(channel: string) {
 
 function parseCities(term: string): { from: string; to: string } | null {
   if (!term) return null;
-  const t = decodeURIComponent(term).toLowerCase();
-  const fromMatch = t.match(/из\s+([а-яё]+(?:-[а-яё]+)?)/i);
-  const toMatch   = t.match(/(?:в|до)\s+([а-яё]+(?:-[а-яё]+)?)/i);
-  if (fromMatch && toMatch) {
-    const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-    return { from: cap(fromMatch[1]), to: cap(toMatch[1]) };
+  const t = decodeURIComponent(term).replace(/\+/g, " ").toLowerCase().trim();
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const fromMatch = t.match(/из\s+([а-яё]+(?:[\s-][а-яё]+)?)/);
+  const toMatch   = t.match(/(?:^|\s)(?:в|до)\s+([а-яё]+(?:[\s-][а-яё]+)?)/);
+  if (fromMatch?.[1] && toMatch?.[1]) {
+    return { from: cap(fromMatch[1].trim()), to: cap(toMatch[1].trim()) };
   }
   return null;
 }
