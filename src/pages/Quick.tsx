@@ -152,11 +152,24 @@ function ymLead(channel: string) {
   ymGoal(`lead_${channel}`);
 }
 
+function parseCities(term: string): { from: string; to: string } | null {
+  if (!term) return null;
+  const t = decodeURIComponent(term).toLowerCase();
+  const fromMatch = t.match(/из\s+([а-яё]+(?:-[а-яё]+)?)/i);
+  const toMatch   = t.match(/(?:в|до)\s+([а-яё]+(?:-[а-яё]+)?)/i);
+  if (fromMatch && toMatch) {
+    const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+    return { from: cap(fromMatch[1]), to: cap(toMatch[1]) };
+  }
+  return null;
+}
+
 export default function Quick() {
   const [pulse, setPulse]       = useState(false);
   const [count, setCount]       = useState(getStartCount());
   const [mins, setMins]         = useState(7);
   const [scrolled, setScrolled] = useState(false);
+  const [utmCities, setUtmCities] = useState<{ from: string; to: string } | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [showIosHint, setShowIosHint]     = useState(false);
@@ -164,7 +177,15 @@ export default function Quick() {
   const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    document.title = "Такси для дальних поездок от 200 км — Дальняк";
+    const p2 = new URLSearchParams(window.location.search);
+    const term = p2.get("utm_term") || "";
+    const cities = parseCities(term);
+    if (cities) {
+      setUtmCities(cities);
+      document.title = `Такси ${cities.from} – ${cities.to} | Дальняк`;
+    } else {
+      document.title = "Такси для дальних поездок от 200 км — Дальняк";
+    }
     const p = setInterval(() => setPulse(v => !v), 1800);
     const c = setInterval(() => { setCount(n => n + 1); setMins(Math.floor(Math.random() * 9) + 2); }, (Math.random() * 4 + 3) * 60000);
     const m = setInterval(() => setMins(v => v >= 40 ? 4 : v + 1), 60000);
@@ -289,9 +310,19 @@ export default function Quick() {
 
               {/* ГЛАВНЫЙ ЗАГОЛОВОК */}
               <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(32px,5vw,66px)", lineHeight: 0.95, color: "#fff", textTransform: "uppercase", letterSpacing: "-0.01em" }}>
-                Заказать такси<br />
-                из города в город<br />
-                <span style={{ color: GOLD }}>от 200 км</span>
+                {utmCities ? (
+                  <>
+                    Такси <span style={{ color: GOLD }}>{utmCities.from}</span><br />
+                    — <span style={{ color: GOLD }}>{utmCities.to}</span><br />
+                    <span style={{ fontSize: "clamp(18px,3vw,36px)", color: "rgba(255,255,255,0.55)" }}>фиксированная цена</span>
+                  </>
+                ) : (
+                  <>
+                    Заказать такси<br />
+                    из города в город<br />
+                    <span style={{ color: GOLD }}>от 200 км</span>
+                  </>
+                )}
               </h1>
 
               <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "clamp(13px,1.2vw,16px)", marginTop: 18, lineHeight: 1.7, maxWidth: 480 }}>
