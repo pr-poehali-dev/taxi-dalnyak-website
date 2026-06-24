@@ -3,7 +3,7 @@ import Icon from "@/components/ui/icon";
 
 const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
-const CAR_IMG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/091d3d1c-1649-4d9e-8958-1a624bf8f371.jpg";
+
 const REVIEW_1 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/b0eb5050-a05a-4647-8442-4b839d45161f.jpg";
 const REVIEW_2 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/fedc4281-a106-4024-9369-8a03712c92a3.jpg";
 const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/ac322d91-fd27-4c11-b86f-f28e85ec3df0.jpg";
@@ -300,13 +300,9 @@ export default function Quick() {
       {/* ══════════════════════════════════════
           HERO — полноэкранный фон
       ══════════════════════════════════════ */}
-      <div ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "100svh" }}>
-        <img src={CAR_IMG} alt="Такси для дальних поездок"
-          fetchPriority="high"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ objectPosition: "center 45%" }} />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,rgba(10,15,30,0.88) 0%,rgba(10,15,30,0.5) 40%,rgba(10,15,30,0.93) 100%)" }} />
-        <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom,rgba(10,15,30,0) 50%,${NAVY} 100%)` }} />
+      <div ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "100svh", background: `linear-gradient(160deg,#0a0f1e 0%,#0d1428 40%,#080c18 100%)` }}>
+        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 70% 40%,rgba(201,168,76,0.07) 0%,transparent 70%)` }} />
+        <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom,transparent 50%,${NAVY} 100%)` }} />
 
         {/* ══════════════════════════════════════
             ХЕДЕР — общий для мобилки и десктопа
