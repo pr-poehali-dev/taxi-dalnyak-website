@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 
 const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
@@ -220,6 +220,21 @@ function toNominative(word: string): string {
   return cap(key);
 }
 
+const PulseDot = memo(function PulseDot() {
+  const [pulse, setPulse] = useState(false);
+  useEffect(() => {
+    const t = setInterval(() => setPulse(v => !v), 1800);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="flex items-center gap-1">
+      <span className={`w-1.5 h-1.5 rounded-full transition-opacity duration-700 ${pulse ? "opacity-100" : "opacity-20"}`}
+        style={{ background: "#4ade80" }} />
+      <span style={{ color: "#4ade80", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em" }}>На связи 24/7</span>
+    </div>
+  );
+});
+
 function parseCities(term: string): { from: string; to: string } | null {
   if (!term) return null;
   const t = decodeURIComponent(term).replace(/\+/g, " ").toLowerCase().trim();
@@ -232,7 +247,6 @@ function parseCities(term: string): { from: string; to: string } | null {
 }
 
 export default function Quick() {
-  const [pulse, setPulse]       = useState(false);
   const [count, setCount]       = useState(getStartCount());
   const [mins, setMins]         = useState(7);
   const [scrolled, setScrolled] = useState(false);
@@ -253,7 +267,6 @@ export default function Quick() {
     } else {
       document.title = "Такси для дальних поездок от 200 км — Дальняк";
     }
-    const p = setInterval(() => setPulse(v => !v), 1800);
     const c = setInterval(() => { setCount(n => n + 1); setMins(Math.floor(Math.random() * 9) + 2); }, (Math.random() * 4 + 3) * 60000);
     const m = setInterval(() => setMins(v => v >= 40 ? 4 : v + 1), 60000);
     const standalone = window.matchMedia("(display-mode: standalone)").matches
@@ -267,7 +280,7 @@ export default function Quick() {
     const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", onScroll);
     return () => {
-      clearInterval(p); clearInterval(c); clearInterval(m);
+      clearInterval(c); clearInterval(m);
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("scroll", onScroll);
     };
@@ -303,17 +316,13 @@ export default function Quick() {
             style={{ background: scrolled ? "rgba(10,15,30,0.95)" : "transparent", backdropFilter: scrolled ? "blur(12px)" : "blur(0px)" }}>
             <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src={LOGO} alt="" className="w-10 h-10 rounded-xl object-cover"
+                <img src={LOGO} alt="" loading="lazy" className="w-10 h-10 rounded-xl object-cover"
                   style={{ border: `1.5px solid ${GOLD}`, boxShadow: `0 0 12px rgba(201,168,76,0.3)` }} />
                 <div>
                   <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 16, color: "#fff", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                     Такси Дальняк
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className={`w-1.5 h-1.5 rounded-full transition-opacity duration-700 ${pulse ? "opacity-100" : "opacity-20"}`}
-                      style={{ background: "#4ade80" }} />
-                    <span style={{ color: "#4ade80", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em" }}>На связи 24/7</span>
-                  </div>
+                  <PulseDot />
                 </div>
               </div>
               {/* десктоп — показываем телефон + кнопки */}
@@ -436,7 +445,7 @@ export default function Quick() {
                       style={{ background: GOLD, fontSize: 8, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>
                       топ
                     </div>
-                    <img src={MAX_LOGO} alt="MAX" className="h-6 object-contain" />
+                    <img src={MAX_LOGO} alt="MAX" loading="lazy" className="h-6 object-contain" />
                     <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>MAX</span>
                   </a>
                   <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_vk"); ymLead("vk"); }}
@@ -873,7 +882,7 @@ export default function Quick() {
           <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("bottom_max"); ymLead("max"); }}
             className="flex items-center justify-center gap-1.5 rounded-2xl py-3 active:scale-[0.97] transition-transform"
             style={{ background: "linear-gradient(135deg,#001a3d,#003080)", border: "1px solid rgba(0,80,200,0.4)" }}>
-            <img src={MAX_LOGO} alt="MAX" className="h-5 object-contain" />
+            <img src={MAX_LOGO} alt="MAX" loading="lazy" className="h-5 object-contain" />
             <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>MAX</span>
           </a>
           <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("bottom_vk"); ymLead("vk"); }}
@@ -891,7 +900,7 @@ export default function Quick() {
       <div className="hidden md:block" style={{ background: "#050810", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={LOGO} alt="" className="w-10 h-10 rounded-xl object-cover" style={{ border: `1.5px solid ${GOLD}` }} />
+            <img src={LOGO} alt="" loading="lazy" className="w-10 h-10 rounded-xl object-cover" style={{ border: `1.5px solid ${GOLD}` }} />
             <div>
               <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 15, color: "#fff", textTransform: "uppercase" }}>Такси Дальняк</div>
               <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>Такси для дальних поездок от 200 км · С 2014 года</div>
