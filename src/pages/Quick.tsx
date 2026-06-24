@@ -385,17 +385,14 @@ export default function Quick() {
                   </>
                 ) : (
                   <>
-                    Такси в другой город<br />
-                    <span style={{ color: GOLD }}>от 200 км</span><br />
-                    <span style={{ fontSize: "clamp(18px,2.5vw,34px)", color: "rgba(255,255,255,0.75)" }}>фиксированная цена</span>
+                    Заказать такси<br />
+                    из города в город<br />
+                    <span style={{ color: GOLD }}>от 200 км</span>
                   </>
                 )}
               </h1>
 
-              <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "clamp(10px,1vw,13px)", marginTop: 10, marginBottom: 2, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                Дальние поездки по РФ на такси · Междугородние маршруты · Предзаказ
-              </p>
-              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "clamp(13px,1.2vw,16px)", marginTop: 8, lineHeight: 1.7, maxWidth: 480 }}>
+              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "clamp(13px,1.2vw,16px)", marginTop: 18, lineHeight: 1.7, maxWidth: 480 }}>
                 Заказать такси из города в город по фиксированной цене.<br />
                 Новые авто, опытные водители, круглосуточный диспетчер.
               </p>
