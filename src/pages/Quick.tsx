@@ -500,6 +500,62 @@ export default function Quick() {
       </div>
 
       {/* ══════════════════════════════════════
+          СЕКЦИЯ: БРОНИРОВАНИЕ
+      ══════════════════════════════════════ */}
+      <div style={{ background: NAVY }}>
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
+          <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid rgba(201,168,76,0.35)`, background: "linear-gradient(135deg,rgba(201,168,76,0.07) 0%,rgba(10,15,30,0.6) 100%)" }}>
+            <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: "1px solid rgba(201,168,76,0.15)" }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
+                <Icon name="ShieldCheck" size={18} style={{ color: "#0a0f1e" }} />
+              </div>
+              <div>
+                <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 16, color: "#fff", textTransform: "uppercase", letterSpacing: "0.08em" }}>Бронирование поездки</div>
+                <div style={{ color: GOLD, fontSize: 11, fontWeight: 600 }}>Фиксируем дату и цену · Без скрытых условий</div>
+              </div>
+            </div>
+            <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex gap-3 items-start">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.25)" }}>
+                  <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 14, color: GOLD }}>1</span>
+                </div>
+                <div>
+                  <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 14, color: "#fff" }}>Аванс 500–1000 ₽</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, lineHeight: 1.5, marginTop: 2 }}>Небольшой депозит фиксирует вашу поездку. Остаток — при посадке.</div>
+                </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.25)" }}>
+                  <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 14, color: GOLD }}>2</span>
+                </div>
+                <div>
+                  <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 14, color: "#fff" }}>Цена не изменится</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, lineHeight: 1.5, marginTop: 2 }}>После бронирования фиксируем стоимость — никаких надбавок в день поездки.</div>
+                </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.25)" }}>
+                  <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 14, color: GOLD }}>3</span>
+                </div>
+                <div>
+                  <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 14, color: "#fff" }}>Возврат если отменим мы</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, lineHeight: 1.5, marginTop: 2 }}>Если поездка не состоялась по нашей вине — возвращаем аванс полностью.</div>
+                </div>
+              </div>
+            </div>
+            <div className="px-5 pb-5">
+              <a href={PHONE_HREF} onClick={() => ymGoal("booking_phone")}
+                className="flex items-center justify-center gap-2 w-full rounded-xl py-3.5 transition-transform hover:scale-[1.01] active:scale-[0.98]"
+                style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
+                <Icon name="Phone" size={16} style={{ color: NAVY }} />
+                <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: NAVY, textTransform: "uppercase", letterSpacing: "0.08em" }}>Забронировать по телефону</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════
           СЕКЦИЯ: ПРЕИМУЩЕСТВА (мобилка)
       ══════════════════════════════════════ */}
       <div className="md:hidden" style={{ background: NAVY }}>
