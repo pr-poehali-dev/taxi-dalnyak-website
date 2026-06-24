@@ -279,58 +279,7 @@ export default function Quick() {
     setShowIosHint(true);
   }
 
-  /* ═══════════════════════════════════════════════════════
-     ХЕДЕР — общий для мобилки и десктопа
-  ═══════════════════════════════════════════════════════ */
-  const Header = () => (
-    <div className="relative z-20">
-      <div className={`transition-all duration-300 ${scrolled ? "py-2 shadow-2xl" : "py-4"}`}
-        style={{ background: scrolled ? "rgba(10,15,30,0.95)" : "transparent", backdropFilter: scrolled ? "blur(12px)" : "none" }}>
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={LOGO} alt="" className="w-10 h-10 rounded-xl object-cover"
-              style={{ border: `1.5px solid ${GOLD}`, boxShadow: `0 0 12px rgba(201,168,76,0.3)` }} />
-            <div>
-              <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 16, color: "#fff", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                Такси Дальняк
-              </div>
-              <div className="flex items-center gap-1">
-                <span className={`w-1.5 h-1.5 rounded-full transition-opacity duration-700 ${pulse ? "opacity-100" : "opacity-20"}`}
-                  style={{ background: "#4ade80" }} />
-                <span style={{ color: "#4ade80", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em" }}>На связи 24/7</span>
-              </div>
-            </div>
-          </div>
-          {/* десктоп — показываем телефон + кнопки */}
-          <div className="hidden md:flex items-center gap-4">
-            <div>
-              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 600 }}>Диспетчер круглосуточно</div>
-              <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 20, color: "#fff" }}>{PHONE}</div>
-            </div>
-            <a href={PHONE_HREF} onClick={() => ymGoal("header_phone")}
-              className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105"
-              style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 16px rgba(201,168,76,0.4)" }}>
-              <Icon name="Phone" size={15} style={{ color: NAVY }} />
-              <span style={{ fontFamily: "Oswald", fontSize: 14, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Позвонить</span>
-            </a>
-            <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("header_vk")}
-              className="flex items-center gap-2 rounded-xl px-4 py-3 transition-transform hover:scale-105"
-              style={{ background: "linear-gradient(135deg,#1a3a6b,#2456a4)" }}>
-              <Icon name="Users" size={15} className="text-white" />
-              <span style={{ fontFamily: "Oswald", fontSize: 14, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>ВКонтакте</span>
-            </a>
-          </div>
-          {/* мобилка — только кнопка звонка */}
-          <a href={PHONE_HREF} onClick={() => ymGoal("header_phone")}
-            className="md:hidden flex items-center gap-1.5 rounded-xl px-3 py-2 active:scale-95 transition-transform"
-            style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 12px rgba(201,168,76,0.4)" }}>
-            <Icon name="Phone" size={13} style={{ color: NAVY }} />
-            <span style={{ fontFamily: "Oswald", fontSize: 12, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Звонок</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  );
+
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: NAVY, fontFamily: "Inter, sans-serif" }}>
@@ -346,7 +295,56 @@ export default function Quick() {
         <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,rgba(10,15,30,0.88) 0%,rgba(10,15,30,0.5) 40%,rgba(10,15,30,0.93) 100%)" }} />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom,rgba(10,15,30,0) 50%,${NAVY} 100%)` }} />
 
-        <Header />
+        {/* ══════════════════════════════════════
+            ХЕДЕР — общий для мобилки и десктопа
+        ══════════════════════════════════════ */}
+        <div className="relative z-20">
+          <div className={`transition-all duration-300 ${scrolled ? "py-2 shadow-2xl" : "py-4"}`}
+            style={{ background: scrolled ? "rgba(10,15,30,0.95)" : "transparent", backdropFilter: scrolled ? "blur(12px)" : "blur(0px)" }}>
+            <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img src={LOGO} alt="" className="w-10 h-10 rounded-xl object-cover"
+                  style={{ border: `1.5px solid ${GOLD}`, boxShadow: `0 0 12px rgba(201,168,76,0.3)` }} />
+                <div>
+                  <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 16, color: "#fff", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Такси Дальняк
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className={`w-1.5 h-1.5 rounded-full transition-opacity duration-700 ${pulse ? "opacity-100" : "opacity-20"}`}
+                      style={{ background: "#4ade80" }} />
+                    <span style={{ color: "#4ade80", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em" }}>На связи 24/7</span>
+                  </div>
+                </div>
+              </div>
+              {/* десктоп — показываем телефон + кнопки */}
+              <div className="hidden md:flex items-center gap-4">
+                <div>
+                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 600 }}>Диспетчер круглосуточно</div>
+                  <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 20, color: "#fff" }}>{PHONE}</div>
+                </div>
+                <a href={PHONE_HREF} onClick={() => ymGoal("header_phone")}
+                  className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105"
+                  style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 16px rgba(201,168,76,0.4)" }}>
+                  <Icon name="Phone" size={15} style={{ color: NAVY }} />
+                  <span style={{ fontFamily: "Oswald", fontSize: 14, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Позвонить</span>
+                </a>
+                <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("header_vk")}
+                  className="flex items-center gap-2 rounded-xl px-4 py-3 transition-transform hover:scale-105"
+                  style={{ background: "linear-gradient(135deg,#1a3a6b,#2456a4)" }}>
+                  <Icon name="Users" size={15} className="text-white" />
+                  <span style={{ fontFamily: "Oswald", fontSize: 14, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>ВКонтакте</span>
+                </a>
+              </div>
+              {/* мобилка — только кнопка звонка */}
+              <a href={PHONE_HREF} onClick={() => ymGoal("header_phone")}
+                className="md:hidden flex items-center gap-1.5 rounded-xl px-3 py-2 active:scale-95 transition-transform"
+                style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 12px rgba(201,168,76,0.4)" }}>
+                <Icon name="Phone" size={13} style={{ color: NAVY }} />
+                <span style={{ fontFamily: "Oswald", fontSize: 12, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Звонок</span>
+              </a>
+            </div>
+          </div>
+        </div>
 
         {/* ── HERO КОНТЕНТ ── */}
         <div className="relative z-10 max-w-6xl mx-auto px-6 flex flex-col" style={{ minHeight: "calc(100svh - 68px)", paddingTop: 20 }}>
