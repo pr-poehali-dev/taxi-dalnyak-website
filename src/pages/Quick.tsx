@@ -385,9 +385,9 @@ export default function Quick() {
                   </>
                 ) : (
                   <>
-                    Заказать такси<br />
-                    из города в город<br />
-                    <span style={{ color: GOLD }}>от 200 км</span>
+                    Такси в другой город<br />
+                    <span style={{ color: GOLD }}>от 200 км</span><br />
+                    <span style={{ fontSize: "clamp(18px,2.5vw,34px)", color: "rgba(255,255,255,0.75)" }}>фиксированная цена</span>
                   </>
                 )}
               </h1>
