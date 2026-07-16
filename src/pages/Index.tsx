@@ -59,8 +59,8 @@ const REVIEW_1 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 const REVIEW_2 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/fedc4281-a106-4024-9369-8a03712c92a3.jpg";
 const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/ac322d91-fd27-4c11-b86f-f28e85ec3df0.jpg";
 
-const PHONE = "+7 (931) 009-81-76";
-const PHONE_HREF = "tel:+79310098176";
+const PHONE = "+7 (995) 645-51-25";
+const PHONE_HREF = "tel:+79956455125";
 const VK_HREF = "https://vk.com/dalnyack";
 const MAX_HREF = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
 
@@ -621,7 +621,7 @@ export default function Index() {
           {/* большая кнопка позвонить */}
           <a
             href={phoneHref}
-            onClick={() => { ymGoal("phone_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign }); ymLead("phone", utmParams); }}
+            onClick={() => { ymGoal("call", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign }); ymLead("phone", utmParams); }}
             className="cta-pulse flex items-center justify-center gap-3 w-full bg-[#F5A800] hover:bg-amber-400 active:scale-[0.98] text-[#1a1a2e] font-black py-4 rounded-2xl transition mb-2"
             style={{ fontFamily: "Oswald" }}
           >
@@ -650,7 +650,7 @@ export default function Index() {
               href={maxHref}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => { ymGoal("max_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign }); ymLead("max", utmParams); }}
+              onClick={() => { ymGoal("max", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign }); ymLead("max", utmParams); }}
               className="flex items-center justify-center gap-2 bg-[#0077FF] hover:bg-blue-500 active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
               style={{ fontFamily: "Oswald" }}
             >

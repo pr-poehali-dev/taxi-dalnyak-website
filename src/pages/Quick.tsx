@@ -8,8 +8,8 @@ const REVIEW_1 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 const REVIEW_2 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/fedc4281-a106-4024-9369-8a03712c92a3.jpg";
 const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/ac322d91-fd27-4c11-b86f-f28e85ec3df0.jpg";
 
-const PHONE      = "+7 (931) 009-81-76";
-const PHONE_HREF = "tel:+79310098176";
+const PHONE      = "+7 (995) 645-51-25";
+const PHONE_HREF = "tel:+79956455125";
 const VK_HREF    = "https://vk.com/dalnyack";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
@@ -56,7 +56,7 @@ function PriceCalc() {
   const price = useMemo(() => calcPrice(parseInt(km.replace(/\D/g, ""), 10)), [km]);
   const GOLD = "#c9a84c"; const GOLD2 = "#e8c96a";
   const VK_HREF2   = "https://vk.com/dalnyack";
-  const PHONE_HREF2 = "tel:+79310098176";
+  const PHONE_HREF2 = "tel:+79956455125";
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(201,168,76,0.2)" }}>
       <div className="px-5 pt-4 pb-3 flex items-center gap-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -144,7 +144,7 @@ function getStartCount() {
 
 function ymGoal(goal: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).ym?.(98584604, "reachGoal", goal);
+  (window as any).ym?.(108400932, "reachGoal", goal);
 }
 
 function ymLead(channel: string) {
@@ -327,7 +327,7 @@ export default function Quick() {
                   <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 600 }}>Диспетчер круглосуточно</div>
                   <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 20, color: "#fff" }}>{PHONE}</div>
                 </div>
-                <a href={PHONE_HREF} onClick={() => ymGoal("header_phone")}
+                <a href={PHONE_HREF} onClick={() => ymGoal("call")}
                   className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105"
                   style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 16px rgba(201,168,76,0.4)" }}>
                   <Icon name="Phone" size={15} style={{ color: NAVY }} />
@@ -341,7 +341,7 @@ export default function Quick() {
                 </a>
               </div>
               {/* мобилка — только кнопка звонка */}
-              <a href={PHONE_HREF} onClick={() => ymGoal("header_phone")}
+              <a href={PHONE_HREF} onClick={() => ymGoal("call")}
                 className="md:hidden flex items-center gap-1.5 rounded-xl px-3 py-2 active:scale-95 transition-transform"
                 style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 12px rgba(201,168,76,0.4)" }}>
                 <Icon name="Phone" size={13} style={{ color: NAVY }} />
@@ -413,7 +413,7 @@ export default function Quick() {
 
               {/* кнопки */}
               <div className="space-y-3 md:max-w-lg">
-                <a href={PHONE_HREF} onClick={() => { ymGoal("hero_phone"); ymLead("phone"); }}
+                <a href={PHONE_HREF} onClick={() => { ymGoal("call"); ymLead("phone"); }}
                   className="flex items-center justify-center gap-3 w-full rounded-2xl py-5 transition-transform hover:scale-[1.02] active:scale-[0.97]"
                   style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 8px 32px rgba(201,168,76,0.45)" }}>
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(10,15,30,0.2)" }}>
@@ -434,7 +434,7 @@ export default function Quick() {
                     <Icon name="Send" size={22} className="text-white" />
                     <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>
                   </a>
-                  <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_max"); ymLead("max"); }}
+                  <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("max"); ymLead("max"); }}
                     className="relative flex flex-col items-center justify-center rounded-2xl py-4 gap-1.5 transition-transform hover:scale-[1.02] active:scale-[0.97] overflow-hidden"
                     style={{ background: "linear-gradient(135deg,#001a3d,#003080)", border: "1px solid rgba(0,90,210,0.4)" }}>
                     <div className="absolute top-1.5 right-1.5 rounded-full px-1.5 py-0.5"
@@ -862,7 +862,7 @@ export default function Quick() {
       ══════════════════════════════════════ */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-5 pt-3"
         style={{ background: `linear-gradient(to top,${NAVY} 65%,transparent)` }}>
-        <a href={PHONE_HREF} onClick={() => { ymGoal("bottom_phone"); ymLead("phone"); }}
+        <a href={PHONE_HREF} onClick={() => { ymGoal("call"); ymLead("phone"); }}
           className="flex items-center justify-center gap-3 w-full rounded-2xl py-4 mb-2.5 active:scale-[0.97] transition-transform"
           style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 24px rgba(201,168,76,0.5)" }}>
           <Icon name="Phone" size={18} style={{ color: NAVY }} />
@@ -875,7 +875,7 @@ export default function Quick() {
             <Icon name="Send" size={15} className="text-white" />
             <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>
           </a>
-          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("bottom_max"); ymLead("max"); }}
+          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("max"); ymLead("max"); }}
             className="flex items-center justify-center gap-1.5 rounded-2xl py-3 active:scale-[0.97] transition-transform"
             style={{ background: "linear-gradient(135deg,#001a3d,#003080)", border: "1px solid rgba(0,80,200,0.4)" }}>
             <img src={MAX_LOGO} alt="MAX" loading="lazy" className="h-5 object-contain" />
@@ -904,7 +904,7 @@ export default function Quick() {
           </div>
           <div className="flex items-center gap-4">
             <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 22, color: "#fff" }}>{PHONE}</div>
-            <a href={PHONE_HREF} onClick={() => ymGoal("footer_phone")}
+            <a href={PHONE_HREF} onClick={() => ymGoal("call")}
               className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105"
               style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
               <Icon name="Phone" size={15} style={{ color: NAVY }} />

@@ -12,8 +12,8 @@ const MAX_LOGO  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888
 const ECLASS    = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/13086e99-0824-48d3-b5a1-0a5ad3f5d7a0.jpg";
 const VIANO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/e5b058ff-ade7-469a-8bcc-784862384325.jpg";
 
-const PHONE      = "+7 (931) 009-81-76";
-const PHONE_HREF = "tel:+79310098176";
+const PHONE      = "+7 (995) 645-51-25";
+const PHONE_HREF = "tel:+79956455125";
 const VK_HREF    = "https://vk.com/dalnyack";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
@@ -104,14 +104,14 @@ export default function MoscowBusiness() {
                   <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Диспетчер Алексей</div>
                   <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 19, color: "#fff" }}>{PHONE}</div>
                 </div>
-                <a href={PHONE_HREF} onClick={() => ymGoal("mb_header_phone")}
+                <a href={PHONE_HREF} onClick={() => ymGoal("call")}
                   className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105"
                   style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
                   <Icon name="Phone" size={15} style={{ color: NAVY }} />
                   <span style={{ fontFamily: "Oswald", fontSize: 14, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Позвонить</span>
                 </a>
               </div>
-              <a href={PHONE_HREF} onClick={() => ymGoal("mb_header_phone")}
+              <a href={PHONE_HREF} onClick={() => ymGoal("call")}
                 className="md:hidden flex items-center gap-1.5 rounded-xl px-3 py-2"
                 style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
                 <Icon name="Phone" size={13} style={{ color: NAVY }} />
@@ -154,7 +154,7 @@ export default function MoscowBusiness() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <a href={PHONE_HREF} onClick={() => ymGoal("mb_hero_phone")}
+              <a href={PHONE_HREF} onClick={() => ymGoal("call")}
                 className="flex items-center justify-center gap-3 rounded-2xl px-8 py-4 transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: `0 4px 28px rgba(201,168,76,0.45)` }}>
                 <Icon name="Phone" size={20} style={{ color: NAVY }} />
@@ -202,7 +202,7 @@ export default function MoscowBusiness() {
             <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.75 }}>
               Алексей работает с клиентами лично. Расскажите сколько вас человек, есть ли багаж, нужна ли встреча в аэропорту — он подберёт автомобиль именно под вашу поездку и назовёт точную стоимость до рубля. Никаких сюрпризов в дороге.
             </p>
-            <a href={PHONE_HREF} onClick={() => ymGoal("mb_alexey_phone")}
+            <a href={PHONE_HREF} onClick={() => ymGoal("call")}
               className="inline-flex items-center gap-2 mt-4 rounded-xl px-5 py-3 transition-transform hover:scale-105"
               style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
               <Icon name="Phone" size={15} style={{ color: NAVY }} />
@@ -298,7 +298,7 @@ export default function MoscowBusiness() {
               </div>
             ))}
           </div>
-          <a href={PHONE_HREF} onClick={() => ymGoal("mb_price_phone")}
+          <a href={PHONE_HREF} onClick={() => ymGoal("call")}
             className="inline-flex items-center gap-3 rounded-2xl px-8 py-4 transition-transform hover:scale-105 active:scale-[0.98]"
             style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: `0 4px 24px rgba(201,168,76,0.4)` }}>
             <Icon name="Phone" size={18} style={{ color: NAVY }} />
@@ -317,7 +317,7 @@ export default function MoscowBusiness() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {ROUTES.map(r => (
-            <a key={r} href={PHONE_HREF} onClick={() => ymGoal("mb_route_click")}
+            <a key={r} href={PHONE_HREF} onClick={() => ymGoal("call")}
               className="flex items-center gap-2 rounded-xl px-3 py-3 transition-all hover:border-yellow-500/40 active:scale-95"
               style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}>
               <Icon name="MapPin" size={12} style={{ color: GOLD, flexShrink: 0 }} />
@@ -349,7 +349,7 @@ export default function MoscowBusiness() {
       {/* ══ STICKY CTA МОБИЛКА ══ */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-5 pt-3"
         style={{ background: `linear-gradient(to top,${NAVY} 65%,transparent)` }}>
-        <a href={PHONE_HREF} onClick={() => ymGoal("mb_bottom_phone")}
+        <a href={PHONE_HREF} onClick={() => ymGoal("call")}
           className="flex items-center justify-center gap-3 w-full rounded-2xl py-4 mb-2.5 active:scale-[0.97] transition-transform"
           style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 24px rgba(201,168,76,0.5)" }}>
           <Icon name="Phone" size={18} style={{ color: NAVY }} />
@@ -362,7 +362,7 @@ export default function MoscowBusiness() {
             <Icon name="Send" size={15} className="text-white" />
             <span style={{ fontFamily: "Oswald", fontSize: 12, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>TG</span>
           </a>
-          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("mb_bottom_max")}
+          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("max")}
             className="flex items-center justify-center gap-1.5 rounded-2xl py-3 active:scale-[0.97] transition-transform"
             style={{ background: "linear-gradient(135deg,#001a3d,#003080)", border: "1px solid rgba(0,80,200,0.4)" }}>
             <img src={MAX_LOGO} alt="MAX" className="h-5 object-contain" />
@@ -389,7 +389,7 @@ export default function MoscowBusiness() {
           </div>
           <div className="flex items-center gap-3">
             <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 20, color: "#fff" }}>{PHONE}</div>
-            <a href={PHONE_HREF} onClick={() => ymGoal("mb_footer_phone")}
+            <a href={PHONE_HREF} onClick={() => ymGoal("call")}
               className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105"
               style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
               <Icon name="Phone" size={15} style={{ color: NAVY }} />
