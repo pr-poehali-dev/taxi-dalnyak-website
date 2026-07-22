@@ -388,9 +388,9 @@ export default function Quick() {
                   </>
                 ) : (
                   <>
-                    Дальние поездки<br />
-                    аренда авто<br />
-                    <span style={{ color: GOLD }}>с водителем</span>
+                    Поездки <span style={{ color: GOLD }}>от 9000 ₽</span><br />
+                    Заказать такси<br />
+                    из города в город
                   </>
                 )}
               </h1>
