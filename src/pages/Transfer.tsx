@@ -171,6 +171,35 @@ export default function Transfer() {
             </div>
           </div>
         </div>
+
+        <div className="max-w-6xl mx-auto px-5 pb-10">
+          <div className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${LINE}` }}>
+            <div className="flex items-center gap-2 shrink-0">
+              <Icon name="AlertCircle" size={14} style={{ color: "rgba(255,255,255,0.3)" }} />
+              <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em" }}>Важно знать</span>
+            </div>
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.35)" }}>
+                  <Icon name="X" size={9} style={{ color: "#f87171" }} />
+                </div>
+                <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5 }}>Короткие поездки по городу не обслуживаем</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.35)" }}>
+                  <Icon name="X" size={9} style={{ color: "#f87171" }} />
+                </div>
+                <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5 }}>Поездки с попутчиками не выполняем</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(74,222,128,0.15)", border: "1px solid rgba(74,222,128,0.35)" }}>
+                  <Icon name="Check" size={9} style={{ color: "#4ade80" }} />
+                </div>
+                <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12.5, fontWeight: 600 }}>Работаем только на дальних маршрутах — от 200 км</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ══ КАК ЭТО РАБОТАЕТ ══ */}
