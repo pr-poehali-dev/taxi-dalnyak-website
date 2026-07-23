@@ -1,8 +1,9 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 
 const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
+const HERO_BG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/fdd0aa38-abad-481f-8e43-a46bdcb16035.jpg";
 
 const REVIEW_1 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/b0eb5050-a05a-4647-8442-4b839d45161f.jpg";
 const REVIEW_2 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/fedc4281-a106-4024-9369-8a03712c92a3.jpg";
@@ -41,85 +42,6 @@ const TARIFFS = [
   { id: "comfortplus", name: "Комфорт+",  desc: "Toyota Camry 70 кузов",  seats: 4, luggage: "3–4 сумки",    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/38f8c2aa-ebc6-4a58-bedb-3322efbce272.jpg", badge: "Бизнес",     color: "#A78BFA" },
   { id: "minivan",     name: "Минивэн",   desc: "Hyundai Staria 2022",    seats: 7, luggage: "Много багажа", img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/92a14984-9eac-4b0c-aa50-8c49af1c12b7.jpg", badge: "Группа",     color: "#34D399" },
 ];
-
-function calcPrice(km: number): { min: number; max: number } | null {
-  if (!km || km <= 0) return null;
-  const rate = km <= 200 ? 30 : km <= 500 ? 27 : 26;
-  const minP = Math.round(km * rate * 1.15 / 100) * 100;
-  return { min: minP, max: Math.round(minP * 1.12 / 100) * 100 };
-}
-
-function PriceCalc() {
-  const [km, setKm]     = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo]     = useState("");
-  const price = useMemo(() => calcPrice(parseInt(km.replace(/\D/g, ""), 10)), [km]);
-  const GOLD = "#FF7A29"; const GOLD2 = "#FFC13B";
-  const VK_HREF2   = "https://vk.com/dalnyack";
-  const PHONE_HREF2 = "tel:+79956455125";
-  return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,122,41,0.2)" }}>
-      <div className="px-5 pt-4 pb-3 flex items-center gap-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
-          <Icon name="Calculator" size={15} style={{ color: "#0a0f1e" }} />
-        </div>
-        <div>
-          <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Рассчитать стоимость</div>
-          <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>Фиксированная цена · Без сюрпризов</div>
-        </div>
-      </div>
-      <div className="p-4 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 4 }}>Откуда</label>
-            <input value={from} onChange={e => setFrom(e.target.value)} placeholder="Ваш город"
-              className="w-full rounded-xl px-3 py-2.5 text-white text-[13px] placeholder-white/20 focus:outline-none"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }} />
-          </div>
-          <div>
-            <label style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 4 }}>Куда</label>
-            <input value={to} onChange={e => setTo(e.target.value)} placeholder="Город назначения"
-              className="w-full rounded-xl px-3 py-2.5 text-white text-[13px] placeholder-white/20 focus:outline-none"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }} />
-          </div>
-        </div>
-        <div>
-          <label style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 4 }}>Расстояние в км</label>
-          <input value={km} onChange={e => setKm(e.target.value.replace(/\D/g, ""))} placeholder="Например, 400 км"
-            inputMode="numeric"
-            className="w-full rounded-xl px-3 py-2.5 text-white text-[13px] placeholder-white/20 focus:outline-none"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }} />
-          <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 10, marginTop: 4 }}>Расстояние можно уточнить в Яндекс.Картах</div>
-        </div>
-        {price ? (
-          <div className="rounded-xl px-4 py-3.5" style={{ background: `linear-gradient(135deg,rgba(255,122,41,0.12),rgba(255,122,41,0.06))`, border: `1px solid rgba(255,122,41,0.3)` }}>
-            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Стоимость поездки</div>
-            <div style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 28, fontWeight: 900, lineHeight: 1 }}>от {price.min.toLocaleString("ru")} ₽</div>
-            <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginTop: 4 }}>{from && to ? `${from} → ${to} · ` : ""}{km} км · фиксированная цена</div>
-          </div>
-        ) : (
-          <div className="rounded-xl px-4 py-3 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 12 }}>Введите расстояние — цена появится сразу</span>
-          </div>
-        )}
-        {price && (
-          <div className="grid grid-cols-2 gap-2">
-            <a href={VK_HREF2} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 font-bold text-[12px] uppercase transition-transform hover:scale-[1.02] active:scale-[0.97]"
-              style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#1a3a6b,#2456a4)", color: "#fff" }}>
-              <Icon name="Users" size={13} /> ВКонтакте
-            </a>
-            <a href={PHONE_HREF2}
-              className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 font-bold text-[12px] uppercase transition-transform hover:scale-[1.02] active:scale-[0.97]"
-              style={{ fontFamily: "Oswald", background: `linear-gradient(135deg,${GOLD},${GOLD2})`, color: "#0a0f1e" }}>
-              <Icon name="Phone" size={13} /> Позвонить
-            </a>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 const STATS = [
   { value: "12+",  label: "лет на рынке" },
@@ -300,8 +222,10 @@ export default function Quick() {
       {/* ══════════════════════════════════════
           HERO — полноэкранный фон
       ══════════════════════════════════════ */}
-      <div ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "100svh", background: `linear-gradient(160deg,#0a0f1e 0%,#0d1428 40%,#080c18 100%)` }}>
-        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 70% 40%,rgba(255,122,41,0.07) 0%,transparent 70%)` }} />
+      <div ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "100svh" }}>
+        <img src={HERO_BG} alt="" loading="eager" className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: "center 35%" }} />
+        <div className="absolute inset-0" style={{ background: `linear-gradient(100deg,rgba(8,11,22,0.94) 0%,rgba(10,15,30,0.55) 55%,rgba(10,15,30,0.35) 100%)` }} />
+        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 75% 45%,rgba(255,122,41,0.1) 0%,transparent 70%)` }} />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom,transparent 50%,${NAVY} 100%)` }} />
 
         {/* ══════════════════════════════════════
@@ -534,7 +458,7 @@ export default function Quick() {
           <div className="text-center mb-10">
             <div style={{ color: GOLD, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.3em" }} className="mb-2">Почему нам доверяют</div>
             <h2 style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 40, color: "#fff", textTransform: "uppercase" }}>
-              Такси для дальних поездок — надёжно и честно
+              Трансфер для дальних поездок — надёжно и честно
             </h2>
           </div>
           <div className="grid grid-cols-5 gap-4">
@@ -680,27 +604,6 @@ export default function Quick() {
       </div>
 
       {/* ══════════════════════════════════════
-          СЕКЦИЯ: УТП
-      ══════════════════════════════════════ */}
-      <div style={{ background: NAVY }}>
-        <div className="max-w-6xl mx-auto px-4 md:px-6 pt-5 pb-0">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { icon: "Zap",         text: "Срочная подача" },
-              { icon: "Calendar",    text: "Предзаказ без брони" },
-              { icon: "Receipt",     text: "Чек самозанятого" },
-              { icon: "FileCheck2",  text: "Работаем по договору" },
-            ].map(item => (
-              <div key={item.text} className="flex items-start gap-2.5 rounded-2xl px-4 py-3.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <Icon name={item.icon as "Zap"} size={15} style={{ color: GOLD, flexShrink: 0, marginTop: 1 }} />
-                <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 600, lineHeight: 1.4 }}>{item.text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ══════════════════════════════════════
           СЕКЦИЯ: РЕЙТИНГИ
       ══════════════════════════════════════ */}
       <div style={{ background: NAVY }}>
@@ -731,15 +634,6 @@ export default function Quick() {
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* ══════════════════════════════════════
-          СЕКЦИЯ: КАЛЬКУЛЯТОР
-      ══════════════════════════════════════ */}
-      <div style={{ background: NAVY }}>
-        <div className="max-w-6xl mx-auto px-4 md:px-6 pt-5 pb-0">
-          <PriceCalc />
         </div>
       </div>
 
@@ -816,28 +710,8 @@ export default function Quick() {
       ══════════════════════════════════════ */}
       <div style={{ background: "#080d1a" }}>
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
-          {/* КПП-баннер */}
-          <a href="/kpp"
-            className="flex items-center gap-4 w-full rounded-2xl px-5 py-4 mb-4 transition-transform hover:scale-[1.01] active:scale-[0.98]"
-            style={{ background: "linear-gradient(135deg,#0d1018 0%,#121620 100%)", border: `1px solid rgba(255,122,41,0.25)`, position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(to right,${GOLD},${GOLD2},transparent)` }} />
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,rgba(255,122,41,0.2),rgba(255,122,41,0.08))`, border: `1px solid rgba(255,122,41,0.2)` }}>
-              <Icon name="MapPin" size={20} style={{ color: GOLD }} />
-            </div>
-            <div className="flex-1">
-              <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: "clamp(14px,2vw,17px)", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.03em", lineHeight: 1.1 }}>
-                Поездка до КПП
-              </div>
-              <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 3 }}>
-                Машина точно приедет · 24/7 · Без лишних вопросов
-              </div>
-            </div>
-            <Icon name="ChevronRight" size={18} style={{ color: GOLD, flexShrink: 0 }} />
-          </a>
-
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Калькулятор", icon: "Calculator", href: "/calc",   sub: "Узнай цену" },
               { label: "Тарифы",      icon: "Car",        href: "/tariffs", sub: "Наши авто" },
               { label: "Отзывы",      icon: "Star",       href: "/reviews", sub: "11+ отзывов" },
             ].map(l => (
