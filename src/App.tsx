@@ -29,6 +29,7 @@ import Chelyabinsk from "./pages/regions/Chelyabinsk";
 import Ekaterinburg from "./pages/regions/Ekaterinburg";
 import MoscowBusiness from "./pages/MoscowBusiness";
 import Business from "./pages/Business";
+import Transfer from "./pages/Transfer";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
           {/* Региональные посадочные страницы */}
           <Route path="/moscow-business" element={<MoscowBusiness />} />
           <Route path="/business" element={<Business />} />
+          <Route path="/transfer" element={<Transfer />} />
           <Route path="/moskva" element={<Moscow />} />
           <Route path="/belgorod" element={<Belgorod />} />
           <Route path="/boguchar" element={<Boguchar />} />
