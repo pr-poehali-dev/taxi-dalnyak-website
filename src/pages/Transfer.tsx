@@ -123,6 +123,11 @@ export default function Transfer() {
               Межгородние поездки от 200 км по фиксированной цене. Работаем по договору, предоставляем отчётные документы для бухгалтерии.
             </p>
 
+            <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-2 mt-4" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
+              <Icon name="Ban" size={13} style={{ color: "#f87171", flexShrink: 0 }} />
+              <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12.5 }}>Короткие поездки по городу и с попутчиками — <span style={{ color: "#f87171", fontWeight: 700 }}>не обслуживаем</span></span>
+            </div>
+
             <div className="flex flex-col gap-3 mt-7">
               <a href={PHONE_HREF} onClick={() => { ymGoal("t_hero_call"); ymLead("phone"); }}
                 className="flex items-center justify-center gap-2.5 w-full rounded-2xl px-7 py-4 transition-transform hover:scale-[1.02] active:scale-[0.98]"
