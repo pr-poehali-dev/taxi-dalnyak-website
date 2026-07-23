@@ -72,7 +72,7 @@ export default function Transfer() {
   const scrolled = useScrolled();
 
   useEffect(() => {
-    document.title = "Бронирование трансфера в другой город — Дальняк";
+    document.title = "Деловые поездки и командировки в другой город — Дальняк";
   }, []);
 
   return (
@@ -105,12 +105,15 @@ export default function Transfer() {
               <span style={{ color: FLAME2, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>Диспетчер на связи 24/7</span>
             </div>
 
-            <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(34px,5vw,56px)", lineHeight: 1.02, color: "#fff", textTransform: "uppercase" }}>
-              Трансфер в<br /><span style={{ color: FLAME }}>другой город</span><br />с гарантией подачи
+            <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(30px,4.6vw,50px)", lineHeight: 1.05, color: "#fff", textTransform: "uppercase" }}>
+              Деловые поездки<br />и командировки<br />в другой город
             </h1>
+            <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: "clamp(15px,2vw,20px)", color: FLAME, textTransform: "uppercase", marginTop: 6, letterSpacing: "0.02em" }}>
+              Трансфер для организаций
+            </div>
 
             <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, lineHeight: 1.7, marginTop: 18, maxWidth: 460 }}>
-              Межгородние поездки от 200 км по фиксированной цене. Бронируете авто заранее — мы гарантируем, что оно приедет вовремя.
+              Межгородние поездки от 200 км по фиксированной цене. Работаем по договору, предоставляем отчётные документы для бухгалтерии.
             </p>
 
             <div className="flex flex-col gap-3 mt-7">
