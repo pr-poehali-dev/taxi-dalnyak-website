@@ -105,11 +105,18 @@ export default function Transfer() {
               <span style={{ color: FLAME2, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>Диспетчер на связи 24/7</span>
             </div>
 
-            <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(30px,4.6vw,50px)", lineHeight: 1.05, color: "#fff", textTransform: "uppercase" }}>
+            <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(28px,4.2vw,46px)", lineHeight: 1.05, color: "#fff", textTransform: "uppercase" }}>
               Деловые поездки<br />и командировки<br />в другой город
             </h1>
-            <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: "clamp(15px,2vw,20px)", color: FLAME, textTransform: "uppercase", marginTop: 6, letterSpacing: "0.02em" }}>
-              Трансфер для организаций
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <span style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: "clamp(14px,1.8vw,18px)", color: FLAME, textTransform: "uppercase", letterSpacing: "0.02em" }}>
+                Трансфер для организаций
+              </span>
+              <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "clamp(14px,1.8vw,18px)", fontWeight: 700 }}>/</span>
+              <a href="/kpp" onClick={() => ymGoal("t_hero_kpp")}
+                style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: "clamp(14px,1.8vw,18px)", color: FLAME, textTransform: "uppercase", letterSpacing: "0.02em", textDecoration: "underline", textUnderlineOffset: 3 }}>
+                Трансфер до КПП
+              </a>
             </div>
 
             <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, lineHeight: 1.7, marginTop: 18, maxWidth: 460 }}>
