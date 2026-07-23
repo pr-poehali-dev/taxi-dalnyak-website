@@ -7,10 +7,6 @@ const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
 const HERO_CAR = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/dcda6258-21cd-407d-a1ec-0bb7c13f348b.jpg";
 
-const REVIEW_1 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/b0eb5050-a05a-4647-8442-4b839d45161f.jpg";
-const REVIEW_2 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/fedc4281-a106-4024-9369-8a03712c92a3.jpg";
-const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/ac322d91-fd27-4c11-b86f-f28e85ec3df0.jpg";
-
 const PHONE      = "+7 (995) 645-51-25";
 const PHONE_HREF = "tel:+79956455125";
 const VK_HREF    = "https://vk.com/dalnyack";
@@ -57,9 +53,9 @@ const FLEET = [
 ];
 
 const REVIEWS = [
-  { name: "Валерия", route: "Москва – Новомичуринск", img: REVIEW_1, text: "Очень переживала — зимой с ребёнком, первый раз на такое расстояние. Но всё прошло замечательно! Машину нашли быстро, водитель — замечательный человек." },
-  { name: "Ирина",   route: "Лен. область – СПб",     img: REVIEW_3, text: "Позвонила в две компании — ничего не нашли. На третий раз нашла Такси Дальняк. Водитель очень вежливый, машина в идеальном состоянии." },
-  { name: "Евгений", route: "Межгород по России",     img: REVIEW_2, text: "Рекомендую! Удобная и быстрая доставка, комфортабельный авто. Ребята отвечают за время, комфорт и стоимость." },
+  { name: "Валерия", route: "Москва – Новомичуринск", text: "Очень переживала — зимой с ребёнком, первый раз на такое расстояние. Но всё прошло замечательно! Машину нашли быстро, водитель — замечательный человек." },
+  { name: "Ирина",   route: "Лен. область – СПб",     text: "Позвонила в две компании — ничего не нашли. На третий раз нашла Такси Дальняк. Водитель очень вежливый, машина в идеальном состоянии." },
+  { name: "Евгений", route: "Межгород по России",     text: "Рекомендую! Удобная и быстрая доставка, комфортабельный авто. Ребята отвечают за время, комфорт и стоимость." },
 ];
 
 function useScrolled() {
@@ -117,19 +113,27 @@ export default function Transfer() {
               Межгородние поездки от 200 км по фиксированной цене. Бронируете авто заранее — мы гарантируем, что оно приедет вовремя.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 mt-7">
+            <div className="flex flex-col gap-3 mt-7">
               <a href={PHONE_HREF} onClick={() => { ymGoal("t_hero_call"); ymLead("phone"); }}
-                className="flex items-center justify-center gap-2.5 rounded-2xl px-7 py-4 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                className="flex items-center justify-center gap-2.5 w-full rounded-2xl px-7 py-4 transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: `linear-gradient(135deg,${FLAME},${FLAME2})`, boxShadow: "0 8px 30px rgba(255,122,41,0.4)" }}>
                 <Icon name="PhoneCall" size={18} style={{ color: INK }} />
                 <span style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 15, color: INK, textTransform: "uppercase" }}>Забронировать авто</span>
               </a>
-              <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("t_hero_tg"); ymLead("tg"); }}
-                className="flex items-center justify-center gap-2 rounded-2xl px-6 py-4 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${LINE}` }}>
-                <Icon name="Send" size={16} style={{ color: "#fff" }} />
-                <span style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 14, color: "#fff", textTransform: "uppercase" }}>Telegram</span>
-              </a>
+              <div className="grid grid-cols-2 gap-3">
+                <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("t_hero_tg"); ymLead("tg"); }}
+                  className="flex items-center justify-center gap-2 rounded-2xl px-6 py-3.5 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${LINE}` }}>
+                  <Icon name="Send" size={16} style={{ color: "#fff" }} />
+                  <span style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 14, color: "#fff", textTransform: "uppercase" }}>Telegram</span>
+                </a>
+                <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("t_hero_max"); ymLead("max"); }}
+                  className="flex items-center justify-center gap-2 rounded-2xl px-6 py-3.5 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${LINE}` }}>
+                  <img src={MAX_LOGO} alt="MAX" loading="lazy" className="h-4 object-contain" />
+                  <span style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 14, color: "#fff", textTransform: "uppercase" }}>MAX</span>
+                </a>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-x-6 gap-y-2 mt-7">
@@ -290,19 +294,20 @@ export default function Transfer() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {REVIEWS.map(r => (
-              <div key={r.name} className="rounded-2xl overflow-hidden" style={{ background: INK, border: `1px solid ${LINE}` }}>
-                <img src={r.img} alt={r.name} loading="lazy" className="w-full h-40 object-cover" />
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <div style={{ color: "#fff", fontWeight: 700, fontSize: 13.5 }}>{r.name}</div>
-                      <div style={{ color: FLAME, fontSize: 11 }}>{r.route}</div>
-                    </div>
-                    <div className="flex gap-0.5">
-                      {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={12} style={{ color: FLAME }} className="fill-[#FF7A29]" />)}
-                    </div>
+              <div key={r.name} className="rounded-2xl p-5 flex flex-col" style={{ background: INK, border: `1px solid ${LINE}` }}>
+                <Icon name="Quote" size={22} style={{ color: "rgba(255,122,41,0.35)", marginBottom: 10 }} />
+                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 13.5, lineHeight: 1.7, flex: 1 }}>{r.text}</p>
+                <div className="flex items-center gap-3 mt-5 pt-4" style={{ borderTop: `1px solid ${LINE}` }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${FLAME},${FLAME2})` }}>
+                    <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: INK }}>{r.name.charAt(0)}</span>
                   </div>
-                  <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12.5, lineHeight: 1.65 }}>{r.text}</p>
+                  <div className="flex-1">
+                    <div style={{ color: "#fff", fontWeight: 700, fontSize: 13.5 }}>{r.name}</div>
+                    <div style={{ color: FLAME, fontSize: 11 }}>{r.route}</div>
+                  </div>
+                  <div className="flex gap-0.5 shrink-0">
+                    {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={11} style={{ color: FLAME }} className="fill-[#FF7A29]" />)}
+                  </div>
                 </div>
               </div>
             ))}
@@ -310,37 +315,74 @@ export default function Transfer() {
         </div>
       </div>
 
-      {/* ══ ДЛЯ ОРГАНИЗАЦИЙ ══ */}
+      {/* ══ ДЛЯ ЮРИДИЧЕСКИХ ЛИЦ ══ */}
       <div style={{ background: INK }}>
         <div className="max-w-6xl mx-auto px-5 py-14">
-          <div className="rounded-2xl p-6 md:p-8" style={{ background: PANEL, border: `1px solid rgba(255,122,41,0.2)` }}>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(255,122,41,0.15)" }}>
-                <Icon name="Building2" size={18} style={{ color: FLAME }} />
-              </div>
-              <div>
-                <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 16, fontWeight: 800, textTransform: "uppercase" }}>Работаем с организациями</div>
-                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 2 }}>Заключаем договор, предоставляем отчётные документы</div>
+          <div className="rounded-3xl p-6 md:p-9 relative overflow-hidden" style={{ background: `linear-gradient(135deg,#141822,#0f1319)`, border: `1.5px solid rgba(255,122,41,0.35)` }}>
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(to right,${FLAME},${FLAME2},${FLAME})` }} />
+
+            <div className="flex flex-col md:flex-row md:items-center gap-6 mb-7">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${FLAME},${FLAME2})`, boxShadow: "0 4px 24px rgba(255,122,41,0.4)" }}>
+                  <Icon name="Briefcase" size={26} style={{ color: INK }} />
+                </div>
+                <div>
+                  <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-1.5" style={{ background: "rgba(255,122,41,0.15)", border: "1px solid rgba(255,122,41,0.35)" }}>
+                    <span style={{ color: FLAME2, fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em" }}>Для бизнеса</span>
+                  </div>
+                  <h2 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(19px,2.5vw,26px)", color: "#fff", textTransform: "uppercase", lineHeight: 1.15 }}>
+                    Работаем с юридическими лицами и ИП
+                  </h2>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5 mb-5" style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, lineHeight: 1.9 }}>
-              <div>ИП Гузаеров А. Л.</div>
-              <div>ИНН 183209197326</div>
-              <div>ОГРНИП 326180000068152</div>
-              <div>Завьяловский р-н, г. Ижевск, ул. Баранова, 81</div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-7">
+              <div className="rounded-2xl p-4 flex items-start gap-3" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${LINE}` }}>
+                <Icon name="FileSignature" size={18} style={{ color: FLAME, flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>Заключаем договор</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 11.5, marginTop: 2, lineHeight: 1.5 }}>Официальное сотрудничество с компанией</div>
+                </div>
+              </div>
+              <div className="rounded-2xl p-4 flex items-start gap-3" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${LINE}` }}>
+                <Icon name="Receipt" size={18} style={{ color: FLAME, flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>Отчётные документы</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 11.5, marginTop: 2, lineHeight: 1.5 }}>Для бухгалтерии и командировочных расходов</div>
+                </div>
+              </div>
+              <div className="rounded-2xl p-4 flex items-start gap-3" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${LINE}` }}>
+                <Icon name="Users" size={18} style={{ color: FLAME, flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>Корпоративные поездки</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 11.5, marginTop: 2, lineHeight: 1.5 }}>Командировки и встречи сотрудников</div>
+                </div>
+              </div>
             </div>
+
+            <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(0,0,0,0.2)", border: `1px solid ${LINE}` }}>
+              <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Реквизиты</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13, lineHeight: 1.9 }}>
+                <div>ИП Гузаеров А. Л.</div>
+                <div>ИНН 183209197326</div>
+                <div>ОГРНИП 326180000068152</div>
+                <div>Завьяловский р-н, г. Ижевск, ул. Баранова, 81</div>
+              </div>
+            </div>
+
             <div className="flex flex-wrap gap-3">
               <a href="mailto:guzaerov.alex@yandex.ru" onClick={() => ymGoal("t_b2b_email")}
                 className="flex items-center gap-2 rounded-xl px-4 py-2.5 transition-transform hover:scale-105"
-                style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${LINE}` }}>
+                style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${LINE}` }}>
                 <Icon name="Mail" size={14} style={{ color: FLAME }} />
                 <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 12.5, fontWeight: 600 }}>guzaerov.alex@yandex.ru</span>
               </a>
               <a href={PHONE_HREF} onClick={() => { ymGoal("t_b2b_call"); ymLead("phone"); }}
-                className="flex items-center gap-2 rounded-xl px-4 py-2.5 transition-transform hover:scale-105"
+                className="flex items-center gap-2 rounded-xl px-5 py-2.5 transition-transform hover:scale-105"
                 style={{ background: `linear-gradient(135deg,${FLAME},${FLAME2})` }}>
                 <Icon name="Phone" size={14} style={{ color: INK }} />
-                <span style={{ color: INK, fontSize: 12.5, fontWeight: 800 }}>Коммерческое предложение</span>
+                <span style={{ color: INK, fontSize: 12.5, fontWeight: 800, textTransform: "uppercase" }}>Коммерческое предложение</span>
               </a>
             </div>
           </div>
