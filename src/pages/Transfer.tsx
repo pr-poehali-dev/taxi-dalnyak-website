@@ -72,7 +72,7 @@ export default function Transfer() {
   const scrolled = useScrolled();
 
   useEffect(() => {
-    document.title = "Деловые поездки и командировки в другой город — Дальняк";
+    document.title = "Заказать такси из города в город от 200 км — Дальняк";
   }, []);
 
   return (
@@ -106,13 +106,9 @@ export default function Transfer() {
             </div>
 
             <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(28px,4.2vw,46px)", lineHeight: 1.05, color: "#fff", textTransform: "uppercase" }}>
-              Деловые поездки<br />и командировки<br />в другой город
+              Заказать такси<br />из города в город<br /><span style={{ color: FLAME }}>от 200 км</span>
             </h1>
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: "clamp(14px,1.8vw,18px)", color: FLAME, textTransform: "uppercase", letterSpacing: "0.02em" }}>
-                Трансфер для организаций
-              </span>
-              <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "clamp(14px,1.8vw,18px)", fontWeight: 700 }}>/</span>
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
               <a href="/kpp" onClick={() => ymGoal("t_hero_kpp")}
                 style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: "clamp(14px,1.8vw,18px)", color: FLAME, textTransform: "uppercase", letterSpacing: "0.02em", textDecoration: "underline", textUnderlineOffset: 3 }}>
                 Трансфер до КПП
