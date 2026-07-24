@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Create order without phone fails",
+      "method": "POST",
+      "path": "/",
+      "body": {},
+      "expectedStatus": 400
+    },
+    {
+      "name": "Create order with phone",
+      "method": "POST",
+      "path": "/",
+      "body": { "phone": "+79991234567", "route_from": "Самара", "route_to": "Ростов-на-Дону", "distance_km": 1190, "price_min": 47600 },
+      "expectedStatus": 200,
+      "expectedBody": { "status": "searching" },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

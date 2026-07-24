@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
+import { calcPrice, isNewTerritoriesRoute } from "@/lib/pricing";
 
 const CAR_IMG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/091d3d1c-1649-4d9e-8958-1a624bf8f371.jpg";
 const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
@@ -167,19 +168,6 @@ const reviews = [
   },
 ];
 
-function calcPrice(km: number): { min: number; max: number } | null {
-  if (!km || km <= 0) return null;
-  let rate: number;
-  if (km <= 200) rate = 30;
-  else if (km <= 500) rate = 27;
-  else rate = 26;
-  const base = km * rate;
-  const with15 = Math.round(base * 1.15 / 100) * 100;
-  const minPrice = with15;
-  const maxPrice = Math.round(minPrice * 1.12 / 100) * 100;
-  return { min: minPrice, max: maxPrice };
-}
-
 function PriceCalc({ phoneHref, vkHref }: { phoneHref: string; vkHref: string }) {
   const [km, setKm] = useState("");
   const [from, setFrom] = useState("");
@@ -187,8 +175,8 @@ function PriceCalc({ phoneHref, vkHref }: { phoneHref: string; vkHref: string })
 
   const price = useMemo(() => {
     const n = parseInt(km.replace(/\D/g, ""), 10);
-    return calcPrice(n);
-  }, [km]);
+    return calcPrice(n, isNewTerritoriesRoute(from, to));
+  }, [km, from, to]);
 
   return (
     <div className="px-4 pb-6">

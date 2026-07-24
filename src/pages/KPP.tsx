@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
+import { calcPrice } from "@/lib/pricing";
 
 declare global { interface Window { ym?: (id: number, action: string, goal: string, params?: Record<string, string>) => void; } }
 
@@ -67,18 +68,11 @@ const ROUTES = [
   "Запорожье – Москва", "Мариуполь – Краснодар", "ЛНР – Екатеринбург",
 ];
 
-function calcPrice(km: number): { min: number; max: number } | null {
-  if (!km || km <= 0) return null;
-  const rate = km <= 300 ? 30 : km <= 600 ? 27 : 26;
-  const minP = Math.round(km * rate * 1.15 / 100) * 100;
-  return { min: minP, max: Math.round(minP * 1.12 / 100) * 100 };
-}
-
 function PriceCalc() {
   const [km, setKm]     = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo]     = useState("");
-  const price = useMemo(() => calcPrice(parseInt(km.replace(/\D/g, ""), 10)), [km]);
+  const price = useMemo(() => calcPrice(parseInt(km.replace(/\D/g, ""), 10), true), [km]);
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid rgba(201,168,76,0.2)` }}>

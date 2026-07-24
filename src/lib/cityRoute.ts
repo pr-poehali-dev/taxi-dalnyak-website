@@ -1,5 +1,6 @@
 // Определение маршрута (город → город) из поискового запроса пользователя (utm_term)
 // + расчёт примерного расстояния и стоимости поездки для подстановки в заголовок сайта.
+import { calcPrice, isNewTerritoriesRoute } from "@/lib/pricing";
 
 const COORDS: Record<string, [number, number]> = {
   "Москва": [55.7558, 37.6176],
@@ -153,13 +154,6 @@ function estimateRoadKm(a: [number, number], b: [number, number]): number {
   return Math.round(haversineKm(a, b) * 1.2 / 10) * 10;
 }
 
-export function calcPrice(km: number): { min: number; max: number } | null {
-  if (!km || km <= 0) return null;
-  const rate = km <= 200 ? 30 : km <= 500 ? 27 : 26;
-  const minP = Math.round(km * rate * 1.15 / 100) * 100;
-  return { min: minP, max: Math.round(minP * 1.12 / 100) * 100 };
-}
-
 const CITY_GENITIVE: Record<string, string> = {
   "Москва": "Москвы", "Санкт-Петербург": "Санкт-Петербурга", "Казань": "Казани",
   "Саратов": "Саратова", "Воронеж": "Воронежа", "Краснодар": "Краснодара",
@@ -233,7 +227,7 @@ export function parseRoute(termRaw: string): RouteResult | null {
     const a = COORDS[fromCity], b = COORDS[toCity];
     if (a && b) {
       const km = estimateRoadKm(a, b);
-      const price = calcPrice(km);
+      const price = calcPrice(km, isNewTerritoriesRoute(fromCity, toCity));
       if (price) return { from: fromCity, to: toCity, km, price };
     }
     return { from: fromCity, to: toCity };

@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
+import { calcPrice, isNewTerritoriesRoute } from "@/lib/pricing";
 
 const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
@@ -42,18 +43,11 @@ const TARIFFS = [
   { id: "minivan",     name: "Минивэн",   desc: "Hyundai Staria 2022",    seats: 7, luggage: "Много багажа", img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/92a14984-9eac-4b0c-aa50-8c49af1c12b7.jpg", badge: "Группа",     color: "#34D399" },
 ];
 
-function calcPrice(km: number): { min: number; max: number } | null {
-  if (!km || km <= 0) return null;
-  const rate = km <= 200 ? 30 : km <= 500 ? 27 : 26;
-  const minP = Math.round(km * rate * 1.15 / 100) * 100;
-  return { min: minP, max: Math.round(minP * 1.12 / 100) * 100 };
-}
-
 function PriceCalc() {
   const [km, setKm]     = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo]     = useState("");
-  const price = useMemo(() => calcPrice(parseInt(km.replace(/\D/g, ""), 10)), [km]);
+  const price = useMemo(() => calcPrice(parseInt(km.replace(/\D/g, ""), 10), isNewTerritoriesRoute(from, to)), [km, from, to]);
   const GOLD = "#c9a84c"; const GOLD2 = "#e8c96a";
   const VK_HREF2   = "https://vk.com/dalnyack";
   const PHONE_HREF2 = "tel:+79956455125";
