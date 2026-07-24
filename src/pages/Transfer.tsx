@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
+import { parseRoute, toGenitive, type RouteResult } from "@/lib/cityRoute";
 
 declare global { interface Window { ym?: (id: number, action: string, goal: string) => void; } }
 
@@ -70,9 +71,21 @@ function useScrolled() {
 
 export default function Transfer() {
   const scrolled = useScrolled();
+  const [route, setRoute] = useState<RouteResult | null>(null);
 
   useEffect(() => {
-    document.title = "Заказать такси из города в город от 200 км — Дальняк";
+    const params = new URLSearchParams(window.location.search);
+    const term = params.get("utm_term") || params.get("utm_content") || "";
+    const r = parseRoute(term);
+    setRoute(r);
+
+    if (r?.from && r?.to) {
+      document.title = `Такси ${r.from} — ${r.to}${r.price ? ` от ${r.price.min.toLocaleString("ru")} ₽` : ""} — Дальняк`;
+    } else if (r?.to) {
+      document.title = `Заказать такси до ${r.to} — Дальняк`;
+    } else {
+      document.title = "Заказать такси из города в город от 200 км — Дальняк";
+    }
   }, []);
 
   return (
@@ -106,8 +119,32 @@ export default function Transfer() {
             </div>
 
             <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(28px,4.2vw,46px)", lineHeight: 1.05, color: "#fff", textTransform: "uppercase" }}>
-              Заказать такси<br />из города в город<br /><span style={{ color: FLAME }}>от 200 км</span>
+              {route?.from && route?.to ? (
+                <>Заказать такси<br />{route.from} <span style={{ color: FLAME }}>—</span> {route.to}</>
+              ) : route?.to ? (
+                <>Заказать такси<br />до города <span style={{ color: FLAME }}>{route.to}</span></>
+              ) : (
+                <>Заказать такси<br />из города в город<br /><span style={{ color: FLAME }}>от 200 км</span></>
+              )}
             </h1>
+
+            {route?.km && route?.price ? (
+              <div className="flex flex-wrap items-center gap-3 mt-3">
+                <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5" style={{ background: "rgba(255,122,41,0.12)", border: `1px solid rgba(255,122,41,0.3)` }}>
+                  <Icon name="Route" size={13} style={{ color: FLAME }} />
+                  <span style={{ color: "#fff", fontSize: 12.5, fontWeight: 700 }}>≈ {route.km.toLocaleString("ru")} км</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5" style={{ background: "rgba(255,122,41,0.12)", border: `1px solid rgba(255,122,41,0.3)` }}>
+                  <Icon name="Wallet" size={13} style={{ color: FLAME }} />
+                  <span style={{ color: "#fff", fontSize: 12.5, fontWeight: 700 }}>от {route.price.min.toLocaleString("ru")} ₽</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5" style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)" }}>
+                  <Icon name="Clock" size={13} style={{ color: "#4ade80" }} />
+                  <span style={{ color: "#fff", fontSize: 12.5, fontWeight: 700 }}>подача 15–30 мин</span>
+                </div>
+              </div>
+            ) : null}
+
             <div className="flex items-center gap-2 mt-3 flex-wrap">
               <a href="/kpp" onClick={() => ymGoal("t_hero_kpp")}
                 style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: "clamp(14px,1.8vw,18px)", color: FLAME, textTransform: "uppercase", letterSpacing: "0.02em", textDecoration: "underline", textUnderlineOffset: 3 }}>
@@ -116,7 +153,9 @@ export default function Transfer() {
             </div>
 
             <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, lineHeight: 1.7, marginTop: 18, maxWidth: 460 }}>
-              Межгородние поездки от 200 км по фиксированной цене. Работаем по договору, предоставляем отчётные документы для бухгалтерии.
+              {route?.from && route?.to
+                ? `Едем из ${toGenitive(route.from)} в ${route.to} по фиксированной цене. Работаем по договору, предоставляем отчётные документы для бухгалтерии.`
+                : "Межгородние поездки от 200 км по фиксированной цене. Работаем по договору, предоставляем отчётные документы для бухгалтерии."}
             </p>
 
             <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-2 mt-4" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
