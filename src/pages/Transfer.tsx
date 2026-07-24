@@ -414,9 +414,7 @@ export default function Transfer() {
               <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Реквизиты</div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1.5" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13, lineHeight: 1.9 }}>
                 <div>ИП Гузаеров А. Л.</div>
-                <div>ИНН 183209197326</div>
                 <div>ОГРНИП 326180000068152</div>
-                <div>Завьяловский р-н, г. Ижевск, ул. Баранова, 81</div>
               </div>
             </div>
 
