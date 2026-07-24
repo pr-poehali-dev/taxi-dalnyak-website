@@ -7,6 +7,10 @@ const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
 const HERO_CAR = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/dcda6258-21cd-407d-a1ec-0bb7c13f348b.jpg";
 
+const REVIEW_1 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/b0eb5050-a05a-4647-8442-4b839d45161f.jpg";
+const REVIEW_2 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/fedc4281-a106-4024-9369-8a03712c92a3.jpg";
+const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/ac322d91-fd27-4c11-b86f-f28e85ec3df0.jpg";
+
 const PHONE      = "+7 (995) 645-51-25";
 const PHONE_HREF = "tel:+79956455125";
 const VK_HREF    = "https://vk.com/dalnyack";
@@ -25,15 +29,11 @@ function ymGoal(goal: string) {
 function ymLead(channel: string) { ymGoal("lead"); ymGoal(`lead_${channel}`); }
 
 const STEPS = [
-  { n: "01", title: "Оставляете заявку", desc: "Звоните или пишете в мессенджер — говорите откуда и куда нужно ехать", icon: "MessageCircleMore" },
-  { n: "02", title: "Бронируете авто",   desc: "Вносите предоплату 30% от стоимости поездки — бронь подтверждена", icon: "CalendarCheck2" },
-  { n: "03", title: "Едете с комфортом", desc: "Автомобиль подан точно в срок — остаток оплаты по факту поездки", icon: "Car" },
-];
-
-const GUARANTEE = [
-  { icon: "Percent",        title: "Предоплата 30%",       desc: "Вносится при бронировании — фиксирует машину и время подачи именно для вас", tone: "neutral" },
-  { icon: "RotateCcw",      title: "Отказ за 4 часа",      desc: "Передумали не позднее чем за 4 часа до выезда — предоплата возвращается полностью", tone: "good" },
-  { icon: "BadgeDollarSign",title: "Наша ответственность", desc: "Не нашли машину за час до выезда — возвращаем 100% предоплаты и платим компенсацию 50% сверху", tone: "flame" },
+  { n: "01", title: "Называете маршрут",   desc: "Говорите город отправления и город назначения — куда нужно ехать", icon: "MessageCircleMore" },
+  { n: "02", title: "Рассчитываем цену",   desc: "Сразу называем точную фиксированную стоимость поездки", icon: "Calculator" },
+  { n: "03", title: "Ищем машину",         desc: "Подбираем свободный автомобиль и водителя под ваш маршрут", icon: "Search" },
+  { n: "04", title: "Присылаем СМС",       desc: "Как только машина назначена — приходит СМС с данными авто и водителя", icon: "MessageSquareText" },
+  { n: "05", title: "Вы едете",            desc: "Водитель подаёт автомобиль точно в срок, комфортно доезжаете до места", icon: "Car" },
 ];
 
 const CITIES = [
@@ -53,9 +53,9 @@ const FLEET = [
 ];
 
 const REVIEWS = [
-  { name: "Валерия", route: "Москва – Новомичуринск", text: "Очень переживала — зимой с ребёнком, первый раз на такое расстояние. Но всё прошло замечательно! Машину нашли быстро, водитель — замечательный человек." },
-  { name: "Ирина",   route: "Лен. область – СПб",     text: "Позвонила в две компании — ничего не нашли. На третий раз нашла Такси Дальняк. Водитель очень вежливый, машина в идеальном состоянии." },
-  { name: "Евгений", route: "Межгород по России",     text: "Рекомендую! Удобная и быстрая доставка, комфортабельный авто. Ребята отвечают за время, комфорт и стоимость." },
+  { name: "Валерия", route: "Москва – Новомичуринск",   img: REVIEW_1 },
+  { name: "Ирина",   route: "Лен. область – СПб",       img: REVIEW_3 },
+  { name: "Евгений", route: "Межгород по России",       img: REVIEW_2 },
 ];
 
 function useScrolled() {
@@ -148,10 +148,31 @@ export default function Transfer() {
             </div>
 
             <div className="flex flex-wrap gap-x-6 gap-y-2 mt-7">
-              {[["12+","лет на рынке"],["50k+","поездок"],["30+","городов"],["4.9","рейтинг"]].map(([v,l]) => (
+              {[["12+","лет на рынке"],["50k+","поездок"],["30+","городов"]].map(([v,l]) => (
                 <div key={l}>
                   <span style={{ fontFamily: "Oswald", color: FLAME, fontWeight: 900, fontSize: 22 }}>{v}</span>
                   <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginLeft: 6 }}>{l}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-5 max-w-md">
+              {[
+                { name: "Яндекс Карты", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#fff"/><circle cx="12" cy="9" r="2.5" fill="#ff4433"/></svg>, bg: "linear-gradient(135deg,#ff4433,#ff6b35)" },
+                { name: "2ГИС",        icon: <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 10, fontWeight: 900 }}>2ГИС</span>,       bg: "linear-gradient(135deg,#00b956,#008f42)" },
+              ].map(r => (
+                <div key={r.name} className="rounded-2xl px-3.5 py-3 flex flex-col gap-1.5" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${LINE}` }}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: r.bg }}>{r.icon}</div>
+                    <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{r.name}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 22, fontWeight: 900, lineHeight: 1 }}>4.8</span>
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4].map(i => <Icon key={i} name="Star" size={11} style={{ color: FLAME }} className="fill-[#FF7A29]" />)}
+                      <Icon name="Star" size={11} style={{ color: "rgba(255,255,255,0.15)" }} />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -166,8 +187,8 @@ export default function Transfer() {
                 <Icon name="ShieldCheck" size={17} style={{ color: INK }} />
               </div>
               <div>
-                <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>Гарантия 100% подачи</div>
-                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Или полный возврат + компенсация</div>
+                <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>Работаем с 2014 года</div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Опытные водители, новые автомобили</div>
               </div>
             </div>
           </div>
@@ -208,66 +229,19 @@ export default function Transfer() {
         <div className="max-w-6xl mx-auto px-5 py-14">
           <div className="text-center mb-10">
             <div style={{ color: FLAME, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.25em" }} className="mb-2">Процесс</div>
-            <h2 style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: "clamp(24px,3vw,34px)", color: "#fff", textTransform: "uppercase" }}>Как проходит бронирование</h2>
+            <h2 style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: "clamp(24px,3vw,34px)", color: "#fff", textTransform: "uppercase" }}>Как проходит заказ</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {STEPS.map((s, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-5">
+            {STEPS.map(s => (
               <div key={s.n} className="relative rounded-2xl p-6" style={{ background: INK, border: `1px solid ${LINE}` }}>
-                <div style={{ fontFamily: "Oswald", color: "rgba(255,122,41,0.25)", fontSize: 48, fontWeight: 900, position: "absolute", top: 8, right: 16 }}>{s.n}</div>
+                <div style={{ fontFamily: "Oswald", color: "rgba(255,122,41,0.25)", fontSize: 40, fontWeight: 900, position: "absolute", top: 8, right: 16 }}>{s.n}</div>
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{ background: "rgba(255,122,41,0.12)" }}>
                   <Icon name={s.icon as "Car"} size={20} style={{ color: FLAME }} />
                 </div>
-                <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 17, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>{s.title}</div>
-                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, lineHeight: 1.65 }}>{s.desc}</p>
-                {i < STEPS.length - 1 && (
-                  <Icon name="ChevronRight" size={18} className="hidden md:block" style={{ color: "rgba(255,122,41,0.4)", position: "absolute", top: "50%", right: -28, transform: "translateY(-50%)" }} />
-                )}
+                <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 16, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>{s.title}</div>
+                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12.5, lineHeight: 1.6 }}>{s.desc}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ══ ГЛАВНАЯ ГАРАНТИЯ ══ */}
-      <div style={{ background: INK }}>
-        <div className="max-w-6xl mx-auto px-5 py-14">
-          <div className="rounded-3xl p-6 md:p-10 relative overflow-hidden" style={{ background: `linear-gradient(135deg,#1a1206,#221806)`, border: `1.5px solid ${FLAME}` }}>
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(to right,${FLAME},${FLAME2},${FLAME})` }} />
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${FLAME},${FLAME2})`, boxShadow: "0 4px 24px rgba(255,122,41,0.5)" }}>
-                <Icon name="ShieldCheck" size={28} style={{ color: INK }} />
-              </div>
-              <div>
-                <div style={{ color: FLAME, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em" }}>Главное преимущество</div>
-                <h2 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(20px,3vw,30px)", color: "#fff", textTransform: "uppercase" }}>Гарантируем 100% подачу автомобиля</h2>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="hidden md:block absolute left-0 right-0" style={{ top: 22, height: 2, background: "rgba(255,255,255,0.1)" }} />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {GUARANTEE.map((g, i) => (
-                  <div key={g.title} className="relative">
-                    <div className="hidden md:flex w-11 h-11 rounded-full items-center justify-center mb-4 relative z-10"
-                      style={{ background: g.tone === "flame" ? `linear-gradient(135deg,${FLAME},${FLAME2})` : INK, border: g.tone === "flame" ? "none" : `2px solid ${g.tone === "good" ? "#4ade80" : "rgba(255,255,255,0.2)"}` }}>
-                      <span style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 15, color: g.tone === "flame" ? INK : "#fff" }}>{i + 1}</span>
-                    </div>
-                    <div className="rounded-2xl p-4" style={{ background: g.tone === "flame" ? "rgba(255,122,41,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${g.tone === "flame" ? "rgba(255,122,41,0.3)" : "rgba(255,255,255,0.08)"}` }}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Icon name={g.icon as "Percent"} size={16} style={{ color: g.tone === "good" ? "#4ade80" : FLAME }} />
-                        <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 14, fontWeight: 700, textTransform: "uppercase" }}>{g.title}</span>
-                      </div>
-                      <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12.5, lineHeight: 1.6 }}>{g.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 mt-7 pt-6" style={{ borderTop: `1px solid ${LINE}` }}>
-              <Icon name="Sparkles" size={14} style={{ color: FLAME, flexShrink: 0 }} />
-              <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12.5 }}>Так мы гарантируем, что автомобиль будет подан к нужному времени — либо вы ничего не теряете</span>
-            </div>
           </div>
         </div>
       </div>
@@ -334,14 +308,10 @@ export default function Transfer() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {REVIEWS.map(r => (
-              <div key={r.name} className="rounded-2xl p-5 flex flex-col" style={{ background: INK, border: `1px solid ${LINE}` }}>
-                <Icon name="Quote" size={22} style={{ color: "rgba(255,122,41,0.35)", marginBottom: 10 }} />
-                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 13.5, lineHeight: 1.7, flex: 1 }}>{r.text}</p>
-                <div className="flex items-center gap-3 mt-5 pt-4" style={{ borderTop: `1px solid ${LINE}` }}>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${FLAME},${FLAME2})` }}>
-                    <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: INK }}>{r.name.charAt(0)}</span>
-                  </div>
-                  <div className="flex-1">
+              <div key={r.name} className="rounded-2xl overflow-hidden flex flex-col" style={{ background: INK, border: `1px solid ${LINE}` }}>
+                <img src={r.img} alt={r.name} loading="lazy" className="w-full block" />
+                <div className="p-4 flex items-center justify-between">
+                  <div>
                     <div style={{ color: "#fff", fontWeight: 700, fontSize: 13.5 }}>{r.name}</div>
                     <div style={{ color: FLAME, fontSize: 11 }}>{r.route}</div>
                   </div>
@@ -436,7 +406,7 @@ export default function Transfer() {
             <img src={LOGO} alt="" loading="lazy" className="w-10 h-10 rounded-xl object-cover" style={{ border: `1.5px solid ${FLAME}` }} />
             <div>
               <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 15, color: "#fff", textTransform: "uppercase" }}>Такси Дальняк</div>
-              <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>Трансфер для дальних поездок · Гарантия подачи авто</div>
+              <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>Трансфер для дальних поездок от 200 км</div>
             </div>
           </div>
           <div className="flex items-center gap-3">
