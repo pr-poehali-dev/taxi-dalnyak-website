@@ -145,13 +145,6 @@ export default function Transfer() {
               </div>
             ) : null}
 
-            <div className="flex items-center gap-2 mt-3 flex-wrap">
-              <a href="/kpp" onClick={() => ymGoal("t_hero_kpp")}
-                style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: "clamp(14px,1.8vw,18px)", color: FLAME, textTransform: "uppercase", letterSpacing: "0.02em", textDecoration: "underline", textUnderlineOffset: 3 }}>
-                Трансфер до КПП
-              </a>
-            </div>
-
             <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, lineHeight: 1.7, marginTop: 18, maxWidth: 460 }}>
               {route?.from && route?.to
                 ? `Едем из ${toGenitive(route.from)} в ${route.to} по фиксированной цене. Работаем по договору, предоставляем отчётные документы для бухгалтерии.`
@@ -168,7 +161,7 @@ export default function Transfer() {
                 className="flex items-center justify-center gap-2.5 w-full rounded-2xl px-7 py-4 transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 style={{ background: `linear-gradient(135deg,${FLAME},${FLAME2})`, boxShadow: "0 8px 30px rgba(255,122,41,0.4)" }}>
                 <Icon name="PhoneCall" size={18} style={{ color: INK }} />
-                <span style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 15, color: INK, textTransform: "uppercase" }}>Забронировать авто</span>
+                <span style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 15, color: INK, textTransform: "uppercase" }}>Позвонить диспетчеру</span>
               </a>
               <div className="grid grid-cols-2 gap-3">
                 <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("t_hero_tg"); ymLead("tg"); }}
@@ -478,7 +471,7 @@ export default function Transfer() {
           className="flex items-center justify-center gap-2.5 w-full rounded-2xl py-4 active:scale-[0.97] transition-transform"
           style={{ background: `linear-gradient(135deg,${FLAME},${FLAME2})`, boxShadow: "0 4px 24px rgba(255,122,41,0.5)" }}>
           <Icon name="Phone" size={18} style={{ color: INK }} />
-          <span style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 16, color: INK, textTransform: "uppercase" }}>Забронировать авто</span>
+          <span style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 16, color: INK, textTransform: "uppercase" }}>Позвонить диспетчеру</span>
         </a>
       </div>
       <div className="md:hidden" style={{ height: 88 }} />
