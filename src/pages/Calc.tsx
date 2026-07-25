@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
-import { calcPrice as calcPriceRange, isNewTerritoriesRoute } from "@/lib/pricing";
 
 const PHONE_HREF = "tel:+79956455125";
 const VK_HREF    = "https://vk.com/dalnyack";
@@ -19,13 +18,19 @@ function ymGoal(goal: string) {
   (window as any).ym?.(108400932, "reachGoal", goal);
 }
 
+function calcPrice(km: number) {
+  if (!km || km <= 0) return null;
+  const rate = km <= 200 ? 30 : km <= 500 ? 27 : 26;
+  return Math.round(km * rate * 1.15 / 100) * 100;
+}
+
 export default function Calc() {
   const navigate = useNavigate();
   const [km, setKm]     = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo]     = useState("");
 
-  const price = useMemo(() => calcPriceRange(parseInt(km, 10), isNewTerritoriesRoute(from, to))?.min ?? null, [km, from, to]);
+  const price = useMemo(() => calcPrice(parseInt(km, 10)), [km]);
 
   const tgMsg = price
     ? encodeURIComponent(`Хочу заказать такси${from ? ` из ${from}` : ""}${to ? ` в ${to}` : ""}, ~${km} км. По расчёту от ${price.toLocaleString("ru")} ₽`)

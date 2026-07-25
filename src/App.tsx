@@ -28,7 +28,6 @@ import Tyumen from "./pages/regions/Tyumen";
 import Chelyabinsk from "./pages/regions/Chelyabinsk";
 import Ekaterinburg from "./pages/regions/Ekaterinburg";
 import MoscowBusiness from "./pages/MoscowBusiness";
-import Transfer from "./pages/Transfer";
 
 const queryClient = new QueryClient();
 
@@ -39,7 +38,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Transfer />} />
+          <Route path="/" element={<Quick />} />
           <Route path="/info" element={<Index />} />
           <Route path="/voennye" element={<Military />} />
           <Route path="/kpp" element={<KPP />} />

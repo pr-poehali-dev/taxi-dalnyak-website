@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
-import { calcPrice, isNewTerritoriesRoute } from "@/lib/pricing";
 
 const HERO_IMG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/7071b942-9c87-47e1-a16d-0af0c4b83c1d.jpg";
 const LOGO      = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
@@ -64,11 +63,18 @@ function ymLead(channel: string, utmParams: { source: string; medium: string; ca
   ymGoal(`lead_${channel}`, { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign });
 }
 
+function calcPrice(km: number): { min: number; max: number } | null {
+  if (!km || km <= 0) return null;
+  const rate = km <= 200 ? 30 : km <= 500 ? 27 : 26;
+  const minP = Math.round(km * rate * 1.15 / 100) * 100;
+  return { min: minP, max: Math.round(minP * 1.12 / 100) * 100 };
+}
+
 function PriceCalc({ city }: { city: string }) {
   const [km, setKm]     = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo]     = useState("");
-  const price = useMemo(() => calcPrice(parseInt(km.replace(/\D/g, ""), 10), isNewTerritoriesRoute(from || city, to)), [km, from, to, city]);
+  const price = useMemo(() => calcPrice(parseInt(km.replace(/\D/g, ""), 10)), [km]);
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(201,168,76,0.2)" }}>
