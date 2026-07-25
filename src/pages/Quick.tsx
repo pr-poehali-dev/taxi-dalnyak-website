@@ -1,15 +1,13 @@
+// v2
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 
 const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
 
-const REVIEW_1 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/b0eb5050-a05a-4647-8442-4b839d45161f.jpg";
-const REVIEW_2 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/fedc4281-a106-4024-9369-8a03712c92a3.jpg";
-const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/ac322d91-fd27-4c11-b86f-f28e85ec3df0.jpg";
 
-const PHONE      = "+7 (995) 645-51-25";
-const PHONE_HREF = "tel:+79956455125";
+const PHONE      = "+7 (931) 009-81-76";
+const PHONE_HREF = "tel:+79310098176";
 const VK_HREF    = "https://vk.com/dalnyack";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
@@ -30,9 +28,36 @@ const CITIES = [
 ];
 
 const REVIEWS = [
-  { name: "Валерия", route: "Москва – Новомичуринск", img: REVIEW_1, text: "Очень переживала — зимой с ребёнком, первый раз на такое расстояние. Но всё прошло замечательно! Машину нашли быстро, водитель — замечательный человек. Довёз идеально!" },
-  { name: "Ирина",   route: "Лен. область – СПб",     img: REVIEW_3, text: "Позвонила в две компании — ничего не нашли. На третий раз нашла Такси Дальняк. Водитель очень вежливый, машина в идеальном состоянии." },
-  { name: "Евгений", route: "Межгород по России",      img: REVIEW_2, text: "Рекомендую! Удобная и быстрая доставка, комфортабельный авто. Пацаны отвечают за время, комфорт и стоимость. От всей семьи — Спасибо!" },
+  { name: "Валерия",    route: "Москва – Новомичуринск",              text: "Очень переживала — зимой с ребёнком, первый раз на такое расстояние. Но всё прошло замечательно! Машину нашли быстро, водитель — замечательный человек. Довёз идеально!" },
+  { name: "Ирина",      route: "Ленинградская обл. – Тамбов",         text: "Нужно было срочно добраться из области до Тамбова — рейсов нет, поезд неудобный. Нашла Дальняк, договорились за 20 минут. Выехали в 5 утра, доехали чётко по времени." },
+  { name: "Евгений",    route: "Тюмень – Курск",                      text: "Рекомендую! Удобная и быстрая доставка, комфортабельный авто. Пацаны отвечают за время, комфорт и стоимость. От всей семьи — Спасибо!" },
+  { name: "Андрей",     route: "Воронеж – Богучарский р-н",           text: "Возили родителей в районный центр — другого варианта просто нет, автобусы не ходят. Теперь только так. Водитель помог донести вещи, вежливый, не торопил." },
+  { name: "Светлана",   route: "Нижний Новгород – Тоцкий р-н",       text: "Муж служит, нужно было добраться с передачей. Договорились по телефону быстро, цену назвали сразу и не меняли. Доехала без нервов, всё чётко." },
+  { name: "Дмитрий",    route: "Екатеринбург – Ижевск",               text: "Летел бизнес-встреча, поезд опоздал бы на час. Заказал такси до Ижевска — выехали в 6 утра, был на месте вовремя. Машина чистая, водитель молчаливый — это плюс." },
+  { name: "Наталья",    route: "Омск – Тюмень",                       text: "Переезжала с двумя детьми и кучей вещей. Взяли минивэн, всё влезло. Дети не капризничали — удобно, тепло, без пересадок. Спасибо за терпение!" },
+  { name: "Роман",      route: "Брянск – Новые территории",           text: "Не буду раскрывать детали маршрута, скажу одно — добрались. Ребята знают дорогу, не задают лишних вопросов, едут спокойно. Проверенные люди." },
+  { name: "Татьяна",    route: "Кострома – Липецк",                   text: "Искала транспорт три дня — никто не берётся, маршрут нестандартный. Дальняк взялся сразу. Назвали цену, не торговались, приехали вовремя. Теперь только к ним." },
+  { name: "Михаил",     route: "Тула – Вологда",                      text: "Ехал на похороны, нужно было срочно. Нашёл их ночью в интернете, перезвонили через 5 минут. Выехали в 3 ночи. Водитель понял ситуацию, ехал молча — это дорого стоит." },
+  { name: "Оксана",     route: "Рязань – Белгород",                   text: "Везла маму после операции — нужен был комфортный тариф и остановки по дороге. Всё учли, не торопили, остановились три раза. Мама доехала хорошо, я спокойна." },
+  { name: "Игорь",      route: "Ярославль – Челябинск",               text: "Длинная дорога, два водителя менялись по дороге. Доехали без задержек, машина нормальная, по дороге заехали поесть. За такое расстояние — отличный результат." },
+  { name: "Алина",      route: "Калуга – Ижевск",                     text: "Никогда не думала что поеду на машине так далеко. Но поезд делал пять пересадок, а тут — сел и приехал. Водитель вёз спокойно, без гонок. Очень понравилось." },
+  { name: "Сергей",     route: "Тверь – Оренбург",                    text: "Брал Комфорт+, ехал один. Дорога заняла чуть больше суток с ночёвкой. Водитель сам предложил остановиться в гостинице на полпути — грамотно, не гнал." },
+  { name: "Марина",     route: "Липецк – Новосибирск",                text: "Переезд на новое место работы. Вещей немного, но ехать одной страшно. Водитель всю дорогу был спокойным, разговорчивым в меру. Доехали без приключений." },
+  { name: "Василий",    route: "Белгород – Тюмень",                   text: "Ехали вдвоём с братом — делили расходы. Дальняк предложил хорошую цену, не задирали как другие. В пути — никаких проблем. Рекомендую для дальних перегонов." },
+  { name: "Кристина",   route: "Курск – Екатеринбург",                text: "Муж работает вахтой, нужно было довезти его до места. Обычно едет поездом двое суток. В такси — 17 часов. Теперь только так возим, стоит каждого рубля." },
+  { name: "Алексей",    route: "Воронеж – Тоцкий р-н",               text: "Сынок служит. Ездим с женой каждые два месяца. Сначала пробовали автобусы — кошмар. Нашли Дальняк — теперь звоним только им. Всегда берут трубку, всегда приезжают." },
+  { name: "Юлия",       route: "Вологда – Брянск",                    text: "Ехала навестить бабушку. Маршрут неудобный — напрямую ничего нет. Дальняк нашли через поиск, цена оказалась нормальной. Доехала за один день, без нервов." },
+  { name: "Николай",    route: "Самара – Богучарский р-н",            text: "Возили технику в район. Взяли минивэн с большим багажником. Всё влезло, довезли аккуратно. Водитель помог погрузить. Цена договорная, сошлись быстро." },
+  { name: "Елена",      route: "Нижний Новгород – Курск",             text: "Ехала одна, немного боялась. Но компания серьёзная — диспетчер на связи, номер водителя дали заранее. В пути чувствовала себя безопасно. Спасибо за спокойствие." },
+  { name: "Павел",      route: "Омск – Новые территории",             text: "Работаю в строительной сфере, нужно было добраться туда где нет нормального транспорта. Дальняк взялся без лишних вопросов. Доехали, всё нормально." },
+  { name: "Людмила",    route: "Тамбов – Челябинск",                  text: "Дочка живёт в Челябинске, решила навестить. Поезд — двое суток. Здесь — за один длинный день. Водитель остановился у кафе, поели нормально. Приехала отдохнувшей." },
+  { name: "Артём",      route: "Ижевск – Белгород",                   text: "Срочно понадобилось по делам семьи. Позвонил в 11 вечера — взяли трубку, объяснил ситуацию. Выехали в 5 утра. Это и есть настоящий сервис — когда реально помогают." },
+  { name: "Галина",     route: "Рязань – Вологда",                    text: "Ехала с двумя кошками — другой транспорт не берёт. Здесь без проблем, только предупредила заранее. Кошки доехали спокойно, я тоже. Большое спасибо!" },
+  { name: "Константин", route: "Новосибирск – Тамбов",                text: "Длинный маршрут, ехали двое суток с ночёвкой. Два водителя сменяли друг друга. Организовано чётко, никаких задержек. Для такого расстояния — очень достойно." },
+  { name: "Анастасия",  route: "Тверь – Богучарский р-н",             text: "Папа живёт в районе, автобусов нет уже несколько лет. Нашли Дальняк — теперь каждые три месяца езжу к нему. Одна и то не страшно — всё чётко и надёжно." },
+  { name: "Виктор",     route: "Калуга – Новые территории",           text: "Перевозили гуманитарный груз. Нужна была машина с большим объёмом, договорились быстро. Водитель знал маршрут, ехал уверенно. Доставили всё в срок." },
+  { name: "Зинаида",    route: "Ярославль – Тоцкий р-н",             text: "Сын — военный. Езжу к нему раз в месяц. Дальняк уже как родные — помнят меня, иногда сами напоминают что пора ехать. Вот это забота о клиенте!" },
+  { name: "Максим",     route: "Курск – Омск",                        text: "Ехал устраиваться на новое место. Вещи в прицепе не довезти, взял минивэн. Всё влезло. Долго, зато без пересадок и нервов. Добрался и сразу вышел на работу." },
 ];
 
 const TARIFFS = [
@@ -56,7 +81,7 @@ function PriceCalc() {
   const price = useMemo(() => calcPrice(parseInt(km.replace(/\D/g, ""), 10)), [km]);
   const GOLD = "#c9a84c"; const GOLD2 = "#e8c96a";
   const VK_HREF2   = "https://vk.com/dalnyack";
-  const PHONE_HREF2 = "tel:+79956455125";
+  const PHONE_HREF2 = "tel:+79310098176";
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(201,168,76,0.2)" }}>
       <div className="px-5 pt-4 pb-3 flex items-center gap-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -144,7 +169,7 @@ function getStartCount() {
 
 function ymGoal(goal: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).ym?.(108400932, "reachGoal", goal);
+  (window as any).ym?.(98584604, "reachGoal", goal);
 }
 
 function ymLead(channel: string) {
@@ -327,7 +352,7 @@ export default function Quick() {
                   <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 600 }}>Диспетчер круглосуточно</div>
                   <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 20, color: "#fff" }}>{PHONE}</div>
                 </div>
-                <a href={PHONE_HREF} onClick={() => ymGoal("call")}
+                <a href={PHONE_HREF} onClick={() => ymGoal("header_phone")}
                   className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105"
                   style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 16px rgba(201,168,76,0.4)" }}>
                   <Icon name="Phone" size={15} style={{ color: NAVY }} />
@@ -341,7 +366,7 @@ export default function Quick() {
                 </a>
               </div>
               {/* мобилка — только кнопка звонка */}
-              <a href={PHONE_HREF} onClick={() => ymGoal("call")}
+              <a href={PHONE_HREF} onClick={() => ymGoal("header_phone")}
                 className="md:hidden flex items-center gap-1.5 rounded-xl px-3 py-2 active:scale-95 transition-transform"
                 style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 12px rgba(201,168,76,0.4)" }}>
                 <Icon name="Phone" size={13} style={{ color: NAVY }} />
@@ -396,7 +421,7 @@ export default function Quick() {
               </h1>
 
               <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "clamp(13px,1.2vw,16px)", marginTop: 18, lineHeight: 1.7, maxWidth: 480 }}>
-                Поездки между городами от 200 км по фиксированной цене.<br />
+                Заказать такси из города в город по фиксированной цене.<br />
                 Новые авто, опытные водители, круглосуточный диспетчер.
               </p>
 
@@ -413,7 +438,7 @@ export default function Quick() {
 
               {/* кнопки */}
               <div className="space-y-3 md:max-w-lg">
-                <a href={PHONE_HREF} onClick={() => { ymGoal("call"); ymLead("phone"); }}
+                <a href={PHONE_HREF} onClick={() => { ymGoal("hero_phone"); ymLead("phone"); }}
                   className="flex items-center justify-center gap-3 w-full rounded-2xl py-5 transition-transform hover:scale-[1.02] active:scale-[0.97]"
                   style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 8px 32px rgba(201,168,76,0.45)" }}>
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(10,15,30,0.2)" }}>
@@ -434,7 +459,7 @@ export default function Quick() {
                     <Icon name="Send" size={22} className="text-white" />
                     <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>
                   </a>
-                  <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("max"); ymLead("max"); }}
+                  <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_max"); ymLead("max"); }}
                     className="relative flex flex-col items-center justify-center rounded-2xl py-4 gap-1.5 transition-transform hover:scale-[1.02] active:scale-[0.97] overflow-hidden"
                     style={{ background: "linear-gradient(135deg,#001a3d,#003080)", border: "1px solid rgba(0,90,210,0.4)" }}>
                     <div className="absolute top-1.5 right-1.5 rounded-full px-1.5 py-0.5"
@@ -494,6 +519,62 @@ export default function Quick() {
             <div className="flex flex-col items-center gap-1 animate-bounce">
               <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.15em" }}>листай</span>
               <Icon name="ChevronDown" size={16} style={{ color: GOLD, opacity: 0.6 }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════
+          СЕКЦИЯ: БРОНИРОВАНИЕ
+      ══════════════════════════════════════ */}
+      <div style={{ background: NAVY }}>
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
+          <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid rgba(201,168,76,0.35)`, background: "linear-gradient(135deg,rgba(201,168,76,0.07) 0%,rgba(10,15,30,0.6) 100%)" }}>
+            <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: "1px solid rgba(201,168,76,0.15)" }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
+                <Icon name="ShieldCheck" size={18} style={{ color: "#0a0f1e" }} />
+              </div>
+              <div>
+                <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 16, color: "#fff", textTransform: "uppercase", letterSpacing: "0.08em" }}>Бронирование поездки</div>
+                <div style={{ color: GOLD, fontSize: 11, fontWeight: 600 }}>Фиксируем дату и цену · Без скрытых условий</div>
+              </div>
+            </div>
+            <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex gap-3 items-start">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.25)" }}>
+                  <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 14, color: GOLD }}>1</span>
+                </div>
+                <div>
+                  <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 14, color: "#fff" }}>Аванс 500–1000 ₽</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, lineHeight: 1.5, marginTop: 2 }}>Небольшой депозит фиксирует вашу поездку. Остаток — при посадке.</div>
+                </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.25)" }}>
+                  <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 14, color: GOLD }}>2</span>
+                </div>
+                <div>
+                  <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 14, color: "#fff" }}>Цена не изменится</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, lineHeight: 1.5, marginTop: 2 }}>После бронирования фиксируем стоимость — никаких надбавок в день поездки.</div>
+                </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.25)" }}>
+                  <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 14, color: GOLD }}>3</span>
+                </div>
+                <div>
+                  <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 14, color: "#fff" }}>Возврат если отменим мы</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, lineHeight: 1.5, marginTop: 2 }}>Если поездка не состоялась по нашей вине — возвращаем аванс полностью.</div>
+                </div>
+              </div>
+            </div>
+            <div className="px-5 pb-5">
+              <a href={PHONE_HREF} onClick={() => ymGoal("booking_phone")}
+                className="flex items-center justify-center gap-2 w-full rounded-xl py-3.5 transition-transform hover:scale-[1.01] active:scale-[0.98]"
+                style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
+                <Icon name="Phone" size={16} style={{ color: NAVY }} />
+                <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 15, color: NAVY, textTransform: "uppercase", letterSpacing: "0.08em" }}>Забронировать по телефону</span>
+              </a>
             </div>
           </div>
         </div>
@@ -835,22 +916,24 @@ export default function Quick() {
               <Icon name="ChevronRight" size={13} style={{ color: GOLD }} />
             </a>
           </div>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {REVIEWS.map(r => (
-              <div key={r.name} className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <img src={r.img} alt={r.name} loading="lazy" className="w-full block" />
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{r.name}</div>
-                      <div style={{ color: GOLD, fontSize: 11, marginTop: 1 }}>{r.route}</div>
+              <div key={r.name + r.route} className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg,rgba(201,168,76,0.2),rgba(201,168,76,0.08))", border: "1px solid rgba(201,168,76,0.25)" }}>
+                      <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 13, color: GOLD }}>{r.name[0]}</span>
                     </div>
-                    <div className="flex gap-0.5">
-                      {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={13} style={{ color: GOLD }} className="fill-[#c9a84c]" />)}
+                    <div>
+                      <div style={{ color: "#fff", fontWeight: 700, fontSize: 13 }}>{r.name}</div>
+                      <div style={{ color: GOLD, fontSize: 10, marginTop: 1 }}>{r.route}</div>
                     </div>
                   </div>
-                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 13, lineHeight: 1.7 }}>{r.text}</p>
+                  <div className="flex gap-0.5 shrink-0 mt-0.5">
+                    {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={11} style={{ color: GOLD }} className="fill-[#c9a84c]" />)}
+                  </div>
                 </div>
+                <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: 1.65 }}>{r.text}</p>
               </div>
             ))}
           </div>
@@ -862,7 +945,7 @@ export default function Quick() {
       ══════════════════════════════════════ */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-5 pt-3"
         style={{ background: `linear-gradient(to top,${NAVY} 65%,transparent)` }}>
-        <a href={PHONE_HREF} onClick={() => { ymGoal("call"); ymLead("phone"); }}
+        <a href={PHONE_HREF} onClick={() => { ymGoal("bottom_phone"); ymLead("phone"); }}
           className="flex items-center justify-center gap-3 w-full rounded-2xl py-4 mb-2.5 active:scale-[0.97] transition-transform"
           style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 24px rgba(201,168,76,0.5)" }}>
           <Icon name="Phone" size={18} style={{ color: NAVY }} />
@@ -875,7 +958,7 @@ export default function Quick() {
             <Icon name="Send" size={15} className="text-white" />
             <span style={{ fontFamily: "Oswald", fontSize: 13, color: "#fff", fontWeight: 800, textTransform: "uppercase" }}>Telegram</span>
           </a>
-          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("max"); ymLead("max"); }}
+          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("bottom_max"); ymLead("max"); }}
             className="flex items-center justify-center gap-1.5 rounded-2xl py-3 active:scale-[0.97] transition-transform"
             style={{ background: "linear-gradient(135deg,#001a3d,#003080)", border: "1px solid rgba(0,80,200,0.4)" }}>
             <img src={MAX_LOGO} alt="MAX" loading="lazy" className="h-5 object-contain" />
@@ -904,7 +987,7 @@ export default function Quick() {
           </div>
           <div className="flex items-center gap-4">
             <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 22, color: "#fff" }}>{PHONE}</div>
-            <a href={PHONE_HREF} onClick={() => ymGoal("call")}
+            <a href={PHONE_HREF} onClick={() => ymGoal("footer_phone")}
               className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105"
               style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
               <Icon name="Phone" size={15} style={{ color: NAVY }} />

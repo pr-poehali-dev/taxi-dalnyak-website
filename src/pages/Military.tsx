@@ -11,8 +11,8 @@ const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fb
 const HERO_IMG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/763338a3-9023-4930-8f1f-67cc73d245fc.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
 
-const PHONE = "+7 (995) 645-51-25";
-const PHONE_HREF = "tel:+79956455125";
+const PHONE = "+7 (931) 009-81-76";
+const PHONE_HREF = "tel:+79310098176";
 const VK_HREF  = "https://vk.com/dalnyack";
 const TG_HREF  = "https://t.me/Mezhgorod1816";
 const MAX_HREF = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
@@ -195,7 +195,7 @@ export default function Military() {
 
           <a
             href={PHONE_HREF}
-            onClick={() => ymGoal("call")}
+            onClick={() => ymGoal("military_phone_click")}
             className="cta-pulse flex items-center justify-center gap-3 w-full bg-[#F5A800] hover:bg-amber-400 active:scale-[0.98] text-[#0a0a0f] font-black py-4 rounded-2xl transition mb-2"
             style={{ fontFamily: "Oswald" }}
           >
@@ -235,7 +235,7 @@ export default function Military() {
               href={MAX_HREF}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => ymGoal("max")}
+              onClick={() => ymGoal("military_max_click")}
               className="flex items-center justify-center gap-1.5 bg-[#0077FF] active:scale-95 text-white font-black py-3.5 rounded-2xl transition"
               style={{ fontFamily: "Oswald" }}
             >

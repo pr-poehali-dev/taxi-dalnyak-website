@@ -1,4 +1,4 @@
-const CACHE = "dalnyak-v2";
+const CACHE = "dalnyak-v1";
 const ASSETS = ["/", "/index.html"];
 
 self.addEventListener("install", e => {
@@ -17,10 +17,6 @@ self.addEventListener("activate", e => {
 
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
-  // Чужие домены (Метрика, счётчики и т.п.) не трогаем вообще
-  if (url.origin !== self.location.origin && url.hostname !== "cdn.poehali.dev") {
-    return;
-  }
   // Картинки — cache-first, долгий TTL
   if (url.hostname === "cdn.poehali.dev") {
     e.respondWith(

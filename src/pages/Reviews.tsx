@@ -42,7 +42,7 @@ const TEXT_REVIEWS = [
 
 function ymGoal(goal: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).ym?.(108400932, "reachGoal", goal);
+  (window as any).ym?.(98584604, "reachGoal", goal);
 }
 
 function Stars({ n = 5 }: { n?: number }) {
@@ -148,7 +148,7 @@ export default function Reviews() {
           <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, marginBottom: 16 }}>
             Звоните — доедем, и вы напишете свой отзыв
           </p>
-          <a href={PHONE_HREF} onClick={() => ymGoal("call")}
+          <a href={PHONE_HREF} onClick={() => ymGoal("reviews_cta")}
             className="flex items-center justify-center gap-2 w-full rounded-2xl py-4 active:scale-[0.97] transition-transform"
             style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 20px rgba(201,168,76,0.35)" }}>
             <Icon name="Phone" size={18} style={{ color: NAVY }} />
@@ -161,14 +161,14 @@ export default function Reviews() {
       <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-5 pt-2"
         style={{ background: `linear-gradient(to top, ${NAVY} 65%, transparent)` }}>
         <div className="max-w-sm mx-auto space-y-2">
-          <a href={PHONE_HREF} onClick={() => ymGoal("call")}
+          <a href={PHONE_HREF} onClick={() => ymGoal("reviews_bottom_phone")}
             className="flex items-center justify-center gap-2 w-full rounded-2xl py-4 active:scale-[0.97] transition-transform"
             style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 20px rgba(201,168,76,0.4)" }}>
             <Icon name="Phone" size={18} style={{ color: NAVY }} />
             <span style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 17, color: NAVY, textTransform: "uppercase" }}>Позвонить диспетчеру</span>
           </a>
           <div className="grid grid-cols-2 gap-2">
-            <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("max")}
+            <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("reviews_bottom_max")}
               className="flex items-center justify-center gap-2 rounded-2xl py-3 active:scale-[0.97] transition-transform"
               style={{ background: "linear-gradient(135deg,#001a3d,#003080)", border: "1px solid rgba(0,80,200,0.4)" }}>
               <img src={MAX_LOGO} alt="MAX" className="h-5 object-contain" />

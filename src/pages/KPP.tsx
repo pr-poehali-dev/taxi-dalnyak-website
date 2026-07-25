@@ -16,8 +16,8 @@ const REVIEW_1  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888
 const REVIEW_2  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/fedc4281-a106-4024-9369-8a03712c92a3.jpg";
 const REVIEW_3  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/ac322d91-fd27-4c11-b86f-f28e85ec3df0.jpg";
 
-const PHONE      = "+7 (995) 645-51-25";
-const PHONE_HREF = "tel:+79956455125";
+const PHONE      = "+7 (931) 009-81-76";
+const PHONE_HREF = "tel:+79310098176";
 const VK_HREF    = "https://vk.com/dalnyack";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
@@ -127,7 +127,7 @@ function PriceCalc() {
           </div>
         )}
         {price && (
-          <a href={PHONE_HREF} onClick={() => ymGoal("call")}
+          <a href={PHONE_HREF} onClick={() => ymGoal("kpp_calc_phone")}
             className="flex items-center justify-center gap-2 w-full rounded-xl py-3 font-bold text-[13px] uppercase transition-transform active:scale-[0.97]"
             style={{ fontFamily: "Oswald", background: `linear-gradient(135deg,${GOLD},${GOLD2})`, color: "#0a0f1e", letterSpacing: "0.05em" }}>
             <Icon name="PhoneCall" size={16} /> Позвонить — подтвердить цену
@@ -398,7 +398,7 @@ export default function KPP() {
         {/* STICKY CTA */}
         <div className="sticky bottom-0 px-4 py-3 z-40" style={{ background: "rgba(6,8,15,0.97)", backdropFilter: "blur(12px)", borderTop: `1px solid rgba(201,168,76,0.15)` }}>
           <div className="max-w-lg mx-auto">
-            <a href={PHONE_HREF} onClick={() => ymGoal("call")}
+            <a href={PHONE_HREF} onClick={() => ymGoal("kpp_phone_click")}
               className="cta-kpp flex items-center justify-center gap-3 w-full rounded-2xl py-4 transition-transform active:scale-[0.98] mb-2.5"
               style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, fontFamily: "Oswald" }}>
               <Icon name="PhoneCall" size={22} style={{ color: "#06080f" }} />
@@ -418,7 +418,7 @@ export default function KPP() {
                 style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#1a3a6b,#2456a4)", color: "#fff", fontWeight: 800, fontSize: "clamp(11px,3vw,14px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 <Icon name="Users" size={15} /> ВК
               </a>
-              <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("max")}
+              <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("kpp_max_click")}
                 className="flex items-center justify-center gap-1.5 rounded-2xl py-3.5 active:scale-95 transition-transform"
                 style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#003a9e,#0055e5)", color: "#fff", fontWeight: 800, fontSize: "clamp(11px,3vw,14px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 <img src={MAX_LOGO} alt="MAX" className="w-5 h-5 rounded-full object-cover" /> МАКС
