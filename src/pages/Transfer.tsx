@@ -25,7 +25,7 @@ const FLAME  = "#FF7A29";
 const FLAME2 = "#FFC13B";
 
 function ymGoal(goal: string) {
-  if (typeof window.ym === "function") window.ym(108400932, "reachGoal", goal);
+  if (typeof window.ym === "function") window.ym(111028538, "reachGoal", goal);
 }
 function ymLead(channel: string) { ymGoal("lead"); ymGoal(`lead_${channel}`); }
 

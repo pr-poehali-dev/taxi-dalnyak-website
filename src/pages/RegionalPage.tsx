@@ -14,7 +14,7 @@ const PHONE_HREF = "tel:+79310098176";
 const VK_HREF    = "https://vk.com/dalnyack";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
-const YM_ID      = 108400932;
+const YM_ID      = 111028538;
 
 const GOLD  = "#c9a84c";
 const GOLD2 = "#e8c96a";

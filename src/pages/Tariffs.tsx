@@ -48,7 +48,7 @@ const TARIFFS = [
 
 function ymGoal(goal: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).ym?.(98584604, "reachGoal", goal);
+  (window as any).ym?.(111028538, "reachGoal", goal);
 }
 
 export default function Tariffs() {

@@ -4,7 +4,7 @@ import Icon from "@/components/ui/icon";
 declare global { interface Window { ym?: (id: number, action: string, goal: string, params?: Record<string, string>) => void; } }
 
 function ymGoal(goal: string) {
-  if (typeof window.ym === "function") window.ym(108400932, "reachGoal", goal);
+  if (typeof window.ym === "function") window.ym(111028538, "reachGoal", goal);
 }
 
 const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";

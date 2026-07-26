@@ -312,7 +312,7 @@ declare global {
 
 function ymGoal(goal: string, params: Record<string, string> = {}) {
   if (typeof window.ym === "function") {
-    window.ym(108400932, "reachGoal", goal, params);
+    window.ym(111028538, "reachGoal", goal, params);
   }
 }
 

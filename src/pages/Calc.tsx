@@ -15,7 +15,7 @@ const BORDER = "rgba(201,168,76,0.18)";
 
 function ymGoal(goal: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).ym?.(98584604, "reachGoal", goal);
+  (window as any).ym?.(111028538, "reachGoal", goal);
 }
 
 function calcPrice(km: number) {
