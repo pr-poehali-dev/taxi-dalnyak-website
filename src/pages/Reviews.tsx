@@ -3,7 +3,7 @@ import Icon from "@/components/ui/icon";
 
 const PHONE_HREF = "tel:+79956455125";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
-const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
+const MAX_HREF   = "https://max.ru/u/f9LHodD0cOIZFP22IJsuy63onnnj7cBZP5dbRvH3Vpuw0xAhfuYCEfjmJjM";
 const MAX_LOGO   = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
 const REVIEW_1   = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/b0eb5050-a05a-4647-8442-4b839d45161f.jpg";
 const REVIEW_2   = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/fedc4281-a106-4024-9369-8a03712c92a3.jpg";

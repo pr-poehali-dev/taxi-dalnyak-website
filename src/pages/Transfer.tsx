@@ -16,7 +16,7 @@ const PHONE      = "+7 (995) 645-51-25";
 const PHONE_HREF = "tel:+79956455125";
 const VK_HREF    = "https://vk.com/dalnyack";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
-const MAX_HREF   = "https://max.ru/u/f9LHodD0cOKIko3lZjdQ_mlLJBf8rzj3cvuBPPKZdqdK6ei4enFM6C8eSpw";
+const MAX_HREF   = "https://max.ru/u/f9LHodD0cOIZFP22IJsuy63onnnj7cBZP5dbRvH3Vpuw0xAhfuYCEfjmJjM";
 
 const INK    = "#0c1015";
 const PANEL  = "#161b23";
