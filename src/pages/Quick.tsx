@@ -589,6 +589,65 @@ export default function Quick() {
       </div>
 
       {/* ══════════════════════════════════════
+          СЕКЦИЯ: РАССРОЧКА ОТ Т-БАНКА
+      ══════════════════════════════════════ */}
+      <div style={{ background: NAVY }}>
+        <div className="max-w-6xl mx-auto px-4 md:px-6 pt-6 pb-0">
+          <div className="rounded-2xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4"
+            style={{ background: `linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03))`, border: `1px solid rgba(201,168,76,0.25)` }}>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
+              <Icon name="Landmark" size={22} style={{ color: NAVY }} />
+            </div>
+            <div className="flex-1">
+              <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 16, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 5 }}>
+                Рассрочка от <span style={{ color: GOLD }}>Т-Банка</span>
+              </div>
+              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, lineHeight: 1.7 }}>
+                Оплатите поездку в рассрочку на срок <span style={{ color: "rgba(255,255,255,0.9)" }}>от 3 до 36 месяцев</span>,
+                сумма — <span style={{ color: "rgba(255,255,255,0.9)" }}>от 3 000 до 1 000 000 ₽</span>. Без переплат банку, оформление за пару минут онлайн.
+              </p>
+            </div>
+            <a href={PHONE_HREF} onClick={() => ymGoal("installment_click")}
+              className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105 shrink-0 w-full md:w-auto justify-center"
+              style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 16px rgba(201,168,76,0.4)" }}>
+              <Icon name="Phone" size={15} style={{ color: NAVY }} />
+              <span style={{ fontFamily: "Oswald", fontSize: 13, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Узнать подробнее</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════
+          СЕКЦИЯ: ПЕРЕВОЗКА СОТРУДНИКОВ
+      ══════════════════════════════════════ */}
+      <div style={{ background: NAVY }}>
+        <div className="max-w-6xl mx-auto px-4 md:px-6 pt-5 pb-0">
+          <div className="rounded-2xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4"
+            style={{ background: CARD, border: BORDER }}>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ background: "linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.05))", border: BORDER }}>
+              <Icon name="Building2" size={22} style={{ color: GOLD }} />
+            </div>
+            <div className="flex-1">
+              <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 16, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 5 }}>
+                Перевозка сотрудников по договору
+              </div>
+              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, lineHeight: 1.7 }}>
+                Заключаем официальные договора с компаниями на регулярную перевозку сотрудников между городами:
+                вахты, командировки, доставка персонала на объекты. <span style={{ color: "rgba(255,255,255,0.9)" }}>Безналичная оплата, закрывающие документы</span>, фиксированная стоимость маршрута.
+              </p>
+            </div>
+            <a href={PHONE_HREF} onClick={() => ymGoal("corporate_click")}
+              className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105 shrink-0 w-full md:w-auto justify-center"
+              style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 16px rgba(201,168,76,0.4)" }}>
+              <Icon name="Phone" size={15} style={{ color: NAVY }} />
+              <span style={{ fontFamily: "Oswald", fontSize: 13, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Оставить заявку</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════
           СЕКЦИЯ: ГОРОДА
       ══════════════════════════════════════ */}
       <div style={{ background: `linear-gradient(180deg,${NAVY} 0%,#080d1a 100%)` }}>
