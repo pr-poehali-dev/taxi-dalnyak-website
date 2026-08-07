@@ -62,7 +62,7 @@ const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 const PHONE = "+7 (931) 009-81-76";
 const PHONE_HREF = "tel:+79310098176";
 const VK_HREF = "https://vk.com/dalnyack";
-const MAX_HREF = "https://max.ru/u/f9LHodD0cOIZFP22IJsuy63onnnj7cBZP5dbRvH3Vpuw0xAhfuYCEfjmJjM";
+const MAX_HREF = "https://max.ru/u/f9LHodD0cOLXF8YYOcofc0nCB_QzuJK3zunO0A5XBUyuWM654AGfmsC_fCc";
 
 const STOP = new Set([
   "такси","taxi","заказать","заказ","вызвать","вызов","поездка","поездку",

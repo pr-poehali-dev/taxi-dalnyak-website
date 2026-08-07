@@ -13,7 +13,7 @@ const PHONE      = "+7 (931) 009-81-76";
 const PHONE_HREF = "tel:+79310098176";
 const VK_HREF    = "https://vk.com/dalnyack";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
-const MAX_HREF   = "https://max.ru/u/f9LHodD0cOIZFP22IJsuy63onnnj7cBZP5dbRvH3Vpuw0xAhfuYCEfjmJjM";
+const MAX_HREF   = "https://max.ru/u/f9LHodD0cOLXF8YYOcofc0nCB_QzuJK3zunO0A5XBUyuWM654AGfmsC_fCc";
 const YM_ID      = 111028538;
 
 const GOLD  = "#c9a84c";
