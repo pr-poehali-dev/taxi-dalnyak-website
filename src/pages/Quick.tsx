@@ -708,6 +708,9 @@ export default function Quick() {
                 { label: "Тюмень",          href: "/tyumen" },
                 { label: "Челябинск",       href: "/chelyabinsk" },
                 { label: "Екатеринбург",    href: "/ekaterinburg" },
+                { label: "Донецк",          href: "/donetsk" },
+                { label: "Луганск",         href: "/lugansk" },
+                { label: "Херсонская область", href: "/kherson" },
               ].map(r => (
                 <a key={r.href} href={r.href}
                   className="rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all hover:scale-[1.03] active:scale-[0.97]"

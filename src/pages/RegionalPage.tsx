@@ -49,6 +49,9 @@ const REGIONS = [
   { label: "Тюмень",          href: "/tyumen" },
   { label: "Челябинск",       href: "/chelyabinsk" },
   { label: "Екатеринбург",    href: "/ekaterinburg" },
+  { label: "Донецк",          href: "/donetsk" },
+  { label: "Луганск",         href: "/lugansk" },
+  { label: "Херсонская область", href: "/kherson" },
 ];
 
 declare global {
