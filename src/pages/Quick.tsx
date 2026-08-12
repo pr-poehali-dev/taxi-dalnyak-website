@@ -842,6 +842,12 @@ export default function Quick() {
             </a>
           </div>
         </div>
+        <div className="max-w-6xl mx-auto px-6 pb-5 flex justify-center">
+          <a href="https://webmaster.yandex.ru/siteinfo/?site=https://taxidalnyack.ru/" target="_blank" rel="noopener noreferrer">
+            <img width={88} height={31} alt="" style={{ border: 0, borderRadius: 8 }}
+              src="https://yandex.ru/cycounter?https://taxidalnyack.ru/&theme=light&lang=ru" />
+          </a>
+        </div>
       </div>
 
       {/* ══════════════════════════════════════
