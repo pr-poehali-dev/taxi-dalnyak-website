@@ -17,11 +17,11 @@ const VK_HREF    = "https://vk.com/dalnyack";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOLXF8YYOcofc0nCB_QzuJK3zunO0A5XBUyuWM654AGfmsC_fCc";
 
-const NAVY   = "#0a0f1e";
-const CARD   = "#131b2e";
-const BORDER = "rgba(201,168,76,0.18)";
-const GOLD   = "#c9a84c";
-const GOLD2  = "#e8c96a";
+const NAVY   = "#0b0b0d";
+const CARD   = "#17171a";
+const BORDER = "rgba(168,135,79,0.18)";
+const GOLD   = "#a8874f";
+const GOLD2  = "#c9a876";
 
 const CITIES = [
   "Москва","Санкт-Петербург","Новосибирск","Екатеринбург","Казань",
@@ -184,8 +184,8 @@ export default function Quick() {
       {/* ══════════════════════════════════════
           HERO — полноэкранный фон
       ══════════════════════════════════════ */}
-      <div ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "100svh", background: `linear-gradient(160deg,#0a0f1e 0%,#0d1428 40%,#080c18 100%)` }}>
-        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 70% 40%,rgba(201,168,76,0.07) 0%,transparent 70%)` }} />
+      <div ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "100svh", background: `linear-gradient(160deg,#0b0b0d 0%,#121214 40%,#08080a 100%)` }}>
+        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 70% 40%,rgba(168,135,79,0.07) 0%,transparent 70%)` }} />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom,transparent 50%,${NAVY} 100%)` }} />
 
         {/* ══════════════════════════════════════
@@ -197,7 +197,7 @@ export default function Quick() {
             <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img src={LOGO} alt="" loading="lazy" className="w-10 h-10 rounded-xl object-cover"
-                  style={{ border: `1.5px solid ${GOLD}`, boxShadow: `0 0 12px rgba(201,168,76,0.3)` }} />
+                  style={{ border: `1.5px solid ${GOLD}`, boxShadow: `0 0 12px rgba(168,135,79,0.3)` }} />
                 <div>
                   <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 16, color: "#fff", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                     Такси Дальняк
@@ -213,7 +213,7 @@ export default function Quick() {
                 </div>
                 <a href={PHONE_HREF} onClick={() => ymGoal("header_phone")}
                   className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105"
-                  style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 16px rgba(201,168,76,0.4)" }}>
+                  style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 16px rgba(168,135,79,0.4)" }}>
                   <Icon name="Phone" size={15} style={{ color: NAVY }} />
                   <span style={{ fontFamily: "Oswald", fontSize: 14, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Позвонить</span>
                 </a>
@@ -227,7 +227,7 @@ export default function Quick() {
               {/* мобилка — только кнопка звонка */}
               <a href={PHONE_HREF} onClick={() => ymGoal("header_phone")}
                 className="md:hidden flex items-center gap-1.5 rounded-xl px-3 py-2 active:scale-95 transition-transform"
-                style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 12px rgba(201,168,76,0.4)" }}>
+                style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 12px rgba(168,135,79,0.4)" }}>
                 <Icon name="Phone" size={13} style={{ color: NAVY }} />
                 <span style={{ fontFamily: "Oswald", fontSize: 12, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Звонок</span>
               </a>
@@ -240,14 +240,14 @@ export default function Quick() {
 
           {/* бейдж */}
           <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-6 self-start"
-            style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)" }}>
+            style={{ background: "rgba(168,135,79,0.12)", border: "1px solid rgba(168,135,79,0.3)" }}>
             <div className="flex -space-x-1.5">
               {[REVIEW_1, REVIEW_2, REVIEW_3].map((img, i) => (
                 <img key={i} src={img} alt="" loading="lazy" className="w-5 h-5 rounded-full object-cover" style={{ border: `1.5px solid ${NAVY}` }} />
               ))}
             </div>
-            <span style={{ color: GOLD2, fontSize: 11, fontWeight: 700 }}>{count.toLocaleString("ru")} поездок сегодня</span>
-            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>· последняя {mins} мин назад</span>
+            <span style={{ color: GOLD2, fontSize: 11, fontWeight: 700 }}>{count.toLocaleString("ru")} заказов выполнено сегодня</span>
+            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>· свободный борт через {mins} мин</span>
           </div>
 
           {/* ── ДВУХКОЛОНОЧНАЯ СЕТКА на десктопе ── */}
@@ -285,12 +285,13 @@ export default function Quick() {
               </p>
 
               {/* статистика */}
-              <div className="grid grid-cols-4 gap-3 mt-7 mb-7 md:max-w-lg">
-                {STATS.map(s => (
-                  <div key={s.value} className="flex flex-col items-center rounded-2xl py-3 px-1"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                    <span style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(16px,2vw,22px)", color: GOLD, lineHeight: 1 }}>{s.value}</span>
-                    <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 9, textAlign: "center", marginTop: 2, lineHeight: 1.2 }}>{s.label}</span>
+              <div className="flex mt-7 mb-7 md:max-w-lg rounded-2xl overflow-hidden"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                {STATS.map((s, idx) => (
+                  <div key={s.value} className="flex-1 flex flex-col items-center py-4 px-1"
+                    style={{ borderLeft: idx === 0 ? "none" : "1px solid rgba(255,255,255,0.08)" }}>
+                    <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: "clamp(17px,2.1vw,24px)", color: GOLD2, lineHeight: 1, letterSpacing: "-0.01em" }}>{s.value}</span>
+                    <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 9, textAlign: "center", marginTop: 4, lineHeight: 1.2, textTransform: "uppercase", letterSpacing: "0.04em" }}>{s.label}</span>
                   </div>
                 ))}
               </div>
@@ -299,7 +300,7 @@ export default function Quick() {
               <div className="space-y-3 md:max-w-lg">
                 <a href={PHONE_HREF} onClick={() => { ymGoal("hero_phone"); ymLead("phone"); }}
                   className="flex items-center justify-center gap-3 w-full rounded-2xl py-5 transition-transform hover:scale-[1.02] active:scale-[0.97]"
-                  style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 8px 32px rgba(201,168,76,0.45)" }}>
+                  style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 8px 32px rgba(168,135,79,0.45)" }}>
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(10,15,30,0.2)" }}>
                     <Icon name="PhoneCall" size={18} style={{ color: NAVY }} />
                   </div>
@@ -359,9 +360,9 @@ export default function Quick() {
             <div className="hidden md:flex flex-col gap-3 w-80 shrink-0">
               {FEATURES.map((f, idx) => (
                 <div key={f.title} className="flex gap-4 rounded-2xl p-4"
-                  style={{ background: CARD, border: idx === 0 ? "1px solid rgba(201,168,76,0.4)" : BORDER }}>
+                  style={{ background: CARD, border: idx === 0 ? "1px solid rgba(168,135,79,0.4)" : BORDER }}>
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: "linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.05))", border: BORDER }}>
+                    style={{ background: "linear-gradient(135deg,rgba(168,135,79,0.15),rgba(168,135,79,0.05))", border: BORDER }}>
                     <Icon name={f.icon as "Car"} size={18} style={{ color: GOLD }} />
                   </div>
                   <div>
@@ -395,9 +396,9 @@ export default function Quick() {
           <div className="space-y-3">
             {FEATURES.map((f, idx) => (
               <div key={f.title} className="flex gap-4 rounded-2xl p-4"
-                style={{ background: CARD, border: idx === 0 ? "1px solid rgba(201,168,76,0.4)" : BORDER }}>
+                style={{ background: CARD, border: idx === 0 ? "1px solid rgba(168,135,79,0.4)" : BORDER }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: "linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.05))", border: BORDER }}>
+                  style={{ background: "linear-gradient(135deg,rgba(168,135,79,0.15),rgba(168,135,79,0.05))", border: BORDER }}>
                   <Icon name={f.icon as "Car"} size={18} style={{ color: GOLD }} />
                 </div>
                 <div>
@@ -424,9 +425,9 @@ export default function Quick() {
           <div className="grid grid-cols-5 gap-4">
             {FEATURES.map((f, idx) => (
               <div key={f.title} className="flex flex-col items-center text-center gap-3 rounded-2xl p-5"
-                style={{ background: CARD, border: idx === 0 ? "1px solid rgba(201,168,76,0.4)" : BORDER }}>
+                style={{ background: CARD, border: idx === 0 ? "1px solid rgba(168,135,79,0.4)" : BORDER }}>
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ background: "linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.05))", border: BORDER }}>
+                  style={{ background: "linear-gradient(135deg,rgba(168,135,79,0.15),rgba(168,135,79,0.05))", border: BORDER }}>
                   <Icon name={f.icon as "Car"} size={22} style={{ color: GOLD }} />
                 </div>
                 <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 15, color: "#fff" }}>{f.title}</div>
@@ -471,7 +472,7 @@ export default function Quick() {
       ══════════════════════════════════════ */}
       <div style={{ background: NAVY }}>
         <div className="max-w-6xl mx-auto px-4 md:px-6 pt-5 pb-0">
-          <div className="rounded-2xl p-5" style={{ background: `linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.03))`, border: `1px solid rgba(201,168,76,0.2)` }}>
+          <div className="rounded-2xl p-5" style={{ background: `linear-gradient(135deg,rgba(168,135,79,0.08),rgba(168,135,79,0.03))`, border: `1px solid rgba(168,135,79,0.2)` }}>
             <div className="flex items-start gap-4">
               <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
                 <Icon name="Headphones" size={20} style={{ color: NAVY }} />
@@ -531,11 +532,11 @@ export default function Quick() {
                 <div className="flex items-center gap-2">
                   <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 26, fontWeight: 900, lineHeight: 1 }}>4.8</span>
                   <div className="flex gap-0.5 mt-0.5">
-                    {[1,2,3,4].map(i => <Icon key={i} name="Star" size={12} style={{ color: GOLD }} className="fill-[#c9a84c]" />)}
+                    {[1,2,3,4].map(i => <Icon key={i} name="Star" size={12} style={{ color: GOLD }} className="fill-[#a8874f]" />)}
                     <div className="relative" style={{ width: 12, height: 12, overflow: "hidden" }}>
                       <Icon name="Star" size={12} style={{ color: "rgba(255,255,255,0.12)", position: "absolute" }} />
                       <div style={{ width: "80%", overflow: "hidden", position: "absolute" }}>
-                        <Icon name="Star" size={12} style={{ color: GOLD }} className="fill-[#c9a84c]" />
+                        <Icon name="Star" size={12} style={{ color: GOLD }} className="fill-[#a8874f]" />
                       </div>
                     </div>
                   </div>
@@ -594,7 +595,7 @@ export default function Quick() {
       <div style={{ background: NAVY }}>
         <div className="max-w-6xl mx-auto px-4 md:px-6 pt-6 pb-0">
           <div className="rounded-2xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4"
-            style={{ background: `linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03))`, border: `1px solid rgba(201,168,76,0.25)` }}>
+            style={{ background: `linear-gradient(135deg,rgba(168,135,79,0.1),rgba(168,135,79,0.03))`, border: `1px solid rgba(168,135,79,0.25)` }}>
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
               <Icon name="Landmark" size={22} style={{ color: NAVY }} />
             </div>
@@ -609,7 +610,7 @@ export default function Quick() {
             </div>
             <a href={PHONE_HREF} onClick={() => ymGoal("installment_click")}
               className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105 shrink-0 w-full md:w-auto justify-center"
-              style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 16px rgba(201,168,76,0.4)" }}>
+              style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 16px rgba(168,135,79,0.4)" }}>
               <Icon name="Phone" size={15} style={{ color: NAVY }} />
               <span style={{ fontFamily: "Oswald", fontSize: 13, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Узнать подробнее</span>
             </a>
@@ -625,7 +626,7 @@ export default function Quick() {
           <div className="rounded-2xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4"
             style={{ background: CARD, border: BORDER }}>
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ background: "linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.05))", border: BORDER }}>
+              style={{ background: "linear-gradient(135deg,rgba(168,135,79,0.15),rgba(168,135,79,0.05))", border: BORDER }}>
               <Icon name="Building2" size={22} style={{ color: GOLD }} />
             </div>
             <div className="flex-1">
@@ -639,7 +640,7 @@ export default function Quick() {
             </div>
             <a href={PHONE_HREF} onClick={() => ymGoal("corporate_click")}
               className="flex items-center gap-2 rounded-xl px-5 py-3 transition-transform hover:scale-105 shrink-0 w-full md:w-auto justify-center"
-              style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 16px rgba(201,168,76,0.4)" }}>
+              style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 2px 16px rgba(168,135,79,0.4)" }}>
               <Icon name="Phone" size={15} style={{ color: NAVY }} />
               <span style={{ fontFamily: "Oswald", fontSize: 13, color: NAVY, fontWeight: 800, textTransform: "uppercase" }}>Оставить заявку</span>
             </a>
@@ -650,7 +651,7 @@ export default function Quick() {
       {/* ══════════════════════════════════════
           СЕКЦИЯ: ГОРОДА
       ══════════════════════════════════════ */}
-      <div style={{ background: `linear-gradient(180deg,${NAVY} 0%,#080d1a 100%)` }}>
+      <div style={{ background: `linear-gradient(180deg,${NAVY} 0%,#08080a 100%)` }}>
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-10">
           <div className="text-center mb-6">
             <div style={{ color: GOLD, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.3em" }} className="mb-2">Geography</div>
@@ -661,7 +662,7 @@ export default function Quick() {
               {CITIES.map(city => (
                 <span key={city} className="rounded-full px-3 py-1 text-[11px] font-semibold"
                   style={city === "Новые территории"
-                    ? { background: "rgba(201,168,76,0.15)", border: "1px solid rgba(201,168,76,0.4)", color: GOLD2 }
+                    ? { background: "rgba(168,135,79,0.15)", border: "1px solid rgba(168,135,79,0.4)", color: GOLD2 }
                     : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>
                   {city}
                 </span>
@@ -677,7 +678,7 @@ export default function Quick() {
       {/* ══════════════════════════════════════
           СЕКЦИЯ: НАВИГАЦИЯ
       ══════════════════════════════════════ */}
-      <div style={{ background: "#080d1a" }}>
+      <div style={{ background: "#08080a" }}>
         <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
           <div className="grid grid-cols-2 gap-3">
             {[
@@ -725,7 +726,7 @@ export default function Quick() {
               ].map(r => (
                 <a key={r.href} href={r.href}
                   className="rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all hover:scale-[1.03] active:scale-[0.97]"
-                  style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", color: "rgba(255,255,255,0.65)" }}>
+                  style={{ background: "rgba(168,135,79,0.08)", border: "1px solid rgba(168,135,79,0.2)", color: "rgba(255,255,255,0.65)" }}>
                   {r.label}
                 </a>
               ))}
@@ -737,14 +738,14 @@ export default function Quick() {
       {/* ══════════════════════════════════════
           СЕКЦИЯ: ОТЗЫВЫ
       ══════════════════════════════════════ */}
-      <div style={{ background: "#080d1a" }}>
+      <div style={{ background: "#08080a" }}>
         <div className="max-w-6xl mx-auto px-4 md:px-6 pb-36 md:pb-20 pt-8">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(${GOLD},${GOLD2})` }} />
             <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>Отзывы пассажиров</span>
             <div className="flex-1" />
             <a href="/reviews" className="flex items-center gap-1 rounded-xl px-3 py-2 transition-opacity hover:opacity-80"
-              style={{ background: "rgba(201,168,76,0.1)", border: BORDER }}>
+              style={{ background: "rgba(168,135,79,0.1)", border: BORDER }}>
               <span style={{ color: GOLD, fontSize: 12, fontWeight: 700 }}>Все отзывы</span>
               <Icon name="ChevronRight" size={13} style={{ color: GOLD }} />
             </a>
@@ -754,7 +755,7 @@ export default function Quick() {
               <div key={r.name + r.route} className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg,rgba(201,168,76,0.2),rgba(201,168,76,0.08))", border: "1px solid rgba(201,168,76,0.25)" }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg,rgba(168,135,79,0.2),rgba(168,135,79,0.08))", border: "1px solid rgba(168,135,79,0.25)" }}>
                       <span style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 13, color: GOLD }}>{r.name[0]}</span>
                     </div>
                     <div>
@@ -763,7 +764,7 @@ export default function Quick() {
                     </div>
                   </div>
                   <div className="flex gap-0.5 shrink-0 mt-0.5">
-                    {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={11} style={{ color: GOLD }} className="fill-[#c9a84c]" />)}
+                    {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={11} style={{ color: GOLD }} className="fill-[#a8874f]" />)}
                   </div>
                 </div>
                 <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: 1.65 }}>{r.text}</p>
@@ -780,7 +781,7 @@ export default function Quick() {
         style={{ background: `linear-gradient(to top,${NAVY} 65%,transparent)` }}>
         <a href={PHONE_HREF} onClick={() => { ymGoal("bottom_phone"); ymLead("phone"); }}
           className="flex items-center justify-center gap-3 w-full rounded-2xl py-4 mb-2.5 active:scale-[0.97] transition-transform"
-          style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 24px rgba(201,168,76,0.5)" }}>
+          style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 24px rgba(168,135,79,0.5)" }}>
           <Icon name="Phone" size={18} style={{ color: NAVY }} />
           <div style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 18, color: NAVY, textTransform: "uppercase" }}>Позвонить диспетчеру</div>
         </a>
@@ -809,7 +810,7 @@ export default function Quick() {
       {/* ══════════════════════════════════════
           НИЖНЯЯ ПАНЕЛЬ — десктоп (footer)
       ══════════════════════════════════════ */}
-      <div className="hidden md:block" style={{ background: "#050810", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <div className="hidden md:block" style={{ background: "#050505", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={LOGO} alt="" loading="lazy" className="w-10 h-10 rounded-xl object-cover" style={{ border: `1.5px solid ${GOLD}` }} />
@@ -850,7 +851,7 @@ export default function Quick() {
           style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
           onClick={() => setShowIosHint(false)}>
           <div className="max-w-sm w-full rounded-3xl p-5"
-            style={{ background: CARD, border: "1px solid rgba(201,168,76,0.3)" }}
+            style={{ background: CARD, border: "1px solid rgba(168,135,79,0.3)" }}
             onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: 16, color: "#fff", textTransform: "uppercase" }}>Установка на iPhone</div>
