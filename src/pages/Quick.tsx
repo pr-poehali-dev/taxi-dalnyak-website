@@ -188,12 +188,12 @@ export default function Quick() {
       ══════════════════════════════════════ */}
       <div ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "100svh", background: `linear-gradient(160deg,#0b0b0d 0%,#121214 40%,#08080a 100%)` }}>
         <img src={heroPhoto} alt="Комфортная поездка на такси Дальняк" fetchPriority="high" decoding="async"
-          className="absolute inset-0 w-full h-full object-cover hidden md:block" style={{ objectPosition: "78% 40%" }} />
+          className="absolute inset-0 w-full h-full object-cover hidden md:block" style={{ objectPosition: "85% 42%" }} />
         <img src={heroPhoto} alt="Комфортная поездка на такси Дальняк" fetchPriority="high" decoding="async"
-          className="absolute inset-0 w-full h-full object-cover md:hidden" style={{ objectPosition: "62% 32%" }} />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(100deg,rgba(6,6,7,0.97) 0%,rgba(6,6,7,0.9) 32%,rgba(6,6,7,0.55) 55%,rgba(6,6,7,0.25) 75%,rgba(6,6,7,0.15) 100%)" }} />
-        <div className="absolute inset-0 md:hidden" style={{ background: "linear-gradient(to bottom,rgba(6,6,7,0.55) 0%,rgba(6,6,7,0.75) 40%,rgba(6,6,7,0.97) 78%)" }} />
-        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 20% 40%,rgba(168,135,79,0.07) 0%,transparent 70%)` }} />
+          className="absolute inset-0 w-full h-full object-cover md:hidden" style={{ objectPosition: "65% 30%" }} />
+        <div className="absolute inset-0 hidden md:block" style={{ background: "linear-gradient(90deg,rgba(6,6,7,0.95) 0%,rgba(6,6,7,0.85) 30%,rgba(6,6,7,0.5) 52%,rgba(6,6,7,0.15) 72%,rgba(6,6,7,0.05) 100%)" }} />
+        <div className="absolute inset-0 md:hidden" style={{ background: "linear-gradient(to bottom,rgba(6,6,7,0.15) 0%,rgba(6,6,7,0.35) 45%,rgba(6,6,7,0.85) 72%,rgba(6,6,7,0.97) 88%)" }} />
+        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 80% 40%,rgba(168,135,79,0.07) 0%,transparent 70%)` }} />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom,transparent 50%,${NAVY} 100%)` }} />
 
         {/* ══════════════════════════════════════
