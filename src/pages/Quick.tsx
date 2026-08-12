@@ -2,7 +2,6 @@
 import { memo, useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { parseRoute } from "@/lib/cityRoute";
-import heroPhoto from "@/assets/hero-taxi-photo.webp";
 
 const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
@@ -187,13 +186,7 @@ export default function Quick() {
           HERO — полноэкранный фон
       ══════════════════════════════════════ */}
       <div ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "100svh", background: `linear-gradient(160deg,#0b0b0d 0%,#121214 40%,#08080a 100%)` }}>
-        <img src={heroPhoto} alt="Комфортная поездка на такси Дальняк" fetchPriority="high" decoding="async"
-          className="absolute inset-0 w-full h-full object-cover hidden md:block" style={{ objectPosition: "85% 42%" }} />
-        <img src={heroPhoto} alt="Комфортная поездка на такси Дальняк" fetchPriority="high" decoding="async"
-          className="absolute inset-0 w-full h-full object-cover md:hidden" style={{ objectPosition: "65% 30%" }} />
-        <div className="absolute inset-0 hidden md:block" style={{ background: "linear-gradient(90deg,rgba(6,6,7,0.95) 0%,rgba(6,6,7,0.85) 30%,rgba(6,6,7,0.5) 52%,rgba(6,6,7,0.15) 72%,rgba(6,6,7,0.05) 100%)" }} />
-        <div className="absolute inset-0 md:hidden" style={{ background: "linear-gradient(to bottom,rgba(6,6,7,0.15) 0%,rgba(6,6,7,0.35) 45%,rgba(6,6,7,0.85) 72%,rgba(6,6,7,0.97) 88%)" }} />
-        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 80% 40%,rgba(168,135,79,0.07) 0%,transparent 70%)` }} />
+        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 70% 40%,rgba(168,135,79,0.07) 0%,transparent 70%)` }} />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom,transparent 50%,${NAVY} 100%)` }} />
 
         {/* ══════════════════════════════════════
