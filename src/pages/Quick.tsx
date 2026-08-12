@@ -2,6 +2,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { parseRoute } from "@/lib/cityRoute";
+import heroPhoto from "@/assets/hero-taxi-photo.webp";
 
 const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
@@ -357,21 +358,31 @@ export default function Quick() {
               )}
             </div>
 
-            {/* Правая колонка — преимущества (только десктоп) */}
-            <div className="hidden md:flex flex-col gap-3 w-80 shrink-0">
-              {FEATURES.map((f, idx) => (
-                <div key={f.title} className="flex gap-4 rounded-2xl p-4"
-                  style={{ background: CARD, border: idx === 0 ? "1px solid rgba(168,135,79,0.4)" : BORDER }}>
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: "linear-gradient(135deg,rgba(168,135,79,0.15),rgba(168,135,79,0.05))", border: BORDER }}>
-                    <Icon name={f.icon as "Car"} size={18} style={{ color: GOLD }} />
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: "Oswald", fontWeight: 700, fontSize: 14, color: "#fff" }}>{f.title}</div>
-                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginTop: 2, lineHeight: 1.5 }}>{f.desc}</div>
-                  </div>
+            {/* Правая колонка — фото (только десктоп) */}
+            <div className="hidden md:block w-80 shrink-0">
+              <div className="relative rounded-3xl overflow-hidden" style={{ aspectRatio: "3/4", border: `1px solid rgba(168,135,79,0.3)`, boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
+                <img src={heroPhoto} alt="Комфортная поездка на такси Дальняк" width={900} height={900}
+                  fetchPriority="high" decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to top,rgba(8,8,10,0.85) 0%,transparent 35%)" }} />
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>Комфорт бизнес-класса</div>
+                  <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 11, marginTop: 2 }}>Просторный салон, кожаные кресла</div>
                 </div>
-              ))}
+              </div>
+            </div>
+          </div>
+
+          {/* фото — мобилка */}
+          <div className="md:hidden mt-5 mb-2">
+            <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "4/3", border: `1px solid rgba(168,135,79,0.3)` }}>
+              <img src={heroPhoto} alt="Комфортная поездка на такси Дальняк" width={900} height={900}
+                fetchPriority="high" decoding="async"
+                className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: "50% 30%" }} />
+              <div className="absolute inset-0" style={{ background: "linear-gradient(to top,rgba(8,8,10,0.8) 0%,transparent 40%)" }} />
+              <div className="absolute bottom-0 left-0 right-0 p-3.5">
+                <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 13, fontWeight: 700, textTransform: "uppercase" }}>Комфорт бизнес-класса</div>
+              </div>
             </div>
           </div>
 
