@@ -187,7 +187,13 @@ export default function Quick() {
           HERO — полноэкранный фон
       ══════════════════════════════════════ */}
       <div ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "100svh", background: `linear-gradient(160deg,#0b0b0d 0%,#121214 40%,#08080a 100%)` }}>
-        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 70% 40%,rgba(168,135,79,0.07) 0%,transparent 70%)` }} />
+        <img src={heroPhoto} alt="Комфортная поездка на такси Дальняк" fetchPriority="high" decoding="async"
+          className="absolute inset-0 w-full h-full object-cover hidden md:block" style={{ objectPosition: "78% 40%" }} />
+        <img src={heroPhoto} alt="Комфортная поездка на такси Дальняк" fetchPriority="high" decoding="async"
+          className="absolute inset-0 w-full h-full object-cover md:hidden" style={{ objectPosition: "62% 32%" }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(100deg,rgba(6,6,7,0.97) 0%,rgba(6,6,7,0.9) 32%,rgba(6,6,7,0.55) 55%,rgba(6,6,7,0.25) 75%,rgba(6,6,7,0.15) 100%)" }} />
+        <div className="absolute inset-0 md:hidden" style={{ background: "linear-gradient(to bottom,rgba(6,6,7,0.55) 0%,rgba(6,6,7,0.75) 40%,rgba(6,6,7,0.97) 78%)" }} />
+        <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 80% 60% at 20% 40%,rgba(168,135,79,0.07) 0%,transparent 70%)` }} />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom,transparent 50%,${NAVY} 100%)` }} />
 
         {/* ══════════════════════════════════════
@@ -358,32 +364,6 @@ export default function Quick() {
               )}
             </div>
 
-            {/* Правая колонка — фото (только десктоп) */}
-            <div className="hidden md:block w-80 shrink-0">
-              <div className="relative rounded-3xl overflow-hidden" style={{ aspectRatio: "3/4", border: `1px solid rgba(168,135,79,0.3)`, boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
-                <img src={heroPhoto} alt="Комфортная поездка на такси Дальняк" width={900} height={900}
-                  fetchPriority="high" decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover" />
-                <div className="absolute inset-0" style={{ background: "linear-gradient(to top,rgba(8,8,10,0.85) 0%,transparent 35%)" }} />
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>Комфорт бизнес-класса</div>
-                  <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 11, marginTop: 2 }}>Просторный салон, кожаные кресла</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* фото — мобилка */}
-          <div className="md:hidden mt-5 mb-2">
-            <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "4/3", border: `1px solid rgba(168,135,79,0.3)` }}>
-              <img src={heroPhoto} alt="Комфортная поездка на такси Дальняк" width={900} height={900}
-                fetchPriority="high" decoding="async"
-                className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: "50% 30%" }} />
-              <div className="absolute inset-0" style={{ background: "linear-gradient(to top,rgba(8,8,10,0.8) 0%,transparent 40%)" }} />
-              <div className="absolute bottom-0 left-0 right-0 p-3.5">
-                <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 13, fontWeight: 700, textTransform: "uppercase" }}>Комфорт бизнес-класса</div>
-              </div>
-            </div>
           </div>
 
           {/* стрелка вниз */}
