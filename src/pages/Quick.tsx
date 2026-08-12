@@ -15,6 +15,7 @@ const PHONE      = "+7 (995) 645-51-25";
 const PHONE_HREF = "tel:+79956455125";
 const VK_HREF    = "https://vk.com/dalnyack";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
+const REVIEWS_TG_HREF = "https://t.me/gorodvgorode1";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOLXF8YYOcofc0nCB_QzuJK3zunO0A5XBUyuWM654AGfmsC_fCc";
 
 const NAVY   = "#0b0b0d";
@@ -771,6 +772,19 @@ export default function Quick() {
               </div>
             ))}
           </div>
+
+          <a href={REVIEWS_TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => ymGoal("reviews_tg_channel")}
+            className="mt-4 flex items-center gap-3 rounded-2xl px-4 py-4 transition-transform hover:scale-[1.01]"
+            style={{ background: "linear-gradient(135deg,#0e6da8,#1a8fc2)", border: "1px solid rgba(26,143,194,0.5)" }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.15)" }}>
+              <Icon name="Send" size={18} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 14, fontWeight: 800, textTransform: "uppercase" }}>Реальные отзывы наших пассажиров</div>
+              <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12 }}>Смотрите живые истории поездок в нашем Telegram-канале</div>
+            </div>
+            <Icon name="ChevronRight" size={16} className="text-white shrink-0" />
+          </a>
         </div>
       </div>
 
