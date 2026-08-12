@@ -12,8 +12,8 @@ const MAX_LOGO  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888
 const ECLASS    = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/13086e99-0824-48d3-b5a1-0a5ad3f5d7a0.jpg";
 const VIANO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/e5b058ff-ade7-469a-8bcc-784862384325.jpg";
 
-const PHONE      = "+7 (931) 009-81-76";
-const PHONE_HREF = "tel:+79310098176";
+const PHONE      = "+7 (995) 645-51-25";
+const PHONE_HREF = "tel:+79956455125";
 const VK_HREF    = "https://vk.com/dalnyack";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
 const MAX_HREF   = "https://max.ru/u/f9LHodD0cOLXF8YYOcofc0nCB_QzuJK3zunO0A5XBUyuWM654AGfmsC_fCc";

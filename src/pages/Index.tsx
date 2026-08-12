@@ -59,8 +59,8 @@ const REVIEW_1 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 const REVIEW_2 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/fedc4281-a106-4024-9369-8a03712c92a3.jpg";
 const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/ac322d91-fd27-4c11-b86f-f28e85ec3df0.jpg";
 
-const PHONE = "+7 (931) 009-81-76";
-const PHONE_HREF = "tel:+79310098176";
+const PHONE = "+7 (995) 645-51-25";
+const PHONE_HREF = "tel:+79956455125";
 const VK_HREF = "https://vk.com/dalnyack";
 const MAX_HREF = "https://max.ru/u/f9LHodD0cOLXF8YYOcofc0nCB_QzuJK3zunO0A5XBUyuWM654AGfmsC_fCc";
 
