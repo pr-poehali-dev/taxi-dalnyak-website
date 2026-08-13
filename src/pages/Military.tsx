@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
+import { useSeo } from "@/hooks/use-seo";
 
 declare global { interface Window { ym?: (id: number, action: string, goal: string, params?: Record<string, string>) => void; } }
 
@@ -57,8 +58,14 @@ function Splash({ visible }: { visible: boolean }) {
 export default function Military() {
   const [splash, setSplash] = useState(true);
 
+  useSeo({
+    title: "Такси для военных — дальние маршруты от 500 км | Такси Дальняк",
+    description: "Такси для военных и в новые территории — Донецк, Луганск, Херсон. Конфиденциально, без лишних вопросов, оплата наличными или картой. Звоните +7 (995) 645-51-25.",
+    path: "/voennye",
+    keywords: "такси для военных, такси в новые территории, такси донецк луганск херсон",
+  });
+
   useEffect(() => {
-    document.title = "Такси для военных — дальние маршруты от 500 км | Такси Дальняк";
     const t = setTimeout(() => setSplash(false), 1200);
     return () => clearTimeout(t);
   }, []);

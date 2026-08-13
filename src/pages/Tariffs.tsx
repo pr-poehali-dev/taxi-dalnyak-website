@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
+import { useSeo } from "@/hooks/use-seo";
 
 const PHONE_HREF = "tel:+79956455125";
 const VK_HREF    = "https://vk.com/dalnyack";
@@ -53,6 +54,13 @@ function ymGoal(goal: string) {
 
 export default function Tariffs() {
   const navigate = useNavigate();
+
+  useSeo({
+    title: "Тарифы такси межгород — Стандарт, Комфорт, Минивэн | Такси Дальняк",
+    description: "Тарифы на междугороднее такси: Стандарт, Комфорт, Комфорт+, Минивэн. Фиксированная цена, все автомобили не старше 10 лет. Звоните +7 (995) 645-51-25.",
+    path: "/tariffs",
+    keywords: "тарифы такси межгород, стоимость такси между городами, тарифы дальняк",
+  });
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: NAVY, fontFamily: "Inter, sans-serif" }}>

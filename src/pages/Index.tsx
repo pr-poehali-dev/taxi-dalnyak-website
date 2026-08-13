@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
+import { useSeo } from "@/hooks/use-seo";
 
 const CAR_IMG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/091d3d1c-1649-4d9e-8958-1a624bf8f371.jpg";
 const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
@@ -255,9 +256,12 @@ export default function Index() {
     return "Вся Россия и новые территории";
   }, [from, to]);
 
-  useEffect(() => {
-    document.title = `${headline} — Такси Дальняк`;
-  }, [headline]);
+  useSeo({
+    title: `${headline} — Такси Дальняк`,
+    description: "Заказать межгородное такси по России по фиксированной цене. Работаем с 2014 года, автопарк от эконома до бизнес-класса. Звоните +7 (995) 645-51-25 круглосуточно.",
+    path: "/info",
+    keywords: "межгородное такси по россии, такси из города в город, заказать такси дальняк",
+  });
 
   const phoneHref = useMemo(() => {
     const p = new URLSearchParams({

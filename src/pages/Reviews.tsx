@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
+import { useSeo } from "@/hooks/use-seo";
 
 const PHONE_HREF = "tel:+79956455125";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
@@ -55,6 +56,13 @@ function Stars({ n = 5 }: { n?: number }) {
 
 export default function Reviews() {
   const navigate = useNavigate();
+
+  useSeo({
+    title: "Отзывы о такси Дальняк — реальные пассажиры о межгородних поездках",
+    description: "Реальные отзывы клиентов Такси Дальняк о поездках между городами. Более 50 тысяч выполненных рейсов, рейтинг 4.9. Звоните +7 (995) 645-51-25.",
+    path: "/reviews",
+    keywords: "отзывы такси межгород, отзывы такси дальняк, такси между городами отзывы",
+  });
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: NAVY, fontFamily: "Inter, sans-serif" }}>

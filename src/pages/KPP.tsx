@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
+import { useSeo } from "@/hooks/use-seo";
 
 declare global { interface Window { ym?: (id: number, action: string, goal: string, params?: Record<string, string>) => void; } }
 
@@ -70,8 +71,14 @@ const ROUTES = [
 export default function KPP() {
   const [splash, setSplash] = useState(true);
 
+  useSeo({
+    title: "Такси до КПП — дальние поездки | Такси Дальняк",
+    description: "Такси до КПП и в новые территории — фиксированная цена, без счётчика. Донецк, Луганск, Мариуполь, Запорожье. Круглосуточно, звоните +7 (995) 645-51-25.",
+    path: "/kpp",
+    keywords: "такси до кпп, такси донецк, такси луганск, такси на кпп из россии",
+  });
+
   useEffect(() => {
-    document.title = "Такси до КПП — дальние поездки | Такси Дальняк";
     const t = setTimeout(() => setSplash(false), 1000);
     return () => clearTimeout(t);
   }, []);

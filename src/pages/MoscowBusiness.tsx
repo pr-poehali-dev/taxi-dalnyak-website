@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
+import { useSeo } from "@/hooks/use-seo";
 
 declare global { interface Window { ym?: (id: number, action: string, goal: string, params?: Record<string, string>) => void; } }
 
@@ -61,6 +62,13 @@ export default function MoscowBusiness() {
   const [scrolled, setScrolled]   = useState(false);
   const [pulse, setPulse]         = useState(true);
   const heroRef                   = useRef<HTMLDivElement>(null);
+
+  useSeo({
+    title: "Такси бизнес-класс Москва — Mercedes с водителем | Такси Дальняк",
+    description: "Такси бизнес-класса из Москвы на Mercedes E-Class и Viano с личным водителем. Встреча в аэропорту, деловые поездки, поездки в другой город. Звоните +7 (995) 645-51-25.",
+    path: "/moscow-business",
+    keywords: "такси бизнес класс москва, mercedes с водителем москва, vip такси межгород",
+  });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
