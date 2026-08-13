@@ -167,120 +167,6 @@ const reviews = [
   },
 ];
 
-function calcPrice(km: number): { min: number; max: number } | null {
-  if (!km || km <= 0) return null;
-  let rate: number;
-  if (km <= 200) rate = 30;
-  else if (km <= 500) rate = 27;
-  else rate = 26;
-  const base = km * rate;
-  const with15 = Math.round(base * 1.15 / 100) * 100;
-  const minPrice = with15;
-  const maxPrice = Math.round(minPrice * 1.12 / 100) * 100;
-  return { min: minPrice, max: maxPrice };
-}
-
-function PriceCalc({ phoneHref, vkHref }: { phoneHref: string; vkHref: string }) {
-  const [km, setKm] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-
-  const price = useMemo(() => {
-    const n = parseInt(km.replace(/\D/g, ""), 10);
-    return calcPrice(n);
-  }, [km]);
-
-  return (
-    <div className="px-4 pb-6">
-      <div className="rounded-2xl border border-[#F5A800]/25 overflow-hidden" style={{ background: "linear-gradient(135deg,#1a1610 0%,#12100a 100%)" }}>
-        {/* шапка */}
-        <div className="px-4 pt-4 pb-3 border-b border-white/5 flex items-center gap-2">
-          <Icon name="Calculator" size={15} className="text-[#F5A800]" />
-          <span style={{ fontFamily: "Oswald" }} className="text-white font-bold uppercase tracking-wide text-sm">Узнать стоимость</span>
-        </div>
-
-        <div className="px-4 pt-3 pb-4 space-y-2.5">
-          {/* откуда / куда */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-white/40 text-[10px] font-bold uppercase tracking-wider block mb-1">Откуда</label>
-              <input
-                value={from}
-                onChange={e => setFrom(e.target.value)}
-                placeholder="Москва"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-[13px] placeholder-white/20 focus:outline-none focus:border-[#F5A800]/50"
-              />
-            </div>
-            <div>
-              <label className="text-white/40 text-[10px] font-bold uppercase tracking-wider block mb-1">Куда</label>
-              <input
-                value={to}
-                onChange={e => setTo(e.target.value)}
-                placeholder="Краснодар"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-[13px] placeholder-white/20 focus:outline-none focus:border-[#F5A800]/50"
-              />
-            </div>
-          </div>
-
-          {/* расстояние */}
-          <div>
-            <label className="text-white/40 text-[10px] font-bold uppercase tracking-wider block mb-1">Расстояние (км)</label>
-            <input
-              value={km}
-              onChange={e => setKm(e.target.value.replace(/\D/g, ""))}
-              placeholder="Например, 350"
-              inputMode="numeric"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-[13px] placeholder-white/20 focus:outline-none focus:border-[#F5A800]/50"
-            />
-            <div className="text-white/25 text-[10px] mt-1">Расстояние по трассе можно посмотреть в Яндекс.Картах</div>
-          </div>
-
-          {/* результат */}
-          {price ? (
-            <div className="rounded-xl bg-[#F5A800]/10 border border-[#F5A800]/30 px-4 py-3">
-              <div className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">Стоимость поездки</div>
-              <div className="text-[#F5A800] font-black text-2xl" style={{ fontFamily: "Oswald" }}>
-                от {price.min.toLocaleString("ru")} ₽
-              </div>
-              <div className="text-white/35 text-[11px] mt-0.5">
-                {from && to ? `${from} → ${to} · ` : ""}{km} км · тариф Стандарт · фиксированная цена
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-xl bg-white/3 border border-white/8 px-4 py-3 text-center text-white/30 text-[12px]">
-              Введите расстояние — цена появится сразу
-            </div>
-          )}
-
-          {/* кнопки */}
-          {price && (
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <a
-                href={vkHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-white text-[12px] font-bold uppercase"
-                style={{ background: "linear-gradient(135deg,#1a3a6b,#2456a4)" }}
-              >
-                <Icon name="Users" size={13} />
-                ВКонтакте
-              </a>
-              <a
-                href={phoneHref}
-                className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[#0a0a0f] text-[12px] font-bold uppercase"
-                style={{ background: "#F5A800" }}
-              >
-                <Icon name="Phone" size={13} />
-                Позвонить
-              </a>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function Splash({ visible }: { visible: boolean }) {
   return (
     <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0f0f1a] transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
@@ -490,9 +376,6 @@ export default function Index() {
             ))}
           </div>
         </div>
-
-        {/* КАЛЬКУЛЯТОР ЦЕНЫ */}
-        <PriceCalc phoneHref={PHONE_HREF} vkHref={VK_HREF} />
 
         {/* ТАРИФЫ */}
         <div className="px-4 pb-6">

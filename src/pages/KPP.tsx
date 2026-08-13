@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
 
 declare global { interface Window { ym?: (id: number, action: string, goal: string, params?: Record<string, string>) => void; } }
@@ -66,77 +66,6 @@ const ROUTES = [
   "Донецк – Москва", "ДНР – Воронеж", "Луганск – Питер",
   "Запорожье – Москва", "Мариуполь – Краснодар", "ЛНР – Екатеринбург",
 ];
-
-function calcPrice(km: number): { min: number; max: number } | null {
-  if (!km || km <= 0) return null;
-  const rate = km <= 300 ? 30 : km <= 600 ? 27 : 26;
-  const minP = Math.round(km * rate * 1.15 / 100) * 100;
-  return { min: minP, max: Math.round(minP * 1.12 / 100) * 100 };
-}
-
-function PriceCalc() {
-  const [km, setKm]     = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo]     = useState("");
-  const price = useMemo(() => calcPrice(parseInt(km.replace(/\D/g, ""), 10)), [km]);
-
-  return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid rgba(201,168,76,0.2)` }}>
-      <div className="px-5 pt-4 pb-3 flex items-center gap-2.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
-          <Icon name="Calculator" size={15} style={{ color: "#0a0f1e" }} />
-        </div>
-        <div>
-          <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Рассчитать стоимость</div>
-          <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>фиксированная цена · без накруток</div>
-        </div>
-      </div>
-      <div className="p-4 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 4 }}>Откуда</label>
-            <input value={from} onChange={e => setFrom(e.target.value)} placeholder="Ваш город"
-              className="w-full rounded-xl px-3 py-2.5 text-white text-[13px] placeholder-white/20 focus:outline-none"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }} />
-          </div>
-          <div>
-            <label style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 4 }}>Куда</label>
-            <input value={to} onChange={e => setTo(e.target.value)} placeholder="Направление / КПП"
-              className="w-full rounded-xl px-3 py-2.5 text-white text-[13px] placeholder-white/20 focus:outline-none"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }} />
-          </div>
-        </div>
-        <div>
-          <label style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 4 }}>Расстояние (км)</label>
-          <input value={km} onChange={e => setKm(e.target.value.replace(/\D/g, ""))} placeholder="Например, 600 км"
-            inputMode="numeric"
-            className="w-full rounded-xl px-3 py-2.5 text-white text-[13px] placeholder-white/20 focus:outline-none"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }} />
-        </div>
-        {price ? (
-          <div className="rounded-xl px-4 py-3.5" style={{ background: `linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.05))`, border: `1px solid rgba(201,168,76,0.3)` }}>
-            <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Стоимость поездки</div>
-            <div style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 30, fontWeight: 900, lineHeight: 1 }}>от {price.min.toLocaleString("ru")} ₽</div>
-            <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 11, marginTop: 5 }}>
-              {from && to ? `${from} → ${to} · ` : ""}{km} км · цена фиксирована при заказе
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-xl px-4 py-3 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-            <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 12 }}>Укажите расстояние — цена появится сразу</span>
-          </div>
-        )}
-        {price && (
-          <a href={PHONE_HREF} onClick={() => ymGoal("kpp_calc_phone")}
-            className="flex items-center justify-center gap-2 w-full rounded-xl py-3 font-bold text-[13px] uppercase transition-transform active:scale-[0.97]"
-            style={{ fontFamily: "Oswald", background: `linear-gradient(135deg,${GOLD},${GOLD2})`, color: "#0a0f1e", letterSpacing: "0.05em" }}>
-            <Icon name="PhoneCall" size={16} /> Позвонить — подтвердить цену
-          </a>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function KPP() {
   const [splash, setSplash] = useState(true);
@@ -306,11 +235,6 @@ export default function KPP() {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* КАЛЬКУЛЯТОР */}
-        <div className="px-4 pb-6 max-w-lg mx-auto w-full">
-          <PriceCalc />
         </div>
 
         {/* АВТОПАРК */}
