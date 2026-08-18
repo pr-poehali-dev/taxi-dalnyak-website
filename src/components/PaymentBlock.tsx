@@ -1,7 +1,7 @@
 import Icon from "@/components/ui/icon";
 
-const GOLD = "#a8874f";
-const GOLD2 = "#c9a876";
+const GOLD = "#c9a84c";
+const GOLD2 = "#e8c96a";
 const NAVY = "#0b0b0d";
 
 const STEPS = [

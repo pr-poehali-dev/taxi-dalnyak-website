@@ -37,14 +37,14 @@ function Splash({ visible }: { visible: boolean }) {
   return (
     <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0a0a0f] transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
       <div className="flex flex-col items-center gap-4 text-center px-6">
-        <img src={LOGO} alt="Такси Дальняк" className="w-20 h-20 rounded-2xl object-cover shadow-2xl ring-4 ring-[#F5A800]/40" />
+        <img src={LOGO} alt="Такси Дальняк" className="w-20 h-20 rounded-2xl object-cover shadow-2xl ring-4 ring-[#c9a84c]/40" />
         <div style={{ fontFamily: "Oswald" }}>
-          <div className="text-[10px] uppercase tracking-[0.4em] text-[#F5A800] font-bold">Такси</div>
+          <div className="text-[10px] uppercase tracking-[0.4em] text-[#c9a84c] font-bold">Такси</div>
           <div className="text-3xl font-black uppercase text-white mt-0.5">Дальняк</div>
           <div className="text-sm text-white/40 mt-1">Надёжно. Далеко. Без вопросов.</div>
         </div>
         <div className="w-40 h-[3px] bg-white/10 rounded-full overflow-hidden mt-2">
-          <div className="h-full bg-[#F5A800] splash-bar-m" />
+          <div className="h-full bg-[#c9a84c] splash-bar-m" />
         </div>
       </div>
       <style>{`
@@ -77,8 +77,8 @@ export default function Military() {
       <div className="min-h-[100dvh] w-full bg-[#0a0a0f] text-white flex flex-col">
         <style>{`
           @keyframes ctaPulse {
-            0%,100% { box-shadow: 0 4px 20px rgba(245,168,0,0.4), 0 0 0 0 rgba(245,168,0,0.3); }
-            50%      { box-shadow: 0 4px 20px rgba(245,168,0,0.7), 0 0 0 10px rgba(245,168,0,0); }
+            0%,100% { box-shadow: 0 4px 20px rgba(201,168,76,0.4), 0 0 0 0 rgba(201,168,76,0.3); }
+            50%      { box-shadow: 0 4px 20px rgba(201,168,76,0.7), 0 0 0 10px rgba(201,168,76,0); }
           }
           .cta-pulse { animation: ctaPulse 2.4s ease-out infinite; }
           @keyframes fadeUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
@@ -88,9 +88,9 @@ export default function Military() {
         {/* ШАПКА */}
         <div className="bg-[#111118] px-4 py-3 flex items-center justify-between border-b border-white/8">
           <div className="flex items-center gap-3">
-            <img src={LOGO} alt="Такси Дальняк" className="w-10 h-10 rounded-xl object-cover ring-2 ring-[#F5A800]/50" fetchPriority="high" />
+            <img src={LOGO} alt="Такси Дальняк" className="w-10 h-10 rounded-xl object-cover ring-2 ring-[#c9a84c]/50" fetchPriority="high" />
             <div style={{ fontFamily: "Oswald" }}>
-              <div className="text-[9px] uppercase tracking-[0.35em] text-[#F5A800] font-bold leading-none">Такси</div>
+              <div className="text-[9px] uppercase tracking-[0.35em] text-[#c9a84c] font-bold leading-none">Такси</div>
               <div className="text-lg font-black uppercase text-white leading-none mt-0.5">Дальняк</div>
             </div>
           </div>
@@ -112,22 +112,22 @@ export default function Military() {
           <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(10,10,15,0.7) 0%, transparent 60%)" }} />
 
           {/* бейдж конфиденциальности */}
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-[#0a0a0f]/80 backdrop-blur-md rounded-full px-3 py-1.5 border border-[#F5A800]/20">
-            <Icon name="Lock" size={11} className="text-[#F5A800]" />
-            <span className="text-[10px] font-bold text-[#F5A800] uppercase tracking-wider">Конфиденциально</span>
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-[#0a0a0f]/80 backdrop-blur-md rounded-full px-3 py-1.5 border border-[#c9a84c]/20">
+            <Icon name="Lock" size={11} className="text-[#c9a84c]" />
+            <span className="text-[10px] font-bold text-[#c9a84c] uppercase tracking-wider">Конфиденциально</span>
           </div>
         </div>
 
         {/* ГЛАВНЫЙ ЗАГОЛОВОК */}
         <div className="px-4 pt-5 pb-4 fade-up">
-          <div className="inline-flex items-center gap-1.5 bg-[#F5A800]/15 border border-[#F5A800]/30 rounded-full px-3 py-1 mb-3">
-            <Icon name="Star" size={11} className="text-[#F5A800] fill-[#F5A800] shrink-0" />
-            <span className="text-[#F5A800] text-[11px] font-bold uppercase tracking-wide">Для военнослужащих</span>
+          <div className="inline-flex items-center gap-1.5 bg-[#c9a84c]/15 border border-[#c9a84c]/30 rounded-full px-3 py-1 mb-3">
+            <Icon name="Star" size={11} className="text-[#c9a84c] fill-[#c9a84c] shrink-0" />
+            <span className="text-[#c9a84c] text-[11px] font-bold uppercase tracking-wide">Для военнослужащих</span>
           </div>
 
           <h1 style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: "clamp(24px,7vw,42px)", lineHeight: 1.05, textTransform: "uppercase", color: "#fff" }}>
             Такси от 500 км —<br />
-            <span style={{ color: "#F5A800" }}>довезём куда нужно</span>
+            <span style={{ color: "#c9a84c" }}>довезём куда нужно</span>
           </h1>
 
           <p className="text-white/60 text-[13px] leading-relaxed mt-3">
@@ -140,8 +140,8 @@ export default function Military() {
           <div className="grid grid-cols-2 gap-2.5">
             {GUARANTEES.map((g) => (
               <div key={g.text} className="bg-[#111118] rounded-2xl border border-white/6 p-3.5 flex flex-col gap-1.5">
-                <div className="w-8 h-8 rounded-xl bg-[#F5A800]/15 flex items-center justify-center">
-                  <Icon name={g.icon as "Shield"} size={16} className="text-[#F5A800]" />
+                <div className="w-8 h-8 rounded-xl bg-[#c9a84c]/15 flex items-center justify-center">
+                  <Icon name={g.icon as "Shield"} size={16} className="text-[#c9a84c]" />
                 </div>
                 <div className="text-white font-bold text-[12px] leading-snug">{g.text}</div>
                 <div className="text-white/40 text-[10px] leading-snug">{g.sub}</div>
@@ -154,12 +154,12 @@ export default function Military() {
         <div className="px-4 pb-6">
           <div className="bg-[#111118] rounded-2xl border border-white/6 p-4">
             <div className="flex items-center gap-2 mb-3">
-              <Icon name="Route" size={14} className="text-[#F5A800]" />
+              <Icon name="Route" size={14} className="text-[#c9a84c]" />
               <span style={{ fontFamily: "Oswald" }} className="text-white font-bold uppercase tracking-wide text-sm">Популярные направления</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {ROUTES.map((r) => (
-                <span key={r} className="flex items-center gap-1 bg-[#F5A800]/10 border border-[#F5A800]/20 rounded-full px-3 py-1.5 text-[11px] text-[#F5A800] font-semibold">
+                <span key={r} className="flex items-center gap-1 bg-[#c9a84c]/10 border border-[#c9a84c]/20 rounded-full px-3 py-1.5 text-[11px] text-[#c9a84c] font-semibold">
                   <Icon name="MapPin" size={9} className="shrink-0" />{r}
                 </span>
               ))}
@@ -170,9 +170,9 @@ export default function Military() {
 
         {/* БЛОК ДОВЕРИЯ */}
         <div className="px-4 pb-6">
-          <div className="relative rounded-2xl overflow-hidden border border-[#F5A800]/15 p-4" style={{ background: "linear-gradient(135deg, #111118 0%, #1a1508 100%)" }}>
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#F5A800] via-[#F5A800]/50 to-transparent" />
-            <div style={{ fontFamily: "Oswald" }} className="text-[#F5A800] font-bold uppercase tracking-wide text-sm mb-3">Почему выбирают нас</div>
+          <div className="relative rounded-2xl overflow-hidden border border-[#c9a84c]/15 p-4" style={{ background: "linear-gradient(135deg, #111118 0%, #1a1508 100%)" }}>
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#c9a84c] via-[#c9a84c]/50 to-transparent" />
+            <div style={{ fontFamily: "Oswald" }} className="text-[#c9a84c] font-bold uppercase tracking-wide text-sm mb-3">Почему выбирают нас</div>
             <div className="flex flex-col gap-2.5">
               {[
                 "Работаем с 2014 года — тысячи выполненных рейсов",
@@ -181,7 +181,7 @@ export default function Military() {
                 "Маршрут и данные клиента не разглашаются",
               ].map((item) => (
                 <div key={item} className="flex items-start gap-2.5">
-                  <Icon name="CheckCircle" size={14} className="text-[#F5A800] shrink-0 mt-0.5" />
+                  <Icon name="CheckCircle" size={14} className="text-[#c9a84c] shrink-0 mt-0.5" />
                   <span className="text-white/75 text-[12px] leading-snug">{item}</span>
                 </div>
               ))}
@@ -191,7 +191,7 @@ export default function Military() {
 
         {/* СРОЧНЫЙ ПРИЗЫВ */}
         <div className="px-4 pb-4">
-          <div className="bg-[#F5A800]/8 border border-[#F5A800]/25 rounded-2xl px-4 py-3 text-center">
+          <div className="bg-[#c9a84c]/8 border border-[#c9a84c]/25 rounded-2xl px-4 py-3 text-center">
             <div style={{ fontFamily: "Oswald" }} className="text-white font-black uppercase text-base tracking-wide">Нужно уехать?</div>
             <div className="text-white/50 text-[12px] mt-0.5">Звоните — ответим сразу, найдём машину быстро</div>
           </div>
@@ -203,7 +203,7 @@ export default function Military() {
           <a
             href={PHONE_HREF}
             onClick={() => ymGoal("military_phone_click")}
-            className="cta-pulse flex items-center justify-center gap-3 w-full bg-[#F5A800] hover:bg-amber-400 active:scale-[0.98] text-[#0a0a0f] font-black py-4 rounded-2xl transition mb-2"
+            className="cta-pulse flex items-center justify-center gap-3 w-full bg-[#c9a84c] hover:bg-amber-400 active:scale-[0.98] text-[#0a0a0f] font-black py-4 rounded-2xl transition mb-2"
             style={{ fontFamily: "Oswald" }}
           >
             <Icon name="PhoneCall" size={24} />

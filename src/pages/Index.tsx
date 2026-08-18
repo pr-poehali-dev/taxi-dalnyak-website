@@ -15,7 +15,7 @@ const TARIFFS = [
     luggage: "1–2 сумки",
     img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/39d043f8-acde-4a27-a69c-ebe03e8bd403.jpg",
     badge: "",
-    color: "#F5A800",
+    color: "#c9a84c",
   },
   {
     id: "comfort",
@@ -90,14 +90,14 @@ function Splash({ visible }: { visible: boolean }) {
   return (
     <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0f0f1a] transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
       <div className="flex flex-col items-center gap-4 text-center px-6">
-        <img src={LOGO} alt="Такси Дальняк" className="w-24 h-24 rounded-2xl object-cover shadow-2xl ring-4 ring-[#F5A800]/40" />
+        <img src={LOGO} alt="Такси Дальняк" className="w-24 h-24 rounded-2xl object-cover shadow-2xl ring-4 ring-[#c9a84c]/40" />
         <div style={{ fontFamily: "Oswald" }}>
-          <div className="text-[11px] uppercase tracking-[0.4em] text-[#F5A800] font-bold">Такси</div>
+          <div className="text-[11px] uppercase tracking-[0.4em] text-[#c9a84c] font-bold">Такси</div>
           <div className="text-3xl font-black uppercase text-white mt-0.5">Дальняк</div>
           <div className="text-sm text-white/40 mt-1">С нами вы доедете</div>
         </div>
         <div className="w-40 h-[3px] bg-white/10 rounded-full overflow-hidden mt-2">
-          <div className="h-full bg-[#F5A800] splash-bar" />
+          <div className="h-full bg-[#c9a84c] splash-bar" />
         </div>
       </div>
       <style>{`
@@ -203,8 +203,8 @@ export default function Index() {
       <div className="min-h-[100dvh] w-full bg-[#0f0f1a] text-white flex flex-col">
         <style>{`
           @keyframes ctaPulse {
-            0%,100% { box-shadow: 0 4px 20px rgba(245,168,0,0.4), 0 0 0 0 rgba(245,168,0,0.3); }
-            50%      { box-shadow: 0 4px 20px rgba(245,168,0,0.7), 0 0 0 10px rgba(245,168,0,0); }
+            0%,100% { box-shadow: 0 4px 20px rgba(201,168,76,0.4), 0 0 0 0 rgba(201,168,76,0.3); }
+            50%      { box-shadow: 0 4px 20px rgba(201,168,76,0.7), 0 0 0 10px rgba(201,168,76,0); }
           }
           .cta-pulse { animation: ctaPulse 2.4s ease-out infinite; }
         `}</style>
@@ -212,9 +212,9 @@ export default function Index() {
         {/* ШАПКА */}
         <div className="bg-[#1a1a2e] px-4 py-3 flex items-center justify-between border-b border-white/10">
           <div className="flex items-center gap-3">
-            <img src={LOGO} alt="Такси Дальняк" className="w-10 h-10 rounded-xl object-cover ring-2 ring-[#F5A800]/50" />
+            <img src={LOGO} alt="Такси Дальняк" className="w-10 h-10 rounded-xl object-cover ring-2 ring-[#c9a84c]/50" />
             <div style={{ fontFamily: "Oswald" }}>
-              <div className="text-[9px] uppercase tracking-[0.35em] text-[#F5A800] font-bold leading-none">Такси</div>
+              <div className="text-[9px] uppercase tracking-[0.35em] text-[#c9a84c] font-bold leading-none">Такси</div>
               <div className="text-lg font-black uppercase text-white leading-none mt-0.5">Дальняк</div>
             </div>
           </div>
@@ -235,10 +235,10 @@ export default function Index() {
           <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #0f0f1a 0%, rgba(15,15,26,0.5) 50%, transparent 100%)" }} />
           <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(15,15,26,0.6) 0%, transparent 55%)" }} />
           {/* логотип на машине */}
-          <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-[#0f0f1a]/80 backdrop-blur-md rounded-xl px-2.5 py-1.5 border border-[#F5A800]/25">
+          <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-[#0f0f1a]/80 backdrop-blur-md rounded-xl px-2.5 py-1.5 border border-[#c9a84c]/25">
             <img src={LOGO} alt="" className="w-7 h-7 rounded-lg object-cover" />
             <div style={{ fontFamily: "Oswald" }}>
-              <div className="text-[8px] uppercase tracking-[0.3em] text-[#F5A800] leading-none">Такси</div>
+              <div className="text-[8px] uppercase tracking-[0.3em] text-[#c9a84c] leading-none">Такси</div>
               <div className="text-[13px] font-black uppercase text-white leading-none mt-0.5">Дальняк</div>
             </div>
           </div>
@@ -247,20 +247,20 @@ export default function Index() {
         {/* ГЛАВНЫЙ БЛОК */}
         <div className="px-4 pt-5 pb-3">
           {/* маршрут-бейдж */}
-          <div className="inline-flex items-center gap-1.5 bg-[#F5A800]/15 border border-[#F5A800]/30 rounded-full px-3 py-1 mb-3">
-            <Icon name="MapPin" size={12} className="text-[#F5A800] shrink-0" />
-            <span className="text-[#F5A800] text-[11px] font-bold uppercase tracking-wide">Вся Россия и новые территории</span>
+          <div className="inline-flex items-center gap-1.5 bg-[#c9a84c]/15 border border-[#c9a84c]/30 rounded-full px-3 py-1 mb-3">
+            <Icon name="MapPin" size={12} className="text-[#c9a84c] shrink-0" />
+            <span className="text-[#c9a84c] text-[11px] font-bold uppercase tracking-wide">Вся Россия и новые территории</span>
           </div>
 
           {/* заголовок */}
           <h1 style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: "clamp(24px,7vw,44px)", lineHeight: 1.05, textTransform: "uppercase", color: "#fff" }}>
             Заказать такси<br />из города в город<br />
-            <span style={{ color: "#F5A800", fontSize: "clamp(34px,10vw,62px)", display: "inline-block", marginTop: 4, textShadow: "0 4px 24px rgba(245,168,0,0.4)" }}>от 200 км</span>
+            <span style={{ color: "#c9a84c", fontSize: "clamp(34px,10vw,62px)", display: "inline-block", marginTop: 4, textShadow: "0 4px 24px rgba(201,168,76,0.4)" }}>от 200 км</span>
           </h1>
 
           {/* главный слоган */}
           <div className="mt-2 mb-4">
-            <div style={{ fontFamily: "Oswald", fontSize: "clamp(17px,4.5vw,26px)", fontWeight: 700, color: "#F5A800", lineHeight: 1.15 }}>
+            <div style={{ fontFamily: "Oswald", fontSize: "clamp(17px,4.5vw,26px)", fontWeight: 700, color: "#c9a84c", lineHeight: 1.15 }}>
               С нами вы доедете.
             </div>
             <div className="text-white/45 text-sm mt-0.5 italic">За других не отвечаем.</div>
@@ -275,7 +275,7 @@ export default function Index() {
               { icon: "ShieldCheck", text: "Работаем с 2014 года" },
             ].map((item) => (
               <div key={item.text} className="flex items-start gap-2 bg-[#1a1a2e] rounded-xl px-3 py-2.5 border border-white/5">
-                <Icon name={item.icon as "Zap"} size={14} className="text-[#F5A800] shrink-0 mt-0.5" />
+                <Icon name={item.icon as "Zap"} size={14} className="text-[#c9a84c] shrink-0 mt-0.5" />
                 <span className="text-white text-[11px] font-semibold leading-tight">{item.text}</span>
               </div>
             ))}
@@ -285,7 +285,7 @@ export default function Index() {
         {/* ТАРИФЫ */}
         <div className="px-4 pb-6">
           <div className="flex items-center gap-2 mb-4">
-            <Icon name="Car" size={15} className="text-[#F5A800]" />
+            <Icon name="Car" size={15} className="text-[#c9a84c]" />
             <span style={{ fontFamily: "Oswald" }} className="text-white font-bold uppercase tracking-wide text-sm">Наш автопарк</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -324,23 +324,23 @@ export default function Index() {
               </div>
             ))}
           </div>
-          <div className="mt-3 bg-[#F5A800]/10 border border-[#F5A800]/20 rounded-xl px-3 py-2.5 flex items-center gap-2">
-            <Icon name="Tag" size={14} className="text-[#F5A800] shrink-0" />
-            <span className="text-[#F5A800] text-[11.5px] font-bold">Фиксированная стоимость — без счётчика и сюрпризов</span>
+          <div className="mt-3 bg-[#c9a84c]/10 border border-[#c9a84c]/20 rounded-xl px-3 py-2.5 flex items-center gap-2">
+            <Icon name="Tag" size={14} className="text-[#c9a84c] shrink-0" />
+            <span className="text-[#c9a84c] text-[11.5px] font-bold">Фиксированная стоимость — без счётчика и сюрпризов</span>
           </div>
         </div>
 
         {/* МАРШРУТЫ */}
         <div className="px-4 pb-6">
           <div className="flex items-center gap-2 mb-1">
-            <Icon name="Route" size={15} className="text-[#F5A800]" />
+            <Icon name="Route" size={15} className="text-[#c9a84c]" />
             <span style={{ fontFamily: "Oswald" }} className="text-white font-bold uppercase tracking-wide text-sm">Выполненные рейсы</span>
           </div>
           <p className="text-white/40 text-[11px] mb-3 italic">Это лишь малая часть поездок — каждый день новый маршрут</p>
           <div className="flex flex-wrap gap-2">
             {ROUTES.map((r) => (
               <span key={r} className="flex items-center gap-1 bg-[#1a1a2e] border border-white/8 rounded-full px-3 py-1.5 text-[11px] text-white/70 font-semibold">
-                <Icon name="MapPin" size={10} className="text-[#F5A800] shrink-0" />{r}
+                <Icon name="MapPin" size={10} className="text-[#c9a84c] shrink-0" />{r}
               </span>
             ))}
           </div>
@@ -348,20 +348,20 @@ export default function Index() {
 
         {/* НАС РЕКОМЕНДУЮТ */}
         <div className="px-4 pb-6">
-          <div className="bg-gradient-to-br from-[#1a1a2e] to-[#141422] rounded-2xl border border-[#F5A800]/15 p-4">
+          <div className="bg-gradient-to-br from-[#1a1a2e] to-[#141422] rounded-2xl border border-[#c9a84c]/15 p-4">
             <div className="flex items-center gap-2 mb-3">
-              <Icon name="ThumbsUp" size={16} className="text-[#F5A800]" />
-              <span style={{ fontFamily: "Oswald" }} className="text-[#F5A800] font-bold uppercase tracking-wide text-sm">Нас рекомендуют</span>
+              <Icon name="ThumbsUp" size={16} className="text-[#c9a84c]" />
+              <span style={{ fontFamily: "Oswald" }} className="text-[#c9a84c] font-bold uppercase tracking-wide text-sm">Нас рекомендуют</span>
             </div>
             <p className="text-white/80 text-[12.5px] leading-relaxed mb-3">
-              Нас выбирают <span className="text-white font-bold">не из-за цены</span> — а из-за <span className="text-[#F5A800] font-bold">фиксированной стоимости</span> и умения решить задачу.
+              Нас выбирают <span className="text-white font-bold">не из-за цены</span> — а из-за <span className="text-[#c9a84c] font-bold">фиксированной стоимости</span> и умения решить задачу.
             </p>
             <p className="text-white/60 text-[12px] leading-relaxed mb-3">
               Мы не просто перевозим пассажиров — мы помогаем людям качественно получить услугу. Об этом говорят наши отзывы и постоянные клиенты, которые обращаются снова и снова.
             </p>
             <div className="flex items-center gap-3 pt-2 border-t border-white/8">
               <div className="flex gap-0.5">
-                {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={12} className="text-[#F5A800] fill-[#F5A800]" />)}
+                {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={12} className="text-[#c9a84c] fill-[#c9a84c]" />)}
               </div>
               <span className="text-white/50 text-[11px]">Работаем с 2014 года · Тысячи довольных пассажиров</span>
             </div>
@@ -372,7 +372,7 @@ export default function Index() {
         <div className="px-4 pb-6">
           <div className="flex items-center gap-2 mb-3">
             <div className="flex gap-0.5">
-              {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={13} className="text-[#F5A800] fill-[#F5A800]" />)}
+              {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={13} className="text-[#c9a84c] fill-[#c9a84c]" />)}
             </div>
             <span style={{ fontFamily: "Oswald" }} className="text-white/70 font-bold uppercase tracking-wide text-xs">Реальные отзывы пассажиров</span>
           </div>
@@ -389,13 +389,13 @@ export default function Index() {
                 <div className="flex flex-col justify-between p-3 min-w-0">
                   <div>
                     <div className="flex gap-0.5 mb-1.5">
-                      {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={10} className="text-[#F5A800] fill-[#F5A800]" />)}
+                      {[1,2,3,4,5].map(i => <Icon key={i} name="Star" size={10} className="text-[#c9a84c] fill-[#c9a84c]" />)}
                     </div>
                     <p className="text-white/75 text-[11.5px] leading-snug line-clamp-4">{r.text}</p>
                   </div>
                   <div className="mt-2">
                     <div className="text-white font-bold text-xs">{r.name}</div>
-                    <div className="text-[#F5A800] text-[10px]">{r.route}</div>
+                    <div className="text-[#c9a84c] text-[10px]">{r.route}</div>
                   </div>
                 </div>
               </div>
@@ -410,7 +410,7 @@ export default function Index() {
           <a
             href={phoneHref}
             onClick={() => { ymGoal("phone_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign }); ymLead("phone", utmParams); }}
-            className="cta-pulse flex items-center justify-center gap-3 w-full bg-[#F5A800] hover:bg-amber-400 active:scale-[0.98] text-[#1a1a2e] font-black py-4 rounded-2xl transition mb-2"
+            className="cta-pulse flex items-center justify-center gap-3 w-full bg-[#c9a84c] hover:bg-amber-400 active:scale-[0.98] text-[#1a1a2e] font-black py-4 rounded-2xl transition mb-2"
             style={{ fontFamily: "Oswald" }}
           >
             <Icon name="PhoneCall" size={24} />

@@ -34,7 +34,7 @@ const TARIFF_IMGS = {
 };
 
 const TARIFFS = [
-  { id: "standart",    name: "Стандарт",  desc: "Рио · Поло · Солярис",   seats: 4, luggage: "1–2 сумки",    img: TARIFF_IMGS.standart,    badge: "",           color: "#F5A800" },
+  { id: "standart",    name: "Стандарт",  desc: "Рио · Поло · Солярис",   seats: 4, luggage: "1–2 сумки",    img: TARIFF_IMGS.standart,    badge: "",           color: "#c9a84c" },
   { id: "comfort",     name: "Комфорт",   desc: "Хавал Джулиан 2025",     seats: 4, luggage: "2–3 сумки",    img: TARIFF_IMGS.comfort,     badge: "Популярный", color: "#22D3EE" },
   { id: "comfortplus", name: "Комфорт+",  desc: "Toyota Camry 70 кузов",  seats: 4, luggage: "3–4 сумки",    img: TARIFF_IMGS.comfortplus, badge: "Бизнес",     color: "#A78BFA" },
   { id: "minivan",     name: "Минивэн",   desc: "Hyundai Staria 2022",    seats: 7, luggage: "Много багажа", img: TARIFF_IMGS.minivan,     badge: "Группа",     color: "#34D399" },
