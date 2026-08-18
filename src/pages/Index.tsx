@@ -65,88 +65,6 @@ const PHONE_HREF = "tel:+79956455125";
 const VK_HREF = "https://vk.com/dalnyack";
 const MAX_HREF = "https://max.ru/u/f9LHodD0cOLXF8YYOcofc0nCB_QzuJK3zunO0A5XBUyuWM654AGfmsC_fCc";
 
-const STOP = new Set([
-  "такси","taxi","заказать","заказ","вызвать","вызов","поездка","поездку",
-  "трансфер","межгород","междугороднее","недорого","дешево","цена","стоимость",
-  "номер","телефон","круглосуточно","онлайн","сайт",
-  "из","в","во","до","со","с","на","по","и","от","к","ко",
-]);
-
-const CITIES: { stem: string; nom: string }[] = [
-  { stem: "москв", nom: "Москва" },
-  { stem: "питер", nom: "Санкт-Петербург" },
-  { stem: "санкт", nom: "Санкт-Петербург" },
-  { stem: "петербург", nom: "Санкт-Петербург" },
-  { stem: "ростов", nom: "Ростов" },
-  { stem: "воронеж", nom: "Воронеж" },
-  { stem: "краснодар", nom: "Краснодар" },
-  { stem: "ставропол", nom: "Ставрополь" },
-  { stem: "волгоград", nom: "Волгоград" },
-  { stem: "саратов", nom: "Саратов" },
-  { stem: "самар", nom: "Самара" },
-  { stem: "казан", nom: "Казань" },
-  { stem: "уф", nom: "Уфа" },
-  { stem: "пенз", nom: "Пенза" },
-  { stem: "перм", nom: "Пермь" },
-  { stem: "твер", nom: "Тверь" },
-  { stem: "тул", nom: "Тула" },
-  { stem: "рязан", nom: "Рязань" },
-  { stem: "ижевск", nom: "Ижевск" },
-  { stem: "ижевс", nom: "Ижевск" },
-  { stem: "сарапул", nom: "Сарапул" },
-  { stem: "элист", nom: "Элиста" },
-  { stem: "астрахан", nom: "Астрахань" },
-  { stem: "новочеркасск", nom: "Новочеркасск" },
-  { stem: "таганрог", nom: "Таганрог" },
-  { stem: "шахт", nom: "Шахты" },
-  { stem: "сочи", nom: "Сочи" },
-  { stem: "анап", nom: "Анапа" },
-  { stem: "ялт", nom: "Ялта" },
-  { stem: "геленджик", nom: "Геленджик" },
-  { stem: "новороссийск", nom: "Новороссийск" },
-  { stem: "пятигорск", nom: "Пятигорск" },
-  { stem: "кисловодск", nom: "Кисловодск" },
-  { stem: "минеральн", nom: "Минеральные Воды" },
-  { stem: "махачкал", nom: "Махачкала" },
-  { stem: "грозн", nom: "Грозный" },
-  { stem: "нальчик", nom: "Нальчик" },
-  { stem: "владикавказ", nom: "Владикавказ" },
-  { stem: "новомичуринск", nom: "Новомичуринск" },
-];
-
-function normCity(w: string): string {
-  if (!w) return w;
-  const wl = w.toLowerCase();
-  for (const c of CITIES) {
-    if (wl.startsWith(c.stem)) return c.nom;
-  }
-  return w.charAt(0).toUpperCase() + w.slice(1);
-}
-
-function parseRoute(term: string): { from: string; to: string } {
-  if (!term) return { from: "", to: "" };
-  let t = decodeURIComponent(term).toLowerCase().trim();
-  if (!t || t.startsWith("{") || t.endsWith("}")) return { from: "", to: "" };
-  t = t.replace(/[+_]/g, " ").replace(/[^a-zа-яё\s-]/gi, " ");
-  const tokens = t.split(/\s+/).filter(Boolean);
-
-  let from = "", to = "";
-  for (let i = 0; i < tokens.length - 1; i++) {
-    const cur = tokens[i], nxt = tokens[i + 1];
-    if (!nxt || STOP.has(nxt)) continue;
-    if (!from && (cur === "из" || cur === "от" || cur === "с" || cur === "со")) from = normCity(nxt);
-    if (!to && (cur === "в" || cur === "во" || cur === "до" || cur === "к" || cur === "ко")) to = normCity(nxt);
-  }
-
-  const cleaned = tokens.filter((x) => x.length >= 2 && !STOP.has(x)).map(normCity);
-  const uniq: string[] = [];
-  for (const w of cleaned) if (!uniq.includes(w)) uniq.push(w);
-  if (!from && uniq[0]) from = uniq[0];
-  if (!to && uniq[1]) to = uniq[1];
-
-  return { from, to };
-}
-
 const reviews = [
   {
     name: "Валерия",
@@ -221,14 +139,12 @@ function ymLead(channel: string, utmParams: { source: string; medium: string; ca
 
 
 export default function Index() {
-  const [route, setRoute] = useState<{ from: string; to: string }>({ from: "", to: "" });
   const [splash, setSplash] = useState(true);
   const [utmParams, setUtmParams] = useState({ source: "direct", medium: "none", campaign: "none", term: "", content: "none" });
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     const term = p.get("utm_term") || p.get("keyword") || "";
-    setRoute(parseRoute(term));
     setUtmParams({
       source:   p.get("utm_source")   || "direct",
       medium:   p.get("utm_medium")   || "none",
@@ -240,24 +156,8 @@ export default function Index() {
     return () => clearTimeout(t);
   }, []);
 
-  const { from, to } = route;
-
-  const headline = useMemo(() => {
-    if (from && to) return `Такси ${from} – ${to}`;
-    if (from) return `Такси из ${from}`;
-    if (to) return `Такси в ${to}`;
-    return "Межгородное такси по России";
-  }, [from, to]);
-
-  const routeLabel = useMemo(() => {
-    if (from && to) return `${from} – ${to}`;
-    if (from) return `из ${from}`;
-    if (to) return `в ${to}`;
-    return "Вся Россия и новые территории";
-  }, [from, to]);
-
   useSeo({
-    title: `${headline} — Такси Дальняк`,
+    title: "Заказать такси из города в город от 200 км — Такси Дальняк",
     description: "Заказать межгородное такси по России по фиксированной цене. Работаем с 2014 года, автопарк от эконома до бизнес-класса. Звоните +7 (995) 645-51-25 круглосуточно.",
     path: "/info",
     keywords: "межгородное такси по россии, такси из города в город, заказать такси дальняк",
@@ -349,12 +249,13 @@ export default function Index() {
           {/* маршрут-бейдж */}
           <div className="inline-flex items-center gap-1.5 bg-[#F5A800]/15 border border-[#F5A800]/30 rounded-full px-3 py-1 mb-3">
             <Icon name="MapPin" size={12} className="text-[#F5A800] shrink-0" />
-            <span className="text-[#F5A800] text-[11px] font-bold uppercase tracking-wide">{routeLabel}</span>
+            <span className="text-[#F5A800] text-[11px] font-bold uppercase tracking-wide">Вся Россия и новые территории</span>
           </div>
 
           {/* заголовок */}
           <h1 style={{ fontFamily: "Oswald", fontWeight: 800, fontSize: "clamp(24px,7vw,44px)", lineHeight: 1.05, textTransform: "uppercase", color: "#fff" }}>
-            {headline}
+            Заказать такси<br />из города в город<br />
+            <span style={{ color: "#F5A800", fontSize: "clamp(34px,10vw,62px)", display: "inline-block", marginTop: 4, textShadow: "0 4px 24px rgba(245,168,0,0.4)" }}>от 200 км</span>
           </h1>
 
           {/* главный слоган */}

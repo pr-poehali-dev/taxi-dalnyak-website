@@ -1,7 +1,6 @@
 // v2
 import { memo, useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
-import { parseRoute } from "@/lib/cityRoute";
 
 const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
@@ -124,18 +123,10 @@ const PulseDot = memo(function PulseDot() {
   );
 });
 
-function parseCities(term: string): { from: string; to: string } | null {
-  if (!term) return null;
-  const r = parseRoute(term);
-  if (r?.from && r?.to) return { from: r.from, to: r.to };
-  return null;
-}
-
 export default function Quick() {
   const [count, setCount]       = useState(getStartCount());
   const [mins, setMins]         = useState(7);
   const [scrolled, setScrolled] = useState(false);
-  const [utmCities, setUtmCities] = useState<{ from: string; to: string } | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [showIosHint, setShowIosHint]     = useState(false);
@@ -143,15 +134,7 @@ export default function Quick() {
   const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const p2 = new URLSearchParams(window.location.search);
-    const term = p2.get("utm_term") || "";
-    const cities = parseCities(term);
-    if (cities) {
-      setUtmCities(cities);
-      document.title = `Такси ${cities.from} – ${cities.to} | Дальняк`;
-    } else {
-      document.title = "Такси для дальних поездок от 200 км — Дальняк";
-    }
+    document.title = "Заказать такси из города в город от 200 км — Такси Дальняк";
     const c = setInterval(() => { setCount(n => n + 1); setMins(Math.floor(Math.random() * 9) + 2); }, (Math.random() * 4 + 3) * 60000);
     const m = setInterval(() => setMins(v => v >= 40 ? 4 : v + 1), 60000);
     const standalone = window.matchMedia("(display-mode: standalone)").matches
@@ -265,19 +248,9 @@ export default function Quick() {
 
               {/* ГЛАВНЫЙ ЗАГОЛОВОК */}
               <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(32px,5vw,66px)", lineHeight: 0.95, color: "#fff", textTransform: "uppercase", letterSpacing: "-0.01em" }}>
-                {utmCities ? (
-                  <>
-                    Заказать такси<br />
-                    из <span style={{ color: GOLD }}>{utmCities.from}</span><br />
-                    в <span style={{ color: GOLD }}>{utmCities.to}</span>
-                  </>
-                ) : (
-                  <>
-                    Заказать такси<br />
-                    из города в город<br />
-                    <span style={{ color: GOLD }}>от 200 км</span>
-                  </>
-                )}
+                Заказать такси<br />
+                из города в город<br />
+                <span style={{ color: GOLD2, fontSize: "clamp(46px,7vw,92px)", display: "inline-block", marginTop: 6, textShadow: "0 4px 28px rgba(201,168,118,0.45)" }}>от 200 км</span>
               </h1>
 
               <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "clamp(13px,1.2vw,16px)", marginTop: 18, lineHeight: 1.7, maxWidth: 480 }}>
