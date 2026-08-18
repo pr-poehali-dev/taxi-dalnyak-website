@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { useSeo } from "@/hooks/use-seo";
+import { REVIEWS as TEXT_REVIEWS } from "@/lib/reviews";
 
 const PHONE_HREF = "tel:+79956455125";
 const TG_HREF    = "https://t.me/Mezhgorod1816";
@@ -22,24 +23,6 @@ const PHOTO_REVIEWS = [
   { name: "Евгений", route: "Межгород по России",            img: REVIEW_2 },
 ];
 
-const TEXT_REVIEWS = [
-  { name: "Алексей С.", route: "Воронеж – Москва", stars: 5,
-    text: "Заказал за день, машина пришла точно в срок. Водитель позвонил за 30 минут, предупредил. Доехали без остановок, комфортно. Буду обращаться снова." },
-  { name: "Наталья К.", route: "Тула – Санкт-Петербург", stars: 5,
-    text: "Ехали с мамой, путь дальний. Водитель очень внимательный, делал остановки по нашей просьбе. Цена оказалась ниже, чем ожидала. Спасибо!" },
-  { name: "Дмитрий В.", route: "Белгород – Нижний Новгород", stars: 5,
-    text: "Всё чётко: договорились, приехал, довёз. Никакого обмана, цена как договорились. Машина новая и чистая. Буду рекомендовать коллегам." },
-  { name: "Светлана М.", route: "Брянск – Москва", stars: 5,
-    text: "Ездим с Такси Дальняк уже третий раз. Каждый раз всё на высоте. Удобно, что можно написать в Telegram и быстро получить ответ с ценой." },
-  { name: "Андрей П.", route: "Рязань – Воронеж", stars: 5,
-    text: "Обращался впервые — очень понравилось. Водитель пунктуальный, в дороге не болтал лишнего, музыку включил на мой вкус. Доехали быстро." },
-  { name: "Юлия Т.", route: "Курск – Тверь", stars: 5,
-    text: "Ехала одна, немного переживала. Диспетчер всё объяснила, водитель написал когда выехал. Всё прошло отлично, чувствовала себя в безопасности." },
-  { name: "Михаил О.", route: "Ярославль – Тамбов", stars: 5,
-    text: "Нашёл через Яндекс, позвонил — ответили сразу. Назвали цену без «а посмотрим». Всё честно, без сюрпризов. Машина новая, просторная." },
-  { name: "Ольга Д.", route: "Екатеринбург – Тюмень", stars: 5,
-    text: "Срочно нужно было уехать. Всё решили за 20 минут. Цена справедливая. Водитель — профессионал, довёз без нареканий. Рекомендую!" },
-];
 
 function ymGoal(goal: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,8 +31,12 @@ function ymGoal(goal: string) {
 
 function Stars({ n = 5 }: { n?: number }) {
   return (
-    <div className="flex gap-0.5">
-      {[...Array(n)].map((_, i) => <Icon key={i} name="Star" size={11} style={{ color: GOLD }} />)}
+    <div className="flex gap-0.5 shrink-0">
+      {[1, 2, 3, 4, 5].map(i => (
+        <Icon key={i} name="Star" size={11}
+          style={{ color: i <= n ? GOLD : "rgba(255,255,255,0.14)" }}
+          className={i <= n ? "fill-[#c9a84c]" : ""} />
+      ))}
     </div>
   );
 }
@@ -86,7 +73,7 @@ export default function Reviews() {
           <div className="flex items-center gap-2 mt-2">
             <Stars />
             <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
-              {PHOTO_REVIEWS.length + TEXT_REVIEWS.length}+ отзывов · с 2014 года
+              {TEXT_REVIEWS.length} отзывов · с 2014 года
             </span>
           </div>
         </div>
@@ -95,7 +82,7 @@ export default function Reviews() {
         <div className="grid grid-cols-3 gap-2 mb-7">
           {[
             { value: "4.9", label: "Рейтинг", sub: "из 5.0" },
-            { value: `${PHOTO_REVIEWS.length + TEXT_REVIEWS.length}+`, label: "Отзывов", sub: "от клиентов" },
+            { value: `${TEXT_REVIEWS.length}`, label: "Отзывов", sub: "от клиентов" },
             { value: "98%", label: "Рекомендуют", sub: "друзьям" },
           ].map(s => (
             <div key={s.value} className="flex flex-col items-center rounded-2xl py-3.5 px-1" style={{ background: CARD, border: BORDER }}>
