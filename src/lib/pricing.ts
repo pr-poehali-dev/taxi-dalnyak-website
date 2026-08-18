@@ -1,7 +1,7 @@
 // Единый модуль расчёта стоимости поездки.
-// Стандартный тариф — 40 ₽/км, поездки на новые территории — 90 ₽/км.
+// Стандартный тариф — 35 ₽/км, поездки на новые территории — 90 ₽/км.
 
-export const RATE_STANDARD = 40;
+export const RATE_STANDARD = 35;
 export const RATE_NEW_TERRITORIES = 90;
 
 const NEW_TERRITORIES_CITIES = [

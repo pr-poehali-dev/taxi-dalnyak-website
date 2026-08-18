@@ -1,6 +1,7 @@
 // v2
 import { memo, useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
+import PaymentBlock from "@/components/PaymentBlock";
 
 const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
@@ -95,7 +96,9 @@ const FEATURES = [
 function getStartCount() {
   const d = new Date();
   const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-  return 847 + (seed % 60);
+  const base = 11 + (seed % 5);
+  const hour = d.getHours();
+  return base + Math.floor((hour / 24) * 7);
 }
 
 function ymGoal(goal: string) {
@@ -135,7 +138,7 @@ export default function Quick() {
 
   useEffect(() => {
     document.title = "Заказать такси из города в город от 200 км — Такси Дальняк";
-    const c = setInterval(() => { setCount(n => n + 1); setMins(Math.floor(Math.random() * 9) + 2); }, (Math.random() * 4 + 3) * 60000);
+    const c = setInterval(() => { setCount(n => n + 1); setMins(Math.floor(Math.random() * 9) + 2); }, (Math.random() * 30 + 60) * 60000);
     const m = setInterval(() => setMins(v => v >= 40 ? 4 : v + 1), 60000);
     const standalone = window.matchMedia("(display-mode: standalone)").matches
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -230,7 +233,7 @@ export default function Quick() {
                 <img key={i} src={img} alt="" loading="lazy" className="w-5 h-5 rounded-full object-cover" style={{ border: `1.5px solid ${NAVY}` }} />
               ))}
             </div>
-            <span style={{ color: GOLD2, fontSize: 11, fontWeight: 700 }}>{count.toLocaleString("ru")} заказов выполнено сегодня</span>
+            <span style={{ color: GOLD2, fontSize: 11, fontWeight: 700 }}>{count} дальних рейсов сегодня</span>
             <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>· свободный борт через {mins} мин</span>
           </div>
 
@@ -424,6 +427,8 @@ export default function Quick() {
           </div>
         </div>
       </div>
+
+      <PaymentBlock />
 
       {/* ══════════════════════════════════════
           СЕКЦИЯ: ДИСПЕТЧЕР
