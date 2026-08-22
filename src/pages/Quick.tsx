@@ -5,6 +5,7 @@ import PaymentBlock from "@/components/PaymentBlock";
 import RoadPattern from "@/components/RoadPattern";
 import ChatProof from "@/components/ChatProof";
 import { REVIEWS } from "@/lib/reviews";
+import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
 
 const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
@@ -14,12 +15,7 @@ const REVIEW_2 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/ac322d91-fd27-4c11-b86f-f28e85ec3df0.jpg";
 
 
-const PHONE      = "+7 (995) 645-51-25";
-const PHONE_HREF = "tel:+79956455125";
-const VK_HREF    = "https://vk.com/dalnyack";
-const TG_HREF    = "https://t.me/Mezhgorod1816";
-const REVIEWS_TG_HREF = "https://t.me/gorodvgorode1";
-const MAX_HREF   = "https://max.ru/u/f9LHodD0cOLXF8YYOcofc0nCB_QzuJK3zunO0A5XBUyuWM654AGfmsC_fCc";
+
 
 const NAVY   = "#0b0b0d";
 const CARD   = "#17171a";
@@ -77,9 +73,10 @@ function ymGoal(goal: string) {
   (window as any).ym?.(111028538, "reachGoal", goal);
 }
 
-function ymLead(channel: string) {
+function ymLead(channel: string, source?: string) {
   ymGoal("lead");
   ymGoal(`lead_${channel}`);
+  if (source) ymGoal(`lead_${source}`);
 }
 
 const PulseDot = memo(function PulseDot() {
@@ -97,7 +94,8 @@ const PulseDot = memo(function PulseDot() {
   );
 });
 
-export default function Quick() {
+export default function Quick({ contacts = DEFAULT_CONTACTS, source }: { contacts?: Contacts; source?: string } = {}) {
+  const { PHONE, PHONE_HREF, VK_HREF, TG_HREF, REVIEWS_TG_HREF, MAX_HREF } = contacts;
   const [count, setCount]       = useState(getStartCount());
   const [mins, setMins]         = useState(7);
   const [scrolled, setScrolled] = useState(false);
@@ -247,7 +245,7 @@ export default function Quick() {
 
               {/* кнопки */}
               <div className="space-y-3 md:max-w-lg">
-                <a href={PHONE_HREF} onClick={() => { ymGoal("hero_phone"); ymLead("phone"); }}
+                <a href={PHONE_HREF} onClick={() => { ymGoal("hero_phone"); ymLead("phone", source); }}
                   className="flex items-center justify-center gap-3 w-full rounded-2xl py-5 transition-transform hover:scale-[1.02] active:scale-[0.97]"
                   style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 8px 32px rgba(201,168,76,0.45)" }}>
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(10,15,30,0.2)" }}>
@@ -262,19 +260,19 @@ export default function Quick() {
                 </a>
 
                 <div className="grid grid-cols-3 gap-3">
-                  <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_tg"); ymLead("tg"); }}
+                  <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_tg"); ymLead("tg", source); }}
                     className="flex flex-col items-center justify-center rounded-2xl py-4 gap-1.5 transition-transform hover:scale-[1.02] active:scale-[0.97]"
                     style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.09)" }}>
                     <Icon name="Send" size={20} style={{ color: "rgba(255,255,255,0.55)" }} />
                     <span style={{ fontFamily: "Oswald", fontSize: 12.5, color: "rgba(255,255,255,0.6)", fontWeight: 700, textTransform: "uppercase" }}>Telegram</span>
                   </a>
-                  <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_max"); ymLead("max"); }}
+                  <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_max"); ymLead("max", source); }}
                     className="flex flex-col items-center justify-center rounded-2xl py-4 gap-1.5 transition-transform hover:scale-[1.02] active:scale-[0.97]"
                     style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.09)" }}>
                     <img src={MAX_LOGO} alt="MAX" loading="lazy" className="h-5 object-contain" style={{ opacity: 0.65 }} />
                     <span style={{ fontFamily: "Oswald", fontSize: 12.5, color: "rgba(255,255,255,0.6)", fontWeight: 700, textTransform: "uppercase" }}>MAX</span>
                   </a>
-                  <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_vk"); ymLead("vk"); }}
+                  <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("hero_vk"); ymLead("vk", source); }}
                     className="flex flex-col items-center justify-center rounded-2xl py-4 gap-1.5 transition-transform hover:scale-[1.02] active:scale-[0.97]"
                     style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.09)" }}>
                     <Icon name="Users" size={20} style={{ color: "rgba(255,255,255,0.55)" }} />
@@ -732,26 +730,26 @@ export default function Quick() {
       ══════════════════════════════════════ */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-5 pt-3"
         style={{ background: `linear-gradient(to top,${NAVY} 65%,transparent)` }}>
-        <a href={PHONE_HREF} onClick={() => { ymGoal("bottom_phone"); ymLead("phone"); }}
+        <a href={PHONE_HREF} onClick={() => { ymGoal("bottom_phone"); ymLead("phone", source); }}
           className="flex items-center justify-center gap-3 w-full rounded-2xl py-4 mb-2.5 active:scale-[0.97] transition-transform"
           style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 24px rgba(201,168,76,0.5)" }}>
           <Icon name="Phone" size={18} style={{ color: NAVY }} />
           <div style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: 18, color: NAVY, textTransform: "uppercase" }}>Позвонить диспетчеру</div>
         </a>
         <div className="grid grid-cols-3 gap-2">
-          <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("bottom_tg"); ymLead("tg"); }}
+          <a href={TG_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("bottom_tg"); ymLead("tg", source); }}
             className="flex items-center justify-center gap-1.5 rounded-2xl py-3 active:scale-[0.97] transition-transform"
             style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
             <Icon name="Send" size={14} style={{ color: "rgba(255,255,255,0.55)" }} />
             <span style={{ fontFamily: "Oswald", fontSize: 12.5, color: "rgba(255,255,255,0.6)", fontWeight: 700, textTransform: "uppercase" }}>Telegram</span>
           </a>
-          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("bottom_max"); ymLead("max"); }}
+          <a href={MAX_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("bottom_max"); ymLead("max", source); }}
             className="flex items-center justify-center gap-1.5 rounded-2xl py-3 active:scale-[0.97] transition-transform"
             style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
             <img src={MAX_LOGO} alt="MAX" loading="lazy" className="h-4 object-contain" style={{ opacity: 0.65 }} />
             <span style={{ fontFamily: "Oswald", fontSize: 12.5, color: "rgba(255,255,255,0.6)", fontWeight: 700, textTransform: "uppercase" }}>MAX</span>
           </a>
-          <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("bottom_vk"); ymLead("vk"); }}
+          <a href={VK_HREF} target="_blank" rel="noopener noreferrer" onClick={() => { ymGoal("bottom_vk"); ymLead("vk", source); }}
             className="flex items-center justify-center gap-1.5 rounded-2xl py-3 active:scale-[0.97] transition-transform"
             style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
             <Icon name="Users" size={14} style={{ color: "rgba(255,255,255,0.55)" }} />
