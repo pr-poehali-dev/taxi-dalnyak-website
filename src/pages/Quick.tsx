@@ -73,10 +73,18 @@ function ymGoal(goal: string) {
   (window as any).ym?.(111028538, "reachGoal", goal);
 }
 
+function tmrGoal(goal: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tmr = (window as any)._tmr;
+  if (tmr) tmr.push({ id: "3789002", type: "reachGoal", goal });
+}
+
 function ymLead(channel: string, source?: string) {
   ymGoal("lead");
   ymGoal(`lead_${channel}`);
   if (source) ymGoal(`lead_${source}`);
+  tmrGoal("lead");
+  tmrGoal(`lead_${channel}`);
 }
 
 const PulseDot = memo(function PulseDot() {
