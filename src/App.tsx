@@ -9,7 +9,7 @@ import Quick from "./pages/Quick";
 import QuickVk from "./pages/QuickVk";
 import Tariffs from "./pages/Tariffs";
 import Reviews from "./pages/Reviews";
-import NotFound from "./pages/NotFound";
+import PageNotFound from "./pages/PageNotFound";
 import KPP from "./pages/KPP";
 import Moscow from "./pages/regions/Moscow";
 import Belgorod from "./pages/regions/Belgorod";
@@ -72,7 +72,7 @@ const App = () => (
           <Route path="/lugansk" element={<Lugansk />} />
           <Route path="/kherson" element={<Kherson />} />
 
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<PageNotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
