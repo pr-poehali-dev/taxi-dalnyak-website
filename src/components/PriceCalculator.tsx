@@ -1,15 +1,23 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 import { searchCities, roadKmBetween } from "@/lib/cityRoute";
-import { calcAllPrices, isNewTerritoriesRoute, MIN_PRICE } from "@/lib/pricing";
+import { calcAllPrices, isNewTerritoriesRoute, MIN_PRICE, type TariffPrice } from "@/lib/pricing";
 import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
 
 const GOLD = "#c9a84c";
 const GOLD2 = "#e8c96a";
 
+export interface CalcResult {
+  from: string;
+  to: string;
+  km: number;
+  tariffs: TariffPrice[];
+}
+
 interface Props {
   contacts?: Contacts;
   onLead?: (channel: string) => void;
+  onResult?: (r: CalcResult | null) => void;
 }
 
 function CityInput({
@@ -117,7 +125,7 @@ function CityInput({
   );
 }
 
-export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead }: Props) {
+export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead, onResult }: Props) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [shown, setShown] = useState(false);
@@ -126,8 +134,13 @@ export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead }:
     const km = roadKmBetween(from, to);
     if (!km) return null;
     const nt = isNewTerritoriesRoute(from, to);
-    return { km, nt, tariffs: calcAllPrices(km, nt) };
+    return { km, nt, tariffs: calcAllPrices(km, nt, from, to) };
   }, [from, to]);
+
+  useEffect(() => {
+    if (!onResult) return;
+    onResult(shown && result && from !== to ? { from, to, km: result.km, tariffs: result.tariffs } : null);
+  }, [shown, result, from, to, onResult]);
 
   const sameCity = from && to && from === to;
   const tooShort = result && result.km < 200;
@@ -157,9 +170,20 @@ export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead }:
           Рассчитать стоимость
         </span>
       </div>
-      <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11.5, marginBottom: 16, marginLeft: 14 }}>
-        Укажите города — покажем цену по всем классам авто
+      <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11.5, marginBottom: 12, marginLeft: 14 }}>
+        Укажите города — покажем примерную цену по всем классам авто
       </p>
+
+      <div
+        className="flex items-start gap-2 rounded-xl px-3.5 py-2.5 mb-4"
+        style={{ background: "rgba(201,168,76,0.09)", border: "1px solid rgba(201,168,76,0.28)" }}
+      >
+        <Icon name="Info" size={13} style={{ color: GOLD, flexShrink: 0, marginTop: 1 }} />
+        <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 11, lineHeight: 1.5 }}>
+          Расчёт <span style={{ color: GOLD2, fontWeight: 700 }}>предварительный</span>. Платные дороги
+          и мосты оплачиваются отдельно.
+        </span>
+      </div>
 
       <div className="space-y-3">
         <CityInput label="Откуда" value={from} onChange={setFrom} placeholder="Например, Москва" icon="Circle" />
@@ -257,10 +281,38 @@ export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead }:
             ))}
           </div>
 
-          <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 10.5, lineHeight: 1.5, marginTop: 10, textAlign: "center" }}>
-            Расчёт предварительный. Минимальная стоимость поездки — {MIN_PRICE.toLocaleString("ru")} ₽.
-            Точную цену зафиксирует диспетчер до выезда.
-          </p>
+          <div
+            className="mt-3 rounded-2xl p-4"
+            style={{ background: "rgba(201,168,76,0.1)", border: `1.5px solid rgba(201,168,76,0.45)` }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Icon name="TriangleAlert" size={15} style={{ color: GOLD2, flexShrink: 0 }} fallback="AlertCircle" />
+              <span
+                style={{
+                  fontFamily: "Oswald",
+                  color: GOLD2,
+                  fontSize: 13.5,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                Цена примерная
+              </span>
+            </div>
+            <ul className="space-y-1.5">
+              {[
+                "Платные дороги и мосты оплачиваются отдельно",
+                `Минимальная стоимость поездки — ${MIN_PRICE.toLocaleString("ru")} ₽`,
+                "Для точной цены напишите или позвоните диспетчеру",
+              ].map(t => (
+                <li key={t} className="flex items-start gap-2">
+                  <span style={{ color: GOLD, fontSize: 12, lineHeight: 1.5 }}>•</span>
+                  <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, lineHeight: 1.5, fontWeight: 600 }}>{t}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           <a
             href={contacts.PHONE_HREF}
@@ -278,6 +330,35 @@ export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead }:
               </span>
             </div>
           </a>
+
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <a
+              href={contacts.TG_HREF}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onLead?.("tg")}
+              className="flex items-center justify-center gap-2 rounded-2xl py-3 active:scale-95 transition-transform"
+              style={{ background: "linear-gradient(135deg,#0e6da8,#1a8fc2)" }}
+            >
+              <Icon name="Send" size={15} className="text-white" />
+              <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 13, fontWeight: 800, textTransform: "uppercase" }}>
+                Telegram
+              </span>
+            </a>
+            <a
+              href={contacts.MAX_HREF}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onLead?.("max")}
+              className="flex items-center justify-center gap-2 rounded-2xl py-3 active:scale-95 transition-transform"
+              style={{ background: "linear-gradient(135deg,#003a9e,#0055e5)" }}
+            >
+              <Icon name="MessageCircle" size={15} className="text-white" />
+              <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 13, fontWeight: 800, textTransform: "uppercase" }}>
+                MAX
+              </span>
+            </a>
+          </div>
 
           <button
             type="button"

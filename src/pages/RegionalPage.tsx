@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
-import PriceCalculator from "@/components/PriceCalculator";
+import PriceCalculator, { type CalcResult } from "@/components/PriceCalculator";
+import FloatingContacts from "@/components/FloatingContacts";
 
 const HERO_IMG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/7071b942-9c87-47e1-a16d-0af0c4b83c1d.jpg";
 const LOGO      = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
@@ -99,6 +100,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
   const [utmParams, setUtmParams] = useState({ source: "direct", medium: "none", campaign: "none", term: "", content: "none" });
   const [splash, setSplash]       = useState(true);
   const [menuOpen, setMenuOpen]   = useState(false);
+  const [calcResult, setCalcResult] = useState<CalcResult | null>(null);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -343,6 +345,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
         <section className="px-4 pt-5 pb-0 max-w-5xl mx-auto w-full">
           <PriceCalculator
             contacts={contacts}
+            onResult={setCalcResult}
             onLead={(ch) => { ymGoal(`calc_${ch}`, { city: config.slug }); ymLead(ch, utmParams, source); }}
           />
         </section>
@@ -441,33 +444,67 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
             <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(${GOLD},${GOLD2})` }} />
             <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>Наш автопарк</span>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {TARIFFS.map(t => (
-              <div key={t.id} className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "1/1.1" }}>
-                <img src={t.img} alt={t.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
-                <div className="absolute inset-0" style={{ background: "linear-gradient(to top,rgba(5,8,18,0.97) 0%,rgba(5,8,18,0.35) 55%,rgba(5,8,18,0.05) 100%)" }} />
-                <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(to right,${t.color},transparent)` }} />
-                {t.badge && (
-                  <div className="absolute top-3 right-3">
-                    <span className="text-[9px] font-black uppercase tracking-wide px-2 py-1 rounded-lg"
-                      style={{ background: `${t.color}20`, color: t.color, border: `1px solid ${t.color}40` }}>{t.badge}</span>
+          {calcResult && (
+            <div className="mb-3 rounded-xl px-4 py-2.5 flex items-center gap-2" style={{ background: "rgba(201,168,76,0.1)", border: `1px solid rgba(201,168,76,0.3)` }}>
+              <Icon name="Route" size={13} style={{ color: GOLD, flexShrink: 0 }} fallback="MapPin" />
+              <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 11.5, fontWeight: 600 }}>
+                Цены для маршрута <span style={{ color: GOLD2, fontWeight: 800 }}>{calcResult.from} — {calcResult.to}</span> · ≈ {calcResult.km.toLocaleString("ru")} км
+              </span>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
+            {TARIFFS.map(t => {
+              const priced = calcResult?.tariffs.find(x => x.id === t.id);
+              return (
+                <div key={t.id} className="relative rounded-2xl overflow-hidden flex" style={{ minHeight: 120, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div className="relative shrink-0" style={{ width: "42%", minHeight: 120 }}>
+                    <img src={t.img} alt={t.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0" style={{ background: "linear-gradient(to right,rgba(5,8,18,0.1) 0%,rgba(5,8,18,0.85) 100%)" }} />
                   </div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 p-3.5">
-                  <div style={{ fontFamily: "Oswald", color: t.color, fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", lineHeight: 1 }}>{t.name}</div>
-                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, marginTop: 3 }}>{t.desc}</div>
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="flex items-center gap-1" style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>
-                      <Icon name="Users" size={9} />{t.seats} пасс.
-                    </span>
-                    <span className="flex items-center gap-1" style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>
-                      <Icon name="Briefcase" size={9} />{t.luggage}
-                    </span>
+
+                  <div className="absolute top-0 left-0 bottom-0 w-[3px]" style={{ background: `linear-gradient(${t.color},transparent)` }} />
+
+                  <div className="flex-1 p-3.5 flex flex-col justify-center">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span style={{ fontFamily: "Oswald", color: t.color, fontSize: 16, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em", lineHeight: 1 }}>{t.name}</span>
+                      {t.badge && (
+                        <span className="text-[8.5px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-md"
+                          style={{ background: `${t.color}20`, color: t.color, border: `1px solid ${t.color}40` }}>{t.badge}</span>
+                      )}
+                    </div>
+                    <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 10.5, marginTop: 3 }}>{t.desc}</div>
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <span className="flex items-center gap-1" style={{ color: "rgba(255,255,255,0.32)", fontSize: 10 }}>
+                        <Icon name="Users" size={9} />{t.seats} пасс.
+                      </span>
+                      <span className="flex items-center gap-1" style={{ color: "rgba(255,255,255,0.32)", fontSize: 10 }}>
+                        <Icon name="Briefcase" size={9} />{t.luggage}
+                      </span>
+                    </div>
+
+                    {priced ? (
+                      <div className="mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                        <div style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 19, fontWeight: 900, lineHeight: 1 }}>
+                          ≈ {priced.price.toLocaleString("ru")} ₽
+                        </div>
+                        <div style={{ color: "rgba(255,255,255,0.28)", fontSize: 9.5, marginTop: 2 }}>
+                          примерная цена · {priced.rate} ₽/км
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 10.5 }}>
+                          Рассчитайте маршрут выше — покажем цену
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+
           <div className="mt-3 rounded-xl px-4 py-3 flex items-center gap-2.5" style={{ background: `rgba(201,168,76,0.07)`, border: `1px solid rgba(201,168,76,0.18)` }}>
             <Icon name="Tag" size={13} style={{ color: GOLD, flexShrink: 0 }} />
             <span style={{ color: GOLD2, fontSize: 12, fontWeight: 600 }}>Фиксированная стоимость — без счётчика и сюрпризов</span>
@@ -517,6 +554,11 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
             ))}
           </div>
         </section>
+
+        <FloatingContacts
+          contacts={contacts}
+          onLead={(ch) => { ymGoal(`float_${ch}`, { city: config.slug }); ymLead(ch, utmParams, source); }}
+        />
 
         {/* STICKY CTA */}
         <div className="sticky bottom-0 px-4 py-3 z-40" style={{ background: "rgba(7,11,20,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(201,168,76,0.15)" }}>
