@@ -109,6 +109,16 @@ function CityInput({
         )}
       </div>
 
+      {open && touched && value.length >= 3 && list.length === 0 && !ready && (
+        <div
+          className="absolute z-30 left-0 right-0 mt-1.5 rounded-2xl px-4 py-3 flex items-center gap-2.5"
+          style={{ background: "#111726", border: "1px solid rgba(201,168,76,0.25)" }}
+        >
+          <Icon name="Loader" size={13} style={{ color: GOLD }} className="animate-spin" fallback="Circle" />
+          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>Загружаем сёла и посёлки…</span>
+        </div>
+      )}
+
       {open && list.length > 0 && !exact && (
         <div
           className="absolute z-30 left-0 right-0 mt-1.5 rounded-2xl overflow-hidden"
@@ -118,18 +128,31 @@ function CityInput({
             boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
           }}
         >
-          {list.map(c => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => { onChange(c); setOpen(false); }}
-              className="w-full text-left px-4 py-2.5 flex items-center gap-2.5 transition-colors hover:bg-white/5"
-              style={{ color: "rgba(255,255,255,0.8)", fontSize: 13.5, fontWeight: 600 }}
-            >
-              <Icon name="MapPin" size={12} style={{ color: GOLD, flexShrink: 0 }} />
-              {c}
-            </button>
-          ))}
+          {list.map(c => {
+            const m = c.match(/^(.*?)\s\(([^)]+)\)$/);
+            const title = m ? m[1] : c;
+            const region = m ? m[2] : null;
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => { onChange(c); setOpen(false); }}
+                className="w-full text-left px-4 py-2.5 flex items-center gap-2.5 transition-colors hover:bg-white/5"
+              >
+                <Icon name="MapPin" size={12} style={{ color: GOLD, flexShrink: 0 }} />
+                <span className="min-w-0">
+                  <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 13.5, fontWeight: 600, display: "block" }}>
+                    {title}
+                  </span>
+                  {region && (
+                    <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10.5, display: "block", marginTop: 1 }}>
+                      {region}
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
