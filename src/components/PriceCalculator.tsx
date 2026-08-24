@@ -137,10 +137,14 @@ export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead, o
     return { km, nt, tariffs: calcAllPrices(km, nt, from, to) };
   }, [from, to]);
 
+  const onResultRef = useRef(onResult);
+  useEffect(() => { onResultRef.current = onResult; });
+
   useEffect(() => {
-    if (!onResult) return;
-    onResult(shown && result && from !== to ? { from, to, km: result.km, tariffs: result.tariffs } : null);
-  }, [shown, result, from, to, onResult]);
+    onResultRef.current?.(
+      shown && result && from !== to ? { from, to, km: result.km, tariffs: result.tariffs } : null,
+    );
+  }, [shown, result, from, to]);
 
   const sameCity = from && to && from === to;
   const tooShort = result && result.km < 200;

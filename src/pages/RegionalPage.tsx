@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
 import PriceCalculator, { type CalcResult } from "@/components/PriceCalculator";
@@ -101,6 +101,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
   const [splash, setSplash]       = useState(true);
   const [menuOpen, setMenuOpen]   = useState(false);
   const [calcResult, setCalcResult] = useState<CalcResult | null>(null);
+  const fleetRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -345,9 +346,89 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
         <section className="px-4 pt-5 pb-0 max-w-5xl mx-auto w-full">
           <PriceCalculator
             contacts={contacts}
-            onResult={setCalcResult}
+            onResult={(r) => {
+              setCalcResult(r);
+              if (r) {
+                requestAnimationFrame(() => {
+                  fleetRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                });
+              }
+            }}
             onLead={(ch) => { ymGoal(`calc_${ch}`, { city: config.slug }); ymLead(ch, utmParams, source); }}
           />
+        </section>
+
+        {/* АВТОПАРК */}
+        <section ref={fleetRef} className="px-4 pt-6 pb-0 max-w-5xl mx-auto w-full" style={{ scrollMarginTop: 70 }}>
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(${GOLD},${GOLD2})` }} />
+            <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>{calcResult ? "Цены по вашему маршруту" : "Наш автопарк"}</span>
+          </div>
+          {calcResult && (
+            <div className="mb-3 rounded-xl px-4 py-2.5 flex items-center gap-2" style={{ background: "rgba(201,168,76,0.1)", border: `1px solid rgba(201,168,76,0.3)` }}>
+              <Icon name="Route" size={13} style={{ color: GOLD, flexShrink: 0 }} fallback="MapPin" />
+              <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 11.5, fontWeight: 600 }}>
+                Цены для маршрута <span style={{ color: GOLD2, fontWeight: 800 }}>{calcResult.from} — {calcResult.to}</span> · ≈ {calcResult.km.toLocaleString("ru")} км
+              </span>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
+            {TARIFFS.map(t => {
+              const priced = calcResult?.tariffs.find(x => x.id === t.id);
+              return (
+                <div key={t.id} className="relative rounded-2xl overflow-hidden flex" style={{ minHeight: 120, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div className="relative shrink-0" style={{ width: "42%", minHeight: 120 }}>
+                    <img src={t.img} alt={t.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0" style={{ background: "linear-gradient(to right,rgba(5,8,18,0.1) 0%,rgba(5,8,18,0.85) 100%)" }} />
+                  </div>
+
+                  <div className="absolute top-0 left-0 bottom-0 w-[3px]" style={{ background: `linear-gradient(${t.color},transparent)` }} />
+
+                  <div className="flex-1 p-3.5 flex flex-col justify-center">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span style={{ fontFamily: "Oswald", color: t.color, fontSize: 16, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em", lineHeight: 1 }}>{t.name}</span>
+                      {t.badge && (
+                        <span className="text-[8.5px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-md"
+                          style={{ background: `${t.color}20`, color: t.color, border: `1px solid ${t.color}40` }}>{t.badge}</span>
+                      )}
+                    </div>
+                    <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 10.5, marginTop: 3 }}>{t.desc}</div>
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <span className="flex items-center gap-1" style={{ color: "rgba(255,255,255,0.32)", fontSize: 10 }}>
+                        <Icon name="Users" size={9} />{t.seats} пасс.
+                      </span>
+                      <span className="flex items-center gap-1" style={{ color: "rgba(255,255,255,0.32)", fontSize: 10 }}>
+                        <Icon name="Briefcase" size={9} />{t.luggage}
+                      </span>
+                    </div>
+
+                    {priced ? (
+                      <div className="mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                        <div style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 19, fontWeight: 900, lineHeight: 1 }}>
+                          ≈ {priced.price.toLocaleString("ru")} ₽
+                        </div>
+                        <div style={{ color: "rgba(255,255,255,0.28)", fontSize: 9.5, marginTop: 2 }}>
+                          примерная цена · {priced.rate} ₽/км
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 10.5 }}>
+                          Рассчитайте маршрут выше — покажем цену
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 rounded-xl px-4 py-3 flex items-center gap-2.5" style={{ background: `rgba(201,168,76,0.07)`, border: `1px solid rgba(201,168,76,0.18)` }}>
+            <Icon name="Tag" size={13} style={{ color: GOLD, flexShrink: 0 }} />
+            <span style={{ color: GOLD2, fontSize: 12, fontWeight: 600 }}>Фиксированная стоимость — без счётчика и сюрпризов</span>
+          </div>
         </section>
 
         {/* ДИСПЕТЧЕР */}
@@ -435,79 +516,6 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
                 <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>Средняя оценка организации</span>
               </div>
             ))}
-          </div>
-        </section>
-
-        {/* АВТОПАРК */}
-        <section className="px-4 pt-6 pb-0 max-w-5xl mx-auto w-full">
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(${GOLD},${GOLD2})` }} />
-            <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>Наш автопарк</span>
-          </div>
-          {calcResult && (
-            <div className="mb-3 rounded-xl px-4 py-2.5 flex items-center gap-2" style={{ background: "rgba(201,168,76,0.1)", border: `1px solid rgba(201,168,76,0.3)` }}>
-              <Icon name="Route" size={13} style={{ color: GOLD, flexShrink: 0 }} fallback="MapPin" />
-              <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 11.5, fontWeight: 600 }}>
-                Цены для маршрута <span style={{ color: GOLD2, fontWeight: 800 }}>{calcResult.from} — {calcResult.to}</span> · ≈ {calcResult.km.toLocaleString("ru")} км
-              </span>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-3">
-            {TARIFFS.map(t => {
-              const priced = calcResult?.tariffs.find(x => x.id === t.id);
-              return (
-                <div key={t.id} className="relative rounded-2xl overflow-hidden flex" style={{ minHeight: 120, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                  <div className="relative shrink-0" style={{ width: "42%", minHeight: 120 }}>
-                    <img src={t.img} alt={t.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-0" style={{ background: "linear-gradient(to right,rgba(5,8,18,0.1) 0%,rgba(5,8,18,0.85) 100%)" }} />
-                  </div>
-
-                  <div className="absolute top-0 left-0 bottom-0 w-[3px]" style={{ background: `linear-gradient(${t.color},transparent)` }} />
-
-                  <div className="flex-1 p-3.5 flex flex-col justify-center">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span style={{ fontFamily: "Oswald", color: t.color, fontSize: 16, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em", lineHeight: 1 }}>{t.name}</span>
-                      {t.badge && (
-                        <span className="text-[8.5px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-md"
-                          style={{ background: `${t.color}20`, color: t.color, border: `1px solid ${t.color}40` }}>{t.badge}</span>
-                      )}
-                    </div>
-                    <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 10.5, marginTop: 3 }}>{t.desc}</div>
-                    <div className="flex items-center gap-3 mt-1.5">
-                      <span className="flex items-center gap-1" style={{ color: "rgba(255,255,255,0.32)", fontSize: 10 }}>
-                        <Icon name="Users" size={9} />{t.seats} пасс.
-                      </span>
-                      <span className="flex items-center gap-1" style={{ color: "rgba(255,255,255,0.32)", fontSize: 10 }}>
-                        <Icon name="Briefcase" size={9} />{t.luggage}
-                      </span>
-                    </div>
-
-                    {priced ? (
-                      <div className="mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                        <div style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 19, fontWeight: 900, lineHeight: 1 }}>
-                          ≈ {priced.price.toLocaleString("ru")} ₽
-                        </div>
-                        <div style={{ color: "rgba(255,255,255,0.28)", fontSize: 9.5, marginTop: 2 }}>
-                          примерная цена · {priced.rate} ₽/км
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 10.5 }}>
-                          Рассчитайте маршрут выше — покажем цену
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-3 rounded-xl px-4 py-3 flex items-center gap-2.5" style={{ background: `rgba(201,168,76,0.07)`, border: `1px solid rgba(201,168,76,0.18)` }}>
-            <Icon name="Tag" size={13} style={{ color: GOLD, flexShrink: 0 }} />
-            <span style={{ color: GOLD2, fontSize: 12, fontWeight: 600 }}>Фиксированная стоимость — без счётчика и сюрпризов</span>
           </div>
         </section>
 
