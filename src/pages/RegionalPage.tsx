@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
+import PriceCalculator from "@/components/PriceCalculator";
 
 const HERO_IMG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/7071b942-9c87-47e1-a16d-0af0c4b83c1d.jpg";
 const LOGO      = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
@@ -336,6 +337,14 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
               ))}
             </div>
           </div>
+        </section>
+
+        {/* КАЛЬКУЛЯТОР */}
+        <section className="px-4 pt-5 pb-0 max-w-5xl mx-auto w-full">
+          <PriceCalculator
+            contacts={contacts}
+            onLead={(ch) => { ymGoal(`calc_${ch}`, { city: config.slug }); ymLead(ch, utmParams, source); }}
+          />
         </section>
 
         {/* ДИСПЕТЧЕР */}
