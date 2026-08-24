@@ -11,17 +11,26 @@ interface Props {
 }
 
 export default function FloatingContacts({ contacts = DEFAULT_CONTACTS, onLead }: Props) {
-  const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 420);
+    const onScroll = () => setVisible(window.scrollY > 380);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const items = [
+    {
+      key: "phone",
+      label: "Позвонить",
+      href: contacts.PHONE_HREF,
+      bg: `linear-gradient(135deg,${GOLD},${GOLD2})`,
+      icon: "Phone",
+      external: false,
+      dark: true,
+      pulse: true,
+    },
     {
       key: "tg",
       label: "Telegram",
@@ -38,78 +47,63 @@ export default function FloatingContacts({ contacts = DEFAULT_CONTACTS, onLead }
       icon: "MessageCircle",
       external: true,
     },
-    {
-      key: "phone",
-      label: contacts.PHONE,
-      href: contacts.PHONE_HREF,
-      bg: `linear-gradient(135deg,${GOLD},${GOLD2})`,
-      icon: "Phone",
-      external: false,
-      dark: true,
-    },
   ];
 
   return (
     <div
-      className="fixed right-3 z-[60] flex flex-col items-end gap-2.5"
+      className="fixed right-2.5 z-[60] flex flex-col items-end gap-2"
       style={{
-        bottom: "calc(env(safe-area-inset-bottom, 0px) + 150px)",
+        bottom: "calc(env(safe-area-inset-bottom, 0px) + 152px)",
         opacity: visible ? 1 : 0,
         pointerEvents: visible ? "auto" : "none",
-        transform: visible ? "translateY(0)" : "translateY(12px)",
+        transform: visible ? "translateY(0)" : "translateY(10px)",
         transition: "opacity .25s ease, transform .25s ease",
       }}
     >
       <style>{`
-        @keyframes fcPulse{0%,100%{box-shadow:0 4px 18px rgba(201,168,76,.45),0 0 0 0 rgba(201,168,76,.3)}50%{box-shadow:0 4px 18px rgba(201,168,76,.6),0 0 0 10px rgba(201,168,76,0)}}
+        @keyframes fcPulse{0%,100%{box-shadow:0 4px 16px rgba(201,168,76,.5),0 0 0 0 rgba(201,168,76,.35)}50%{box-shadow:0 4px 16px rgba(201,168,76,.65),0 0 0 9px rgba(201,168,76,0)}}
         .fc-pulse{animation:fcPulse 2.8s ease-out infinite}
       `}</style>
 
-      {open &&
-        items.map(it => (
-          <a
-            key={it.key}
-            href={it.href}
-            {...(it.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            onClick={() => { onLead?.(it.key); setOpen(false); }}
-            className="flex items-center gap-2 rounded-full pl-3.5 pr-4 py-2.5 active:scale-95 transition-transform"
-            style={{ background: it.bg, boxShadow: "0 6px 20px rgba(0,0,0,0.45)" }}
+      {items.map(it => (
+        <a
+          key={it.key}
+          href={it.href}
+          {...(it.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+          onClick={() => onLead?.(it.key)}
+          className={`flex items-center gap-2 rounded-full pl-3 pr-3.5 py-2.5 active:scale-95 transition-transform ${it.pulse ? "fc-pulse" : ""}`}
+          style={{
+            background: it.bg,
+            boxShadow: it.pulse ? undefined : "0 5px 18px rgba(0,0,0,0.45)",
+            minWidth: 132,
+          }}
+        >
+          <span
+            className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+            style={{ background: it.dark ? "rgba(10,15,30,0.15)" : "rgba(255,255,255,0.18)" }}
           >
             <Icon
               name={it.icon}
-              size={16}
+              size={14}
               style={{ color: it.dark ? "#0a0f1e" : "#fff" }}
               fallback="MessageCircle"
             />
-            <span
-              style={{
-                fontFamily: "Oswald",
-                color: it.dark ? "#0a0f1e" : "#fff",
-                fontSize: 12.5,
-                fontWeight: 800,
-                textTransform: "uppercase",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {it.label}
-            </span>
-          </a>
-        ))}
-
-      <button
-        type="button"
-        onClick={() => setOpen(v => !v)}
-        aria-label={open ? "Закрыть контакты" : "Связаться с нами"}
-        className={`w-14 h-14 rounded-full flex items-center justify-center active:scale-95 transition-transform ${open ? "" : "fc-pulse"}`}
-        style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}
-      >
-        <Icon
-          name={open ? "X" : "MessageCircle"}
-          size={24}
-          style={{ color: "#0a0f1e" }}
-          fallback="Phone"
-        />
-      </button>
+          </span>
+          <span
+            style={{
+              fontFamily: "Oswald",
+              color: it.dark ? "#0a0f1e" : "#fff",
+              fontSize: 13,
+              fontWeight: 800,
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {it.label}
+          </span>
+        </a>
+      ))}
     </div>
   );
 }

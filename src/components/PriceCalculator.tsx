@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import { searchCities, roadKmBetween } from "@/lib/cityRoute";
 import { calcAllPrices, isNewTerritoriesRoute, MIN_PRICE, type TariffPrice } from "@/lib/pricing";
 import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
+import { loadSettlements } from "@/lib/settlements";
 
 const GOLD = "#c9a84c";
 const GOLD2 = "#e8c96a";
@@ -35,9 +36,15 @@ function CityInput({
 }) {
   const [open, setOpen] = useState(false);
   const [touched, setTouched] = useState(false);
+  const [ready, setReady] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
-  const list = useMemo(() => (touched ? searchCities(value, 6) : []), [value, touched]);
+  const list = useMemo(
+    () => (touched ? searchCities(value, 6) : []),
+    // ready — чтобы список обновился, когда догрузятся сёла
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [value, touched, ready],
+  );
   const exact = list.length === 1 && list[0] === value;
 
   useEffect(() => {
@@ -74,7 +81,11 @@ function CityInput({
             setTouched(true);
             setOpen(true);
           }}
-          onFocus={() => { setTouched(true); setOpen(true); }}
+          onFocus={() => {
+            setTouched(true);
+            setOpen(true);
+            loadSettlements().then(() => setReady(true));
+          }}
           placeholder={placeholder}
           autoComplete="off"
           className="w-full rounded-2xl pl-10 pr-9 py-3.5 outline-none transition-colors"
@@ -128,7 +139,7 @@ function CityInput({
 export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead, onResult }: Props) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [shown, setShown] = useState(false);
+  const shown = true;
 
   const result = useMemo(() => {
     const km = roadKmBetween(from, to);
@@ -148,8 +159,6 @@ export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead, o
 
   const sameCity = from && to && from === to;
   const tooShort = result && result.km < 200;
-
-  const canCalc = Boolean(roadKmBetween(from, to)) && !sameCity;
 
   return (
     <div
@@ -171,11 +180,11 @@ export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead, o
             letterSpacing: "0.1em",
           }}
         >
-          Рассчитать стоимость
+          Рассчитать стоимость и выбрать авто
         </span>
       </div>
       <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11.5, marginBottom: 12, marginLeft: 14 }}>
-        Укажите города — покажем примерную цену по всем классам авто
+        Укажите два города — цены появятся сразу
       </p>
 
       <div
@@ -199,32 +208,6 @@ export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead, o
           <Icon name="AlertCircle" size={14} style={{ color: "#ef4444", flexShrink: 0 }} />
           <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12 }}>Города совпадают — выберите разные</span>
         </div>
-      )}
-
-      {!shown && (
-        <button
-          type="button"
-          disabled={!canCalc}
-          onClick={() => setShown(true)}
-          className="w-full rounded-2xl py-4 mt-4 transition-transform active:scale-[0.98]"
-          style={{
-            background: canCalc ? `linear-gradient(135deg,${GOLD},${GOLD2})` : "rgba(255,255,255,0.06)",
-            cursor: canCalc ? "pointer" : "not-allowed",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: "Oswald",
-              fontSize: 16,
-              fontWeight: 900,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              color: canCalc ? "#0a0f1e" : "rgba(255,255,255,0.25)",
-            }}
-          >
-            Показать цены
-          </span>
-        </button>
       )}
 
       {shown && result && !sameCity && (
@@ -253,33 +236,53 @@ export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead, o
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {result.tariffs.map(t => (
               <div
                 key={t.id}
-                className="flex items-center justify-between rounded-2xl px-4 py-3.5"
-                style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)" }}
+                className="relative rounded-2xl overflow-hidden flex"
+                style={{ minHeight: 104, background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)" }}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-1 h-8 rounded-full" style={{ background: t.color }} />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 14, fontWeight: 800, textTransform: "uppercase" }}>
+                <div className="relative shrink-0" style={{ width: "38%", minHeight: 104 }}>
+                  <img src={t.img} alt={t.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0" style={{ background: "linear-gradient(to right,rgba(5,8,18,0.15) 0%,rgba(5,8,18,0.9) 100%)" }} />
+                </div>
+                <div className="absolute top-0 left-0 bottom-0 w-[3px]" style={{ background: `linear-gradient(${t.color},transparent)` }} />
+
+                <div className="flex-1 p-3 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span style={{ fontFamily: "Oswald", color: t.color, fontSize: 15, fontWeight: 800, textTransform: "uppercase", lineHeight: 1 }}>
                         {t.name}
                       </span>
                       {t.badge && (
-                        <span className="rounded-full px-1.5 py-0.5" style={{ background: `${t.color}22`, color: t.color, fontSize: 8.5, fontWeight: 800, textTransform: "uppercase" }}>
+                        <span className="rounded-md px-1.5 py-0.5" style={{ background: `${t.color}22`, color: t.color, fontSize: 8, fontWeight: 800, textTransform: "uppercase" }}>
                           {t.badge}
                         </span>
                       )}
                     </div>
-                    <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10.5, marginTop: 1 }}>
+                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginTop: 2 }}>{t.desc}</div>
+                    <div style={{ color: "rgba(255,255,255,0.28)", fontSize: 9.5, marginTop: 2 }}>
                       {t.seats} пасс. · {t.luggage} · {t.rate} ₽/км
                     </div>
                   </div>
-                </div>
-                <div style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 17, fontWeight: 900, whiteSpace: "nowrap" }}>
-                  {t.price.toLocaleString("ru")} ₽
+
+                  <div className="text-right shrink-0">
+                    <div style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 17, fontWeight: 900, whiteSpace: "nowrap", lineHeight: 1 }}>
+                      ≈ {t.price.toLocaleString("ru")} ₽
+                    </div>
+                    <a
+                      href={contacts.PHONE_HREF}
+                      onClick={() => onLead?.("phone")}
+                      className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 mt-1.5 active:scale-95 transition-transform"
+                      style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}
+                    >
+                      <Icon name="Phone" size={11} style={{ color: "#0a0f1e" }} />
+                      <span style={{ fontFamily: "Oswald", color: "#0a0f1e", fontSize: 10.5, fontWeight: 900, textTransform: "uppercase" }}>
+                        Заказать
+                      </span>
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}
@@ -366,11 +369,11 @@ export default function PriceCalculator({ contacts = DEFAULT_CONTACTS, onLead, o
 
           <button
             type="button"
-            onClick={() => { setShown(false); setFrom(""); setTo(""); }}
+            onClick={() => { setFrom(""); setTo(""); }}
             className="w-full mt-2 py-2"
             style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, fontWeight: 600 }}
           >
-            Рассчитать другой маршрут
+            Очистить и выбрать другой маршрут
           </button>
         </div>
       )}

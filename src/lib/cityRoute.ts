@@ -2,6 +2,7 @@
 // + расчёт примерного расстояния и стоимости поездки для подстановки в заголовок сайта.
 import { calcPrice, isNewTerritoriesRoute } from "@/lib/pricing";
 import { CITY_COORDS } from "@/lib/cities";
+import { searchSettlements, getSettlementCoords } from "@/lib/settlements";
 
 const COORDS: Record<string, [number, number]> = CITY_COORDS;
 
@@ -76,7 +77,7 @@ const FORM_TO_CITY: Record<string, string> = {
 export const ALL_CITIES: string[] = Object.keys(COORDS).sort((a, b) => a.localeCompare(b, "ru"));
 
 export function getCoords(city: string): [number, number] | null {
-  return COORDS[city] ?? null;
+  return COORDS[city] ?? getSettlementCoords(city);
 }
 
 function normalize(v: string): string {
@@ -94,11 +95,17 @@ export function searchCities(query: string, limit = 8): string[] {
     else if (n.includes(q)) inside.push(city);
     if (starts.length >= limit) break;
   }
-  return [...starts, ...inside].slice(0, limit);
+  const found = [...starts, ...inside].slice(0, limit);
+  if (found.length >= limit) return found;
+
+  // добираем сёлами и посёлками, если городов не хватило
+  const extra = searchSettlements(query, limit - found.length);
+  for (const e of extra) if (!found.includes(e)) found.push(e);
+  return found.slice(0, limit);
 }
 
 export function roadKmBetween(from: string, to: string): number | null {
-  const a = COORDS[from], b = COORDS[to];
+  const a = getCoords(from), b = getCoords(to);
   if (!a || !b) return null;
   return estimateRoadKm(a, b);
 }
