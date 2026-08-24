@@ -1,6 +1,6 @@
-import Quick from "./Quick";
+import Home from "./Home";
 import { VK_ADS_CONTACTS } from "@/lib/contacts";
 
 export default function QuickVk() {
-  return <Quick contacts={VK_ADS_CONTACTS} source="vk_ads" />;
+  return <Home contacts={VK_ADS_CONTACTS} source="vk_ads" />;
 }

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Military from "./pages/Military";
 import Quick from "./pages/Quick";
+import Home from "./pages/Home";
 import QuickVk from "./pages/QuickVk";
 import Tariffs from "./pages/Tariffs";
 import Reviews from "./pages/Reviews";
@@ -41,7 +42,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Quick />} />
+          <Route path="/" element={<Home />} />
           <Route path="/info" element={<Index />} />
           <Route path="/voennye" element={<Military />} />
           <Route path="/kpp" element={<KPP />} />

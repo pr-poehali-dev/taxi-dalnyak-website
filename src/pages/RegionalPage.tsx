@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
+import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
 
 const HERO_IMG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/7071b942-9c87-47e1-a16d-0af0c4b83c1d.jpg";
 const LOGO      = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
@@ -9,12 +10,7 @@ const REVIEW_1 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888a
 const REVIEW_2 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/fedc4281-a106-4024-9369-8a03712c92a3.jpg";
 const REVIEW_3 = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/ac322d91-fd27-4c11-b86f-f28e85ec3df0.jpg";
 
-const PHONE      = "+7 (995) 645-51-25";
-const PHONE_HREF = "tel:+79956455125";
-const VK_HREF    = "https://vk.com/dalnyack";
-const TG_HREF    = "https://t.me/Mezhgorod1816";
-const MAX_HREF   = "https://max.ru/u/f9LHodD0cOLXF8YYOcofc0nCB_QzuJK3zunO0A5XBUyuWM654AGfmsC_fCc";
-const YM_ID      = 111028538;
+const YM_ID = 111028538;
 
 const GOLD  = "#c9a84c";
 const GOLD2 = "#e8c96a";
@@ -61,9 +57,17 @@ declare global {
 function ymGoal(goal: string, params: Record<string, string> = {}) {
   if (typeof window.ym === "function") window.ym(YM_ID, "reachGoal", goal, params);
 }
-function ymLead(channel: string, utmParams: { source: string; medium: string; campaign: string; term: string }) {
+function tmrGoal(goal: string) {
+  const tmr = (window as unknown as { _tmr?: { push: (o: Record<string, unknown>) => void } })._tmr;
+  if (tmr) tmr.push({ id: "3789002", type: "reachGoal", goal });
+}
+
+function ymLead(channel: string, utmParams: { source: string; medium: string; campaign: string; term: string }, pageSource?: string) {
   ymGoal("lead", { channel, utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign, utm_term: utmParams.term });
   ymGoal(`lead_${channel}`, { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign });
+  if (pageSource) ymGoal(`lead_${pageSource}`);
+  tmrGoal("lead");
+  tmrGoal(`lead_${channel}`);
 }
 
 export interface RegionConfig {
@@ -75,9 +79,22 @@ export interface RegionConfig {
   about: string;
   features: string[];
   reviews?: { name: string; route: string; text: string; img: string }[];
+  badge?: string;
+  sub?: string;
+  lead?: string;
+  aboutTitle?: string;
+  routesTitle?: string;
+  routesNote?: string;
+  canonical?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+  splashSub?: string;
+  heroAlt?: string;
 }
 
-export default function RegionalPage({ config }: { config: RegionConfig }) {
+export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, source }: { config: RegionConfig; contacts?: Contacts; source?: string }) {
+  const { PHONE, PHONE_HREF, VK_HREF, TG_HREF, MAX_HREF } = contacts;
   const [utmParams, setUtmParams] = useState({ source: "direct", medium: "none", campaign: "none", term: "", content: "none" });
   const [splash, setSplash]       = useState(true);
   const [menuOpen, setMenuOpen]   = useState(false);
@@ -90,12 +107,12 @@ export default function RegionalPage({ config }: { config: RegionConfig }) {
   }, []);
 
   useEffect(() => {
-    const title = `Заказать такси из ${config.cityRod} в другой город от 200 км — Такси Дальняк`;
+    const title = config.seoTitle ?? `Заказать такси из ${config.cityRod} в другой город от 200 км — Такси Дальняк`;
     document.title = title;
 
-    const description = `Такси из ${config.cityRod} в другой город по фиксированной цене. ${config.routes.slice(0, 4).join(", ")} и другие направления. Круглосуточно, звоните ${PHONE}.`;
-    const keywords = `такси ${config.cityRod}, заказать такси ${config.cityRod}, межгород ${config.cityRod}, такси из ${config.cityRod} в другой город`;
-    const canonicalUrl = `https://taxidalnyack.ru/${config.slug === "moscow" ? "moskva" : config.slug === "nizhny" ? "nizhniy" : config.slug}`;
+    const description = config.seoDescription ?? `Такси из ${config.cityRod} в другой город по фиксированной цене. ${config.routes.slice(0, 4).join(", ")} и другие направления. Круглосуточно, звоните ${PHONE}.`;
+    const keywords = config.seoKeywords ?? `такси ${config.cityRod}, заказать такси ${config.cityRod}, межгород ${config.cityRod}, такси из ${config.cityRod} в другой город`;
+    const canonicalUrl = config.canonical ?? `https://taxidalnyack.ru/${config.slug === "moscow" ? "moskva" : config.slug === "nizhny" ? "nizhniy" : config.slug}`;
 
     const setMeta = (selector: string, attr: string, value: string) => {
       let el = document.querySelector(selector) as HTMLElement | null;
@@ -193,7 +210,7 @@ export default function RegionalPage({ config }: { config: RegionConfig }) {
         <img src={LOGO} alt="" className="w-20 h-20 rounded-2xl object-cover mb-4" style={{ boxShadow: `0 0 40px rgba(201,168,76,0.4)` }} />
         <div style={{ fontFamily: "Oswald", color: GOLD, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.5em", fontWeight: 700 }}>Такси</div>
         <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 32, textTransform: "uppercase", fontWeight: 900, lineHeight: 1 }}>Дальняк</div>
-        <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginTop: 6 }}>{config.city} · Межгородское такси</div>
+        <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginTop: 6 }}>{config.splashSub ?? `${config.city} · Межгородское такси`}</div>
         <div className="w-32 h-0.5 mt-5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
           <div className="h-full rounded-full splash-line" style={{ background: `linear-gradient(to right,${GOLD},${GOLD2})` }} />
         </div>
@@ -253,7 +270,7 @@ export default function RegionalPage({ config }: { config: RegionConfig }) {
             <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 mb-4"
               style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)" }}>
               <Icon name="MapPin" size={12} style={{ color: GOLD }} />
-              <span style={{ color: GOLD, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em" }}>{config.city} · Межгородское такси</span>
+              <span style={{ color: GOLD, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em" }}>{config.badge ?? `${config.city} · Межгородское такси`}</span>
             </div>
 
             <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(24px,6vw,52px)", lineHeight: 1.0, textTransform: "uppercase", color: "#fff", letterSpacing: "-0.01em", marginBottom: 10 }}>
@@ -265,15 +282,15 @@ export default function RegionalPage({ config }: { config: RegionConfig }) {
             </h1>
 
             <p style={{ fontFamily: "Oswald", color: GOLD2, fontSize: "clamp(13px,2.5vw,18px)", fontWeight: 600, marginBottom: 4 }}>
-              От 200 км · Большой опыт в перевозках
+              {config.sub ?? "От 200 км · Большой опыт в перевозках"}
             </p>
             <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, lineHeight: 1.6, maxWidth: 560, marginBottom: 20 }}>
-              Огромная база водителей — от эконома до бизнес-класса. Фиксированная стоимость без счётчика и сюрпризов.
+              {config.lead ?? "Огромная база водителей — от эконома до бизнес-класса. Фиксированная стоимость без счётчика и сюрпризов."}
             </p>
 
             {/* ФОТО */}
             <div className="relative rounded-3xl overflow-hidden" style={{ maxHeight: 460 }}>
-              <img src={HERO_IMG} alt={`Комфортная поездка из ${config.cityRod}`} fetchPriority="high"
+              <img src={HERO_IMG} alt={config.heroAlt ?? `Комфортная поездка из ${config.cityRod}`} {...{ fetchpriority: "high" }}
                 className="w-full object-cover" style={{ maxHeight: 460, objectPosition: "center 15%" }} />
               <div className="absolute inset-0" style={{ background: "linear-gradient(to right,rgba(7,11,20,0.6) 0%,transparent 45%,rgba(7,11,20,0.15) 100%)" }} />
               <div className="absolute inset-0" style={{ background: "linear-gradient(to top,rgba(7,11,20,0.95) 0%,transparent 45%)" }} />
@@ -365,7 +382,7 @@ export default function RegionalPage({ config }: { config: RegionConfig }) {
           <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(${GOLD},${GOLD2})` }} />
-              <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Такси из {config.cityRod}</span>
+              <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>{config.aboutTitle ?? `Такси из ${config.cityRod}`}</span>
             </div>
             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>{config.about}</p>
             <div className="space-y-2">
@@ -452,9 +469,9 @@ export default function RegionalPage({ config }: { config: RegionConfig }) {
         <section className="px-4 pt-6 pb-0 max-w-5xl mx-auto w-full">
           <div className="flex items-center gap-2.5 mb-2">
             <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(${GOLD},${GOLD2})` }} />
-            <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>Маршруты из {config.cityRod}</span>
+            <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>{config.routesTitle ?? `Маршруты из ${config.cityRod}`}</span>
           </div>
-          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 11, marginBottom: 12, fontStyle: "italic" }}>Часть направлений — выезжаем по всей России</p>
+          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 11, marginBottom: 12, fontStyle: "italic" }}>{config.routesNote ?? "Часть направлений — выезжаем по всей России"}</p>
           <div className="flex flex-wrap gap-2">
             {config.routes.map(r => (
               <span key={r} className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
@@ -496,7 +513,7 @@ export default function RegionalPage({ config }: { config: RegionConfig }) {
         <div className="sticky bottom-0 px-4 py-3 z-40" style={{ background: "rgba(7,11,20,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(201,168,76,0.15)" }}>
           <div className="max-w-5xl mx-auto">
             <a href={PHONE_HREF}
-              onClick={() => { ymGoal("phone_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign, city: config.slug }); ymLead("phone", utmParams); }}
+              onClick={() => { ymGoal("phone_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign, city: config.slug }); ymLead("phone", utmParams, source); }}
               className="cta-gold flex items-center justify-center gap-3 w-full rounded-2xl py-4 transition-transform hover:scale-[1.01] active:scale-[0.98] mb-2.5"
               style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, fontFamily: "Oswald" }}>
               <Icon name="PhoneCall" size={22} style={{ color: "#0a0f1e" }} />
@@ -507,19 +524,19 @@ export default function RegionalPage({ config }: { config: RegionConfig }) {
             </a>
             <div className="grid grid-cols-3 gap-2">
               <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
-                onClick={() => { ymGoal("tg_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign, city: config.slug }); ymLead("tg", utmParams); }}
+                onClick={() => { ymGoal("tg_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign, city: config.slug }); ymLead("tg", utmParams, source); }}
                 className="flex items-center justify-center gap-1.5 rounded-2xl py-3.5 active:scale-95 transition-transform"
                 style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#0e6da8,#1a8fc2)", color: "#fff", fontWeight: 800, fontSize: "clamp(11px,2.5vw,14px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 <Icon name="Send" size={15} /> TG
               </a>
               <a href={vkHref} target="_blank" rel="noopener noreferrer"
-                onClick={() => { ymGoal("vk_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign, city: config.slug }); ymLead("vk", utmParams); }}
+                onClick={() => { ymGoal("vk_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign, city: config.slug }); ymLead("vk", utmParams, source); }}
                 className="flex items-center justify-center gap-1.5 rounded-2xl py-3.5 active:scale-95 transition-transform"
                 style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#1a3a6b,#2456a4)", color: "#fff", fontWeight: 800, fontSize: "clamp(11px,2.5vw,14px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 <Icon name="Users" size={15} /> ВК
               </a>
               <a href={maxHref} target="_blank" rel="noopener noreferrer"
-                onClick={() => { ymGoal("max_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign, city: config.slug }); ymLead("max", utmParams); }}
+                onClick={() => { ymGoal("max_click", { utm_source: utmParams.source, utm_medium: utmParams.medium, utm_campaign: utmParams.campaign, city: config.slug }); ymLead("max", utmParams, source); }}
                 className="flex items-center justify-center gap-1.5 rounded-2xl py-3.5 active:scale-95 transition-transform"
                 style={{ fontFamily: "Oswald", background: "linear-gradient(135deg,#003a9e,#0055e5)", color: "#fff", fontWeight: 800, fontSize: "clamp(11px,2.5vw,14px)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 <img src={MAX_LOGO} alt="MAX" className="w-5 h-5 rounded-full object-cover" /> МАКС
