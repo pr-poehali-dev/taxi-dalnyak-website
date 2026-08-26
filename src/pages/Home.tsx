@@ -7,6 +7,12 @@ export const HOME_CONFIG = {
   cityRod: "города в город",
   canonical: "https://taxidalnyack.ru/",
   short: true,
+  priceGuide: [
+    { route: "Москва – Воронеж", from: 18900 },
+    { route: "Москва – Курск", from: 18600 },
+    { route: "Москва – Санкт-Петербург", from: 25600 },
+    { route: "Москва – Ростов-на-Дону", from: 39900 },
+  ],
 
   h1: "Заказать такси из города в город. [gold]От 200 км[/gold]",
   badge: "Межгород · Россия · с 2014 года",
