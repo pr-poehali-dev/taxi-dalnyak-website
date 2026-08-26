@@ -4,7 +4,7 @@ import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
 import PriceGuide from "@/components/PriceGuide";
 import { BASE_REVIEWS } from "@/lib/promoReviews";
 
-const HERO = "/hero-promo.jpg";
+const HERO_WIDE = "/hero-promo-wide.jpg";
 const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";
 
@@ -29,6 +29,13 @@ const BENEFITS = [
   { icon: "Clock",       title: "В удобное",          sub: "для вас время" },
   { icon: "Armchair",    title: "Комфортные",         sub: "автомобили" },
   { icon: "ShieldCheck", title: "Без пересадок",      sub: "и лишних ожиданий" },
+];
+
+const SIGN_ROUTES = [
+  { city: "Воронеж", km: 520 },
+  { city: "Курск", km: 530 },
+  { city: "Санкт-Петербург", km: 710 },
+  { city: "Ростов-на-Дону", km: 1080 },
 ];
 
 const PRICE_ROUTES = [
@@ -121,58 +128,81 @@ export default function Promo({
         </div>
       </header>
 
-      {/* HERO */}
-      <section style={{ background: "linear-gradient(180deg,#0d1220 0%,#070b14 100%)" }}>
-        <div className="max-w-5xl mx-auto px-4 pt-7 pb-1">
-          <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 mb-4"
-            style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)" }}>
-            <Icon name="MapPin" size={12} style={{ color: GOLD }} />
-            <span style={{ color: GOLD, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em" }}>Дорога без лишних хлопот</span>
+      {/* HERO — ФОТО ФОНОМ, ТЕКСТ ПОВЕРХ */}
+      <section className="relative overflow-hidden">
+        <img src={HERO_WIDE} alt="Межгородное такси от адреса до адреса" {...{ fetchpriority: "high" }}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: "58% 42%" }} />
+        {/* затемнение: плотное только под текстом слева, машина справа остаётся светлой */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(105deg,rgba(7,11,20,0.93) 0%,rgba(7,11,20,0.8) 30%,rgba(7,11,20,0.3) 58%,transparent 88%)" }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to top,#070b14 0%,rgba(7,11,20,0.4) 16%,transparent 42%)" }} />
+
+        <div className="relative max-w-5xl mx-auto px-4 pt-8 pb-6">
+          <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 mb-5"
+            style={{ background: "rgba(201,168,76,0.14)", border: "1px solid rgba(201,168,76,0.35)", backdropFilter: "blur(6px)" }}>
+            <Icon name="MapPin" size={12} style={{ color: GOLD2 }} />
+            <span style={{ color: GOLD2, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em" }}>Дорога без лишних хлопот</span>
           </div>
 
-          <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(30px,8vw,62px)", lineHeight: 0.95, textTransform: "uppercase", color: "#fff", letterSpacing: "-0.01em" }}>
+          <h1 className="max-w-2xl" style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(32px,9vw,68px)", lineHeight: 0.92, textTransform: "uppercase", color: "#fff", letterSpacing: "-0.015em", textShadow: "0 4px 30px rgba(0,0,0,0.85)" }}>
             Межгородное
           </h1>
-          <div className="inline-block rounded-xl px-3 py-1 my-1.5" style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
-            <span style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(30px,8vw,62px)", lineHeight: 1, textTransform: "uppercase", color: "#0a0f1e" }}>Такси</span>
+          <div className="inline-block rounded-xl px-3.5 py-1 my-2"
+            style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 8px 32px rgba(201,168,76,0.45)" }}>
+            <span style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(32px,9vw,68px)", lineHeight: 1.05, textTransform: "uppercase", color: "#0a0f1e", display: "block" }}>Такси</span>
           </div>
-          <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: "clamp(17px,4.5vw,32px)", fontWeight: 500, marginBottom: 16 }}>
+          <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: "clamp(18px,5vw,34px)", fontWeight: 500, textShadow: "0 2px 18px rgba(0,0,0,0.9)" }}>
             от адреса до адреса
           </div>
 
-          {/* ФОТО */}
-          <div className="relative rounded-3xl overflow-hidden mb-4">
-            <img src={HERO} alt="Межгородное такси от адреса до адреса" {...{ fetchpriority: "high" }}
-              className="w-full object-cover" style={{ maxHeight: 420 }} />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to top,rgba(7,11,20,0.9) 0%,transparent 50%)" }} />
-            <div className="absolute bottom-4 left-4 right-4">
-              <div className="grid grid-cols-3 gap-2 max-w-xs">
-                {[{ v: "12+", l: "лет на рынке" }, { v: "50к+", l: "поездок" }, { v: "4.8★", l: "рейтинг" }].map(s => (
-                  <div key={s.v} className="rounded-xl py-2 px-2 text-center" style={{ background: "rgba(7,11,20,0.78)", backdropFilter: "blur(8px)", border: "1px solid rgba(201,168,76,0.2)" }}>
-                    <div style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 17, fontWeight: 900, lineHeight: 1 }}>{s.v}</div>
-                    <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 9, marginTop: 2 }}>{s.l}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* ПРЕИМУЩЕСТВА */}
-          <div className="grid grid-cols-2 gap-2.5">
-            {BENEFITS.map(b => (
-              <div key={b.title} className="flex items-center gap-3 rounded-2xl px-3.5 py-3"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                  style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
-                  <Icon name={b.icon} size={17} style={{ color: "#0a0f1e" }} />
-                </div>
-                <div className="leading-tight">
-                  <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>{b.title}</div>
-                  <div style={{ color: GOLD, fontSize: 12, fontWeight: 600 }}>{b.sub}</div>
-                </div>
+          {/* ДОРОЖНЫЙ УКАЗАТЕЛЬ — как на трассе */}
+          <div className="mt-6 rounded-xl overflow-hidden max-w-[280px]"
+            style={{ background: "linear-gradient(180deg,#12539b,#0d3f78)", border: "2px solid rgba(255,255,255,0.85)", boxShadow: "0 12px 40px rgba(0,0,0,0.6)" }}>
+            {SIGN_ROUTES.map((s, i) => (
+              <div key={s.city} className="flex items-center gap-2.5 px-3 py-1.5"
+                style={{ borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.22)" }}>
+                <Icon name="ArrowUp" size={14} style={{ color: "#fff" }} className="shrink-0" />
+                <span className="flex-1" style={{ color: "#fff", fontSize: 13, fontWeight: 600, letterSpacing: "0.02em" }}>{s.city}</span>
+                <span style={{ color: "#fff", fontSize: 13, fontWeight: 700, fontFamily: "Oswald" }}>{s.km}</span>
               </div>
             ))}
           </div>
+          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10.5, marginTop: 7 }}>
+            Расстояние от Москвы, км · возим по всей России
+          </div>
+
+          {/* ЦИФРЫ */}
+          <div className="grid grid-cols-3 gap-2 max-w-xs mt-6">
+            {[{ v: "12+", l: "лет на рынке" }, { v: "50к+", l: "поездок" }, { v: "4.8★", l: "рейтинг" }].map(s => (
+              <div key={s.v} className="rounded-xl py-2 px-2 text-center"
+                style={{ background: "rgba(7,11,20,0.7)", backdropFilter: "blur(8px)", border: "1px solid rgba(201,168,76,0.25)" }}>
+                <div style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 17, fontWeight: 900, lineHeight: 1 }}>{s.v}</div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 9, marginTop: 2 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ШАШЕЧНАЯ ЛЕНТА */}
+      <div style={{ height: 12, background: `repeating-linear-gradient(90deg,${GOLD} 0 14px,#0a0f1e 14px 28px)`, opacity: 0.85 }} />
+
+      {/* ПРЕИМУЩЕСТВА */}
+      <section className="px-4 pt-6 max-w-5xl mx-auto w-full">
+        <div className="grid grid-cols-2 gap-2.5">
+          {BENEFITS.map(b => (
+            <div key={b.title} className="flex items-center gap-3 rounded-2xl px-3.5 py-3.5"
+              style={{ background: "linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))", border: "1px solid rgba(201,168,76,0.18)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 16px rgba(201,168,76,0.3)" }}>
+                <Icon name={b.icon} size={18} style={{ color: "#0a0f1e" }} />
+              </div>
+              <div className="leading-tight">
+                <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>{b.title}</div>
+                <div style={{ color: GOLD, fontSize: 12, fontWeight: 600 }}>{b.sub}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
