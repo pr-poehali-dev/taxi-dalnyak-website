@@ -2,7 +2,7 @@
 // Тарифы за километр: обычные регионы РФ и новые территории (ДНР, ЛНР, Херсонская, Запорожская).
 import { NEW_TERRITORY_CITIES } from "@/lib/cities";
 
-export const MIN_PRICE = 10000;
+export const MIN_PRICE = 5000;
 
 export interface TariffClass {
   id: string;
@@ -18,7 +18,7 @@ export interface TariffClass {
 }
 
 export const TARIFF_CLASSES: TariffClass[] = [
-  { id: "standart",    name: "Стандарт", desc: "Рио · Поло · Солярис",  seats: 4, luggage: "1–2 сумки",    rateRf: 35, rateNt: 95,  color: "#c9a84c" , img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/39d043f8-acde-4a27-a69c-ebe03e8bd403.jpg" },
+  { id: "standart",    name: "Стандарт", desc: "Рио · Поло · Солярис",  seats: 4, luggage: "1–2 сумки",    rateRf: 30, rateNt: 95,  color: "#c9a84c" , img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/39d043f8-acde-4a27-a69c-ebe03e8bd403.jpg" },
   { id: "comfort",     name: "Комфорт",  desc: "Хавал Джулиан 2025",    seats: 4, luggage: "2–3 сумки",    rateRf: 40, rateNt: 100, color: "#22D3EE", badge: "Популярный" , img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/238966ba-ee86-4f06-bc36-0872f043ebfb.jpg" },
   { id: "comfortplus", name: "Комфорт+", desc: "Toyota Camry 70 кузов", seats: 4, luggage: "3–4 сумки",    rateRf: 45, rateNt: 110, color: "#A78BFA", badge: "Бизнес" , img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/38f8c2aa-ebc6-4a58-bedb-3322efbce272.jpg" },
   { id: "minivan",     name: "Минивэн",  desc: "Hyundai Staria 2022",   seats: 7, luggage: "Много багажа", rateRf: 55, rateNt: 120, color: "#34D399", badge: "Группа" , img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/92a14984-9eac-4b0c-aa50-8c49af1c12b7.jpg" },

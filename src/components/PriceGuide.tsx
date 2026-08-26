@@ -17,10 +17,10 @@ interface Props {
 // Ориентиры «от» — отсекают неплатёжеспособных, но не заменяют диспетчера:
 // точную цену маршрута человек всё равно узнаёт только по звонку.
 const DEFAULT_ROUTES: PriceGuideRoute[] = [
-  { route: "Москва – Воронеж", from: 18900 },
-  { route: "Москва – Курск", from: 18600 },
-  { route: "Москва – Санкт-Петербург", from: 25600 },
-  { route: "Москва – Ростов-на-Дону", from: 39900 },
+  { route: "Москва – Воронеж", from: 16200 },
+  { route: "Москва – Курск", from: 15900 },
+  { route: "Москва – Санкт-Петербург", from: 21900 },
+  { route: "Москва – Ростов-на-Дону", from: 34200 },
 ];
 
 export default function PriceGuide({ routes = DEFAULT_ROUTES, note }: Props) {

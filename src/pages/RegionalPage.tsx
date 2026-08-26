@@ -450,6 +450,8 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
           </div>
         </section>
 
+        </>}
+
         {/* ОТЗЫВЫ */}
         <section className="px-4 pt-6 pb-32 max-w-5xl mx-auto w-full">
           <div className="flex items-center gap-2.5 mb-4">
@@ -476,7 +478,6 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
             ))}
           </div>
         </section>
-        </>}
 
         {!config.short && (
           <FloatingContacts
