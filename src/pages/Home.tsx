@@ -6,6 +6,7 @@ export const HOME_CONFIG = {
   city: "Россия",
   cityRod: "города в город",
   canonical: "https://taxidalnyack.ru/",
+  short: true,
 
   h1: "Заказать такси из города в город. [gold]От 200 км[/gold]",
   badge: "Межгород · Россия · с 2014 года",

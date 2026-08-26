@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
-import PriceCalculator from "@/components/PriceCalculator";
 import FloatingContacts from "@/components/FloatingContacts";
 
 const HERO_IMG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/7071b942-9c87-47e1-a16d-0af0c4b83c1d.jpg";
@@ -87,6 +86,8 @@ export interface RegionConfig {
   seoKeywords?: string;
   splashSub?: string;
   heroAlt?: string;
+  /** Короткая версия: только шапка, заголовок, «Важно знать» и кнопки связи. */
+  short?: boolean;
 }
 
 export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, source }: { config: RegionConfig; contacts?: Contacts; source?: string }) {
@@ -310,7 +311,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
         </section>
 
         {/* ВАЖНО */}
-        <section className="px-4 pt-6 pb-0 max-w-5xl mx-auto w-full">
+        <section className={`px-4 pt-6 max-w-5xl mx-auto w-full ${config.short ? "pb-5" : "pb-0"}`}>
           <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}>
             <div className="flex items-center gap-2 mb-3">
               <Icon name="AlertCircle" size={13} style={{ color: "rgba(255,255,255,0.25)" }} />
@@ -334,14 +335,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
           </div>
         </section>
 
-        {/* КАЛЬКУЛЯТОР + АВТОПАРК */}
-        <section className="px-4 pt-5 pb-0 max-w-5xl mx-auto w-full">
-          <PriceCalculator
-            contacts={contacts}
-            onLead={(ch) => { ymGoal(`calc_${ch}`, { city: config.slug }); ymLead(ch, utmParams, source); }}
-          />
-        </section>
-
+        {!config.short && <>
         {/* ДИСПЕТЧЕР */}
         <section className="px-4 pt-5 pb-0 max-w-5xl mx-auto w-full">
           <div className="rounded-2xl p-5" style={{ background: `linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.03))`, border: `1px solid rgba(201,168,76,0.2)` }}>
@@ -473,11 +467,14 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
             ))}
           </div>
         </section>
+        </>}
 
-        <FloatingContacts
-          contacts={contacts}
-          onLead={(ch) => { ymGoal(`float_${ch}`, { city: config.slug }); ymLead(ch, utmParams, source); }}
-        />
+        {!config.short && (
+          <FloatingContacts
+            contacts={contacts}
+            onLead={(ch) => { ymGoal(`float_${ch}`, { city: config.slug }); ymLead(ch, utmParams, source); }}
+          />
+        )}
 
         {/* STICKY CTA */}
         <div className="sticky bottom-0 px-4 py-3 z-40" style={{ background: "rgba(7,11,20,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(201,168,76,0.15)" }}>
