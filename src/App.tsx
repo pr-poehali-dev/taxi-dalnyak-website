@@ -8,6 +8,7 @@ import Military from "./pages/Military";
 import Quick from "./pages/Quick";
 import Home from "./pages/Home";
 import QuickVk from "./pages/QuickVk";
+import Direct from "./pages/Direct";
 import Tariffs from "./pages/Tariffs";
 import Reviews from "./pages/Reviews";
 import PageNotFound from "./pages/PageNotFound";
@@ -48,6 +49,7 @@ const App = () => (
           <Route path="/kpp" element={<KPP />} />
           <Route path="/zvoni" element={<Quick />} />
           <Route path="/vk" element={<QuickVk />} />
+          <Route path="/direct" element={<Direct />} />
           <Route path="/tariffs" element={<Tariffs />} />
           <Route path="/reviews" element={<Reviews />} />
 

@@ -16,10 +16,15 @@ export const DEFAULT_CONTACTS: Contacts = {
   MAX_HREF: "https://max.ru/u/f9LHodD0cOLXF8YYOcofc0nCB_QzuJK3zunO0A5XBUyuWM654AGfmsC_fCc",
 };
 
-export const VK_ADS_CONTACTS: Contacts = {
+// Отдельный номер и Макс для Яндекс.Директа — чтобы звонки из Директа
+// не смешивались со звонками из VK и с органики.
+export const DIRECT_ADS_CONTACTS: Contacts = {
   ...DEFAULT_CONTACTS,
   PHONE: "+7 (922) 505-51-25",
   PHONE_HREF: "tel:+79225055125",
   MAX_HREF:
     "https://max.ru/u/f9LHodD0cOI2GygpC-YhvtMDVdYEJcCG3IhGQlqUoFV99elHxgibg8U3KVw",
 };
+
+/** @deprecated Оставлено для обратной совместимости: старая ссылка /vk. */
+export const VK_ADS_CONTACTS = DIRECT_ADS_CONTACTS;
