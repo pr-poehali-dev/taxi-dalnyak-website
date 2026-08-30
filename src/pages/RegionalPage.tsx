@@ -91,6 +91,10 @@ export interface RegionConfig {
   short?: boolean;
   /** Ориентиры цен «от» — показываются под блоком «Важно знать». */
   priceGuide?: PriceGuideRoute[];
+  /** Минимальное расстояние для заказа, км (по умолчанию 200). */
+  minKm?: number;
+  /** Своя сетка тарифов за км — вместо общей. */
+  rateTable?: { title?: string; note?: string; rows: { name: string; rate: number; desc?: string }[] };
 }
 
 export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, source }: { config: RegionConfig; contacts?: Contacts; source?: string }) {
@@ -324,7 +328,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
               {[
                 { ok: false, text: "Поездками с попутчиками мы не занимаемся" },
                 { ok: false, text: "Маршруты по городу мы не выполняем" },
-                { ok: true,  text: "Работаем только на дальних маршрутах — от 200 км" },
+                { ok: true,  text: `Работаем только на дальних маршрутах — от ${config.minKm ?? 200} км` },
               ].map(item => (
                 <div key={item.text} className="flex items-start gap-2.5">
                   <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
@@ -341,6 +345,33 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
         {config.priceGuide && (
           <section className="px-4 pt-5 pb-1 max-w-5xl mx-auto w-full">
             <PriceGuide routes={config.priceGuide} />
+          </section>
+        )}
+
+        {config.rateTable && (
+          <section className="px-4 pt-5 pb-0 max-w-5xl mx-auto w-full">
+            <div className="rounded-3xl p-5" style={{ background: "linear-gradient(135deg,rgba(201,168,76,0.07),rgba(201,168,76,0.02))", border: "1px solid rgba(201,168,76,0.22)" }}>
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-1 h-5 rounded-full" style={{ background: `linear-gradient(${GOLD},${GOLD2})` }} />
+                <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  {config.rateTable.title ?? "Тарифы за километр"}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                {config.rateTable.rows.map(r => (
+                  <div key={r.name} className="rounded-2xl px-4 py-3.5" style={{ background: "rgba(7,11,20,0.5)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>{r.name}</div>
+                    {r.desc && <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10.5, marginTop: 1 }}>{r.desc}</div>}
+                    <div style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 22, fontWeight: 900, lineHeight: 1.1, marginTop: 5 }}>
+                      {r.rate} ₽<span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.35)" }}>/км</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {config.rateTable.note && (
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 11.5, lineHeight: 1.6, marginTop: 12 }}>{config.rateTable.note}</p>
+              )}
+            </div>
           </section>
         )}
 
