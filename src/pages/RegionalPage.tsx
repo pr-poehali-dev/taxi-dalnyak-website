@@ -16,6 +16,9 @@ const YM_ID = 111028538;
 
 const GOLD  = "#c9a84c";
 const GOLD2 = "#e8c96a";
+// Сколько направлений показываем до нажатия «Показать все».
+// Остальные есть в HTML — их видят поисковики и автотаргетинг.
+const ROUTES_PREVIEW = 40;
 
 
 const BASE_REVIEWS = [
@@ -102,6 +105,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
   const [utmParams, setUtmParams] = useState({ source: "direct", medium: "none", campaign: "none", term: "", content: "none" });
   const [splash, setSplash]       = useState(true);
   const [menuOpen, setMenuOpen]   = useState(false);
+  const [allRoutes, setAllRoutes] = useState(false);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -472,13 +476,25 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
           </div>
           <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 11, marginBottom: 12, fontStyle: "italic" }}>{config.routesNote ?? "Часть направлений — выезжаем по всей России"}</p>
           <div className="flex flex-wrap gap-2">
-            {config.routes.map(r => (
+            {config.routes.map((r, i) => (
               <span key={r} className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.55)", fontSize: 11, fontWeight: 600 }}>
+                style={{
+                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
+                  color: "rgba(255,255,255,0.55)", fontSize: 11, fontWeight: 600,
+                  display: !allRoutes && i >= ROUTES_PREVIEW ? "none" : undefined,
+                }}>
                 <Icon name="MapPin" size={9} style={{ color: GOLD, flexShrink: 0 }} />{r}
               </span>
             ))}
           </div>
+          {config.routes.length > ROUTES_PREVIEW && (
+            <button onClick={() => setAllRoutes(v => !v)}
+              className="flex items-center gap-2 rounded-full px-4 py-2 mt-3"
+              style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.3)", color: GOLD2, fontSize: 12, fontWeight: 700 }}>
+              <Icon name={allRoutes ? "ChevronUp" : "ChevronDown"} size={13} />
+              {allRoutes ? "Свернуть список" : `Показать все направления (${config.routes.length})`}
+            </button>
+          )}
         </section>
 
         </>}
