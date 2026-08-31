@@ -3,6 +3,7 @@ import Icon from "@/components/ui/icon";
 import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
 import FloatingContacts from "@/components/FloatingContacts";
 import PriceGuide, { type PriceGuideRoute } from "@/components/PriceGuide";
+import { routeFromQuery } from "@/lib/routeFromQuery";
 
 const HERO_IMG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/7071b942-9c87-47e1-a16d-0af0c4b83c1d.jpg";
 const LOGO      = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
@@ -115,7 +116,10 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
   }, []);
 
   useEffect(() => {
-    const title = config.seoTitle ?? `Заказать такси из ${config.cityRod} в другой город от 200 км — Такси Дальняк`;
+    const qr = routeFromQuery(new URLSearchParams(window.location.search).get("utm_term"));
+    const title = qr
+      ? `Такси ${qr.from} – ${qr.to} — фиксированная цена | Такси Дальняк`
+      : config.seoTitle ?? `Заказать такси из ${config.cityRod} в другой город от 200 км — Такси Дальняк`;
     document.title = title;
 
     const description = config.seoDescription ?? `Такси из ${config.cityRod} в другой город по фиксированной цене. ${config.routes.slice(0, 4).join(", ")} и другие направления. Круглосуточно, звоните ${PHONE}.`;
@@ -189,6 +193,8 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
       bc?.remove();
     };
   }, [config.city, config.cityRod, config.slug, config.routes]);
+
+  const queryRoute = useMemo(() => routeFromQuery(utmParams.term), [utmParams.term]);
 
   const reviews = config.reviews ?? BASE_REVIEWS;
 
@@ -278,11 +284,13 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
             <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 mb-4"
               style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)" }}>
               <Icon name="MapPin" size={12} style={{ color: GOLD }} />
-              <span style={{ color: GOLD, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em" }}>{config.badge ?? `${config.city} · Межгородское такси`}</span>
+              <span style={{ color: GOLD, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em" }}>{queryRoute ? `${queryRoute.from} – ${queryRoute.to} · Ваш маршрут` : config.badge ?? `${config.city} · Межгородское такси`}</span>
             </div>
 
             <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(24px,6vw,52px)", lineHeight: 1.0, textTransform: "uppercase", color: "#fff", letterSpacing: "-0.01em", marginBottom: 10 }}>
-              {config.h1 ? (
+              {queryRoute ? (
+                <>Такси{" "}<span style={{ color: GOLD }}>{queryRoute.from} — {queryRoute.to}</span>{" "}по фиксированной цене</>
+              ) : config.h1 ? (
                 <span dangerouslySetInnerHTML={{ __html: config.h1.replace(/\[gold\](.*?)\[\/gold\]/g, `<span style="color:${GOLD}">$1</span>`) }} />
               ) : (
                 <>Заказать автомобиль с водителем{" "}<span style={{ color: GOLD }}>из {config.cityRod}</span>{" "}в другой город</>
@@ -290,10 +298,12 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
             </h1>
 
             <p style={{ fontFamily: "Oswald", color: GOLD2, fontSize: "clamp(13px,2.5vw,18px)", fontWeight: 600, marginBottom: 4 }}>
-              {config.sub ?? "От 200 км · Большой опыт в перевозках"}
+              {queryRoute ? `Прямой рейс ${queryRoute.from} – ${queryRoute.to} · Круглосуточно` : config.sub ?? "От 200 км · Большой опыт в перевозках"}
             </p>
             <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, lineHeight: 1.6, maxWidth: 560, marginBottom: 20 }}>
-              {config.lead ?? "Огромная база водителей — от эконома до бизнес-класса. Фиксированная стоимость без счётчика и сюрпризов."}
+              {queryRoute
+                ? `Выполняем маршрут ${queryRoute.from} – ${queryRoute.to}. Цену фиксируем до выезда — она не меняется из-за пробок, ночного времени и времени в пути. Машина едет только за вами, без попутчиков.`
+                : config.lead ?? "Огромная база водителей — от эконома до бизнес-класса. Фиксированная стоимость без счётчика и сюрпризов."}
             </p>
 
             {/* ФОТО */}
