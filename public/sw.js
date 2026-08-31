@@ -1,4 +1,4 @@
-const CACHE = "dalnyak-v1";
+const CACHE = "dalnyak-v2";
 const ASSETS = ["/", "/index.html"];
 
 self.addEventListener("install", e => {
