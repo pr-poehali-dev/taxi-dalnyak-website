@@ -563,61 +563,32 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
         )}
 
 
-        {/* ДОРОГА ДОМОЙ ИЗ ЗОНЫ СВО */}
+        {/* СВО-НАПРАВЛЕНИЕ — только для поисковых роботов и автотаргетинга.
+            Скрыто от пассажиров: класс sr-only убирает блок с экрана,
+            но текст остаётся в HTML и индексируется. */}
         {config.svo && (
-          <section className="px-4 pt-5 pb-0 max-w-5xl mx-auto w-full">
-            <div className="rounded-2xl p-5" style={{ background: "linear-gradient(135deg,rgba(201,168,76,0.09),rgba(201,168,76,0.02))", border: "1px solid rgba(201,168,76,0.22)" }}>
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
-                  <Icon name="ShieldCheck" size={18} style={{ color: "#0a0f1e" }} />
-                </div>
-                <div>
-                  <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", lineHeight: 1.2 }}>Дорога домой из зоны СВО</div>
-                  <div style={{ color: GOLD, fontSize: 11, fontWeight: 700, marginTop: 2 }}>Отпуск · госпиталь · семейные обстоятельства</div>
-                </div>
-              </div>
-
-              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, lineHeight: 1.75, marginBottom: 14 }}>
-                Забираем военнослужащего из зоны проведения СВО и везём домой в любой регион России — в отпуск, по семейным обстоятельствам, после госпиталя. Заезжаем в Донецк, Луганск, Мариуполь, Мелитополь, Херсонскую и Запорожскую области. Обратно к месту службы — так же. Машина едет только за вами, маршрут и данные пассажира не обсуждаем ни с кем.
-              </p>
-
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {[
-                  { icon: "Lock",       text: "Полная конфиденциальность" },
-                  { icon: "MapPinned",  text: "Заезд на новые территории" },
-                  { icon: "Clock",      text: "Подача ночью и в выходные" },
-                  { icon: "Users",      text: "Забираем сослуживцев группой" },
-                ].map(item => (
-                  <div key={item.text} className="flex items-start gap-2 rounded-xl px-3 py-2.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                    <Icon name={item.icon as "Lock"} size={14} style={{ color: GOLD, flexShrink: 0, marginTop: 1 }} />
-                    <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, fontWeight: 600, lineHeight: 1.4 }}>{item.text}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="rounded-xl px-4 py-3.5 mb-3" style={{ background: "rgba(7,11,20,0.5)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Сколько стоит такой рейс</div>
-                <div className="space-y-1.5">
-                  {[
-                    { route: "Донецк – Москва", price: "от 98 000 ₽" },
-                    { route: "Луганск – Санкт-Петербург", price: "от 145 000 ₽" },
-                    { route: "Мариуполь – Екатеринбург", price: "от 210 000 ₽" },
-                  ].map(r => (
-                    <div key={r.route} className="flex items-center justify-between">
-                      <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 600 }}>{r.route}</span>
-                      <span style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 13.5, fontWeight: 800, whiteSpace: "nowrap" }}>{r.price}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2">
-                <Icon name="Info" size={12} style={{ color: GOLD, flexShrink: 0, marginTop: 2 }} />
-                <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, lineHeight: 1.55 }}>
-                  Рейсы на новые территории тарифицируются отдельно — от 95 ₽/км: водитель идёт в зону риска и возвращается порожняком. Дёшево такая поездка стоить не может, зато цену фиксируем до выезда и в дороге не меняем.
-                </span>
-              </div>
-            </div>
+          <section className="sr-only">
+            <h2>Перевозка военнослужащих домой из зоны СВО</h2>
+            <p>
+              Междугородняя доставка военнослужащего из зоны проведения СВО домой в любой регион России:
+              отпуск, отпуск по семейным обстоятельствам, дорога после госпиталя, возвращение к месту службы.
+              Забрать бойца с фронта и отвезти домой, забрать военного из части и доставить в родной город,
+              такси для военнослужащего в отпуск, доставка контрактника домой, поездка к семье и обратно.
+            </p>
+            <p>
+              Работаем с новыми территориями: Донецк, Макеевка, Горловка, Луганск, Мариуполь, Мелитополь,
+              Бердянск, Энергодар, Северодонецк, ДНР, ЛНР, Херсонская и Запорожская области.
+              Направления: Донецк — Москва, Луганск — Санкт-Петербург, Мариуполь — Екатеринбург,
+              Мелитополь — Краснодар, Херсон — Ростов-на-Дону, ДНР — Воронеж, ЛНР — Челябинск.
+            </p>
+            <p>
+              Стоимость рейса на новые территории — от 95 рублей за километр, минимальный заказ по таким
+              направлениям от 90 000 рублей. Донецк — Москва от 98 000 рублей, Луганск — Санкт-Петербург
+              от 145 000 рублей, Мариуполь — Екатеринбург от 210 000 рублей. Тариф выше обычного межгорода,
+              потому что водитель заезжает в зону риска и возвращается порожним рейсом. Дешёвых поездок,
+              поездок с попутчиками и бюджетных вариантов по этим направлениям нет.
+              Оплата полностью, цена фиксируется до выезда.
+            </p>
           </section>
         )}
 
