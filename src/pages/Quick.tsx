@@ -39,9 +39,9 @@ const CITIES = [
 
 
 const TARIFFS = [
-  { id: "standart",    name: "Стандарт",  desc: "Рио · Поло · Солярис",   seats: 4, luggage: "1–2 сумки",    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/39d043f8-acde-4a27-a69c-ebe03e8bd403.jpg",   badge: "",           color: "#c9a84c" },
-  { id: "comfort",     name: "Комфорт",   desc: "Хавал Джулиан 2025",     seats: 4, luggage: "2–3 сумки",    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/238966ba-ee86-4f06-bc36-0872f043ebfb.jpg",   badge: "Популярный", color: "#22D3EE" },
-  { id: "comfortplus", name: "Комфорт+",  desc: "Toyota Camry 70 кузов",  seats: 4, luggage: "3–4 сумки",    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/38f8c2aa-ebc6-4a58-bedb-3322efbce272.jpg", badge: "Бизнес",     color: "#A78BFA" },
+  { id: "standart",    name: "Седан",  desc: "Рио · Поло · Солярис",   seats: 4, luggage: "1–2 сумки",    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/39d043f8-acde-4a27-a69c-ebe03e8bd403.jpg",   badge: "",           color: "#c9a84c" },
+  { id: "comfort",     name: "Кроссовер",   desc: "Хавал Джулиан 2025",     seats: 4, luggage: "2–3 сумки",    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/238966ba-ee86-4f06-bc36-0872f043ebfb.jpg",   badge: "Популярный", color: "#22D3EE" },
+  { id: "comfortplus", name: "Бизнес-седан",  desc: "Toyota Camry 70 кузов",  seats: 4, luggage: "3–4 сумки",    img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/38f8c2aa-ebc6-4a58-bedb-3322efbce272.jpg", badge: "Бизнес",     color: "#A78BFA" },
   { id: "minivan",     name: "Минивэн",   desc: "Hyundai Staria 2022",    seats: 7, luggage: "Много багажа", img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/92a14984-9eac-4b0c-aa50-8c49af1c12b7.jpg", badge: "Группа",     color: "#34D399" },
 ];
 
@@ -58,6 +58,7 @@ const FEATURES = [
   { icon: "Shield",     title: "Работаем с 2014 года",  desc: "10+ лет на рынке межгородных перевозок — тысячи довольных клиентов" },
   { icon: "Clock",      title: "Круглосуточно",         desc: "Диспетчер отвечает 24/7, принимаем заказы в любое время" },
   { icon: "MapPin",     title: "30+ городов",           desc: "Выезды из Москвы, СПб, Воронежа, Екатеринбурга и других регионов" },
+  { icon: "FileCheck2", title: "Перевозка сотрудников", desc: "Возим сотрудников компаний в командировки и на вахту между регионами — по договору, безнал, закрывающие документы" },
 ];
 
 function getStartCount() {
@@ -386,7 +387,7 @@ export default function Quick({ contacts = DEFAULT_CONTACTS, source }: { contact
             <div className="space-y-2">
               {[
                 { ok: false, text: "Поездками с попутчиками мы не занимаемся" },
-                { ok: false, text: "Маршруты по городу мы не выполняем" },
+                { ok: false, text: "Короткие внутренние поездки не выполняем" },
                 { ok: true,  text: "Работаем только на дальних маршрутах — от 200 км" },
               ].map(item => (
                 <div key={item.text} className="flex items-start gap-2.5">
@@ -458,7 +459,7 @@ export default function Quick({ contacts = DEFAULT_CONTACTS, source }: { contact
         <div className="max-w-6xl mx-auto px-4 md:px-6 pt-5 pb-0">
           <div className="grid grid-cols-2 gap-3">
             {[
-              { name: "Яндекс Карты", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#fff"/><circle cx="12" cy="9" r="2.5" fill="#ff4433"/></svg>, bg: "linear-gradient(135deg,#ff4433,#ff6b35)", note: "Такси в другой город · без попутчиков" },
+              { name: "Карты", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#fff"/><circle cx="12" cy="9" r="2.5" fill="#ff4433"/></svg>, bg: "linear-gradient(135deg,#ff4433,#ff6b35)", note: "Такси в другой город · без попутчиков" },
               { name: "2ГИС", icon: <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 10, fontWeight: 900 }}>2ГИС</span>, bg: "linear-gradient(135deg,#00b956,#008f42)", note: "Межгородские перевозки от 200 км" },
             ].map(r => (
               <div key={r.name} className="rounded-2xl px-4 py-4 flex flex-col gap-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>

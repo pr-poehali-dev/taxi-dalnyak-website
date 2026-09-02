@@ -47,9 +47,9 @@ const CITIES = [
 ];
 
 const FLEET = [
-  { id: "standart",    name: "Стандарт",  desc: "Рио · Поло · Солярис",   seats: "4 места",  img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/39d043f8-acde-4a27-a69c-ebe03e8bd403.jpg" },
-  { id: "comfort",     name: "Комфорт",   desc: "Хавал Джулиан 2025",     seats: "4 места",  img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/238966ba-ee86-4f06-bc36-0872f043ebfb.jpg" },
-  { id: "comfortplus", name: "Комфорт+",  desc: "Toyota Camry 70 кузов",  seats: "4 места",  img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/38f8c2aa-ebc6-4a58-bedb-3322efbce272.jpg" },
+  { id: "standart",    name: "Седан",  desc: "Рио · Поло · Солярис",   seats: "4 места",  img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/39d043f8-acde-4a27-a69c-ebe03e8bd403.jpg" },
+  { id: "comfort",     name: "Кроссовер",   desc: "Хавал Джулиан 2025",     seats: "4 места",  img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/238966ba-ee86-4f06-bc36-0872f043ebfb.jpg" },
+  { id: "comfortplus", name: "Бизнес-седан",  desc: "Toyota Camry 70 кузов",  seats: "4 места",  img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/38f8c2aa-ebc6-4a58-bedb-3322efbce272.jpg" },
   { id: "minivan",     name: "Минивэн",   desc: "Hyundai Staria 2022",    seats: "7 мест",   img: "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/92a14984-9eac-4b0c-aa50-8c49af1c12b7.jpg" },
 ];
 
@@ -153,7 +153,7 @@ export default function Transfer() {
 
             <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-2 mt-4" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
               <Icon name="Ban" size={13} style={{ color: "#f87171", flexShrink: 0 }} />
-              <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12.5 }}>Короткие поездки по городу и с попутчиками — <span style={{ color: "#f87171", fontWeight: 700 }}>не обслуживаем</span></span>
+              <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12.5 }}>Короткие внутренние поездки и попутчиков — <span style={{ color: "#f87171", fontWeight: 700 }}>не обслуживаем</span></span>
             </div>
 
             <div className="flex flex-col gap-3 mt-7">
@@ -190,7 +190,7 @@ export default function Transfer() {
 
             <div className="grid grid-cols-2 gap-3 mt-5 max-w-md">
               {[
-                { name: "Яндекс Карты", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#fff"/><circle cx="12" cy="9" r="2.5" fill="#ff4433"/></svg>, bg: "linear-gradient(135deg,#ff4433,#ff6b35)" },
+                { name: "Карты", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#fff"/><circle cx="12" cy="9" r="2.5" fill="#ff4433"/></svg>, bg: "linear-gradient(135deg,#ff4433,#ff6b35)" },
                 { name: "2ГИС",        icon: <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 10, fontWeight: 900 }}>2ГИС</span>,       bg: "linear-gradient(135deg,#00b956,#008f42)" },
               ].map(r => (
                 <div key={r.name} className="rounded-2xl px-3.5 py-3 flex flex-col gap-1.5" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${LINE}` }}>
@@ -237,7 +237,7 @@ export default function Transfer() {
                 <div className="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.35)" }}>
                   <Icon name="X" size={9} style={{ color: "#f87171" }} />
                 </div>
-                <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5 }}>Короткие поездки по городу не обслуживаем</span>
+                <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12.5 }}>Короткие внутренние поездки не обслуживаем</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4.5 h-4.5 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.35)" }}>

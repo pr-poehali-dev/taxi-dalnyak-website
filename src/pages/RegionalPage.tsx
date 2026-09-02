@@ -303,7 +303,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
             <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, lineHeight: 1.6, maxWidth: 560, marginBottom: 20 }}>
               {queryRoute
                 ? `Выполняем маршрут ${queryRoute.from} – ${queryRoute.to}. Цену фиксируем до выезда — она не меняется из-за пробок, ночного времени и времени в пути. Машина едет только за вами, без попутчиков.`
-                : config.lead ?? "Огромная база водителей — от эконома до бизнес-класса. Фиксированная стоимость без счётчика и сюрпризов."}
+                : config.lead ?? "Свои водители на дальних рейсах — седаны, кроссоверы и минивэны. Фиксированная стоимость без счётчика и сюрпризов."}
             </p>
 
             {/* ФОТО */}
@@ -341,7 +341,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
             <div className="space-y-2">
               {[
                 { ok: false, text: "Поездками с попутчиками мы не занимаемся" },
-                { ok: false, text: "Маршруты по городу мы не выполняем" },
+                { ok: false, text: "Короткие внутренние поездки не выполняем" },
                 { ok: true,  text: `Работаем только на дальних маршрутах — от ${config.minKm ?? 200} км` },
               ].map(item => (
                 <div key={item.text} className="flex items-start gap-2.5">
@@ -452,7 +452,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
         <section className="px-4 pt-5 pb-0 max-w-5xl mx-auto w-full">
           <div className="grid grid-cols-2 gap-3">
             {[
-              { name: "Яндекс Карты", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#fff"/><circle cx="12" cy="9" r="2.5" fill="#ff4433"/></svg>, bg: "linear-gradient(135deg,#ff4433,#ff6b35)" },
+              { name: "Карты", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#fff"/><circle cx="12" cy="9" r="2.5" fill="#ff4433"/></svg>, bg: "linear-gradient(135deg,#ff4433,#ff6b35)" },
               { name: "2ГИС", icon: <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 10, fontWeight: 900 }}>2ГИС</span>, bg: "linear-gradient(135deg,#00b956,#008f42)" },
             ].map(r => (
               <div key={r.name} className="rounded-2xl px-4 py-4 flex flex-col gap-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>

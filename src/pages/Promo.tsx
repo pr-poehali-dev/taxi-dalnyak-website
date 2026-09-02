@@ -226,7 +226,7 @@ export default function Promo({
           <div className="space-y-2">
             {[
               { ok: false, text: "Поездками с попутчиками мы не занимаемся" },
-              { ok: false, text: "Маршруты по городу мы не выполняем" },
+              { ok: false, text: "Короткие внутренние поездки не выполняем" },
               { ok: true, text: "Работаем только на дальних маршрутах — от 200 км" },
             ].map(i => (
               <div key={i.text} className="flex items-start gap-2.5">
