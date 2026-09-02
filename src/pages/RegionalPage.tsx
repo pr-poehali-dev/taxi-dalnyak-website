@@ -99,6 +99,8 @@ export interface RegionConfig {
   minKm?: number;
   /** Своя сетка тарифов за км — вместо общей. */
   rateTable?: { title?: string; note?: string; rows: { name: string; rate: number; desc?: string }[] };
+  /** Блок «Перевозка сотрудников по договору» с реквизитами. */
+  corporate?: boolean;
 }
 
 export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, source }: { config: RegionConfig; contacts?: Contacts; source?: string }) {
@@ -508,6 +510,56 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
         </section>
 
         </>}
+
+        {/* СОТРУДНИКИ ПО ДОГОВОРУ */}
+        {config.corporate && (
+          <section className="px-4 pt-5 pb-0 max-w-5xl mx-auto w-full">
+            <div className="rounded-2xl p-5" style={{ background: "linear-gradient(135deg,rgba(201,168,76,0.09),rgba(201,168,76,0.02))", border: "1px solid rgba(201,168,76,0.22)" }}>
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
+                  <Icon name="FileCheck2" size={18} style={{ color: "#0a0f1e" }} />
+                </div>
+                <div>
+                  <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", lineHeight: 1.2 }}>Перевозка сотрудников</div>
+                  <div style={{ color: GOLD, fontSize: 11, fontWeight: 700, marginTop: 2 }}>Между регионами · по договору</div>
+                </div>
+              </div>
+
+              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, lineHeight: 1.75, marginBottom: 14 }}>
+                Возим сотрудников компаний на дальние расстояния: командировки, вахтовые заезды и смены, доставка бригад между регионами. Работаем официально — договор, безналичная оплата, закрывающие документы для бухгалтерии.
+              </p>
+
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {[
+                  { icon: "FileSignature", text: "Договор с юрлицами и ИП" },
+                  { icon: "Landmark",      text: "Безналичный расчёт" },
+                  { icon: "Receipt",       text: "Закрывающие документы" },
+                  { icon: "CalendarClock", text: "Регулярные рейсы по графику" },
+                ].map(item => (
+                  <div key={item.text} className="flex items-start gap-2 rounded-xl px-3 py-2.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <Icon name={item.icon as "Receipt"} size={14} style={{ color: GOLD, flexShrink: 0, marginTop: 1 }} />
+                    <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 11.5, fontWeight: 600, lineHeight: 1.4 }}>{item.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-xl px-4 py-3" style={{ background: "rgba(7,11,20,0.5)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Реквизиты</div>
+                <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+                  <div className="flex items-baseline gap-1.5">
+                    <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11.5 }}>ИНН</span>
+                    <span style={{ color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.02em" }}>183209197326</span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11.5 }}>ОГРНИП</span>
+                    <span style={{ color: "#fff", fontSize: 13, fontWeight: 700, letterSpacing: "0.02em" }}>326180000068152</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
 
         {/* ОТЗЫВЫ */}
         <section className="px-4 pt-6 pb-32 max-w-5xl mx-auto w-full">

@@ -7,6 +7,7 @@ export const HOME_CONFIG = {
   cityRod: "города в город",
   canonical: "https://taxidalnyack.ru/",
   short: true,
+  corporate: true,
   priceGuide: [
     { route: "Москва – Воронеж", from: 16200 },
     { route: "Москва – Курск", from: 15900 },
