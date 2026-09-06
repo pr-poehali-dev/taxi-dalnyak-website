@@ -18,7 +18,7 @@ export default function TownPage() {
         slug: town.slug,
         city,
         cityRod,
-        seoTitle: `Такси из ${cityRod} в другой город — ${main} | Такси Дальняк`,
+        seoTitle: `Такси из ${cityRod}${town.titleSuffix ?? ""} в другой город — ${main} | Такси Дальняк`,
         seoDescription: `Заказать междугороднее такси из ${cityRod} (${region}) в ${main} и другие города России. Прямой рейс без пересадок, фиксированная цена, подача круглосуточно. +7 (995) 645-51-25`,
         seoKeywords: [
           `такси ${city}`,
