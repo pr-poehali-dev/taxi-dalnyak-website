@@ -47,6 +47,41 @@ function collect(root: string): PageData[] {
     city: "Россия",
   });
 
+  // малые города из общего справочника
+  const townsSrc = fs.readFileSync(path.join(root, "src/data/towns.ts"), "utf-8");
+  const blocks = townsSrc.split(/\n  \{\n/).slice(1);
+  for (const b of blocks) {
+    const slug = str(b, "slug");
+    if (!slug) continue;
+    const city = str(b, "city");
+    const rod = str(b, "cityRod");
+    const pred = str(b, "cityPred");
+    const region = str(b, "region");
+    const intro = str(b, "intro").replace(/"\s*\+\s*"/g, "");
+    const nearby = str(b, "nearby");
+    const rm = b.match(/routes:\s*KHERSON_ROUTES\("([^"]+)"\)/);
+    const base = rm ? rm[1] : city;
+    const dests = ["Москва","Ростов-на-Дону","Краснодар","Симферополь","Севастополь","Джанкой","Мелитополь","Бердянск","Мариуполь","Донецк","Луганск","Воронеж","Волгоград","Ставрополь","Сочи","Санкт-Петербург","Белгород","Таганрог","Анапа","Керчь"];
+    const routes = dests.map(d => `${base} – ${d}`);
+    pages.push({
+      route: "/" + slug,
+      title: `Такси из ${rod} в другой город — ${dests.slice(0,4).join(", ")} | Такси Дальняк`,
+      description: `Заказать междугороднее такси из ${rod} (${region}) в ${dests.slice(0,4).join(", ")} и другие города России. Прямой рейс без пересадок, фиксированная цена, подача круглосуточно.`,
+      h1: `Такси из ${rod} в любой город России`,
+      about: `${intro} ${nearby} Машина едет только за вами — попутчиков не подсаживаем, остановки делаем по вашей просьбе.`,
+      features: [
+        `Подача в ${pred} и сёлах района`,
+        `Прямые рейсы: ${dests[0]}, ${dests[1]}`,
+        "Работаем на новых территориях с 2014 года",
+        "Фиксированная цена — без доплат в дороге",
+        "Помощь с багажом, остановки в пути",
+        "Круглосуточно, включая ночные выезды",
+      ],
+      routes,
+      city,
+    });
+  }
+
   const dir = path.join(root, "src/pages/regions");
   for (const file of fs.readdirSync(dir).filter(f => f.endsWith(".tsx"))) {
     const src = fs.readFileSync(path.join(dir, file), "utf-8");
