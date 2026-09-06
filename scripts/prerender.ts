@@ -13,6 +13,7 @@ interface PageData {
   features: string[];
   routes: string[];
   city: string;
+  keywords: string;
 }
 
 function str(src: string, key: string): string {
@@ -45,6 +46,7 @@ function collect(root: string): PageData[] {
     features: arr(home, "features").slice(0, 8),
     routes: arr(home, "routes").slice(0, 40),
     city: "Россия",
+    keywords: str(home, "seoKeywords"),
   });
 
   // малые города из общего справочника
@@ -79,6 +81,13 @@ function collect(root: string): PageData[] {
       ],
       routes,
       city,
+      keywords: [
+        `такси ${city}`,
+        `такси из ${rod}`,
+        `междугороднее такси ${city}`,
+        ...routes.slice(0, 6).map(r => `такси ${r.replace(" – ", " ")}`),
+        `такси ${region.toLowerCase()}`,
+      ].join(", "),
     });
   }
 
@@ -99,6 +108,9 @@ function collect(root: string): PageData[] {
       features: arr(src, "features").slice(0, 8),
       routes: arr(src, "routes").slice(0, 40),
       city: str(src, "city"),
+      keywords:
+        str(src, "seoKeywords") ||
+        `такси ${rod}, заказать такси ${rod}, межгород ${rod}, такси из ${rod} в другой город`,
     });
   }
   return pages;
@@ -124,11 +136,12 @@ function head(p: PageData): string {
   return [
     `<title>${esc(p.title)}</title>`,
     `<meta name="description" content="${esc(p.description)}"/>`,
+    p.keywords ? `<meta name="keywords" content="${esc(p.keywords)}"/>` : "",
     `<link rel="canonical" href="${url}"/>`,
     `<meta property="og:title" content="${esc(p.title)}"/>`,
     `<meta property="og:description" content="${esc(p.description)}"/>`,
     `<meta property="og:url" content="${url}"/>`,
-  ].join("\n    ");
+  ].filter(Boolean).join("\n    ");
 }
 
 export function prerender(): Plugin {
@@ -150,6 +163,7 @@ export function prerender(): Plugin {
         let html = tpl;
         html = html.replace(/<title>[\s\S]*?<\/title>/, "");
         html = html.replace(/<meta name="description"[^>]*>/, "");
+        html = html.replace(/<meta name="keywords"[^>]*>/, "");
         html = html.replace(/<link rel="canonical"[^>]*>/, "");
         html = html.replace(/<meta property="og:title"[^>]*>/, "");
         html = html.replace(/<meta property="og:description"[^>]*>/, "");
