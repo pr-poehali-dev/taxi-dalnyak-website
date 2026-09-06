@@ -91,7 +91,7 @@ export default function RegionalHero({
             ) : config.h1 ? (
               <span dangerouslySetInnerHTML={{ __html: config.h1.replace(/\[gold\](.*?)\[\/gold\]/g, `<span style="color:${GOLD}">$1</span>`) }} />
             ) : (
-              <>Заказать автомобиль с водителем{" "}<span style={{ color: GOLD }}>из {config.cityRod}</span>{" "}в другой город</>
+              <>Заказать такси{" "}<span style={{ color: GOLD }}>из {config.cityRod}</span>{" "}в другой город</>
             )}
           </h1>
 

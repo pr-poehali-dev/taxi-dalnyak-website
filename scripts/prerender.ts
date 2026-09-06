@@ -113,7 +113,7 @@ function collect(root: string): PageData[] {
       description:
         str(src, "seoDescription") ||
         `Такси из ${rod} в другой город по фиксированной цене. Междугородние поездки от 200 км, круглосуточно.`,
-      h1: (str(src, "h1") || `Такси из ${rod} в другой город`).replace(/\[\/?gold\]/g, ""),
+      h1: (str(src, "h1") || `Заказать такси из ${rod} в другой город`).replace(/\[\/?gold\]/g, ""),
       about: str(src, "about"),
       features: arr(src, "features").slice(0, 8),
       routes: arr(src, "routes").slice(0, 40),
