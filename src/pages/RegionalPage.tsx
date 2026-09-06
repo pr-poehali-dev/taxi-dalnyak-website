@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
-import DiscountOffers from "@/components/DiscountOffers";
 import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
 import FloatingContacts from "@/components/FloatingContacts";
 import PriceGuide, { type PriceGuideRoute } from "@/components/PriceGuide";
@@ -102,8 +101,6 @@ export interface RegionConfig {
   rateTable?: { title?: string; note?: string; rows: { name: string; rate: number; desc?: string }[] };
   /** Блок «Перевозка сотрудников по договору» с реквизитами. */
   corporate?: boolean;
-  /** Блоки скидок: за приведённого друга + обратный рейс. */
-  discounts?: boolean;
 }
 
 export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, source }: { config: RegionConfig; contacts?: Contacts; source?: string }) {
@@ -563,14 +560,6 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
           </section>
         )}
 
-
-        {/* СКИДКИ */}
-        {config.discounts && (
-          <DiscountOffers
-            phoneHref={PHONE_HREF}
-            onCall={() => { ymGoal("discount_call", { city: config.slug }); ymLead("phone", utmParams, source); }}
-          />
-        )}
 
         {/* ОТЗЫВЫ */}
         <section className="px-4 pt-6 pb-32 max-w-5xl mx-auto w-full">
