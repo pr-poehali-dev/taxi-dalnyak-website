@@ -101,6 +101,8 @@ export interface RegionConfig {
   rateTable?: { title?: string; note?: string; rows: { name: string; rate: number; desc?: string }[] };
   /** Блок «Перевозка сотрудников по договору» с реквизитами. */
   corporate?: boolean;
+  /** Оффер «обратная дорога −20%» под заголовком. */
+  offerBack?: boolean;
 }
 
 export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, source }: { config: RegionConfig; contacts?: Contacts; source?: string }) {
@@ -307,6 +309,77 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
                 ? `Выполняем маршрут ${queryRoute.from} – ${queryRoute.to}. Цену фиксируем до выезда — она не меняется из-за пробок, ночного времени и времени в пути. Машина едет только за вами, без попутчиков.`
                 : config.lead ?? "Свои водители на дальних рейсах — седаны, кроссоверы и минивэны. Фиксированная стоимость без счётчика и сюрпризов."}
             </p>
+
+            {/* ОФФЕР — ОБРАТНАЯ ДОРОГА -20% */}
+            {config.offerBack && (
+              <div className="relative rounded-2xl overflow-hidden mb-5" style={{ background: "linear-gradient(120deg,#1a1408 0%,#241c0a 45%,#12100a 100%)", border: `1px solid ${GOLD}66`, boxShadow: `0 8px 32px rgba(201,168,76,0.16)` }}>
+                <div className="absolute -right-6 -top-8 w-36 h-36 rounded-full" style={{ background: `radial-gradient(circle,${GOLD}33,transparent 70%)` }} />
+                <div className="relative p-5">
+                  <div className="flex items-start justify-between gap-3 mb-3.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
+                        <Icon name="ArrowLeftRight" size={19} style={{ color: "#0a0f1e" }} />
+                      </div>
+                      <div>
+                        <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: "clamp(17px,4.6vw,23px)", fontWeight: 900, textTransform: "uppercase", lineHeight: 1.05, letterSpacing: "-0.01em" }}>
+                          Обратная дорога <span style={{ color: GOLD2 }}>−20%</span>
+                        </div>
+                        <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 11.5, fontWeight: 600, marginTop: 3 }}>
+                          Бронируйте обе поездки сразу
+                        </div>
+                      </div>
+                    </div>
+                    <div className="shrink-0 rounded-xl px-2.5 py-1.5 text-center" style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
+                      <div style={{ fontFamily: "Oswald", color: "#0a0f1e", fontSize: 19, fontWeight: 900, lineHeight: 1 }}>−20%</div>
+                      <div style={{ color: "rgba(10,15,30,0.65)", fontSize: 8, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 1 }}>назад</div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl px-4 py-3 mb-3.5" style={{ background: "rgba(7,11,20,0.55)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 9.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 7 }}>Пример на 1 000 км</div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, marginBottom: 2 }}>Туда</div>
+                        <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 19, fontWeight: 800, lineHeight: 1 }}>32 000 ₽</div>
+                      </div>
+                      <Icon name="ArrowRight" size={15} style={{ color: `${GOLD}88`, flexShrink: 0 }} />
+                      <div className="flex-1">
+                        <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, marginBottom: 2 }}>Обратно</div>
+                        <div className="flex items-baseline gap-1.5">
+                          <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 12, textDecoration: "line-through" }}>32 000</span>
+                          <span style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 21, fontWeight: 900, lineHeight: 1 }}>25 600 ₽</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2.5 pt-2.5 flex items-center gap-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                      <Icon name="PiggyBank" size={12} style={{ color: GOLD }} />
+                      <span style={{ color: GOLD2, fontSize: 11.5, fontWeight: 700 }}>Экономия 6 400 ₽</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-4">
+                    {["Машина закреплена за датой", "Цена зафиксирована", "Оплата раздельно"].map(t => (
+                      <div key={t} className="flex items-center gap-1.5">
+                        <Icon name="Check" size={11} style={{ color: GOLD, flexShrink: 0 }} />
+                        <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 11, fontWeight: 600 }}>{t}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <a href={PHONE_HREF}
+                    onClick={() => { ymGoal("offer_back_call", { city: config.slug }); ymLead("phone", utmParams, source); }}
+                    className="flex items-center justify-center gap-2 rounded-xl py-3.5 w-full"
+                    style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, boxShadow: "0 4px 20px rgba(201,168,76,0.35)" }}>
+                    <Icon name="Phone" size={16} style={{ color: "#0a0f1e" }} />
+                    <span style={{ fontFamily: "Oswald", color: "#0a0f1e", fontSize: 15, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.04em" }}>Узнать цену туда-обратно</span>
+                  </a>
+
+                  <div style={{ color: "rgba(255,255,255,0.28)", fontSize: 10, lineHeight: 1.5, marginTop: 10 }}>
+                    Скидка на обратный рейс при бронировании обеих поездок сразу, маршруты от 500 км. Дату обратной дороги можно перенести один раз бесплатно.
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* ФОТО */}
             <div className="relative rounded-3xl overflow-hidden" style={{ maxHeight: 460 }}>
