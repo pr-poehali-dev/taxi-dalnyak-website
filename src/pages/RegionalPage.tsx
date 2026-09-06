@@ -95,6 +95,8 @@ export interface RegionConfig {
   short?: boolean;
   /** Ориентиры цен «от» — показываются под блоком «Важно знать». */
   priceGuide?: PriceGuideRoute[];
+  /** Примечание под таблицей цен. */
+  priceNote?: string;
   /** Минимальное расстояние для заказа, км (по умолчанию 200). */
   minKm?: number;
   /** Своя сетка тарифов за км — вместо общей. */
@@ -431,7 +433,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
 
         {config.priceGuide && (
           <section className="px-4 pt-5 pb-1 max-w-5xl mx-auto w-full">
-            <PriceGuide routes={config.priceGuide} />
+            <PriceGuide routes={config.priceGuide} note={config.priceNote} />
           </section>
         )}
 

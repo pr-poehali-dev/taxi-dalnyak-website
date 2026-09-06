@@ -34,6 +34,7 @@ import Ekaterinburg from "./pages/regions/Ekaterinburg";
 import Donetsk from "./pages/regions/Donetsk";
 import Lugansk from "./pages/regions/Lugansk";
 import Kherson from "./pages/regions/Kherson";
+import Rovenki from "./pages/regions/Rovenki";
 import MoscowBusiness from "./pages/MoscowBusiness";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ const App = () => (
           <Route path="/donetsk" element={<Donetsk />} />
           <Route path="/lugansk" element={<Lugansk />} />
           <Route path="/kherson" element={<Kherson />} />
+          <Route path="/rovenki" element={<Rovenki />} />
 
           <Route path="*" element={<PageNotFound />} />
         </Routes>
