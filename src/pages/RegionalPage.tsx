@@ -344,11 +344,11 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
 
                       <div className="flex items-baseline gap-2 flex-wrap mt-3">
                         <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12.5 }}>1 000 км:</span>
-                        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13, textDecoration: "line-through" }}>32 000</span>
-                        <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 22, fontWeight: 900, lineHeight: 1 }}>25 600 ₽</span>
+                        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 13, textDecoration: "line-through" }}>34 000</span>
+                        <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 22, fontWeight: 900, lineHeight: 1 }}>27 200 ₽</span>
                       </div>
                       <div style={{ color: GOLD, fontSize: 11, fontWeight: 700, marginTop: 4 }}>
-                        Выгода 6 400 ₽ на обратном пути
+                        Выгода 6 800 ₽ на обратном пути
                       </div>
                     </div>
                   </div>
