@@ -1,5 +1,5 @@
 import Icon from "@/components/ui/icon";
-import { MIN_PRICE, RATE_STANDARD } from "@/lib/pricing";
+import { RATE_STANDARD } from "@/lib/pricing";
 
 const GOLD = "#c9a84c";
 const GOLD2 = "#e8c96a";
@@ -54,10 +54,10 @@ export default function PriceGuide({ routes = DEFAULT_ROUTES, note }: Props) {
           style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.28)" }}
         >
           <div style={{ fontFamily: "Oswald", color: GOLD2, fontSize: 22, fontWeight: 900, lineHeight: 1 }}>
-            {MIN_PRICE.toLocaleString("ru")} ₽
+            от {RATE_STANDARD} ₽<span style={{ fontSize: 13 }}>/км</span>
           </div>
           <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 10.5, marginTop: 4 }}>
-            минимальный заказ
+            цена фиксируется до выезда
           </div>
         </div>
         <div
@@ -65,10 +65,10 @@ export default function PriceGuide({ routes = DEFAULT_ROUTES, note }: Props) {
           style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
         >
           <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 22, fontWeight: 900, lineHeight: 1 }}>
-            от {RATE_STANDARD} ₽<span style={{ fontSize: 13 }}>/км</span>
+            0 ₽
           </div>
           <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 10.5, marginTop: 4 }}>
-            цена фиксируется до выезда
+            предоплата — расчёт на месте
           </div>
         </div>
       </div>

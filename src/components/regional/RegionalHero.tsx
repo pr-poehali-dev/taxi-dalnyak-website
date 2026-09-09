@@ -46,10 +46,13 @@ export default function RegionalHero({
             </div>
           </a>
           <div className="flex items-center gap-2">
-            <a href={PHONE_HREF} className="hidden md:flex items-center gap-2 rounded-xl px-4 py-2"
+            <a href={PHONE_HREF}
+              onClick={() => { ymGoal("header_phone", { city: config.slug }); ymLead("phone", utmParams, source); }}
+              className="flex items-center gap-2 rounded-xl px-3 md:px-4 py-2"
               style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
               <Icon name="Phone" size={13} style={{ color: "#0a0f1e" }} />
-              <span style={{ fontFamily: "Oswald", color: "#0a0f1e", fontSize: 13, fontWeight: 800, textTransform: "uppercase" }}>{PHONE}</span>
+              <span className="hidden sm:inline" style={{ fontFamily: "Oswald", color: "#0a0f1e", fontSize: 13, fontWeight: 800, textTransform: "uppercase" }}>{PHONE}</span>
+              <span className="sm:hidden" style={{ fontFamily: "Oswald", color: "#0a0f1e", fontSize: 12, fontWeight: 800, textTransform: "uppercase" }}>Позвонить</span>
             </a>
             <button onClick={() => setMenuOpen(v => !v)}
               className="flex items-center gap-1.5 rounded-xl px-3 py-2"
@@ -103,6 +106,23 @@ export default function RegionalHero({
               ? `Выполняем маршрут ${queryRoute.from} – ${queryRoute.to}. Цену фиксируем до выезда — она не меняется из-за пробок, ночного времени и времени в пути. Машина едет только за вами, без попутчиков.`
               : config.lead ?? "Свои водители на дальних рейсах — седаны, кроссоверы и минивэны. Фиксированная стоимость без счётчика и сюрпризов."}
           </p>
+
+          {/* КНОПКА ЗВОНКА В ПЕРВОМ ЭКРАНЕ */}
+          <div className="mb-5" style={{ maxWidth: 560 }}>
+            <a href={PHONE_HREF}
+              onClick={() => { ymGoal("hero_phone", { city: config.slug }); ymLead("phone", utmParams, source); }}
+              className="flex items-center justify-center gap-3 w-full rounded-2xl py-4 transition-transform hover:scale-[1.01] active:scale-[0.98]"
+              style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, fontFamily: "Oswald", boxShadow: "0 10px 30px rgba(201,168,76,0.25)" }}>
+              <Icon name="PhoneCall" size={22} style={{ color: "#0a0f1e" }} />
+              <div className="flex flex-col items-start leading-none">
+                <span style={{ fontSize: "clamp(16px,4.5vw,20px)", textTransform: "uppercase", letterSpacing: "0.05em", color: "#0a0f1e", fontWeight: 900 }}>Узнать цену маршрута</span>
+                <span style={{ fontSize: 11, color: "rgba(10,15,30,0.65)", fontWeight: 700, marginTop: 2 }}>{PHONE} · без предоплаты</span>
+              </div>
+            </a>
+            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11.5, textAlign: "center", marginTop: 8 }}>
+              Назовём стоимость за 2 минуты · Диспетчер на связи круглосуточно
+            </p>
+          </div>
 
           {/* ОФФЕР — КУПОН НА ОБРАТНУЮ ДОРОГУ */}
           {config.offerBack && (

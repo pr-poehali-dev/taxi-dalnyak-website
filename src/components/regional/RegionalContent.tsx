@@ -12,30 +12,6 @@ interface Props {
 export default function RegionalContent({ config, allRoutes, setAllRoutes, reviews }: Props) {
   return (
     <>
-      {/* ВАЖНО */}
-      <section className={`px-4 pt-6 max-w-5xl mx-auto w-full ${config.short ? "pb-5" : "pb-0"}`}>
-        <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <div className="flex items-center gap-2 mb-3">
-            <Icon name="AlertCircle" size={13} style={{ color: "rgba(255,255,255,0.25)" }} />
-            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em" }}>Важно знать</span>
-          </div>
-          <div className="space-y-2">
-            {[
-              { ok: false, text: "Поездками с попутчиками мы не занимаемся" },
-              { ok: false, text: "Короткие внутренние поездки не выполняем" },
-              { ok: true,  text: `Работаем только на дальних маршрутах — от ${config.minKm ?? 200} км` },
-            ].map(item => (
-              <div key={item.text} className="flex items-start gap-2.5">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                  style={{ background: item.ok ? "rgba(74,222,128,0.12)" : "rgba(239,68,68,0.12)", border: `1px solid ${item.ok ? "rgba(74,222,128,0.3)" : "rgba(239,68,68,0.3)"}` }}>
-                  <Icon name={item.ok ? "Check" : "X"} size={10} style={{ color: item.ok ? "#4ade80" : "#ef4444" }} />
-                </div>
-                <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: 1.5 }}>{item.text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {config.priceGuide && (
         <section className="px-4 pt-5 pb-1 max-w-5xl mx-auto w-full">
@@ -189,6 +165,31 @@ export default function RegionalContent({ config, allRoutes, setAllRoutes, revie
       </section>
 
       </>}
+
+      {/* ВАЖНО */}
+      <section className={`px-4 pt-6 max-w-5xl mx-auto w-full ${config.short ? "pb-5" : "pb-0"}`}>
+        <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Icon name="AlertCircle" size={13} style={{ color: "rgba(255,255,255,0.25)" }} />
+            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em" }}>Важно знать</span>
+          </div>
+          <div className="space-y-2">
+            {[
+              { ok: false, text: "Поездками с попутчиками мы не занимаемся" },
+              { ok: false, text: "Короткие внутренние поездки не выполняем" },
+              { ok: true,  text: `Работаем только на дальних маршрутах — от ${config.minKm ?? 200} км` },
+            ].map(item => (
+              <div key={item.text} className="flex items-start gap-2.5">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                  style={{ background: item.ok ? "rgba(74,222,128,0.12)" : "rgba(239,68,68,0.12)", border: `1px solid ${item.ok ? "rgba(74,222,128,0.3)" : "rgba(239,68,68,0.3)"}` }}>
+                  <Icon name={item.ok ? "Check" : "X"} size={10} style={{ color: item.ok ? "#4ade80" : "#ef4444" }} />
+                </div>
+                <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: 1.5 }}>{item.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* СОТРУДНИКИ ПО ДОГОВОРУ */}
       {config.corporate && (
