@@ -17,5 +17,6 @@ User-agent: *
 Allow: /
 Disallow: /vk
 Disallow: /direct
+Disallow: /otzyv
 
 Sitemap: https://taxidalnyack.ru/sitemap.xml

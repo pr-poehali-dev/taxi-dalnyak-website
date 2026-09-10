@@ -37,6 +37,7 @@ import Kherson from "./pages/regions/Kherson";
 import Rovenki from "./pages/regions/Rovenki";
 import TownPage from "./pages/TownPage";
 import MoscowBusiness from "./pages/MoscowBusiness";
+import Otzyv from "./pages/Otzyv";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => (
           <Route path="/promo" element={<Promo />} />
           <Route path="/tariffs" element={<Tariffs />} />
           <Route path="/reviews" element={<Reviews />} />
+          <Route path="/otzyv" element={<Otzyv />} />
 
           {/* Региональные посадочные страницы */}
           <Route path="/moscow-business" element={<MoscowBusiness />} />
