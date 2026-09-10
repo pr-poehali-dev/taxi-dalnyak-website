@@ -106,48 +106,6 @@ export default function RegionalContent({ config, allRoutes, setAllRoutes, revie
         </div>
       </section>
 
-      {/* РЕЙТИНГИ */}
-      <section className="px-4 pt-5 pb-0 max-w-5xl mx-auto w-full">
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { name: "Карты", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#fff"/><circle cx="12" cy="9" r="2.5" fill="#ff4433"/></svg>, bg: "linear-gradient(135deg,#ff4433,#ff6b35)" },
-            { name: "2ГИС", icon: <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 10, fontWeight: 900 }}>2ГИС</span>, bg: "linear-gradient(135deg,#00b956,#008f42)" },
-          ].map(r => (
-            <div key={r.name} className="rounded-2xl px-4 py-4 flex flex-col gap-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: r.bg }}>{r.icon}</div>
-                <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>{r.name}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span style={{ fontFamily: "Oswald", color: "#fff", fontSize: 26, fontWeight: 900, lineHeight: 1 }}>4.8</span>
-                <div className="flex gap-0.5 mt-0.5">
-                  {[1,2,3,4].map(i => <Icon key={i} name="Star" size={12} style={{ color: GOLD }} className="fill-[#c9a84c]" />)}
-                  <div className="relative" style={{ width: 12, height: 12, overflow: "hidden" }}>
-                    <Icon name="Star" size={12} style={{ color: "rgba(255,255,255,0.12)", position: "absolute" }} />
-                    <div style={{ width: "80%", overflow: "hidden", position: "absolute" }}>
-                      <Icon name="Star" size={12} style={{ color: GOLD }} className="fill-[#c9a84c]" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>Средняя оценка организации</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="rounded-2xl px-4 py-4 mt-3 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5"
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <YandexRating label="" />
-          <div className="text-center sm:text-left">
-            <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Подтверждённый рейтинг Яндекса
-            </div>
-            <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11.5, lineHeight: 1.5, marginTop: 3 }}>
-              Оценка обновляется автоматически из карточки организации в Яндекс Бизнесе
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* МАРШРУТЫ */}
       <section className="px-4 pt-6 pb-0 max-w-5xl mx-auto w-full">
@@ -179,6 +137,22 @@ export default function RegionalContent({ config, allRoutes, setAllRoutes, revie
       </section>
 
       </>}
+
+      {/* РЕЙТИНГ ЯНДЕКСА */}
+      <section className="px-4 pt-6 pb-0 max-w-5xl mx-auto w-full">
+        <div className="rounded-2xl px-4 py-5 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6"
+          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <YandexRating label="" />
+          <div className="text-center sm:text-left">
+            <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 14, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Мы в Яндекс Бизнесе
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11.5, lineHeight: 1.55, marginTop: 4 }}>
+              Ездили с нами? Оставьте оценку — она попадёт прямо в карточку организации
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ВАЖНО */}
       <section className={`px-4 pt-6 max-w-5xl mx-auto w-full ${config.short ? "pb-5" : "pb-0"}`}>
