@@ -141,6 +141,83 @@ function body(p: PageData): string {
   ].join("");
 }
 
+const PHONE = "+79956455125";
+const YA_ORG = "https://yandex.ru/maps/org/82867613833";
+const LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/9f1988fa-044e-4fe0-9ed6-d8c75200c13b.jpg";
+
+function schema(p: PageData): string {
+  const url = SITE + p.route;
+  const graph: Record<string, unknown>[] = [
+    {
+      "@type": "Organization",
+      "@id": SITE + "#org",
+      name: "Такси Дальняк",
+      alternateName: "Такси межгород Дальняк",
+      url: SITE,
+      logo: LOGO,
+      image: LOGO,
+      telephone: PHONE,
+      priceRange: "от 30 ₽/км",
+      areaServed: { "@type": "Country", name: "Россия" },
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: PHONE,
+        contactType: "customer service",
+        areaServed: "RU",
+        availableLanguage: "Russian",
+      },
+      sameAs: [
+        YA_ORG,
+        "https://t.me/Mezhgorod1816",
+        "https://t.me/gorodvgorode1",
+      ],
+    },
+    {
+      "@type": "TaxiService",
+      "@id": url + "#service",
+      name: `Такси Дальняк — ${p.city}`,
+      description: p.description,
+      url,
+      telephone: PHONE,
+      image: LOGO,
+      serviceType: "Междугороднее такси",
+      provider: { "@id": SITE + "#org" },
+      areaServed:
+        p.city === "Россия"
+          ? { "@type": "Country", name: "Россия" }
+          : { "@type": "City", name: p.city },
+      hoursAvailable: {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        opens: "00:00",
+        closes: "23:59",
+      },
+    },
+    {
+      "@type": "WebPage",
+      "@id": url + "#page",
+      url,
+      name: p.title,
+      description: p.description,
+      isPartOf: { "@id": SITE + "#org" },
+      inLanguage: "ru-RU",
+    },
+  ];
+
+  if (p.route !== "/") {
+    graph.push({
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Главная", item: SITE + "/" },
+        { "@type": "ListItem", position: 2, name: p.city, item: url },
+      ],
+    });
+  }
+
+  const json = JSON.stringify({ "@context": "https://schema.org", "@graph": graph });
+  return `<script type="application/ld+json">${json.replace(/</g, "\\u003c")}</script>`;
+}
+
 function head(p: PageData): string {
   const url = SITE + p.route;
   return [
@@ -151,6 +228,7 @@ function head(p: PageData): string {
     `<meta property="og:title" content="${esc(p.title)}"/>`,
     `<meta property="og:description" content="${esc(p.description)}"/>`,
     `<meta property="og:url" content="${url}"/>`,
+    schema(p),
   ].filter(Boolean).join("\n    ");
 }
 
@@ -178,6 +256,7 @@ export function prerender(): Plugin {
         html = html.replace(/<meta property="og:title"[^>]*>/, "");
         html = html.replace(/<meta property="og:description"[^>]*>/, "");
         html = html.replace(/<meta property="og:url"[^>]*>/, "");
+        html = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g, "");
         html = html.replace("</head>", `    ${head(p)}\n</head>`);
         html = html.replace('<div id="root"></div>', `<div id="root">${body(p)}</div>`);
 

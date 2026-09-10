@@ -49,15 +49,21 @@ export function useRegionalSeo(config: RegionConfig, PHONE: string) {
     script.textContent = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "TaxiService",
+      "@id": `${canonicalUrl}#service`,
       name: `Такси Дальняк — ${config.city}`,
       description,
       telephone: "+79956455125",
       url: canonicalUrl,
       areaServed: { "@type": "City", name: config.city },
       serviceType: "Междугороднее такси",
-      provider: { "@type": "Organization", name: "Такси Дальняк", telephone: "+79956455125", url: "https://taxidalnyack.ru/" },
-      openingHours: "Mo-Su 00:00-23:59",
-      priceRange: "от 26₽/км",
+      provider: { "@id": "https://taxidalnyack.ru#org" },
+      hoursAvailable: {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        opens: "00:00",
+        closes: "23:59",
+      },
+      priceRange: "от 30 ₽/км",
     });
 
     const breadcrumbId = "regional-breadcrumb";
