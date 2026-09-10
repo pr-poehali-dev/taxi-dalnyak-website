@@ -142,22 +142,38 @@ export default function RegionalContent({ config, allRoutes, setAllRoutes, revie
 
       {/* РЕЙТИНГ ЯНДЕКСА */}
       <section className="px-4 pt-6 pb-0 max-w-5xl mx-auto w-full">
-        <div className="rounded-2xl px-4 py-5 flex flex-col sm:flex-row items-center sm:justify-center gap-4 sm:gap-6"
-          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <YandexRating label="" />
-          <div className="text-center sm:text-left">
-            <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 14, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Мы в Яндекс Бизнесе
+        <div className="rounded-2xl p-5"
+          style={{ background: "linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.03))", border: "1px solid rgba(201,168,76,0.2)" }}>
+
+          <div className="flex items-start gap-4">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})` }}>
+              <Icon name="Star" size={20} style={{ color: "#0a0f1e" }} className="fill-[#0a0f1e]" />
             </div>
-            <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11.5, lineHeight: 1.55, marginTop: 4, maxWidth: 320 }}>
-              Ездили с нами? Оставьте оценку — она попадёт прямо в карточку организации
+            <div className="min-w-0">
+              <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 15, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 5 }}>
+                Мы в <span style={{ color: GOLD }}>Яндекс Бизнесе</span>
+              </div>
+              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, lineHeight: 1.7 }}>
+                Рейтинг ведёт сам Яндекс — его{" "}
+                <span style={{ color: "rgba(255,255,255,0.9)" }}>нельзя накрутить или подделать</span>.
+                Ездили с нами? Оставьте оценку — она попадёт прямо в карточку организации.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3 mt-4 pt-4"
+            style={{ borderTop: "1px solid rgba(201,168,76,0.15)" }}>
+            <div className="rounded-xl px-3 py-2 shrink-0"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <YandexRating label="" />
             </div>
             <a href={YA_REVIEW_URL} target="_blank" rel="noopener noreferrer"
               onClick={() => ymGoal("yandex_review_click", { city: config.slug })}
-              className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 mt-3 transition-transform hover:scale-[1.02] active:scale-[0.97]"
-              style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, fontFamily: "Oswald" }}>
-              <Icon name="Star" size={14} style={{ color: "#0a0f1e" }} className="fill-[#0a0f1e]" />
-              <span style={{ color: "#0a0f1e", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              className="flex items-center justify-center gap-2 rounded-2xl py-3.5 w-full transition-transform hover:scale-[1.01] active:scale-[0.98]"
+              style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, fontFamily: "Oswald", boxShadow: "0 8px 24px rgba(201,168,76,0.2)" }}>
+              <Icon name="Star" size={16} style={{ color: "#0a0f1e" }} className="fill-[#0a0f1e]" />
+              <span style={{ color: "#0a0f1e", fontSize: 14, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 Оставить отзыв
               </span>
             </a>

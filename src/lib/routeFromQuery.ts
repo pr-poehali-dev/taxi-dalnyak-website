@@ -1,6 +1,7 @@
 const CITIES: [string, string][] = [
   ["москв", "Москва"], ["питер", "Санкт-Петербург"], ["спб", "Санкт-Петербург"],
   ["санкт-петербург", "Санкт-Петербург"], ["петербург", "Санкт-Петербург"],
+  ["нижний новгород", "Нижний Новгород"], ["великий новгород", "Великий Новгород"],
   ["воронеж", "Воронеж"], ["курск", "Курск"], ["белгород", "Белгород"],
   ["ростов", "Ростов-на-Дону"], ["краснодар", "Краснодар"], ["сочи", "Сочи"],
   ["рязан", "Рязань"], ["нижн", "Нижний Новгород"], ["казан", "Казань"],
@@ -35,13 +36,17 @@ const STOP = /такси|межгород|заказать|номер|телеф
 
 function findCities(text: string): string[] {
   const found: { name: string; pos: number }[] = [];
-  const low = text.toLowerCase();
+  let low = text.toLowerCase().replace(/ё/g, "е");
 
-  for (const [needle, name] of CITIES) {
+  const ordered = [...CITIES].sort((a, b) => b[0].length - a[0].length);
+
+  for (const [rawNeedle, name] of ordered) {
+    const needle = rawNeedle.replace(/ё/g, "е");
     const pos = low.indexOf(needle);
     if (pos === -1) continue;
     if (found.some((f) => f.name === name)) continue;
     found.push({ name, pos });
+    low = low.slice(0, pos) + "\u0000".repeat(needle.length) + low.slice(pos + needle.length);
   }
 
   return found.sort((a, b) => a.pos - b.pos).map((f) => f.name);
