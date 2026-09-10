@@ -1,7 +1,9 @@
 import Icon from "@/components/ui/icon";
 import PriceGuide from "@/components/PriceGuide";
 import YandexRating from "@/components/YandexRating";
-import { GOLD, GOLD2, ROUTES_PREVIEW, type RegionConfig } from "@/components/regional/shared";
+import { GOLD, GOLD2, ROUTES_PREVIEW, ymGoal, type RegionConfig } from "@/components/regional/shared";
+
+const YA_REVIEW_URL = "https://yandex.ru/maps/org/82867613833/reviews/";
 
 interface Props {
   config: RegionConfig;
@@ -140,16 +142,25 @@ export default function RegionalContent({ config, allRoutes, setAllRoutes, revie
 
       {/* РЕЙТИНГ ЯНДЕКСА */}
       <section className="px-4 pt-6 pb-0 max-w-5xl mx-auto w-full">
-        <div className="rounded-2xl px-4 py-5 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6"
+        <div className="rounded-2xl px-4 py-5 flex flex-col sm:flex-row items-center sm:justify-center gap-4 sm:gap-6"
           style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
           <YandexRating label="" />
           <div className="text-center sm:text-left">
             <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 14, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>
               Мы в Яндекс Бизнесе
             </div>
-            <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11.5, lineHeight: 1.55, marginTop: 4 }}>
+            <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11.5, lineHeight: 1.55, marginTop: 4, maxWidth: 320 }}>
               Ездили с нами? Оставьте оценку — она попадёт прямо в карточку организации
             </div>
+            <a href={YA_REVIEW_URL} target="_blank" rel="noopener noreferrer"
+              onClick={() => ymGoal("yandex_review_click", { city: config.slug })}
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 mt-3 transition-transform hover:scale-[1.02] active:scale-[0.97]"
+              style={{ background: `linear-gradient(135deg,${GOLD},${GOLD2})`, fontFamily: "Oswald" }}>
+              <Icon name="Star" size={14} style={{ color: "#0a0f1e" }} className="fill-[#0a0f1e]" />
+              <span style={{ color: "#0a0f1e", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Оставить отзыв
+              </span>
+            </a>
           </div>
         </div>
       </section>
