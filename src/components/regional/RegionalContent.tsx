@@ -1,5 +1,6 @@
 import Icon from "@/components/ui/icon";
 import PriceGuide from "@/components/PriceGuide";
+import YandexRating from "@/components/YandexRating";
 import { GOLD, GOLD2, ROUTES_PREVIEW, type RegionConfig } from "@/components/regional/shared";
 
 interface Props {
@@ -132,6 +133,19 @@ export default function RegionalContent({ config, allRoutes, setAllRoutes, revie
               <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>Средняя оценка организации</span>
             </div>
           ))}
+        </div>
+
+        <div className="rounded-2xl px-4 py-4 mt-3 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5"
+          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <YandexRating label="" />
+          <div className="text-center sm:text-left">
+            <div style={{ fontFamily: "Oswald", color: "#fff", fontSize: 13, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Подтверждённый рейтинг Яндекса
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11.5, lineHeight: 1.5, marginTop: 3 }}>
+              Оценка обновляется автоматически из карточки организации в Яндекс Бизнесе
+            </div>
+          </div>
         </div>
       </section>
 

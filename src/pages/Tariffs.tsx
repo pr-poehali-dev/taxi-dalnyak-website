@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import YandexRating from "@/components/YandexRating";
 import Icon from "@/components/ui/icon";
 import { useSeo } from "@/hooks/use-seo";
 
@@ -178,6 +179,8 @@ export default function Tariffs() {
           </div>
         </div>
       </div>
+      <YandexRating className="py-7" />
+
     </div>
   );
 }

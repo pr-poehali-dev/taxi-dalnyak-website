@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import YandexRating from "@/components/YandexRating";
 import Icon from "@/components/ui/icon";
 import { parseRoute, toGenitive, type RouteResult } from "@/lib/cityRoute";
 
@@ -475,6 +476,8 @@ export default function Transfer() {
         </a>
       </div>
       <div className="md:hidden" style={{ height: 88 }} />
+      <YandexRating className="py-7" />
+
     </div>
   );
 }

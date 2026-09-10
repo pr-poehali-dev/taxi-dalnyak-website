@@ -1,5 +1,6 @@
 // v2
 import { memo, useEffect, useRef, useState } from "react";
+import YandexRating from "@/components/YandexRating";
 import Icon from "@/components/ui/icon";
 import PaymentBlock from "@/components/PaymentBlock";
 import RoadPattern from "@/components/RoadPattern";
@@ -850,6 +851,8 @@ export default function Quick({ contacts = DEFAULT_CONTACTS, source }: { contact
           </div>
         </div>
       )}
+      <YandexRating className="py-7" />
+
     </div>
   );
 }

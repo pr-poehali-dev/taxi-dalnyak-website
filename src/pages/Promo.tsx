@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import YandexRating from "@/components/YandexRating";
 import Icon from "@/components/ui/icon";
 import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
 import PriceGuide from "@/components/PriceGuide";
@@ -304,6 +305,8 @@ export default function Promo({
           </div>
         </div>
       </div>
+      <YandexRating className="py-7" />
+
     </div>
   );
 }

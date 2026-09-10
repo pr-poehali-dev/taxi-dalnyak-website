@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import YandexRating from "@/components/YandexRating";
 import Icon from "@/components/ui/icon";
 import { useSeo } from "@/hooks/use-seo";
 
@@ -359,6 +360,8 @@ export default function KPP() {
         </div>
 
       </div>
+      <YandexRating className="py-7" />
+
     </>
   );
 }

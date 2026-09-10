@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import YandexRating from "@/components/YandexRating";
 import Icon from "@/components/ui/icon";
 
 declare global { interface Window { ym?: (id: number, action: string, goal: string) => void; } }
@@ -283,6 +284,8 @@ export default function Business() {
           </div>
         </div>
       </div>
+      <YandexRating className="py-7" />
+
     </div>
   );
 }
