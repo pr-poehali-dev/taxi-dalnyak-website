@@ -1,4 +1,5 @@
 import Icon from "@/components/ui/icon";
+import { cityRod } from "@/lib/routeFromQuery";
 import {
   GOLD, GOLD2, HERO_IMG, LOGO, REGIONS,
   ymGoal, ymLead,
@@ -11,6 +12,7 @@ interface Props {
   menuOpen: boolean;
   setMenuOpen: (fn: (v: boolean) => boolean) => void;
   queryRoute: { from: string; to: string } | null;
+  queryCity?: string | null;
   PHONE: string;
   PHONE_HREF: string;
   utmParams: UtmParams;
@@ -18,7 +20,7 @@ interface Props {
 }
 
 export default function RegionalHero({
-  config, splash, menuOpen, setMenuOpen, queryRoute, PHONE, PHONE_HREF, utmParams, source,
+  config, splash, menuOpen, setMenuOpen, queryRoute, queryCity, PHONE, PHONE_HREF, utmParams, source,
 }: Props) {
   return (
     <>
@@ -85,12 +87,14 @@ export default function RegionalHero({
           <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 mb-4"
             style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)" }}>
             <Icon name="MapPin" size={12} style={{ color: GOLD }} />
-            <span style={{ color: GOLD, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em" }}>{queryRoute ? `${queryRoute.from} – ${queryRoute.to} · Ваш маршрут` : config.badge ?? `${config.city} · Межгородское такси`}</span>
+            <span style={{ color: GOLD, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.2em" }}>{queryRoute ? `${queryRoute.from} – ${queryRoute.to} · Ваш маршрут` : queryCity ? `${queryCity} · Межгород от 200 км` : config.badge ?? `${config.city} · Межгородское такси`}</span>
           </div>
 
           <h1 style={{ fontFamily: "Oswald", fontWeight: 900, fontSize: "clamp(24px,6vw,52px)", lineHeight: 1.0, textTransform: "uppercase", color: "#fff", letterSpacing: "-0.01em", marginBottom: 10 }}>
             {queryRoute ? (
               <>Такси{" "}<span style={{ color: GOLD }}>{queryRoute.from} — {queryRoute.to}</span>{" "}по фиксированной цене</>
+            ) : queryCity ? (
+              <>Такси межгород{" "}<span style={{ color: GOLD }}>из {cityRod(queryCity)}</span>{" "}по фиксированной цене</>
             ) : config.h1 ? (
               <span dangerouslySetInnerHTML={{ __html: config.h1.replace(/\[gold\](.*?)\[\/gold\]/g, `<span style="color:${GOLD}">$1</span>`) }} />
             ) : (
@@ -99,11 +103,13 @@ export default function RegionalHero({
           </h1>
 
           <p style={{ fontFamily: "Oswald", color: GOLD2, fontSize: "clamp(13px,2.5vw,18px)", fontWeight: 600, marginBottom: 4 }}>
-            {queryRoute ? `Прямой рейс ${queryRoute.from} – ${queryRoute.to} · Круглосуточно` : config.sub ?? "От 200 км · Большой опыт в перевозках"}
+            {queryRoute ? `Прямой рейс ${queryRoute.from} – ${queryRoute.to} · Круглосуточно` : queryCity ? `Из ${cityRod(queryCity)} в любой город · Круглосуточно` : config.sub ?? "От 200 км · Большой опыт в перевозках"}
           </p>
           <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, lineHeight: 1.6, maxWidth: 560, marginBottom: 20 }}>
             {queryRoute
               ? `Выполняем маршрут ${queryRoute.from} – ${queryRoute.to}. Цену фиксируем до выезда — она не меняется из-за пробок, ночного времени и времени в пути. Машина едет только за вами, без попутчиков.`
+              : queryCity
+              ? `Везём из ${cityRod(queryCity)} в любой город России на расстояние от 200 км. Цену фиксируем до выезда — она не меняется из-за пробок и времени в пути. Машина едет только за вами, без попутчиков.`
               : config.lead ?? "Свои водители на дальних рейсах — седаны, кроссоверы и минивэны. Фиксированная стоимость без счётчика и сюрпризов."}
           </p>
 

@@ -65,3 +65,36 @@ export function routeFromQuery(term: string | undefined | null): QueryRoute {
 
   return { from: cities[0], to: cities[1] };
 }
+
+const ROD_EXCEPTIONS: Record<string, string> = {
+  "Москва": "Москвы", "Санкт-Петербург": "Санкт-Петербурга", "Ростов-на-Дону": "Ростова-на-Дону",
+  "Нижний Новгород": "Нижнего Новгорода", "Великий Новгород": "Великого Новгорода",
+  "Новый Уренгой": "Нового Уренгоя", "Минеральные Воды": "Минеральных Вод",
+  "Орёл": "Орла", "Крым": "Крыма", "Сочи": "Сочи", "Чебоксары": "Чебоксар",
+  "Набережные Челны": "Набережных Челнов",
+};
+
+export function cityRod(city: string): string {
+  if (ROD_EXCEPTIONS[city]) return ROD_EXCEPTIONS[city];
+  if (/я$/i.test(city)) return city.slice(0, -1) + "и";
+  if (/[гкхжчшщ]а$/i.test(city)) return city.slice(0, -1) + "и";
+  if (/а$/i.test(city)) return city.slice(0, -1) + "ы";
+  if (/[еёиоуыэю]$/i.test(city)) return city;
+  if (/ый$|ий$/i.test(city)) return city.slice(0, -2) + "ого";
+  if (/й$/i.test(city)) return city.slice(0, -1) + "я";
+  if (/ль$/i.test(city)) return city.slice(0, -2) + "ля";
+  if (/ь$/i.test(city)) return city.slice(0, -1) + "и";
+  return city + "а";
+}
+
+export function cityFromQuery(term: string | undefined | null): string | null {
+  if (!term) return null;
+
+  const clean = term.replace(/[+"!\[\]]/g, " ").replace(STOP, " ").trim();
+  if (clean.length < 3) return null;
+
+  const cities = findCities(term);
+  if (cities.length !== 1) return null;
+
+  return cities[0];
+}

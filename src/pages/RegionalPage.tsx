@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
 import FloatingContacts from "@/components/FloatingContacts";
-import { routeFromQuery } from "@/lib/routeFromQuery";
+import { routeFromQuery, cityFromQuery } from "@/lib/routeFromQuery";
 import { BASE_REVIEWS, ymGoal, ymLead, type RegionConfig } from "@/components/regional/shared";
 import { useRegionalSeo } from "@/components/regional/useRegionalSeo";
 import RegionalHero from "@/components/regional/RegionalHero";
@@ -27,6 +27,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
   useRegionalSeo(config, PHONE);
 
   const queryRoute = useMemo(() => routeFromQuery(utmParams.term), [utmParams.term]);
+  const queryCity  = useMemo(() => cityFromQuery(utmParams.term), [utmParams.term]);
 
   const reviews = config.reviews ?? BASE_REVIEWS;
 
@@ -62,6 +63,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
           menuOpen={menuOpen}
           setMenuOpen={setMenuOpen}
           queryRoute={queryRoute}
+          queryCity={queryCity}
           PHONE={PHONE}
           PHONE_HREF={PHONE_HREF}
           utmParams={utmParams}
