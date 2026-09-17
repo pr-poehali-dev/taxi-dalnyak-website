@@ -1,66 +1,11 @@
-const CITIES: [string, string][] = [
-  ["москв", "Москва"], ["питер", "Санкт-Петербург"], ["спб", "Санкт-Петербург"],
-  ["санкт-петербург", "Санкт-Петербург"], ["петербург", "Санкт-Петербург"],
-  ["нижний новгород", "Нижний Новгород"], ["великий новгород", "Великий Новгород"],
-  ["воронеж", "Воронеж"], ["курск", "Курск"], ["белгород", "Белгород"],
-  ["ростов", "Ростов-на-Дону"], ["краснодар", "Краснодар"], ["сочи", "Сочи"],
-  ["рязан", "Рязань"], ["нижн", "Нижний Новгород"], ["казан", "Казань"],
-  ["самар", "Самара"], ["саратов", "Саратов"], ["волгоград", "Волгоград"],
-  ["владимир", "Владимир"], ["ярославл", "Ярославль"], ["иванов", "Иваново"],
-  ["кострома", "Кострома"],
-  ["тамбов", "Тамбов"], ["липецк", "Липецк"], ["орёл", "Орёл"], ["орел", "Орёл"],
-  ["брянск", "Брянск"], ["смоленск", "Смоленск"], ["псков", "Псков"],
-  ["новгород", "Великий Новгород"], ["мурманск", "Мурманск"],
-  ["архангельск", "Архангельск"], ["петрозаводск", "Петрозаводск"],
-  ["вологд", "Вологда"], ["череповец", "Череповец"], ["киров", "Киров"],
-  ["пермь", "Пермь"], ["ижевск", "Ижевск"], ["уф", "Уфа"], ["оренбург", "Оренбург"],
-  ["челябинск", "Челябинск"], ["екатеринбург", "Екатеринбург"], ["тюмен", "Тюмень"],
-  ["курган", "Курган"], ["омск", "Омск"], ["новосибирск", "Новосибирск"],
-  ["кемеров", "Кемерово"], ["барнаул", "Барнаул"], ["томск", "Томск"],
-  ["красноярск", "Красноярск"], ["иркутск", "Иркутск"], ["чебоксар", "Чебоксары"],
-  ["пенз", "Пенза"], ["ульяновск", "Ульяновск"], ["тольятти", "Тольятти"],
-  ["астрахан", "Астрахань"], ["ставропол", "Ставрополь"], ["пятигорск", "Пятигорск"],
-  ["минеральные", "Минеральные Воды"], ["нальчик", "Нальчик"], ["махачкал", "Махачкала"],
-  ["грозн", "Грозный"], ["владикавказ", "Владикавказ"], ["анап", "Анапа"],
-  ["геленджик", "Геленджик"], ["новороссийск", "Новороссийск"], ["крым", "Крым"],
-  ["симферопол", "Симферополь"], ["севастопол", "Севастополь"], ["ялт", "Ялта"],
-  ["донецк", "Донецк"], ["луганск", "Луганск"], ["мариупол", "Мариуполь"],
-  ["мелитопол", "Мелитополь"], ["бердянск", "Бердянск"], ["херсон", "Херсон"],
-  ["калининград", "Калининград"], ["тул", "Тула"], ["калуг", "Калуга"],
-  ["твер", "Тверь"], ["саранск", "Саранск"], ["сургут", "Сургут"],
-  ["нижневартовск", "Нижневартовск"], ["новый уренгой", "Новый Уренгой"],
-  ["ноябрьск", "Ноябрьск"], ["магнитогорск", "Магнитогорск"], ["сыктывкар", "Сыктывкар"],
-];
-
-const STOP = /такси|межгород|заказать|номер|телефон|цена|стоимость|сколько|стоит|дешево|дёшево|недорого|из|до|в|на|по|под|заказ|перевозка|трансфер|машин|авто|водител|км|рублей|руб/gi;
-
-function findCities(text: string): string[] {
-  const found: { name: string; pos: number }[] = [];
-  let low = text.toLowerCase().replace(/ё/g, "е");
-
-  const ordered = [...CITIES].sort((a, b) => b[0].length - a[0].length);
-
-  for (const [rawNeedle, name] of ordered) {
-    const needle = rawNeedle.replace(/ё/g, "е");
-    const pos = low.indexOf(needle);
-    if (pos === -1) continue;
-    if (found.some((f) => f.name === name)) continue;
-    found.push({ name, pos });
-    low = low.slice(0, pos) + "\u0000".repeat(needle.length) + low.slice(pos + needle.length);
-  }
-
-  return found.sort((a, b) => a.pos - b.pos).map((f) => f.name);
-}
+import { findCitiesSmart } from "@/lib/cityMatch";
 
 export type QueryRoute = { from: string; to: string } | null;
 
 export function routeFromQuery(term: string | undefined | null): QueryRoute {
   if (!term) return null;
 
-  const clean = term.replace(/[+"!\[\]]/g, " ").replace(STOP, " ").trim();
-  if (clean.length < 3) return null;
-
-  const cities = findCities(term);
+  const cities = findCitiesSmart(term);
   if (cities.length < 2) return null;
 
   return { from: cities[0], to: cities[1] };
@@ -71,29 +16,62 @@ const ROD_EXCEPTIONS: Record<string, string> = {
   "Нижний Новгород": "Нижнего Новгорода", "Великий Новгород": "Великого Новгорода",
   "Новый Уренгой": "Нового Уренгоя", "Минеральные Воды": "Минеральных Вод",
   "Орёл": "Орла", "Крым": "Крыма", "Сочи": "Сочи", "Чебоксары": "Чебоксар",
-  "Набережные Челны": "Набережных Челнов",
+  "Набережные Челны": "Набережных Челнов", "Ровеньки": "Ровеньков",
+  "Великие Луки": "Великих Лук", "Мытищи": "Мытищ", "Люберцы": "Люберец",
+  "Химки": "Химок", "Ессентуки": "Ессентуков", "Горки": "Горок",
+  "Вятские Поляны": "Вятских Полян", "Кавказские Минеральные Воды": "Кавказских Минеральных Вод",
+  "Дно": "Дна", "Плёс": "Плёса", "Гусь-Хрустальный": "Гусь-Хрустального",
 };
 
+const ADJ_RULES: [RegExp, string][] = [
+  [/ая$/i, "ой"], [/яя$/i, "ей"], [/ый$/i, "ого"], [/ий$/i, "его"],
+  [/ой$/i, "ого"], [/ые$/i, "ых"], [/ие$/i, "их"],
+];
+
+function adjRod(word: string): string | null {
+  for (const [re, end] of ADJ_RULES) {
+    if (re.test(word)) return word.replace(re, end);
+  }
+  return null;
+}
+
+function nounRod(word: string): string | null {
+  if (/[иы]$/i.test(word)) return null;
+  if (/я$/i.test(word)) return word.slice(0, -1) + "и";
+  if (/[гкхжчшщ]а$/i.test(word)) return word.slice(0, -1) + "и";
+  if (/а$/i.test(word)) return word.slice(0, -1) + "ы";
+  if (/[еёоуэю]$/i.test(word)) return word;
+  if (/ый$|ий$/i.test(word)) return word.slice(0, -2) + "ого";
+  if (/й$/i.test(word)) return word.slice(0, -1) + "я";
+  if (/ль$/i.test(word)) return word.slice(0, -2) + "ля";
+  if (/ь$/i.test(word)) return word.slice(0, -1) + "и";
+  return word + "а";
+}
+
+/** Родительный падеж + признак надёжности. */
+export function cityRodSafe(city: string): { text: string; safe: boolean } {
+  if (ROD_EXCEPTIONS[city]) return { text: ROD_EXCEPTIONS[city], safe: true };
+
+  const words = city.split(" ");
+  if (words.length > 1) {
+    const last = nounRod(words[words.length - 1]);
+    if (!last) return { text: city, safe: false };
+    const head = words.slice(0, -1).map((w) => adjRod(w) ?? nounRod(w) ?? w);
+    return { text: [...head, last].join(" "), safe: true };
+  }
+
+  const one = nounRod(city);
+  return one ? { text: one, safe: true } : { text: city, safe: false };
+}
+
 export function cityRod(city: string): string {
-  if (ROD_EXCEPTIONS[city]) return ROD_EXCEPTIONS[city];
-  if (/я$/i.test(city)) return city.slice(0, -1) + "и";
-  if (/[гкхжчшщ]а$/i.test(city)) return city.slice(0, -1) + "и";
-  if (/а$/i.test(city)) return city.slice(0, -1) + "ы";
-  if (/[еёиоуыэю]$/i.test(city)) return city;
-  if (/ый$|ий$/i.test(city)) return city.slice(0, -2) + "ого";
-  if (/й$/i.test(city)) return city.slice(0, -1) + "я";
-  if (/ль$/i.test(city)) return city.slice(0, -2) + "ля";
-  if (/ь$/i.test(city)) return city.slice(0, -1) + "и";
-  return city + "а";
+  return cityRodSafe(city).text;
 }
 
 export function cityFromQuery(term: string | undefined | null): string | null {
   if (!term) return null;
 
-  const clean = term.replace(/[+"!\[\]]/g, " ").replace(STOP, " ").trim();
-  if (clean.length < 3) return null;
-
-  const cities = findCities(term);
+  const cities = findCitiesSmart(term);
   if (cities.length !== 1) return null;
 
   return cities[0];
