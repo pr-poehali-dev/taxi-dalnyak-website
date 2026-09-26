@@ -8,9 +8,12 @@ const NAVY = "#0b0b0d";
 const TG_BLUE = "#229ED9";
 const TG_BLUE2 = "#2ab3ec";
 const LITE_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/61968b78-9167-454f-a663-0eb20d9c02fe.jpg";
+// Ведём в канал на конкретный пост. Скрипт tgtrack перехватывает клик
+// по ссылке с этим адресом и сам проставляет метки — UTM тут не нужны.
+const LITE_TG_POST = "https://t.me/gorodvgorode1/52";
 
 export default function Lite() {
-  const { PHONE, PHONE_HREF, TG_HREF } = DIRECT_ADS_CONTACTS;
+  const { PHONE, PHONE_HREF } = DIRECT_ADS_CONTACTS;
   const [utm, setUtm] = useState({ source: "direct", medium: "none", campaign: "none", term: "", content: "none" });
 
   useEffect(() => {
@@ -75,16 +78,7 @@ export default function Lite() {
     };
   }, []);
 
-  const withUtm = (base: string, content: string) => {
-    const u = new URL(base);
-    u.searchParams.set("utm_source", utm.source);
-    u.searchParams.set("utm_medium", utm.medium);
-    u.searchParams.set("utm_campaign", utm.campaign);
-    u.searchParams.set("utm_content", content);
-    return u.toString();
-  };
-
-  const tgHref = useMemo(() => withUtm(TG_HREF, "lite_tg"), [utm, TG_HREF]);
+  const tgHref = LITE_TG_POST;
 
   return (
     <main
