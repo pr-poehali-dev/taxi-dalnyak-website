@@ -36,6 +36,7 @@ import Lugansk from "./pages/regions/Lugansk";
 import Kherson from "./pages/regions/Kherson";
 import Rovenki from "./pages/regions/Rovenki";
 import TownPage from "./pages/TownPage";
+import Lite from "./pages/Lite";
 import MoscowBusiness from "./pages/MoscowBusiness";
 import Otzyv from "./pages/Otzyv";
 
@@ -83,6 +84,7 @@ const App = () => (
           <Route path="/lugansk" element={<Lugansk />} />
           <Route path="/kherson" element={<Kherson />} />
           <Route path="/rovenki" element={<Rovenki />} />
+          <Route path="/lite" element={<Lite />} />
 
           <Route path="/:slug" element={<TownPage />} />
           <Route path="*" element={<PageNotFound />} />
