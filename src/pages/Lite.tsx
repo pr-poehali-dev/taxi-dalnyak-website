@@ -8,9 +8,9 @@ const NAVY = "#0b0b0d";
 const TG_BLUE = "#229ED9";
 const TG_BLUE2 = "#2ab3ec";
 const LITE_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/61968b78-9167-454f-a663-0eb20d9c02fe.jpg";
-// Ведём в канал на конкретный пост. Скрипт tgtrack перехватывает клик
+// Ведём на главную канала. Скрипт tgtrack перехватывает клик
 // по ссылке с этим адресом и сам проставляет метки — UTM тут не нужны.
-const LITE_TG_POST = "https://t.me/gorodvgorode1/52";
+const LITE_TG_POST = "https://t.me/gorodvgorode1";
 
 export default function Lite() {
   const { PHONE, PHONE_HREF } = DIRECT_ADS_CONTACTS;
