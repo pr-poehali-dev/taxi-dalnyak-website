@@ -20,8 +20,8 @@ export const DEFAULT_CONTACTS: Contacts = {
 // не смешивались со звонками из VK и с органики.
 export const DIRECT_ADS_CONTACTS: Contacts = {
   ...DEFAULT_CONTACTS,
-  PHONE: "+7 (922) 505-51-25",
-  PHONE_HREF: "tel:+79225055125",
+  PHONE: "+7 (995) 645-51-25",
+  PHONE_HREF: "tel:+79956455125",
   MAX_HREF:
     "https://max.ru/u/f9LHodD0cOI2GygpC-YhvtMDVdYEJcCG3IhGQlqUoFV99elHxgibg8U3KVw",
 };
