@@ -65,19 +65,6 @@ export default function Lite() {
     ymGoal("view_lite");
   }, []);
 
-  useEffect(() => {
-    const SRC = "https://api.tgtrack.ru/API/landing_script/v1/?linkID=0361fd345357ca&type=ya&counterID=105507525";
-    if (document.querySelector(`script[src="${SRC}"]`)) return;
-    const s = document.createElement("script");
-    s.src = SRC;
-    s.type = "text/javascript";
-    s.defer = true;
-    document.head.appendChild(s);
-    return () => {
-      s.remove();
-    };
-  }, []);
-
   const tgHref = LITE_TG_POST;
 
   return (
