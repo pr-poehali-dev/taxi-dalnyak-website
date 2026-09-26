@@ -38,6 +38,7 @@ import Rovenki from "./pages/regions/Rovenki";
 import TownPage from "./pages/TownPage";
 import Lite from "./pages/Lite";
 import Max from "./pages/Max";
+import Call from "./pages/Call";
 import MoscowBusiness from "./pages/MoscowBusiness";
 import Otzyv from "./pages/Otzyv";
 
@@ -87,6 +88,7 @@ const App = () => (
           <Route path="/rovenki" element={<Rovenki />} />
           <Route path="/lite" element={<Lite />} />
           <Route path="/max" element={<Max />} />
+          <Route path="/call" element={<Call />} />
 
           <Route path="/:slug" element={<TownPage />} />
           <Route path="*" element={<PageNotFound />} />
