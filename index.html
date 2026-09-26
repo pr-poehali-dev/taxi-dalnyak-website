@@ -118,10 +118,20 @@
     <meta name="pp-name" value="taxi-dalnyak-website">
     <script src="https://cdn.poehali.dev/intertnal/js/inspector-min.js"></script>
 
-    <!-- TGTrack: отслеживание переходов в Telegram-канал -->
-    <script src="https://api.tgtrack.ru/API/landing_script/v1/?linkID=2ce09a2a1819b0&type=ya&counterID=111028538" type="text/javascript" defer></script>
-    <!-- TGTrack: отслеживание переходов в чат MAX -->
-    <script src="https://max.tgtrack.ru/API/landing_script/v1/?linkID=b3b2c435c8f44&type=ya&counterID=111028538" type="text/javascript" defer></script>
+    <!-- TGTrack: отслеживание переходов. Скрипты Telegram и MAX используют одни
+         и те же глобальные переменные, поэтому вместе работать не могут.
+         Грузим ровно один — по адресу страницы. -->
+    <script>
+      (function () {
+        var isMax = location.pathname.replace(/\/+$/, "") === "/max";
+        var s = document.createElement("script");
+        s.src = isMax
+          ? "https://max.tgtrack.ru/API/landing_script/v1/?linkID=b3b2c435c8f44&type=ya&counterID=111028538"
+          : "https://api.tgtrack.ru/API/landing_script/v1/?linkID=2ce09a2a1819b0&type=ya&counterID=111028538";
+        s.defer = true;
+        document.head.appendChild(s);
+      })();
+    </script>
 </head>
 
 <body>
