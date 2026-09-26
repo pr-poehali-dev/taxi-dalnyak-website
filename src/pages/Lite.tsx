@@ -2,12 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { DIRECT_ADS_CONTACTS } from "@/lib/contacts";
 import { routeFromQuery, cityFromQuery, cityRod } from "@/lib/routeFromQuery";
-import { GOLD, GOLD2, HERO_IMG, LOGO, ymGoal, ymLead } from "@/components/regional/shared";
+import { GOLD, GOLD2, LOGO, ymGoal, ymLead } from "@/components/regional/shared";
 
 const NAVY = "#0b0b0d";
+const TG_BLUE = "#229ED9";
+const TG_BLUE2 = "#2ab3ec";
+const LITE_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/61968b78-9167-454f-a663-0eb20d9c02fe.jpg";
 
 export default function Lite() {
-  const { PHONE, PHONE_HREF, TG_HREF, MAX_HREF, VK_HREF } = DIRECT_ADS_CONTACTS;
+  const { PHONE, PHONE_HREF, TG_HREF } = DIRECT_ADS_CONTACTS;
   const [utm, setUtm] = useState({ source: "direct", medium: "none", campaign: "none", term: "", content: "none" });
 
   useEffect(() => {
@@ -69,8 +72,6 @@ export default function Lite() {
   };
 
   const tgHref = useMemo(() => withUtm(TG_HREF, "lite_tg"), [utm, TG_HREF]);
-  const maxHref = useMemo(() => withUtm(MAX_HREF, "lite_max"), [utm, MAX_HREF]);
-  const vkHref = useMemo(() => withUtm(VK_HREF, "lite_vk"), [utm, VK_HREF]);
 
   return (
     <main
@@ -91,10 +92,10 @@ export default function Lite() {
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage: `url(${HERO_IMG})`,
+          backgroundImage: `url(${LITE_BG})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          opacity: 0.22,
+          opacity: 0.62,
         }}
       />
       <div
@@ -102,7 +103,7 @@ export default function Lite() {
         style={{
           position: "absolute",
           inset: 0,
-          background: `linear-gradient(180deg, ${NAVY} 0%, rgba(11,11,13,0.72) 45%, ${NAVY} 100%)`,
+          background: `linear-gradient(180deg, rgba(11,11,13,0.82) 0%, rgba(11,11,13,0.58) 42%, rgba(11,11,13,0.9) 100%)`,
         }}
       />
 
@@ -172,8 +173,8 @@ export default function Lite() {
             justifyContent: "center",
             gap: 10,
             width: "100%",
-            background: `linear-gradient(135deg, ${GOLD2}, ${GOLD})`,
-            color: "#141414",
+            background: `linear-gradient(135deg, ${TG_BLUE2}, ${TG_BLUE})`,
+            color: "#fff",
             borderRadius: 16,
             padding: "18px 20px",
             fontFamily: "Oswald",
@@ -181,7 +182,7 @@ export default function Lite() {
             fontSize: "clamp(17px,4.6vw,21px)",
             textTransform: "uppercase",
             letterSpacing: "0.02em",
-            boxShadow: "0 14px 34px rgba(201,168,76,0.3)",
+            boxShadow: "0 14px 34px rgba(34,158,217,0.38)",
             marginBottom: 10,
           }}
         >
@@ -210,61 +211,12 @@ export default function Lite() {
             fontFamily: "Oswald",
             fontWeight: 700,
             fontSize: "clamp(16px,4.2vw,19px)",
-            marginBottom: 18,
+            marginBottom: 24,
           }}
         >
           <Icon name="Phone" size={19} style={{ color: GOLD }} />
           {PHONE}
         </a>
-
-        <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
-          <a
-            href={maxHref}
-            target="_blank"
-            rel="noopener"
-            onClick={() => ymLead("max", utm, "lite")}
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 7,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "rgba(255,255,255,0.85)",
-              borderRadius: 13,
-              padding: "12px 10px",
-              fontSize: 14,
-              fontWeight: 600,
-            }}
-          >
-            <Icon name="MessageCircle" size={16} style={{ color: GOLD }} />
-            Max
-          </a>
-          <a
-            href={vkHref}
-            target="_blank"
-            rel="noopener"
-            onClick={() => ymLead("vk", utm, "lite")}
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 7,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "rgba(255,255,255,0.85)",
-              borderRadius: 13,
-              padding: "12px 10px",
-              fontSize: 14,
-              fontWeight: 600,
-            }}
-          >
-            <Icon name="Users" size={16} style={{ color: GOLD }} />
-            ВКонтакте
-          </a>
-        </div>
 
         <ul
           style={{
