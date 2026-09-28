@@ -39,10 +39,9 @@ import TownPage from "./pages/TownPage";
 import Lite from "./pages/Lite";
 import Max from "./pages/Max";
 import Call from "./pages/Call";
-import RostovMoskva from "./pages/RostovMoskva";
-import MoskvaSpb from "./pages/MoskvaSpb";
-import RostovDonetsk from "./pages/RostovDonetsk";
-import RostovLugansk from "./pages/RostovLugansk";
+import RouteLandingPage from "./pages/RouteLandingPage";
+import Pages from "./pages/Pages";
+import { ROUTE_LANDINGS } from "./lib/routeLandings";
 import MoscowBusiness from "./pages/MoscowBusiness";
 import Otzyv from "./pages/Otzyv";
 
@@ -93,10 +92,10 @@ const App = () => (
           <Route path="/lite" element={<Lite />} />
           <Route path="/max" element={<Max />} />
           <Route path="/call" element={<Call />} />
-          <Route path="/rostov-moskva" element={<RostovMoskva />} />
-          <Route path="/moskva-spb" element={<MoskvaSpb />} />
-          <Route path="/rostov-donetsk" element={<RostovDonetsk />} />
-          <Route path="/rostov-lugansk" element={<RostovLugansk />} />
+          <Route path="/pages" element={<Pages />} />
+          {ROUTE_LANDINGS.map((r) => (
+            <Route key={r.slug} path={`/${r.slug}`} element={<RouteLandingPage />} />
+          ))}
 
           <Route path="/:slug" element={<TownPage />} />
           <Route path="*" element={<PageNotFound />} />
