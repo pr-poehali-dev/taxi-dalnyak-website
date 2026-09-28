@@ -52,7 +52,10 @@ export interface RouteLandingConfig {
   badge: string;
   km: string;
   priceFrom: string;
-  tollLabel: string;
+  /** Название платной трассы. Если её на маршруте нет — не указывай. */
+  tollLabel?: string;
+  /** Чем заменить упоминание платной дороги, когда её нет. */
+  tollAlt?: { included: string; hero: string; note: string; seo: string };
   tariffs: RouteTariff[];
 }
 
@@ -64,10 +67,17 @@ export default function RouteLanding({ config }: { config: RouteLandingConfig })
 
   const routeName = `${config.from} — ${config.to}`;
 
+  const toll = config.tollAlt ?? {
+    included: "Все дорожные расходы включены",
+    hero: "Платная дорога включена.",
+    note: "Все расходы в пути включены.",
+    seo: "все расходы в пути включены",
+  };
+
   const INCLUDED = [
     { icon: "Home", text: `Подача к подъезду ${config.fromPrep}` },
     { icon: "Route", text: `Поездка ${routeName} (${config.km})` },
-    { icon: "TicketCheck", text: `${config.tollLabel} включена` },
+    { icon: "TicketCheck", text: config.tollLabel ? `${config.tollLabel} включена` : toll.included },
     { icon: "Luggage", text: "Багаж: 2 чемодана + ручная кладь" },
     { icon: "Clock", text: "Ожидание 15 минут бесплатно" },
     { icon: "Baby", text: "Детское кресло — по запросу" },
@@ -89,7 +99,8 @@ export default function RouteLanding({ config }: { config: RouteLandingConfig })
     document.title = `Такси ${routeName} · фикс-цена ${config.priceFrom} | Такси Дальняк`;
     const desc =
       `Такси ${routeName} по фиксированной цене от ${config.priceFrom} под ключ. Без попутчиков, ` +
-      `${config.tollLabel.toLowerCase()} включена, подача к подъезду. Звоните ${PHONE} круглосуточно.`;
+      `${config.tollLabel ? config.tollLabel.toLowerCase() + " включена" : toll.seo}, подача к подъезду. ` +
+      `Звоните ${PHONE} круглосуточно.`;
     const set = (sel: string, make: () => Element, attr: string, val: string) => {
       let el = document.querySelector(sel);
       if (!el) { el = make(); document.head.appendChild(el); }
@@ -102,7 +113,7 @@ export default function RouteLanding({ config }: { config: RouteLandingConfig })
       const l = document.createElement("link"); l.setAttribute("rel", "canonical"); return l;
     }, "href", `https://taxidalnyack.ru/${config.slug}`);
     ymGoal(`view_${config.goalKey}`);
-  }, [PHONE, routeName, config.priceFrom, config.slug, config.goalKey, config.tollLabel]);
+  }, [PHONE, routeName, config.priceFrom, config.slug, config.goalKey, config.tollLabel, toll.seo]);
 
   const BTNS: Btn[] = [
     { kind: "tg", href: TG_HREF, label: "Telegram", icon: "Send" },
@@ -222,7 +233,7 @@ export default function RouteLanding({ config }: { config: RouteLandingConfig })
           </h1>
 
           <p style={{ color: MUTED, fontSize: "clamp(15px,3.9vw,18px)", lineHeight: 1.45, marginBottom: 8, fontWeight: 500 }}>
-            Фикс-цена под ключ. Без попутчиков. Платная дорога включена.
+            Фикс-цена под ключ. Без попутчиков. {config.tollLabel ? "Платная дорога включена." : toll.hero}
           </p>
 
           <div style={{ display: "flex", alignItems: "baseline", gap: 9, marginBottom: 20 }}>
@@ -243,7 +254,7 @@ export default function RouteLanding({ config }: { config: RouteLandingConfig })
 
       {/* 2. Тарифы */}
       <Section bg={NAVY_DEEP}>
-        <H>Тарифы</H>
+        <H>{config.tariffs.length > 1 ? "Тарифы" : "Цена поездки"}</H>
         <div style={{ display: "grid", gap: 12 }}>
           {config.tariffs.map((t) => (
             <div
@@ -323,7 +334,7 @@ export default function RouteLanding({ config }: { config: RouteLandingConfig })
             fontWeight: 700, fontSize: 15, lineHeight: 1.4,
           }}
         >
-          Фикс-цена. {config.tollLabel} включена. Без доплат.
+          Фикс-цена. {config.tollLabel ? `${config.tollLabel} включена.` : toll.note} Без доплат.
         </p>
       </Section>
 
