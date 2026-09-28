@@ -57,6 +57,10 @@ export interface RouteLandingConfig {
   /** Чем заменить упоминание платной дороги, когда её нет. */
   tollAlt?: { included: string; hero: string; note: string; seo: string };
   tariffs: RouteTariff[];
+  /** Город назначения в предложном падеже — нужен, чтобы собрать обратный маршрут. */
+  toPrep?: string;
+  /** Адрес обратного направления. По умолчанию части слага меняются местами. */
+  reverseSlug?: string;
 }
 
 type Btn = { kind: "tg" | "max" | "phone"; href: string; label: string; icon: string };

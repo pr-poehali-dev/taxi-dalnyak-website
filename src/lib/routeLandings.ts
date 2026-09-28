@@ -2,7 +2,7 @@ import type { RouteLandingConfig } from "@/components/route-landing/RouteLanding
 
 // Реестр посадочных под маршруты.
 // Добавил конфиг сюда — страница и ссылка в каталоге /pages появятся сами.
-export const ROUTE_LANDINGS: RouteLandingConfig[] = [
+const FORWARD_ROUTES: RouteLandingConfig[] = [
   {
     slug: "rostov-moskva",
     goalKey: "rostov_moskva",
@@ -13,6 +13,7 @@ export const ROUTE_LANDINGS: RouteLandingConfig[] = [
     km: "~1 100 км",
     priceFrom: "40 000 ₽",
     tollLabel: "Платная дорога М4",
+    toPrep: "в Москве",
     tariffs: [
       { name: "Стандарт", price: "40 000 ₽", desc: "Седан, до 3 пассажиров, 2 чемодана", icon: "Car" },
       { name: "Комфорт", price: "45 000 ₽", desc: "Кроссовер, больше места, климат-контроль", icon: "CarFront", hit: true },
@@ -29,6 +30,7 @@ export const ROUTE_LANDINGS: RouteLandingConfig[] = [
     km: "~700 км",
     priceFrom: "30 000 ₽",
     tollLabel: "Платная дорога М11",
+    toPrep: "в Санкт-Петербурге",
     tariffs: [
       { name: "Стандарт", price: "30 000 ₽", desc: "Седан, до 3 пассажиров, 2 чемодана", icon: "Car" },
       { name: "Комфорт", price: "35 000 ₽", desc: "Кроссовер, больше места, климат-контроль", icon: "CarFront", hit: true },
@@ -38,6 +40,7 @@ export const ROUTE_LANDINGS: RouteLandingConfig[] = [
   {
     slug: "krasnodar-rostov",
     goalKey: "krasnodar_rostov",
+    reverseSlug: "rostov-krasnodar",
     from: "Краснодар",
     to: "Ростов-на-Дону",
     fromPrep: "в Краснодаре",
@@ -45,6 +48,7 @@ export const ROUTE_LANDINGS: RouteLandingConfig[] = [
     km: "~290 км",
     priceFrom: "11 000 ₽",
     tollLabel: "Платная дорога М4",
+    toPrep: "в Ростове-на-Дону",
     tariffs: [
       { name: "Стандарт", price: "11 000 ₽", desc: "Седан, до 3 пассажиров, 2 чемодана", icon: "Car" },
       { name: "Комфорт", price: "14 000 ₽", desc: "Кроссовер, больше места, климат-контроль", icon: "CarFront", hit: true },
@@ -66,6 +70,7 @@ export const ROUTE_LANDINGS: RouteLandingConfig[] = [
       note: "Дорога и оформление на границе включены.",
       seo: "все расходы в пути включены",
     },
+    toPrep: "в Донецке",
     tariffs: [
       { name: "Стандарт", price: "12 000 ₽", desc: "Седан, до 3 пассажиров, 2 чемодана", icon: "Car" },
     ],
@@ -85,11 +90,29 @@ export const ROUTE_LANDINGS: RouteLandingConfig[] = [
       note: "Дорога и оформление на границе включены.",
       seo: "все расходы в пути включены",
     },
+    toPrep: "в Луганске",
     tariffs: [
       { name: "Стандарт", price: "12 000 ₽", desc: "Седан, до 3 пассажиров, 2 чемодана", icon: "Car" },
     ],
   },
 ];
+
+// Обратное направление каждого маршрута собирается автоматически:
+// города меняются местами, цены и всё остальное остаётся тем же.
+function reverseOf(r: RouteLandingConfig): RouteLandingConfig {
+  const slug = r.reverseSlug || r.slug.split("-").reverse().join("-");
+  return {
+    ...r,
+    slug,
+    goalKey: slug.replace(/-/g, "_"),
+    from: r.to,
+    to: r.from,
+    fromPrep: r.toPrep || r.fromPrep,
+    toPrep: r.fromPrep,
+  };
+}
+
+export const ROUTE_LANDINGS: RouteLandingConfig[] = FORWARD_ROUTES.flatMap((r) => [r, reverseOf(r)]);
 
 export function findRouteLanding(slug?: string): RouteLandingConfig | undefined {
   return ROUTE_LANDINGS.find((r) => r.slug === slug);
