@@ -40,6 +40,7 @@ import Lite from "./pages/Lite";
 import Max from "./pages/Max";
 import Call from "./pages/Call";
 import RostovMoskva from "./pages/RostovMoskva";
+import MoskvaSpb from "./pages/MoskvaSpb";
 import MoscowBusiness from "./pages/MoscowBusiness";
 import Otzyv from "./pages/Otzyv";
 
@@ -91,6 +92,7 @@ const App = () => (
           <Route path="/max" element={<Max />} />
           <Route path="/call" element={<Call />} />
           <Route path="/rostov-moskva" element={<RostovMoskva />} />
+          <Route path="/moskva-spb" element={<MoskvaSpb />} />
 
           <Route path="/:slug" element={<TownPage />} />
           <Route path="*" element={<PageNotFound />} />
