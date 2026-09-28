@@ -36,6 +36,22 @@ export const ROUTE_LANDINGS: RouteLandingConfig[] = [
     ],
   },
   {
+    slug: "krasnodar-rostov",
+    goalKey: "krasnodar_rostov",
+    from: "Краснодар",
+    to: "Ростов-на-Дону",
+    fromPrep: "в Краснодаре",
+    badge: "290 км · около 4 часов в пути",
+    km: "~290 км",
+    priceFrom: "11 000 ₽",
+    tollLabel: "Платная дорога М4",
+    tariffs: [
+      { name: "Стандарт", price: "11 000 ₽", desc: "Седан, до 3 пассажиров, 2 чемодана", icon: "Car" },
+      { name: "Комфорт", price: "14 000 ₽", desc: "Кроссовер, больше места, климат-контроль", icon: "CarFront", hit: true },
+      { name: "Минивэн", price: "18 000 ₽", desc: "До 6 пассажиров, багаж без ограничений", icon: "Bus" },
+    ],
+  },
+  {
     slug: "rostov-donetsk",
     goalKey: "rostov_donetsk",
     from: "Ростов",
