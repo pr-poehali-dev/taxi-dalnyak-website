@@ -60,7 +60,7 @@ def save_visit(event, body, cur, schema):
 
 def send_to_metrika(rows):
     """Загружает оплаты в Яндекс.Метрику как офлайн-конверсии."""
-    token = os.environ.get('YANDEX_METRIKA_TOKEN')
+    token = os.environ.get('YANDEX_METRIKA_TOKEN1') or os.environ.get('YANDEX_METRIKA_TOKEN')
     if not token:
         return False, 'Добавьте токен Метрики в настройках проекта'
     if not rows:
@@ -149,7 +149,7 @@ def list_deals(cur, schema):
         'byCampaign': by_campaign,
         'totals': {'paidCount': t[0], 'amount': float(t[1]), 'profit': float(t[2])},
         'autoSync': {
-            'enabled': bool(os.environ.get('YANDEX_METRIKA_TOKEN')),
+            'enabled': bool(os.environ.get('YANDEX_METRIKA_TOKEN1') or os.environ.get('YANDEX_METRIKA_TOKEN')),
             'lastRun': st[1].isoformat() if st and st[1] else None,
             'lastResult': st[0] if st else None,
             'pending': pending,
@@ -221,7 +221,7 @@ def sync_metrika(cur, schema):
 
 def auto_sync_if_due(cur, schema):
     """Раз в сутки сама отправляет накопившиеся оплаты в Метрику."""
-    if not os.environ.get('YANDEX_METRIKA_TOKEN'):
+    if not (os.environ.get('YANDEX_METRIKA_TOKEN1') or os.environ.get('YANDEX_METRIKA_TOKEN')):
         return
 
     cur.execute(
