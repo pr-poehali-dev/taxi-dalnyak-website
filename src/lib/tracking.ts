@@ -13,7 +13,7 @@ export async function registerVisit(): Promise<AdSource> {
 
   try {
     const ymClientId = await getYmClientId();
-    await fetch(endpoint, {
+    await fetch(endpoint + "?action=visit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...source, ymClientId }),

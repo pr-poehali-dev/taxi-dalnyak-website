@@ -9,11 +9,12 @@
     {
       "name": "Save ad visit",
       "method": "POST",
-      "path": "/",
+      "path": "/?action=visit",
       "body": {
         "visitKey": "TEST01",
         "utmSource": "yandex",
         "utmCampaign": "rostov_moskva",
+        "utmTerm": "такси ростов москва",
         "yclid": "1234567890",
         "landingPage": "/rostov-moskva"
       },
@@ -22,11 +23,28 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Visit key required",
+      "name": "Create paid deal linked to visit",
       "method": "POST",
       "path": "/",
-      "body": { "utmSource": "yandex" },
-      "expectedStatus": 400
+      "body": {
+        "visitKey": "TEST01",
+        "clientName": "Тест",
+        "routeFrom": "Ростов",
+        "routeTo": "Москва",
+        "channel": "telegram",
+        "amount": 40000,
+        "costs": 26000,
+        "status": "paid"
+      },
+      "expectedStatus": 200,
+      "expectedBody": { "ok": true },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "List deals with totals",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
     }
   ]
 }

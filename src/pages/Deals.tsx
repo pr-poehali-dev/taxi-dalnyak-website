@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
 import func2url from "../../backend/func2url.json";
 
-const API = (func2url as Record<string, string>)["deals"] || "";
+const API = (func2url as Record<string, string>)["track-visit"] || "";
 
 const NAVY = "#0d1b2e";
 const CARD = "#13263d";

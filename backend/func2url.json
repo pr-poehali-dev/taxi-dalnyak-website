@@ -1,1 +1,6 @@
-{}
+{
+  "track-visit": "https://functions.poehali.dev/fce17f46-bcb5-4859-adb2-b5909be71318",
+  "telegram-webhook": "https://functions.poehali.dev/e4b2bada-212e-433e-991c-4c3ad851834a",
+  "orders-status": "https://functions.poehali.dev/0670100a-e59e-4981-9670-46c82afdb6b4",
+  "orders-create": "https://functions.poehali.dev/45b4d514-28db-4785-8179-1a34ed26d517"
+}
