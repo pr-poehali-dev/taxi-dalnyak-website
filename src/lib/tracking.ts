@@ -26,6 +26,29 @@ export async function registerVisit(): Promise<AdSource> {
   return source;
 }
 
+/**
+ * Автоматически подставляет код визита во ВСЕ ссылки на Telegram и Макс на сайте —
+ * на любой странице, включая те, что добавим позже.
+ */
+export function initVisitKeyLinks() {
+  document.addEventListener(
+    "click",
+    (e) => {
+      const el = e.target as HTMLElement | null;
+      const link = el?.closest?.("a") as HTMLAnchorElement | null;
+      if (!link) return;
+
+      const href = link.getAttribute("href") || "";
+      if (!href.includes("t.me/") && !href.includes("max.ru/")) return;
+      if (href.includes("?text=") || href.includes("?start=")) return;
+
+      const patched = withVisitKey(href);
+      if (patched !== href) link.setAttribute("href", patched);
+    },
+    true,
+  );
+}
+
 /** Добавляет код визита в ссылку на мессенджер, чтобы связать обращение с рекламой. */
 export function withVisitKey(href: string): string {
   const key = getAdSource().visitKey;
