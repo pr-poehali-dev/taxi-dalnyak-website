@@ -1,0 +1,34 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Add paid deal",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "clientName": "Тест",
+        "clientPhone": "+79990000000",
+        "routeFrom": "Ростов",
+        "routeTo": "Москва",
+        "channel": "telegram",
+        "amount": 40000,
+        "costs": 26000,
+        "status": "paid"
+      },
+      "expectedStatus": 200,
+      "expectedBody": { "ok": true },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "List deals",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}

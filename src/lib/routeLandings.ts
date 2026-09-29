@@ -127,6 +127,7 @@ export interface OtherLanding {
 
 // Остальные посадочные и рекламные страницы проекта.
 export const OTHER_LANDINGS: OtherLanding[] = [
+  { path: "/deals", title: "Учёт оплат", note: "Служебная: деньги и окупаемость рекламы", icon: "Wallet" },
   { path: "/", title: "Главная", note: "Основной сайт, коллтрекинг", icon: "House" },
   { path: "/call", title: "Только звонок", note: "Под обучение кампании на звонки", icon: "Phone" },
   { path: "/max", title: "Макс", note: "Реклама с переходом в Макс", icon: "MessageCircle" },

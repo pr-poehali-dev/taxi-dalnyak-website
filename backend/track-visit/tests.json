@@ -1,0 +1,32 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Save ad visit",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "visitKey": "TEST01",
+        "utmSource": "yandex",
+        "utmCampaign": "rostov_moskva",
+        "yclid": "1234567890",
+        "landingPage": "/rostov-moskva"
+      },
+      "expectedStatus": 200,
+      "expectedBody": { "ok": true },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Visit key required",
+      "method": "POST",
+      "path": "/",
+      "body": { "utmSource": "yandex" },
+      "expectedStatus": 400
+    }
+  ]
+}

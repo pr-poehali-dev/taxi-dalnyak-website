@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { DEFAULT_CONTACTS } from "@/lib/contacts";
 import { ymGoal, ymLead } from "@/components/regional/shared";
+import { withVisitKey } from "@/lib/tracking";
 
 const NAVY = "#0d1b2e";
 const NAVY_DEEP = "#081321";
@@ -120,8 +121,8 @@ export default function RouteLanding({ config }: { config: RouteLandingConfig })
   }, [PHONE, routeName, config.priceFrom, config.slug, config.goalKey, config.tollLabel, toll.seo]);
 
   const BTNS: Btn[] = [
-    { kind: "tg", href: TG_HREF, label: "Telegram", icon: "Send" },
-    { kind: "max", href: MAX_HREF, label: "Макс", icon: "MessageCircle" },
+    { kind: "tg", href: withVisitKey(TG_HREF), label: "Telegram", icon: "Send" },
+    { kind: "max", href: withVisitKey(MAX_HREF), label: "Макс", icon: "MessageCircle" },
     { kind: "phone", href: PHONE_HREF, label: PHONE, icon: "Phone" },
   ];
 
@@ -307,7 +308,7 @@ export default function RouteLanding({ config }: { config: RouteLandingConfig })
               </a>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
                 <a
-                  href={TG_HREF} target="_blank" rel="noopener"
+                  href={withVisitKey(TG_HREF)} target="_blank" rel="noopener"
                   onClick={() => click("tg", `tariff_${t.name.toLowerCase()}`)}
                   style={{
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
@@ -318,7 +319,7 @@ export default function RouteLanding({ config }: { config: RouteLandingConfig })
                   <Icon name="Send" size={16} /> Telegram
                 </a>
                 <a
-                  href={MAX_HREF} target="_blank" rel="noopener"
+                  href={withVisitKey(MAX_HREF)} target="_blank" rel="noopener"
                   onClick={() => click("max", `tariff_${t.name.toLowerCase()}`)}
                   style={{
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 7,

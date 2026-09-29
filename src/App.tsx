@@ -41,6 +41,7 @@ import Max from "./pages/Max";
 import Call from "./pages/Call";
 import RouteLandingPage from "./pages/RouteLandingPage";
 import Pages from "./pages/Pages";
+import Deals from "./pages/Deals";
 import { ROUTE_LANDINGS } from "./lib/routeLandings";
 import MoscowBusiness from "./pages/MoscowBusiness";
 import Otzyv from "./pages/Otzyv";
@@ -93,6 +94,7 @@ const App = () => (
           <Route path="/max" element={<Max />} />
           <Route path="/call" element={<Call />} />
           <Route path="/pages" element={<Pages />} />
+          <Route path="/deals" element={<Deals />} />
           {ROUTE_LANDINGS.map((r) => (
             <Route key={r.slug} path={`/${r.slug}`} element={<RouteLandingPage />} />
           ))}
