@@ -42,6 +42,12 @@ interface Campaign {
   profit: number;
 }
 
+interface AutoSync {
+  enabled: boolean;
+  lastRun?: string | null;
+  pending: number;
+}
+
 const money = (n: number) => n.toLocaleString("ru-RU") + " ₽";
 
 const EMPTY = {
@@ -54,6 +60,7 @@ export default function Deals() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [byCampaign, setByCampaign] = useState<Campaign[]>([]);
   const [totals, setTotals] = useState({ paidCount: 0, amount: 0, profit: 0 });
+  const [auto, setAuto] = useState<AutoSync>({ enabled: false, pending: 0 });
   const [form, setForm] = useState({ ...EMPTY });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -66,6 +73,7 @@ export default function Deals() {
       setDeals(d.deals || []);
       setByCampaign(d.byCampaign || []);
       setTotals(d.totals || { paidCount: 0, amount: 0, profit: 0 });
+      setAuto(d.autoSync || { enabled: false, pending: 0 });
     } catch {
       setMsg("Не удалось загрузить данные");
     }
@@ -223,23 +231,54 @@ export default function Deals() {
         </section>
 
         <section style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
-            <h2 style={{ fontWeight: 800, fontSize: 19 }}>Передача в Метрику</h2>
+          <h2 style={{ fontWeight: 800, fontSize: 19, marginBottom: 12 }}>Передача в Метрику</h2>
+
+          <div style={{ background: CARD, border: `1px solid ${LINE}`, borderRadius: 14, padding: "13px 14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 7 }}>
+              <Icon
+                name={auto.enabled ? "CircleCheck" : "TriangleAlert"}
+                size={18}
+                style={{ color: auto.enabled ? GREEN : ORANGE2 }}
+              />
+              <span style={{ fontWeight: 700, fontSize: 15.5 }}>
+                {auto.enabled ? "Работает автоматически" : "Нужен доступ к Метрике"}
+              </span>
+            </div>
+
+            <p style={{ color: MUTED, fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>
+              {auto.enabled
+                ? "Оплаты уходят в Метрику сами, раз в сутки. Нажимать ничего не нужно."
+                : "Добавьте токен Метрики в настройках проекта — и отправка включится сама."}
+              {auto.lastRun && (
+                <>
+                  <br />
+                  Последняя отправка: {new Date(auto.lastRun).toLocaleString("ru-RU")}
+                </>
+              )}
+              {auto.pending > 0 && (
+                <>
+                  <br />
+                  Ждут отправки: {auto.pending}
+                </>
+              )}
+            </p>
+
             <button
               type="button"
               disabled={busy}
               onClick={sync}
               style={{
-                padding: "10px 14px", borderRadius: 11, cursor: "pointer",
+                marginTop: 11, padding: "10px 14px", borderRadius: 11, cursor: "pointer",
                 background: "rgba(255,255,255,0.07)", border: `1px solid ${LINE}`,
-                color: "#fff", fontWeight: 700, fontSize: 14.5, fontFamily: F,
+                color: "#fff", fontWeight: 700, fontSize: 14, fontFamily: F,
               }}
             >
-              Отправить
+              Отправить сейчас
             </button>
           </div>
+
           {msg && (
-            <div style={{ background: DEEP, border: `1px solid ${LINE}`, borderRadius: 12, padding: "11px 13px", color: ORANGE2, fontSize: 14 }}>
+            <div style={{ marginTop: 10, background: DEEP, border: `1px solid ${LINE}`, borderRadius: 12, padding: "11px 13px", color: ORANGE2, fontSize: 14 }}>
               {msg}
             </div>
           )}

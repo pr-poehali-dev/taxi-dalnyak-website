@@ -132,10 +132,28 @@ def list_deals(cur, schema):
     )
     t = cur.fetchone()
 
+    cur.execute(
+        f"""SELECT value, updated_at FROM {schema}.app_state WHERE key = 'last_metrika_sync'"""
+    )
+    st = cur.fetchone()
+
+    cur.execute(
+        f"""SELECT COUNT(*) FROM {schema}.deals
+            WHERE status = 'paid' AND sent_to_metrika = FALSE
+              AND ym_client_id IS NOT NULL AND amount > 0"""
+    )
+    pending = cur.fetchone()[0]
+
     return {
         'deals': deals,
         'byCampaign': by_campaign,
         'totals': {'paidCount': t[0], 'amount': float(t[1]), 'profit': float(t[2])},
+        'autoSync': {
+            'enabled': bool(os.environ.get('YANDEX_METRIKA_TOKEN')),
+            'lastRun': st[1].isoformat() if st and st[1] else None,
+            'lastResult': st[0] if st else None,
+            'pending': pending,
+        },
     }
 
 
@@ -201,6 +219,35 @@ def sync_metrika(cur, schema):
     }
 
 
+def auto_sync_if_due(cur, schema):
+    """Раз в сутки сама отправляет накопившиеся оплаты в Метрику."""
+    if not os.environ.get('YANDEX_METRIKA_TOKEN'):
+        return
+
+    cur.execute(
+        f"""SELECT updated_at < NOW() - INTERVAL '24 hours'
+            FROM {schema}.app_state WHERE key = 'last_metrika_sync'"""
+    )
+    row = cur.fetchone()
+    if row and not row[0]:
+        return
+
+    cur.execute(
+        f"""SELECT COUNT(*) FROM {schema}.deals
+            WHERE status = 'paid' AND sent_to_metrika = FALSE
+              AND ym_client_id IS NOT NULL AND amount > 0"""
+    )
+    if not cur.fetchone()[0]:
+        return
+
+    result = json.loads(sync_metrika(cur, schema)['body'])
+    cur.execute(
+        f"""INSERT INTO {schema}.app_state (key, value, updated_at)
+            VALUES ('last_metrika_sync', {esc(json.dumps(result, ensure_ascii=False))}, NOW())
+            ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"""
+    )
+
+
 def update_deal(body, cur, schema):
     deal_id = int(body.get('id') or 0)
     if not deal_id:
@@ -243,7 +290,12 @@ def handler(event: dict, context) -> dict:
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(list_deals(cur, schema))}
 
         if method == 'POST' and action == 'visit':
-            return save_visit(event, body, cur, schema)
+            result = save_visit(event, body, cur, schema)
+            try:
+                auto_sync_if_due(cur, schema)
+            except Exception:
+                pass
+            return result
 
         if method == 'POST' and action == 'sync':
             return sync_metrika(cur, schema)
