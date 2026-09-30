@@ -19,10 +19,22 @@ export function initGlobalGoals() {
 
       if (href.startsWith("tel:")) {
         reachGoal("call", { page, phone: href.replace(/\D/g, "") });
+        reachGoal("lead", { page, channel: "call" });
       }
 
       if (href.includes("max.ru")) {
         reachGoal("max", { page });
+        reachGoal("lead", { page, channel: "max" });
+      }
+
+      if (href.includes("t.me/")) {
+        reachGoal("telegram", { page });
+        reachGoal("lead", { page, channel: "telegram" });
+      }
+
+      if (href.includes("wa.me") || href.includes("whatsapp")) {
+        reachGoal("whatsapp", { page });
+        reachGoal("lead", { page, channel: "whatsapp" });
       }
     },
     true,
