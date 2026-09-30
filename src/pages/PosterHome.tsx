@@ -10,8 +10,8 @@ const POSTER_JPG = "/poster-home.jpg";
 const IMG_W = 720;
 const IMG_H = 1280;
 
-/** Цвет нижней кромки постера — им заливаем экран, чтобы не было светлой полосы. */
-const EDGE_DEEP = "#1d3a63";
+/** Поля вокруг макета — ровный тёмный фон, как в эталоне. */
+const EDGE_DEEP = "#000";
 
 const YM_ID = 111028538;
 
@@ -86,7 +86,7 @@ export default function PosterHome() {
     <main
       style={{
         background: EDGE_DEEP,
-        height: "100dvh",
+        height: "100svh",
         overflow: "hidden",
         position: "relative",
         display: "flex",
@@ -94,18 +94,6 @@ export default function PosterHome() {
         justifyContent: "center",
       }}
     >
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: `url(${POSTER_WEBP})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          filter: "blur(28px) brightness(0.75)",
-          transform: "scale(1.2)",
-        }}
-      />
       <h1 style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
         Заказать такси из города в город от 200 км — Такси Дальняк
       </h1>
@@ -113,7 +101,9 @@ export default function PosterHome() {
       <div
         style={{
           position: "relative",
-          width: `min(100%, calc(100dvh * ${IMG_W / IMG_H}))`,
+          height: "100%",
+          aspectRatio: `${IMG_W} / ${IMG_H}`,
+          maxWidth: "100%",
           lineHeight: 0,
         }}
       >
@@ -126,7 +116,7 @@ export default function PosterHome() {
             height={IMG_H}
             fetchPriority="high"
             decoding="sync"
-            style={{ display: "block", width: "100%", height: "auto" }}
+            style={{ display: "block", width: "100%", height: "100%", objectFit: "contain" }}
           />
         </picture>
 
@@ -150,9 +140,9 @@ export default function PosterHome() {
             }}
           />
         ))}
-      </div>
 
-      <FloatingButtons phone={PHONE} links={links} onLead={lead} />
+        <FloatingButtons phone={PHONE} links={links} onLead={lead} />
+      </div>
     </main>
   );
 }
@@ -174,14 +164,14 @@ function FloatingButtons({
   return (
     <div
       style={{
-        position: "fixed",
-        right: "max(12px, env(safe-area-inset-right))",
-        bottom: "max(20px, calc(env(safe-area-inset-bottom) + 12px))",
+        position: "absolute",
+        right: "2.5%",
+        bottom: "1.5%",
         zIndex: 60,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 12,
+        gap: 9,
       }}
     >
       <a
@@ -192,8 +182,8 @@ function FloatingButtons({
         aria-label={side[0].title}
         onClick={() => onLead(side[0].channel)}
         style={{
-          width: 54,
-          height: 54,
+          width: 46,
+          height: 46,
           flexShrink: 0,
           pointerEvents: "auto",
           borderRadius: "50%",
@@ -205,7 +195,7 @@ function FloatingButtons({
           border: "2px solid rgba(255,255,255,0.28)",
         }}
       >
-        <Icon name="Send" size={24} style={{ color: "#fff" }} />
+        <Icon name="Send" size={21} style={{ color: "#fff" }} />
       </a>
 
       <a
@@ -216,8 +206,8 @@ function FloatingButtons({
         aria-label={side[1].title}
         onClick={() => onLead(side[1].channel)}
         style={{
-          width: 54,
-          height: 54,
+          width: 46,
+          height: 46,
           flexShrink: 0,
           pointerEvents: "auto",
           borderRadius: "50%",
@@ -229,7 +219,7 @@ function FloatingButtons({
           border: "2px solid rgba(255,255,255,0.28)",
         }}
       >
-        <Icon name="MessageCircle" size={24} style={{ color: "#fff" }} />
+        <Icon name="MessageCircle" size={21} style={{ color: "#fff" }} />
       </a>
 
       <a
@@ -237,8 +227,8 @@ function FloatingButtons({
         aria-label={`Позвонить ${phone}`}
         onClick={() => onLead("phone")}
         style={{
-          width: 66,
-          height: 66,
+          width: 58,
+          height: 58,
           flexShrink: 0,
           pointerEvents: "auto",
           borderRadius: "50%",
@@ -251,7 +241,7 @@ function FloatingButtons({
           animation: "fabPulse 2.4s ease-out infinite",
         }}
       >
-        <Icon name="PhoneCall" size={29} style={{ color: "#12233d" }} />
+        <Icon name="PhoneCall" size={26} style={{ color: "#12233d" }} />
       </a>
 
       <style>{`
