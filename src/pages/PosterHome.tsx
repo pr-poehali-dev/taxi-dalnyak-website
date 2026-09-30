@@ -4,11 +4,15 @@ import { useSeo } from "@/hooks/use-seo";
 import { DEFAULT_CONTACTS } from "@/lib/contacts";
 import { withVisitKey, trackLeadClick } from "@/lib/tracking";
 
-const POSTER =
-  "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/800a0a8a-7553-486b-8ef6-f4e7ea9427e4.jpg";
+const POSTER_WEBP = "/poster-home.webp";
+const POSTER_JPG = "/poster-home.jpg";
 
 const IMG_W = 853;
 const IMG_H = 1280;
+
+/** Цвет нижней кромки постера — им заливаем экран, чтобы не было белой полосы. */
+const EDGE = "#546b8b";
+const EDGE_DEEP = "#1d3a63";
 
 const YM_ID = 111028538;
 
@@ -80,20 +84,40 @@ export default function PosterHome() {
   const isExternal = (c: string) => c !== "phone";
 
   return (
-    <main style={{ background: "#f4f1ea", minHeight: "100dvh" }}>
+    <main
+      style={{
+        background: `linear-gradient(180deg, ${EDGE} 0%, ${EDGE_DEEP} 100%)`,
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        paddingBottom: "calc(74px + env(safe-area-inset-bottom))",
+      }}
+    >
       <h1 style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
         Заказать такси из города в город от 200 км — Такси Дальняк
       </h1>
 
-      <div style={{ position: "relative", maxWidth: 560, margin: "0 auto", width: "100%" }}>
-        <img
-          src={POSTER}
-          alt="Такси Дальняк — заказать такси из города в город от 200 км. Тарифы: стандарт 32 ₽/км, комфорт 37 ₽/км, комфорт+ 42 ₽/км, минивен 57 ₽/км"
-          width={IMG_W}
-          height={IMG_H}
-          fetchPriority="high"
-          style={{ display: "block", width: "100%", height: "auto" }}
-        />
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: `min(560px, calc((100dvh - 78px) * ${IMG_W / IMG_H}))`,
+          lineHeight: 0,
+        }}
+      >
+        <picture>
+          <source srcSet={POSTER_WEBP} type="image/webp" />
+          <img
+            src={POSTER_JPG}
+            alt="Такси Дальняк — заказать такси из города в город от 200 км. Тарифы: стандарт 32 ₽/км, комфорт 37 ₽/км, комфорт+ 42 ₽/км, минивен 57 ₽/км"
+            width={IMG_W}
+            height={IMG_H}
+            fetchPriority="high"
+            decoding="sync"
+            style={{ display: "block", width: "100%", height: "auto" }}
+          />
+        </picture>
 
         {HOTSPOTS.map((h) => (
           <a
@@ -131,9 +155,7 @@ function FloatingButtons({
   links: { phone: string; telegram: string; max: string };
   onLead: (c: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-
-  const items = [
+  const side = [
     { channel: "telegram", href: links.telegram, icon: "Send", bg: "#2aabee", title: "Telegram" },
     { channel: "max", href: links.max, icon: "MessageCircle", bg: "#7f5af0", title: "Макс" },
   ];
@@ -142,81 +164,89 @@ function FloatingButtons({
     <div
       style={{
         position: "fixed",
-        right: "max(14px, env(safe-area-inset-right))",
-        bottom: "max(18px, env(safe-area-inset-bottom))",
+        left: 0,
+        right: 0,
+        bottom: "max(10px, env(safe-area-inset-bottom))",
         zIndex: 60,
         display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-end",
-        gap: 12,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 16,
+        pointerEvents: "none",
       }}
     >
-      {open &&
-        items.map((it) => (
-          <a
-            key={it.channel}
-            href={it.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={it.title}
-            onClick={() => onLead(it.channel)}
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: "50%",
-              background: it.bg,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
-              animation: "fabIn 0.18s ease-out",
-            }}
-          >
-            <Icon name={it.icon as "Send"} size={25} style={{ color: "#fff" }} />
-          </a>
-        ))}
+      <a
+        key={side[0].channel}
+        href={side[0].href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={side[0].title}
+        onClick={() => onLead(side[0].channel)}
+        style={{
+          width: 54,
+          height: 54,
+          flexShrink: 0,
+          pointerEvents: "auto",
+          borderRadius: "50%",
+          background: side[0].bg,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 5px 18px rgba(0,0,0,0.35)",
+          border: "2px solid rgba(255,255,255,0.28)",
+        }}
+      >
+        <Icon name="Send" size={24} style={{ color: "#fff" }} />
+      </a>
 
       <a
         href={links.phone}
         aria-label={`Позвонить ${phone}`}
         onClick={() => onLead("phone")}
         style={{
-          width: 64,
-          height: 64,
+          width: 66,
+          height: 66,
+          flexShrink: 0,
+          pointerEvents: "auto",
           borderRadius: "50%",
           background: "linear-gradient(135deg,#c9a84c,#e0c574)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           boxShadow: "0 8px 26px rgba(201,168,76,0.5)",
+          border: "2px solid rgba(255,255,255,0.3)",
           animation: "fabPulse 2.4s ease-out infinite",
         }}
       >
         <Icon name="PhoneCall" size={29} style={{ color: "#12233d" }} />
       </a>
 
-      <button
-        type="button"
-        aria-label={open ? "Скрыть мессенджеры" : "Показать мессенджеры"}
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+      <a
+        key={side[1].channel}
+        href={side[1].href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={side[1].title}
+        onClick={() => onLead(side[1].channel)}
         style={{
-          width: 44,
-          height: 44,
+          width: 54,
+          height: 54,
+          flexShrink: 0,
+          pointerEvents: "auto",
           borderRadius: "50%",
-          background: "rgba(18,35,61,0.9)",
-          border: "1.5px solid rgba(255,255,255,0.22)",
+          background: side[1].bg,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
+          boxShadow: "0 5px 18px rgba(0,0,0,0.35)",
+          border: "2px solid rgba(255,255,255,0.28)",
         }}
       >
-        <Icon name={open ? "X" : "MessageSquare"} size={20} style={{ color: "#fff" }} />
-      </button>
+        <Icon name="MessageCircle" size={24} style={{ color: "#fff" }} />
+      </a>
 
       <style>{`
-        @keyframes fabIn { from { opacity:0; transform:translateY(10px) scale(0.85) } to { opacity:1; transform:none } }
         @keyframes fabPulse {
           0%,100% { box-shadow: 0 8px 26px rgba(201,168,76,0.5), 0 0 0 0 rgba(201,168,76,0.45) }
           50%     { box-shadow: 0 8px 26px rgba(201,168,76,0.5), 0 0 0 14px rgba(201,168,76,0) }
