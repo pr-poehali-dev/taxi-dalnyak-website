@@ -15,12 +15,14 @@ interface Props {
   queryCity?: string | null;
   PHONE: string;
   PHONE_HREF: string;
+  TG_HREF?: string;
+  MAX_HREF?: string;
   utmParams: UtmParams;
   source?: string;
 }
 
 export default function RegionalHero({
-  config, splash, menuOpen, setMenuOpen, queryRoute, queryCity, PHONE, PHONE_HREF, utmParams, source,
+  config, splash, menuOpen, setMenuOpen, queryRoute, queryCity, PHONE, PHONE_HREF, TG_HREF, MAX_HREF, utmParams, source,
 }: Props) {
   return (
     <>
@@ -113,6 +115,23 @@ export default function RegionalHero({
               : config.lead ?? "Свои водители на дальних рейсах — седаны, кроссоверы и минивэны. Фиксированная стоимость без счётчика и сюрпризов."}
           </p>
 
+          {/* ПОЧЕМУ МЫ — снятие возражений в первом экране */}
+          <p style={{ marginBottom: 20, marginTop: -8 }}>
+            <span className="inline-flex flex-wrap gap-x-4 gap-y-1.5">
+              {[
+                { icon: "Wallet", text: "Без предоплаты" },
+                { icon: "Lock", text: "Цена не меняется" },
+                { icon: "UserX", text: "Без попутчиков" },
+                { icon: "Clock", text: "Подача от 30 минут" },
+              ].map((b) => (
+                <span key={b.text} className="inline-flex items-center gap-1.5">
+                  <Icon name={b.icon as "Wallet"} size={13} style={{ color: GOLD }} />
+                  <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 12.5, fontWeight: 600 }}>{b.text}</span>
+                </span>
+              ))}
+            </span>
+          </p>
+
           {/* КНОПКА ЗВОНКА В ПЕРВОМ ЭКРАНЕ */}
           <div className="mb-5" style={{ maxWidth: 560 }}>
             <a href={PHONE_HREF}
@@ -125,6 +144,29 @@ export default function RegionalHero({
                 <span style={{ fontSize: 11, color: "rgba(10,15,30,0.65)", fontWeight: 700, marginTop: 2 }}>{PHONE} · без предоплаты</span>
               </div>
             </a>
+            {(TG_HREF || MAX_HREF) && (
+              <div className="grid grid-cols-2 gap-2.5 mt-2.5">
+                {TG_HREF && (
+                  <a href={TG_HREF} target="_blank" rel="noopener noreferrer"
+                    onClick={() => { ymGoal("hero_telegram", { city: config.slug }); ymLead("telegram", utmParams, source); }}
+                    className="flex items-center justify-center gap-2 rounded-2xl py-3.5 transition-transform active:scale-[0.97]"
+                    style={{ background: "rgba(42,171,238,0.14)", border: "1.5px solid rgba(42,171,238,0.5)" }}>
+                    <Icon name="Send" size={18} style={{ color: "#4cc3f5" }} />
+                    <span style={{ fontFamily: "Oswald", fontSize: 14, fontWeight: 800, color: "#fff", textTransform: "uppercase", letterSpacing: "0.03em" }}>Telegram</span>
+                  </a>
+                )}
+                {MAX_HREF && (
+                  <a href={MAX_HREF} target="_blank" rel="noopener noreferrer"
+                    onClick={() => { ymGoal("hero_max", { city: config.slug }); ymLead("max", utmParams, source); }}
+                    className="flex items-center justify-center gap-2 rounded-2xl py-3.5 transition-transform active:scale-[0.97]"
+                    style={{ background: "rgba(127,90,240,0.14)", border: "1.5px solid rgba(127,90,240,0.5)" }}>
+                    <Icon name="MessageCircle" size={18} style={{ color: "#a98bff" }} />
+                    <span style={{ fontFamily: "Oswald", fontSize: 14, fontWeight: 800, color: "#fff", textTransform: "uppercase", letterSpacing: "0.03em" }}>Макс</span>
+                  </a>
+                )}
+              </div>
+            )}
+
             <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11.5, textAlign: "center", marginTop: 8 }}>
               Назовём стоимость за 2 минуты · Диспетчер на связи круглосуточно
             </p>

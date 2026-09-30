@@ -20,7 +20,7 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     setUtmParams({ source: p.get("utm_source") || "direct", medium: p.get("utm_medium") || "none", campaign: p.get("utm_campaign") || "none", term: p.get("utm_term") || p.get("keyword") || "", content: p.get("utm_content") || "none" });
-    const t = setTimeout(() => setSplash(false), 900);
+    const t = setTimeout(() => setSplash(false), 350);
     return () => clearTimeout(t);
   }, []);
 
@@ -37,6 +37,15 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
     u.searchParams.set("utm_medium", utmParams.medium);
     u.searchParams.set("utm_campaign", utmParams.campaign);
     u.searchParams.set("utm_content", "vk_button");
+    return u.toString();
+  }, [utmParams]);
+
+  const tgHref = useMemo(() => {
+    const u = new URL(TG_HREF);
+    u.searchParams.set("utm_source", utmParams.source);
+    u.searchParams.set("utm_medium", utmParams.medium);
+    u.searchParams.set("utm_campaign", utmParams.campaign);
+    u.searchParams.set("utm_content", "tg_button");
     return u.toString();
   }, [utmParams]);
 
@@ -66,6 +75,8 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
           queryCity={queryCity}
           PHONE={PHONE}
           PHONE_HREF={PHONE_HREF}
+          TG_HREF={tgHref}
+          MAX_HREF={maxHref}
           utmParams={utmParams}
           source={source}
         />
