@@ -8,10 +8,12 @@ const POSTER_WEBP = "/poster-home.webp";
 const POSTER_JPG = "/poster-home.jpg";
 
 const IMG_W = 853;
-const IMG_H = 1280;
+const IMG_H = 1980;
 
-/** Цвет нижней кромки постера — им заливаем экран, чтобы не было белой полосы. */
-const EDGE = "#546b8b";
+/** Низ достроен продолжением фона — верх макета не смещался. */
+const OFFSET_Y = 0;
+
+/** Цвет нижней кромки постера — им заливаем экран, чтобы не было светлой полосы. */
 const EDGE_DEEP = "#1d3a63";
 
 const YM_ID = 111028538;
@@ -36,9 +38,9 @@ function pct(v: number, total: number) {
 }
 
 const HOTSPOTS = [
-  { channel: "phone", cx: 304, cy: 1164, r: 46, label: "Позвонить" },
-  { channel: "telegram", cx: 416, cy: 1164, r: 46, label: "Написать в Telegram" },
-  { channel: "max", cx: 523, cy: 1165, r: 46, label: "Написать в Макс" },
+  { channel: "phone", cx: 304, cy: 1164 + OFFSET_Y, r: 46, label: "Позвонить" },
+  { channel: "telegram", cx: 416, cy: 1164 + OFFSET_Y, r: 46, label: "Написать в Telegram" },
+  { channel: "max", cx: 523, cy: 1165 + OFFSET_Y, r: 46, label: "Написать в Макс" },
 ];
 
 export default function PosterHome() {
@@ -86,12 +88,10 @@ export default function PosterHome() {
   return (
     <main
       style={{
-        background: `linear-gradient(180deg, ${EDGE} 0%, ${EDGE_DEEP} 100%)`,
-        minHeight: "100dvh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        paddingBottom: "calc(74px + env(safe-area-inset-bottom))",
+        background: EDGE_DEEP,
+        height: "100dvh",
+        overflow: "hidden",
+        position: "relative",
       }}
     >
       <h1 style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
@@ -100,9 +100,12 @@ export default function PosterHome() {
 
       <div
         style={{
-          position: "relative",
+          position: "absolute",
+          top: 0,
+          left: "50%",
+          transform: "translateX(-50%)",
           width: "100%",
-          maxWidth: `min(560px, calc((100dvh - 78px) * ${IMG_W / IMG_H}))`,
+          maxWidth: 560,
           lineHeight: 0,
         }}
       >
@@ -164,16 +167,13 @@ function FloatingButtons({
     <div
       style={{
         position: "fixed",
-        left: 0,
-        right: 0,
-        bottom: "max(10px, env(safe-area-inset-bottom))",
+        right: "max(12px, env(safe-area-inset-right))",
+        bottom: "max(20px, calc(env(safe-area-inset-bottom) + 12px))",
         zIndex: 60,
         display: "flex",
-        flexDirection: "row",
+        flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
-        gap: 16,
-        pointerEvents: "none",
+        gap: 12,
       }}
     >
       <a
@@ -201,28 +201,6 @@ function FloatingButtons({
       </a>
 
       <a
-        href={links.phone}
-        aria-label={`Позвонить ${phone}`}
-        onClick={() => onLead("phone")}
-        style={{
-          width: 66,
-          height: 66,
-          flexShrink: 0,
-          pointerEvents: "auto",
-          borderRadius: "50%",
-          background: "linear-gradient(135deg,#c9a84c,#e0c574)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "0 8px 26px rgba(201,168,76,0.5)",
-          border: "2px solid rgba(255,255,255,0.3)",
-          animation: "fabPulse 2.4s ease-out infinite",
-        }}
-      >
-        <Icon name="PhoneCall" size={29} style={{ color: "#12233d" }} />
-      </a>
-
-      <a
         key={side[1].channel}
         href={side[1].href}
         target="_blank"
@@ -244,6 +222,28 @@ function FloatingButtons({
         }}
       >
         <Icon name="MessageCircle" size={24} style={{ color: "#fff" }} />
+      </a>
+
+      <a
+        href={links.phone}
+        aria-label={`Позвонить ${phone}`}
+        onClick={() => onLead("phone")}
+        style={{
+          width: 66,
+          height: 66,
+          flexShrink: 0,
+          pointerEvents: "auto",
+          borderRadius: "50%",
+          background: "linear-gradient(135deg,#c9a84c,#e0c574)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 8px 26px rgba(201,168,76,0.5)",
+          border: "2px solid rgba(255,255,255,0.3)",
+          animation: "fabPulse 2.4s ease-out infinite",
+        }}
+      >
+        <Icon name="PhoneCall" size={29} style={{ color: "#12233d" }} />
       </a>
 
       <style>{`
