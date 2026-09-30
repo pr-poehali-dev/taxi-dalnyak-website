@@ -1,4 +1,5 @@
 import { type PriceGuideRoute } from "@/components/PriceGuide";
+import { trackLeadClick } from "@/lib/tracking";
 
 export const HERO_IMG  = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/7071b942-9c87-47e1-a16d-0af0c4b83c1d.jpg";
 export const LOGO      = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
@@ -68,6 +69,7 @@ export function ymLead(channel: string, utmParams: { source: string; medium: str
   if (pageSource) ymGoal(`lead_${pageSource}`);
   tmrGoal("lead");
   tmrGoal(`lead_${channel}`);
+  trackLeadClick(channel);
 }
 
 export interface UtmParams {

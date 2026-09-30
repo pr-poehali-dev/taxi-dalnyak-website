@@ -58,6 +58,83 @@ def save_visit(event, body, cur, schema):
     return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True, 'visitKey': visit_key})}
 
 
+def save_click(event, body, cur, schema):
+    """Фиксирует обращение: звонок, Telegram или Макс — с рекламным источником."""
+    channel = (body.get('channel') or '').strip().lower()[:32]
+    if not channel:
+        return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'channel required'})}
+
+    headers = event.get('headers') or {}
+    ip = (event.get('requestContext', {}).get('identity', {}) or {}).get('sourceIp')
+    ua = headers.get('User-Agent') or headers.get('user-agent')
+
+    cur.execute(
+        f"""INSERT INTO {schema}.lead_clicks
+            (visit_key, channel, page, utm_source, utm_medium, utm_campaign,
+             utm_term, utm_content, yclid, ym_client_id, user_agent, ip_address)
+            VALUES ({esc(body.get('visitKey'))}, {esc(channel)}, {esc(body.get('page'))},
+                    {esc(body.get('utmSource'))}, {esc(body.get('utmMedium'))}, {esc(body.get('utmCampaign'))},
+                    {esc(body.get('utmTerm'))}, {esc(body.get('utmContent'))}, {esc(body.get('yclid'))},
+                    {esc(body.get('ymClientId'))}, {esc(ua)}, {esc(ip)})"""
+    )
+    return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True})}
+
+
+def list_clicks(cur, schema):
+    """Отчёт по обращениям: сегодня, вчера, за 7 дней, по каналам и кампаниям."""
+    cur.execute(
+        f"""SELECT channel,
+                   COUNT(*) FILTER (WHERE created_at::date = CURRENT_DATE) AS today,
+                   COUNT(*) FILTER (WHERE created_at::date = CURRENT_DATE - 1) AS yesterday,
+                   COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - 6) AS week,
+                   COUNT(*) AS total
+            FROM {schema}.lead_clicks
+            GROUP BY channel ORDER BY total DESC"""
+    )
+    by_channel = [
+        {'channel': r[0], 'today': r[1], 'yesterday': r[2], 'week': r[3], 'total': r[4]}
+        for r in cur.fetchall()
+    ]
+
+    cur.execute(
+        f"""SELECT COALESCE(NULLIF(utm_campaign,''),'без метки') AS camp,
+                   COALESCE(NULLIF(utm_term,''),'—') AS term,
+                   COUNT(*) AS cnt
+            FROM {schema}.lead_clicks
+            WHERE created_at >= CURRENT_DATE - 6
+            GROUP BY camp, term ORDER BY cnt DESC LIMIT 30"""
+    )
+    by_campaign = [{'campaign': r[0], 'term': r[1], 'count': r[2]} for r in cur.fetchall()]
+
+    cur.execute(
+        f"""SELECT created_at, channel, page,
+                   COALESCE(NULLIF(utm_campaign,''),'—'),
+                   COALESCE(NULLIF(utm_term,''),'—')
+            FROM {schema}.lead_clicks
+            ORDER BY created_at DESC LIMIT 50"""
+    )
+    recent = [
+        {'at': r[0].isoformat() if r[0] else None, 'channel': r[1],
+         'page': r[2], 'campaign': r[3], 'term': r[4]}
+        for r in cur.fetchall()
+    ]
+
+    cur.execute(
+        f"""SELECT COUNT(*) FILTER (WHERE created_at::date = CURRENT_DATE),
+                   COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - 6),
+                   COUNT(*)
+            FROM {schema}.lead_clicks"""
+    )
+    t = cur.fetchone()
+
+    return {
+        'totals': {'today': t[0], 'week': t[1], 'all': t[2]},
+        'byChannel': by_channel,
+        'byCampaign': by_campaign,
+        'recent': recent,
+    }
+
+
 def send_to_metrika(rows):
     """Загружает оплаты в Яндекс.Метрику как офлайн-конверсии."""
     token = os.environ.get('YANDEX_METRIKA_TOKEN1') or os.environ.get('YANDEX_METRIKA_TOKEN')
@@ -286,8 +363,14 @@ def handler(event: dict, context) -> dict:
     conn, schema = db()
     cur = conn.cursor()
     try:
+        if method == 'GET' and action == 'clicks':
+            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(list_clicks(cur, schema))}
+
         if method == 'GET':
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(list_deals(cur, schema))}
+
+        if method == 'POST' and action == 'click':
+            return save_click(event, body, cur, schema)
 
         if method == 'POST' and action == 'visit':
             result = save_visit(event, body, cur, schema)

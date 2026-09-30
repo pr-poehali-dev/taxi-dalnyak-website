@@ -26,6 +26,43 @@ export async function registerVisit(): Promise<AdSource> {
   return source;
 }
 
+/** Фиксирует обращение на своём сервере: звонок, Telegram или Макс. */
+export function trackLeadClick(channel: string) {
+  const endpoint = URLS["track-visit"];
+  if (!endpoint) return;
+
+  const s = getAdSource();
+  const p = new URLSearchParams(window.location.search);
+
+  try {
+    const payload = JSON.stringify({
+      visitKey: s.visitKey,
+      channel,
+      page: window.location.pathname,
+      utmSource: p.get("utm_source") || s.utmSource || "",
+      utmMedium: p.get("utm_medium") || s.utmMedium || "",
+      utmCampaign: p.get("utm_campaign") || s.utmCampaign || "",
+      utmTerm: p.get("utm_term") || p.get("keyword") || s.utmTerm || "",
+      utmContent: p.get("utm_content") || s.utmContent || "",
+      yclid: p.get("yclid") || s.yclid || "",
+    });
+
+    const url = endpoint + "?action=click";
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(url, new Blob([payload], { type: "application/json" }));
+    } else {
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+        keepalive: true,
+      }).catch(() => {});
+    }
+  } catch {
+    /* аналитика не должна ломать сайт */
+  }
+}
+
 /**
  * Автоматически подставляет код визита во ВСЕ ссылки на Telegram и Макс на сайте —
  * на любой странице, включая те, что добавим позже.
