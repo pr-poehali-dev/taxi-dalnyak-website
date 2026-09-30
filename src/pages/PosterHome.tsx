@@ -7,11 +7,8 @@ import { withVisitKey, trackLeadClick } from "@/lib/tracking";
 const POSTER_WEBP = "/poster-home.webp";
 const POSTER_JPG = "/poster-home.jpg";
 
-const IMG_W = 853;
-const IMG_H = 1980;
-
-/** Низ достроен продолжением фона — верх макета не смещался. */
-const OFFSET_Y = 0;
+const IMG_W = 720;
+const IMG_H = 1280;
 
 /** Цвет нижней кромки постера — им заливаем экран, чтобы не было светлой полосы. */
 const EDGE_DEEP = "#1d3a63";
@@ -38,9 +35,9 @@ function pct(v: number, total: number) {
 }
 
 const HOTSPOTS = [
-  { channel: "phone", cx: 304, cy: 1164 + OFFSET_Y, r: 46, label: "Позвонить" },
-  { channel: "telegram", cx: 416, cy: 1164 + OFFSET_Y, r: 46, label: "Написать в Telegram" },
-  { channel: "max", cx: 523, cy: 1165 + OFFSET_Y, r: 46, label: "Написать в Макс" },
+  { channel: "phone", cx: 260, cy: 1167, r: 38, label: "Позвонить" },
+  { channel: "telegram", cx: 358, cy: 1168, r: 38, label: "Написать в Telegram" },
+  { channel: "max", cx: 452, cy: 1167, r: 38, label: "Написать в Макс" },
 ];
 
 export default function PosterHome() {
@@ -92,20 +89,31 @@ export default function PosterHome() {
         height: "100dvh",
         overflow: "hidden",
         position: "relative",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: `url(${POSTER_WEBP})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "blur(28px) brightness(0.75)",
+          transform: "scale(1.2)",
+        }}
+      />
       <h1 style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
         Заказать такси из города в город от 200 км — Такси Дальняк
       </h1>
 
       <div
         style={{
-          position: "absolute",
-          top: 0,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "100%",
-          maxWidth: 560,
+          position: "relative",
+          width: `min(100%, calc(100dvh * ${IMG_W / IMG_H}))`,
           lineHeight: 0,
         }}
       >
