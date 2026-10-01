@@ -120,7 +120,12 @@ export default function Deals() {
     try {
       const r = await fetch(API + "?action=sync", { method: "POST" });
       const d = await r.json();
-      setMsg(d.ok ? `Передано в Метрику: ${d.sent}` : `Метрика: ${d.info || "нужен токен"}`);
+      const noId = deals.filter((x) => !x.sentToMetrika && !x.ymClientId).length;
+      if (!d.ok) setMsg(`Метрика: ${d.info || "нужен токен"}`);
+      else if (d.sent > 0) setMsg(`Передано в Метрику: ${d.sent}`);
+      else if (noId > 0)
+        setMsg(`Отправлять нечего: у ${noId} оплат нет кода клиента с сайта, Метрика не сможет связать их с рекламой. Вписывайте код из первого сообщения клиента.`);
+      else setMsg("Новых оплат для отправки нет — всё уже в Метрике.");
       await load();
     } catch {
       setMsg("Ошибка передачи");
@@ -139,8 +144,8 @@ export default function Deals() {
     fontFamily: F, fontSize: 15.5, outline: "none",
   };
 
-  const Field = ({ label, k, ph, type }: { label: string; k: keyof typeof EMPTY; ph?: string; type?: string }) => (
-    <label style={{ display: "block" }}>
+  const field = (label: string, k: keyof typeof EMPTY, ph?: string, type?: string) => (
+    <label key={k} style={{ display: "block" }}>
       <span style={{ display: "block", color: MUTED, fontSize: 13, marginBottom: 5 }}>{label}</span>
       <input
         style={inputStyle}
@@ -181,18 +186,18 @@ export default function Deals() {
         <section style={{ background: CARD, border: `1px solid ${LINE}`, borderRadius: 16, padding: 16, marginBottom: 24 }}>
           <h2 style={{ fontWeight: 800, fontSize: 19, marginBottom: 14 }}>Новая оплата</h2>
           <div style={{ display: "grid", gap: 11 }}>
-            <Field label="Код клиента из переписки" k="visitKey" ph="Например, K7PM2Q" />
+            {field("Код клиента из переписки", "visitKey", "Например, K7PM2Q")}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11 }}>
-              <Field label="Сумма с клиента" k="amount" ph="12000" type="number" />
-              <Field label="Расходы (водитель, бензин)" k="costs" ph="8000" type="number" />
+              {field("Сумма с клиента", "amount", "12000", "number")}
+              {field("Расходы (водитель, бензин)", "costs", "8000", "number")}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11 }}>
-              <Field label="Откуда" k="routeFrom" ph="Ростов" />
-              <Field label="Куда" k="routeTo" ph="Москва" />
+              {field("Откуда", "routeFrom", "Ростов")}
+              {field("Куда", "routeTo", "Москва")}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11 }}>
-              <Field label="Имя клиента" k="clientName" ph="Иван" />
-              <Field label="Телефон" k="clientPhone" ph="+7..." />
+              {field("Имя клиента", "clientName", "Иван")}
+              {field("Телефон", "clientPhone", "+7...")}
             </div>
             <label style={{ display: "block" }}>
               <span style={{ display: "block", color: MUTED, fontSize: 13, marginBottom: 5 }}>Откуда пришёл</span>
@@ -208,7 +213,7 @@ export default function Deals() {
                 <option value="other">Другое</option>
               </select>
             </label>
-            <Field label="Комментарий" k="comment" ph="Необязательно" />
+            {field("Комментарий", "comment", "Необязательно")}
 
             <div style={{ color: MUTED, fontSize: 14 }}>
               Чистыми с поездки: <b style={{ color: profit >= 0 ? GREEN : "#ff6b6b" }}>{money(profit)}</b>
@@ -328,9 +333,9 @@ export default function Deals() {
                   {d.utmTerm ? ` · «${d.utmTerm}»` : ""}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-                  <span style={{ fontSize: 12.5, color: d.sentToMetrika ? GREEN : MUTED, display: "flex", alignItems: "center", gap: 5 }}>
-                    <Icon name={d.sentToMetrika ? "CircleCheck" : "Clock"} size={14} />
-                    {d.sentToMetrika ? "В Метрике" : "Ждёт отправки"}
+                  <span style={{ fontSize: 12.5, color: d.sentToMetrika ? GREEN : d.ymClientId ? MUTED : ORANGE2, display: "flex", alignItems: "center", gap: 5 }}>
+                    <Icon name={d.sentToMetrika ? "CircleCheck" : d.ymClientId ? "Clock" : "CircleAlert"} size={14} />
+                    {d.sentToMetrika ? "В Метрике" : d.ymClientId ? "Ждёт отправки" : "Без кода клиента — в Метрику не уйдёт"}
                   </span>
                   <button
                     type="button"
