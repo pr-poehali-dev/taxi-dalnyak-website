@@ -11,7 +11,7 @@ const MAX_CYAN = "#3dbcfa";
 const MAX_BG = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/61968b78-9167-454f-a663-0eb20d9c02fe.jpg";
 // Ведём в бизнес-чат MAX. Скрипт max.tgtrack перехватывает клик по ссылке
 // с этим адресом и сам проставляет метки — UTM тут не нужны.
-const MAX_CHAT = "https://max.ru/id183209197326_biz/AaDdvO-tVR8";
+const MAX_CHAT = "https://max.ru/u/f9LHodD0cOL6nTizIr_Gpc-Jl7ldXX47wo9bapZMQZ1lX1GwxV-5HUzaEvE";
 
 export default function Max() {
   const { PHONE, PHONE_HREF } = DIRECT_ADS_CONTACTS;
