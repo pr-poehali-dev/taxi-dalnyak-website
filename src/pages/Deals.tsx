@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
+import MaxLeadPicker, { type MaxLead } from "@/components/deals/MaxLeadPicker";
 import func2url from "../../backend/func2url.json";
 
 const API = (func2url as Record<string, string>)["track-visit"] || "";
@@ -32,6 +33,9 @@ interface Deal {
   visitKey?: string;
   ymClientId?: string;
   sentToMetrika?: boolean;
+  maxUserId?: string;
+  maxGoalSent?: boolean;
+  maxGoalInfo?: string;
   createdAt?: string;
 }
 
@@ -54,6 +58,7 @@ const EMPTY = {
   visitKey: "", clientName: "", clientPhone: "",
   routeFrom: "", routeTo: "", channel: "telegram",
   amount: "", costs: "", comment: "",
+  maxUserId: "", maxUtmSource: "", maxUtmCampaign: "", maxUtmTerm: "",
 };
 
 export default function Deals() {
@@ -100,13 +105,15 @@ export default function Deals() {
     setBusy(true);
     setMsg("");
     try {
-      await fetch(API, {
+      const r = await fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, status: "paid" }),
       });
+      const d = await r.json().catch(() => ({}));
       setForm({ ...EMPTY });
-      setMsg("Оплата записана");
+      if (d.maxGoal) setMsg(d.maxGoal.ok ? "Оплата записана и передана в Метрику через Макс" : `Оплата записана, но в Метрику не ушла: ${d.maxGoal.info}`);
+      else setMsg("Оплата записана");
       await load();
     } catch {
       setMsg("Ошибка сохранения");
@@ -120,7 +127,7 @@ export default function Deals() {
     try {
       const r = await fetch(API + "?action=sync", { method: "POST" });
       const d = await r.json();
-      const noId = deals.filter((x) => !x.sentToMetrika && !x.ymClientId).length;
+      const noId = deals.filter((x) => !x.sentToMetrika && !x.ymClientId && !x.maxUserId).length;
       if (!d.ok) setMsg(`Метрика: ${d.info || "нужен токен"}`);
       else if (d.sent > 0) setMsg(`Передано в Метрику: ${d.sent}`);
       else if (noId > 0)
@@ -132,6 +139,28 @@ export default function Deals() {
     }
     setBusy(false);
   };
+
+  const resendMax = async (id: number) => {
+    const r = await fetch(API + "?action=max_goal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    const d = await r.json().catch(() => ({}));
+    setMsg(d.ok ? "Оплата передана в Метрику через Макс" : `Не получилось: ${d.info || "ошибка"}`);
+    await load();
+  };
+
+  const pickMax = (userId: string, lead?: MaxLead) =>
+    setForm((f) => ({
+      ...f,
+      maxUserId: userId,
+      channel: userId ? "max" : f.channel,
+      clientName: lead && !f.clientName ? lead.name : f.clientName,
+      maxUtmSource: lead?.utmSource || "",
+      maxUtmCampaign: lead?.utmCampaign || "",
+      maxUtmTerm: lead?.utmTerm || "",
+    }));
 
   const remove = async (id: number) => {
     await fetch(API + "?id=" + id, { method: "DELETE" });
@@ -186,7 +215,13 @@ export default function Deals() {
         <section style={{ background: CARD, border: `1px solid ${LINE}`, borderRadius: 16, padding: 16, marginBottom: 24 }}>
           <h2 style={{ fontWeight: 800, fontSize: 19, marginBottom: 14 }}>Новая оплата</h2>
           <div style={{ display: "grid", gap: 11 }}>
-            {field("Код клиента из переписки", "visitKey", "Например, K7PM2Q")}
+            <MaxLeadPicker
+              api={API}
+              value={form.maxUserId}
+              onChange={pickMax}
+              colors={{ card: CARD, deep: DEEP, line: LINE, muted: MUTED, accent: ORANGE2, green: GREEN }}
+            />
+            {!form.maxUserId && field("Или код клиента с сайта", "visitKey", "Например, K7PM2Q")}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11 }}>
               {field("Сумма с клиента", "amount", "12000", "number")}
               {field("Расходы (водитель, бензин)", "costs", "8000", "number")}
@@ -333,10 +368,26 @@ export default function Deals() {
                   {d.utmTerm ? ` · «${d.utmTerm}»` : ""}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-                  <span style={{ fontSize: 12.5, color: d.sentToMetrika ? GREEN : d.ymClientId ? MUTED : ORANGE2, display: "flex", alignItems: "center", gap: 5 }}>
-                    <Icon name={d.sentToMetrika ? "CircleCheck" : d.ymClientId ? "Clock" : "CircleAlert"} size={14} />
-                    {d.sentToMetrika ? "В Метрике" : d.ymClientId ? "Ждёт отправки" : "Без кода клиента — в Метрику не уйдёт"}
-                  </span>
+                  {d.maxUserId ? (
+                    <span style={{ fontSize: 12.5, color: d.maxGoalSent ? GREEN : ORANGE2, display: "flex", alignItems: "center", gap: 5 }}>
+                      <Icon name={d.maxGoalSent ? "CircleCheck" : "CircleAlert"} size={14} />
+                      {d.maxGoalSent ? "В Метрике через Макс" : "Не ушло в Метрику"}
+                      {!d.maxGoalSent && (
+                        <button
+                          type="button"
+                          onClick={() => resendMax(d.id)}
+                          style={{ background: "none", border: "none", color: ORANGE2, textDecoration: "underline", cursor: "pointer", fontSize: 12.5, padding: 0 }}
+                        >
+                          повторить
+                        </button>
+                      )}
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: 12.5, color: d.sentToMetrika ? GREEN : d.ymClientId ? MUTED : ORANGE2, display: "flex", alignItems: "center", gap: 5 }}>
+                      <Icon name={d.sentToMetrika ? "CircleCheck" : d.ymClientId ? "Clock" : "CircleAlert"} size={14} />
+                      {d.sentToMetrika ? "В Метрике" : d.ymClientId ? "Ждёт отправки" : "Без кода клиента — в Метрику не уйдёт"}
+                    </span>
+                  )}
                   <button
                     type="button"
                     onClick={() => remove(d.id)}

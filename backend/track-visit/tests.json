@@ -19,7 +19,9 @@
         "landingPage": "/rostov-moskva"
       },
       "expectedStatus": 200,
-      "expectedBody": { "ok": true },
+      "expectedBody": {
+        "ok": true
+      },
       "bodyMatcher": "partial"
     },
     {
@@ -37,7 +39,9 @@
         "status": "paid"
       },
       "expectedStatus": 200,
-      "expectedBody": { "ok": true },
+      "expectedBody": {
+        "ok": true
+      },
       "bodyMatcher": "partial"
     },
     {
@@ -59,13 +63,21 @@
         "utmTerm": "такси ростов москва"
       },
       "expectedStatus": 200,
-      "expectedBody": { "ok": true },
+      "expectedBody": {
+        "ok": true
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Clicks report",
       "method": "GET",
       "path": "/?action=clicks",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Max leads list",
+      "method": "GET",
+      "path": "/?action=max_leads",
       "expectedStatus": 200
     }
   ]

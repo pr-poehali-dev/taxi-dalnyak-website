@@ -3,6 +3,8 @@ import os
 import csv
 import io
 import urllib.request
+import urllib.parse
+import urllib.error
 import psycopg2
 
 CORS = {
@@ -13,6 +15,9 @@ CORS = {
 }
 
 YM_COUNTER = '111028538'
+MAX_GOAL = 'max_payment'
+TGTRACK_MAX = 'https://max.tgtrack.ru/API/bot-api/v1/%s/send_reach_goal'
+TGTRACK_MAX_REPORT = 'https://report.tgtrack.ru/max/api/%s?ver=1.0&platform=api&format=csv&apiKey=%s&date_from=%d&limit=%d'
 
 
 def esc(v):
@@ -174,11 +179,78 @@ def send_to_metrika(rows):
         return False, str(e)[:300]
 
 
+def max_send_goal(user_id):
+    """Передаёт цель «оплата» в «Откуда Подписки» (Макс) — сервис сам отправит её в Метрику."""
+    key = os.environ.get('TGTRACK_MAX_API_KEY')
+    if not key:
+        return False, 'Добавьте API-ключ «Откуда Подписки»'
+    data = json.dumps({'user_id': str(user_id), 'target': MAX_GOAL}).encode()
+    req = urllib.request.Request(TGTRACK_MAX % key, data=data, method='POST')
+    req.add_header('Content-Type', 'application/json')
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return True, resp.read().decode('utf-8')[:300]
+    except urllib.error.HTTPError as e:
+        return False, 'Откуда Подписки: %s' % e.read().decode('utf-8')[:200]
+    except Exception as e:
+        return False, str(e)[:200]
+
+
+def tgtrack_csv(method, key, since, limit=500):
+    url = TGTRACK_MAX_REPORT % (method, urllib.parse.quote(key), since, limit)
+    with urllib.request.urlopen(url, timeout=8) as resp:
+        text = resp.read().decode('utf-8-sig', 'replace')
+    return list(csv.DictReader(io.StringIO(text))), text
+
+
+def max_leads():
+    """Список людей, пришедших в Макс с рекламы за 21 день (из «Откуда Подписки»)."""
+    key = os.environ.get('TGTRACK_MAX_REPORT_KEY')
+    if not key:
+        return {'enabled': False, 'leads': []}
+    import time
+    since = int(time.time()) - 21 * 86400
+    clean = lambda v: '' if (v or '').strip() in ('', '0') else v.strip()
+    seen, leads, errors = set(), [], []
+
+    for method, id_field, date_field in (
+        ('get_chat_members.php', 'userID', 'eventDate'),
+        ('get_click_data.php', 'mxUserID', 'date'),
+    ):
+        try:
+            rows, _ = tgtrack_csv(method, key, since)
+        except Exception as e:
+            errors.append('%s: %s' % (method, str(e)[:150]))
+            continue
+        for r in rows:
+            uid = clean(r.get(id_field)) or clean(r.get('mxUserID'))
+            if not uid or uid in seen:
+                continue
+            seen.add(uid)
+            name = ' '.join(x for x in [clean(r.get('first_name')), clean(r.get('last_name'))] if x)
+            leads.append({
+                'userId': uid,
+                'name': name or clean(r.get('username')) or 'Клиент ' + uid[-4:],
+                'username': clean(r.get('username')),
+                'date': int(float(clean(r.get(date_field)) or 0)),
+                'utmSource': clean(r.get('utm_source_id')),
+                'utmCampaign': clean(r.get('utm_campaign_id')),
+                'utmTerm': clean(r.get('utm_term_id')),
+            })
+
+    leads.sort(key=lambda x: x['date'], reverse=True)
+    out = {'enabled': True, 'leads': leads}
+    if errors and not leads:
+        out['error'] = '; '.join(errors)
+    return out
+
+
 def list_deals(cur, schema):
     cur.execute(
         f"""SELECT id, client_name, client_phone, route_from, route_to, channel,
                    utm_source, utm_campaign, utm_term, amount, costs, profit, status,
-                   comment, sent_to_metrika, visit_key, ym_client_id, created_at
+                   comment, sent_to_metrika, visit_key, ym_client_id, created_at,
+                   max_user_id, max_goal_sent, max_goal_response
             FROM {schema}.deals ORDER BY created_at DESC LIMIT 300"""
     )
     deals = [
@@ -189,6 +261,7 @@ def list_deals(cur, schema):
             'profit': float(r[11] or 0), 'status': r[12], 'comment': r[13],
             'sentToMetrika': r[14], 'visitKey': r[15], 'ymClientId': r[16],
             'createdAt': r[17].isoformat() if r[17] else None,
+            'maxUserId': r[18], 'maxGoalSent': r[19], 'maxGoalInfo': r[20],
         }
         for r in cur.fetchall()
     ]
@@ -231,6 +304,10 @@ def list_deals(cur, schema):
             'lastResult': st[0] if st else None,
             'pending': pending,
         },
+        'maxGoal': {
+            'enabled': bool(os.environ.get('TGTRACK_MAX_API_KEY')),
+            'leadsEnabled': bool(os.environ.get('TGTRACK_MAX_REPORT_KEY')),
+        },
     }
 
 
@@ -256,20 +333,35 @@ def create_deal(body, cur, schema):
     amount = num(body.get('amount'))
     costs = num(body.get('costs'))
     status = body.get('status') or ('paid' if amount > 0 else 'new')
+    max_uid = ''.join(ch for ch in str(body.get('maxUserId') or '') if ch.isdigit())[:30] or None
+    if max_uid and not utm['utmCampaign']:
+        utm['utmSource'] = utm['utmSource'] or body.get('maxUtmSource') or 'max'
+        utm['utmCampaign'] = body.get('maxUtmCampaign') or None
+        utm['utmTerm'] = utm['utmTerm'] or body.get('maxUtmTerm') or None
 
     cur.execute(
         f"""INSERT INTO {schema}.deals
             (visit_key, ym_client_id, yclid, utm_source, utm_medium, utm_campaign, utm_term,
              utm_content, channel, client_name, client_phone, route_from, route_to,
-             amount, costs, profit, status, comment)
+             amount, costs, profit, status, comment, max_user_id)
             VALUES ({esc(visit_key)}, {esc(ym_client_id)}, {esc(yclid)}, {esc(utm['utmSource'])},
                     {esc(utm['utmMedium'])}, {esc(utm['utmCampaign'])}, {esc(utm['utmTerm'])},
                     {esc(utm['utmContent'])}, {esc(body.get('channel'))}, {esc(body.get('clientName'))},
                     {esc(body.get('clientPhone'))}, {esc(body.get('routeFrom'))}, {esc(body.get('routeTo'))},
-                    {amount}, {costs}, {round(amount - costs, 2)}, {esc(status)}, {esc(body.get('comment'))})
+                    {amount}, {costs}, {round(amount - costs, 2)}, {esc(status)}, {esc(body.get('comment'))},
+                    {esc(max_uid)})
             RETURNING id"""
     )
-    return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True, 'id': cur.fetchone()[0]})}
+    deal_id = cur.fetchone()[0]
+    goal = None
+    if max_uid and status == 'paid':
+        ok, info = max_send_goal(max_uid)
+        goal = {'ok': ok, 'info': info}
+        cur.execute(
+            f"""UPDATE {schema}.deals SET max_goal_sent = {'TRUE' if ok else 'FALSE'},
+                max_goal_response = {esc(info)} WHERE id = {deal_id}"""
+        )
+    return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True, 'id': deal_id, 'maxGoal': goal})}
 
 
 def sync_metrika(cur, schema):
@@ -366,6 +458,9 @@ def handler(event: dict, context) -> dict:
         if method == 'GET' and action == 'clicks':
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(list_clicks(cur, schema))}
 
+        if method == 'GET' and action == 'max_leads':
+            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(max_leads())}
+
         if method == 'GET':
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(list_deals(cur, schema))}
 
@@ -382,6 +477,19 @@ def handler(event: dict, context) -> dict:
 
         if method == 'POST' and action == 'sync':
             return sync_metrika(cur, schema)
+
+        if method == 'POST' and action == 'max_goal':
+            deal_id = int(body.get('id') or 0)
+            cur.execute(f"SELECT max_user_id FROM {schema}.deals WHERE id = {deal_id}")
+            row = cur.fetchone()
+            if not row or not row[0]:
+                return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'ok': False, 'info': 'Нет ID клиента в Максе'})}
+            ok, info = max_send_goal(row[0])
+            cur.execute(
+                f"""UPDATE {schema}.deals SET max_goal_sent = {'TRUE' if ok else 'FALSE'},
+                    max_goal_response = {esc(info)} WHERE id = {deal_id}"""
+            )
+            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': ok, 'info': info})}
 
         if method == 'POST':
             return create_deal(body, cur, schema)
