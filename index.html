@@ -178,6 +178,7 @@
 <script type="text/javascript">
     var _tmr = window._tmr || (window._tmr = []);
     _tmr.push({id: "3789002", type: "pageView", start: (new Date()).getTime()});
+    if (location.pathname.replace(/\/+$/, "") === "") _tmr.push({id: "3668202", type: "pageView", start: (new Date()).getTime(), pid: "USER_ID"});
     (function (d, w, id) {
         if (d.getElementById(id)) return;
         var ts = d.createElement("script"); ts.type = "text/javascript"; ts.async = true; ts.id = id;
@@ -187,6 +188,7 @@
     })(document, window, "tmr-code");
 </script>
 <noscript><div><img src="https://top-fwz1.mail.ru/counter?id=3789002;js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
+<noscript><div><img src="https://top-fwz1.mail.ru/counter?id=3668202;js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
 <!-- /Top.Mail.Ru counter -->
 </body>
 </html>
