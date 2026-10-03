@@ -6,6 +6,8 @@ import MainHero from "@/components/main/MainHero";
 import ContactButtons from "@/components/main/ContactButtons";
 import TariffSlider from "@/components/main/TariffSlider";
 import BottomNav from "@/components/main/BottomNav";
+import ServicesBlock from "@/components/main/ServicesBlock";
+import AdvantagesBlock from "@/components/main/AdvantagesBlock";
 
 const YM_ID = 111028538;
 
@@ -44,8 +46,12 @@ export default function MainHome() {
   return (
     <main className="min-h-screen bg-black text-white pb-20" style={{ fontFamily: "Manrope, sans-serif" }}>
       <MainHero />
-      <ContactButtons links={links} phone={PHONE} onLead={onLead} />
+      <ContactButtons id="contacts" links={links} phone={PHONE} onLead={onLead} />
       <TariffSlider orderHref={links.max} onOrder={() => onLead("max")} />
+      <ServicesBlock />
+      <ContactButtons links={links} phone={PHONE} onLead={onLead} />
+      <AdvantagesBlock />
+      <ContactButtons links={links} phone={PHONE} onLead={onLead} />
       <BottomNav />
     </main>
   );

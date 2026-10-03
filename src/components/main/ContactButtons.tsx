@@ -4,9 +4,10 @@ interface Props {
   links: { phone: string; telegram: string; max: string };
   phone: string;
   onLead: (channel: string) => void;
+  id?: string;
 }
 
-export default function ContactButtons({ links, phone, onLead }: Props) {
+export default function ContactButtons({ links, phone, onLead, id }: Props) {
   const items = [
     { channel: "telegram", href: links.telegram, label: "Telegram", icon: "Send", cls: "bg-gradient-to-r from-sky-500 to-sky-400 border-sky-300/60" },
     { channel: "phone", href: links.phone, label: "Позвонить", icon: "Phone", cls: "bg-black border-white/80", sub: phone },
@@ -14,7 +15,7 @@ export default function ContactButtons({ links, phone, onLead }: Props) {
   ];
 
   return (
-    <section id="contacts" className="px-4 pt-8 pb-4 max-w-xl mx-auto space-y-4 scroll-mt-4">
+    <section id={id} className="px-4 pt-8 pb-4 max-w-xl mx-auto space-y-4 scroll-mt-4">
       {items.map((it) => {
         const ext = it.channel !== "phone";
         return (
