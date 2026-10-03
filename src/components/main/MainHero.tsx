@@ -3,7 +3,7 @@ const HERO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fb
 export default function MainHero() {
   return (
     <section id="home" className="relative h-[100svh] min-h-[560px] flex items-center justify-center text-center overflow-hidden">
-      <img src={HERO} alt="Междугороднее такси Дальняк" className="absolute inset-0 w-full h-full object-cover object-[22%_center] sm:object-center" fetchPriority="high" />
+      <img src={HERO} alt="Междугороднее такси Дальняк" className="absolute inset-0 w-full h-full object-cover object-[22%_center] sm:object-center" {...({ fetchpriority: "high" } as Record<string, string>)} />
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/35 to-black" />
 
       <div className="relative z-10 px-6 max-w-xl animate-fade-in">
