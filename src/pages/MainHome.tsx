@@ -8,6 +8,7 @@ import TariffSlider from "@/components/main/TariffSlider";
 import BottomNav from "@/components/main/BottomNav";
 import ServicesBlock from "@/components/main/ServicesBlock";
 import AdvantagesBlock from "@/components/main/AdvantagesBlock";
+import AudienceBlock from "@/components/main/AudienceBlock";
 import ReviewsSlider from "@/components/main/ReviewsSlider";
 
 const YM_ID = 111028538;
@@ -25,12 +26,14 @@ export default function MainHome() {
   const { PHONE, PHONE_HREF, TG_HREF, MAX_HREF } = DEFAULT_CONTACTS;
 
   useSeo({
-    title: "Такси межгород Дальняк — заказать такси из города в город от 200 км",
+    title: "Такси межгород для военных и вахтовиков — Дальняк | ДНР, ЛНР, Херсон, Запорожье, вся Россия",
     description:
-      "Междугороднее такси в любую точку России, а также ДНР, ЛНР, Запорожье и Херсон. Стандарт от 32 ₽/км. Звоните +7 (995) 645-51-25 круглосуточно.",
+      "Междугороднее такси для военнослужащих, вахтовиков и сотрудников: по России, в Донецк, Луганск, Мариуполь, Херсон, Запорожье. Фиксированная цена, без предоплаты, 24/7. +7 (995) 645-51-25.",
     path: "/",
-    keywords: "такси межгород, междугороднее такси, такси из города в город, такси днр лнр, такси дальняк",
+    keywords:
+      "такси военнослужащему домой, такси для военных межгород, такси из отпуска в часть, такси на новые территории, такси донецк луганск херсон запорожье, такси мариуполь, такси мелитополь, такси бердянск, вахтовые перевозки, корпоративное такси по договору, такси межгород, междугороднее такси, такси дальняк",
   });
+
 
   const links = useMemo(
     () => ({ phone: PHONE_HREF, telegram: withVisitKey(TG_HREF), max: withVisitKey(MAX_HREF) }),
@@ -52,6 +55,7 @@ export default function MainHome() {
       <ServicesBlock />
       <ContactButtons links={links} phone={PHONE} onLead={onLead} />
       <AdvantagesBlock />
+      <AudienceBlock />
       <ReviewsSlider />
       <ContactButtons links={links} phone={PHONE} onLead={onLead} />
       <BottomNav />

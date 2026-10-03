@@ -6,8 +6,8 @@
     <!-- /Gudok -->
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Заказать такси межгород — Такси Дальняк | Поездки между городами от 200 км</title>
-    <meta name="description" content="Заказать такси межгород по фиксированной цене. Поездки между городами России от 200 км. Звоните +7 (995) 645-51-25 круглосуточно."/>
+    <title>Такси межгород для военных и вахтовиков — Дальняк | ДНР, ЛНР, Херсон, Запорожье, вся Россия</title>
+    <meta name="description" content="Междугороднее такси для военнослужащих, вахтовиков и сотрудников: по России, в Донецк, Луганск, Мариуполь, Херсон, Запорожье. Фиксированная цена, без предоплаты, 24/7. +7 (995) 645-51-25."/>
     <meta name="keywords" content="заказать такси межгород, такси между городами, междугороднее такси, такси из города в город, такси между городами россии, перевозка сотрудников межгород, вахтовые перевозки, корпоративное такси по договору, такси военнослужащему домой, забрать бойца из зоны сво, такси на новые территории, такси донецк луганск херсон"/>
     <meta name="robots" content="index, follow"/>
     <meta name="author" content="Такси Дальняк"/>
@@ -35,7 +35,7 @@
     <meta property="og:type" content="website"/>
     <meta property="og:locale" content="ru_RU"/>
     <meta property="og:site_name" content="Такси Дальняк"/>
-    <meta property="og:title" content="Такси Дальняк — межгородное такси от 200 км"/>
+    <meta property="og:title" content="Такси межгород для военных и вахтовиков — Дальняк"/>
     <meta property="og:description" content="Специализируемся только на дальних поездках. Фиксированная цена за км, без надбавок. Звоните 24/7."/>
     <meta property="og:image" content="https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/9f1988fa-044e-4fe0-9ed6-d8c75200c13b.jpg"/>
     <meta property="og:image:width" content="1200"/>
@@ -88,13 +88,29 @@
           "image": "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/9f1988fa-044e-4fe0-9ed6-d8c75200c13b.jpg",
           "serviceType": "Междугороднее такси",
           "provider": { "@id": "https://taxidalnyack.ru#org" },
-          "areaServed": { "@type": "Country", "name": "Россия" },
+          "areaServed": [
+            { "@type": "Country", "name": "Россия" },
+            { "@type": "AdministrativeArea", "name": "Донецкая Народная Республика" },
+            { "@type": "AdministrativeArea", "name": "Луганская Народная Республика" },
+            { "@type": "AdministrativeArea", "name": "Запорожская область" },
+            { "@type": "AdministrativeArea", "name": "Херсонская область" }
+          ],
+          "audience": { "@type": "Audience", "audienceType": "Военнослужащие, вахтовики, сотрудники компаний, семьи военных" },
           "hoursAvailable": {
             "@type": "OpeningHoursSpecification",
             "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
             "opens": "00:00",
             "closes": "23:59"
           }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "Можно ли заказать такси для военнослужащего домой или в часть?", "acceptedAnswer": { "@type": "Answer", "text": "Да. Отвезём военнослужащего из отпуска домой и обратно, встретим на вокзале, в аэропорту или в пункте сбора. Цена фиксированная, предоплата не нужна." } },
+            { "@type": "Question", "name": "Ездите ли вы в Донецк, Луганск, Херсон и Запорожскую область?", "acceptedAnswer": { "@type": "Answer", "text": "Да, выполняем междугородние поездки на новые территории: Донецк, Луганск, Мариуполь, Мелитополь, Бердянск, Херсон. Маршрут и цену согласуем заранее." } },
+            { "@type": "Question", "name": "Работаете ли вы с вахтовиками и организациями?", "acceptedAnswer": { "@type": "Answer", "text": "Да, перевозим вахтовиков и сотрудников компаний по договору с закрывающими документами." } },
+            { "@type": "Question", "name": "Нужна ли предоплата?", "acceptedAnswer": { "@type": "Answer", "text": "Нет, оплата производится при посадке в автомобиль." } }
+          ]
         },
         {
           "@type": "WebSite",
