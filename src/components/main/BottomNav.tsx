@@ -4,7 +4,7 @@ const ITEMS = [
   { href: "#home", label: "Главная", icon: "House" },
   { href: "#contacts", label: "Контакты", icon: "Phone" },
   { href: "#tariffs", label: "Тарифы", icon: "Car" },
-  { href: "/reviews", label: "Отзывы", icon: "MessageSquareText" },
+  { href: "#reviews", label: "Отзывы", icon: "MessageSquareText" },
 ];
 
 export default function BottomNav() {

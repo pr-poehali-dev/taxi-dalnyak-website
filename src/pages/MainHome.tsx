@@ -8,6 +8,7 @@ import TariffSlider from "@/components/main/TariffSlider";
 import BottomNav from "@/components/main/BottomNav";
 import ServicesBlock from "@/components/main/ServicesBlock";
 import AdvantagesBlock from "@/components/main/AdvantagesBlock";
+import ReviewsSlider from "@/components/main/ReviewsSlider";
 
 const YM_ID = 111028538;
 
@@ -51,6 +52,7 @@ export default function MainHome() {
       <ServicesBlock />
       <ContactButtons links={links} phone={PHONE} onLead={onLead} />
       <AdvantagesBlock />
+      <ReviewsSlider />
       <ContactButtons links={links} phone={PHONE} onLead={onLead} />
       <BottomNav />
     </main>
