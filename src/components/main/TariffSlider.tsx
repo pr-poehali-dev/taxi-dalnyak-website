@@ -10,11 +10,17 @@ const TARIFFS = [
 ];
 
 interface Props {
-  orderHref: string;
-  onOrder: () => void;
+  links: { phone: string; telegram: string; max: string };
+  onLead: (channel: string) => void;
 }
 
-export default function TariffSlider({ orderHref, onOrder }: Props) {
+const BTNS = [
+  { channel: "telegram", label: "Telegram", icon: "Send", style: "linear-gradient(90deg,#0ea5e9,#38bdf8)", color: "#fff" },
+  { channel: "max", label: "MAX", icon: "MessageCircle", style: "linear-gradient(90deg,#7c3aed,#d946ef)", color: "#fff" },
+  { channel: "phone", label: "Позвонить", icon: "Phone", style: "#fff", color: "#111" },
+];
+
+export default function TariffSlider({ links, onLead }: Props) {
   return (
     <section id="tariffs" className="pt-10 pb-6 scroll-mt-4">
       <h2 className="text-center text-2xl sm:text-3xl font-bold uppercase leading-tight px-6" style={{ fontFamily: "Oswald, sans-serif" }}>
@@ -32,15 +38,26 @@ export default function TariffSlider({ orderHref, onOrder }: Props) {
             <p className="mt-2 text-sm font-bold text-white/90 leading-snug">
               от {t.rate} руб/км ({t.cars})
             </p>
-            <a
-              href={orderHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={onOrder}
-              className="inline-block mt-5 px-7 py-3.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white font-bold uppercase text-sm shadow-[0_6px_20px_rgba(124,58,237,0.5)] transition"
-            >
-              Заказать
-            </a>
+            <p className="mt-5 text-xs font-bold uppercase tracking-wide text-white/60">Заказать в:</p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {BTNS.map((b) => {
+                const ext = b.channel !== "phone";
+                return (
+                  <a
+                    key={b.channel}
+                    href={links[b.channel as keyof typeof links]}
+                    target={ext ? "_blank" : undefined}
+                    rel={ext ? "noopener noreferrer" : undefined}
+                    onClick={() => onLead(b.channel)}
+                    className="flex flex-col items-center gap-1 rounded-xl py-2.5 text-[12px] font-bold uppercase shadow-lg active:scale-95 transition"
+                    style={{ background: b.style, color: b.color }}
+                  >
+                    <Icon name={b.icon} size={18} style={{ color: b.color }} />
+                    {b.label}
+                  </a>
+                );
+              })}
+            </div>
           </article>
         ))}
       </div>

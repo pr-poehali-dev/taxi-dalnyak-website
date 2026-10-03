@@ -48,7 +48,7 @@ export default function MainHome() {
     <main className="min-h-screen bg-black text-white pb-20" style={{ fontFamily: "Manrope, sans-serif" }}>
       <MainHero />
       <ContactButtons id="contacts" links={links} phone={PHONE} onLead={onLead} />
-      <TariffSlider orderHref={links.max} onOrder={() => onLead("max")} />
+      <TariffSlider links={links} onLead={onLead} />
       <ServicesBlock />
       <ContactButtons links={links} phone={PHONE} onLead={onLead} />
       <AdvantagesBlock />
