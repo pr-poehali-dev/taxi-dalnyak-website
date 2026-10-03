@@ -44,6 +44,7 @@ import Pages from "./pages/Pages";
 import Deals from "./pages/Deals";
 import Clicks from "./pages/Clicks";
 import PosterHome from "./pages/PosterHome";
+import MainHome from "./pages/MainHome";
 import { ROUTE_LANDINGS } from "./lib/routeLandings";
 import MoscowBusiness from "./pages/MoscowBusiness";
 import Otzyv from "./pages/Otzyv";
@@ -57,7 +58,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<MainHome />} />
           <Route path="/poster" element={<PosterHome />} />
           <Route path="/full" element={<Home />} />
           <Route path="/info" element={<Index />} />
