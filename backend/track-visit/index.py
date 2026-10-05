@@ -82,6 +82,13 @@ def save_click(event, body, cur, schema):
                     {esc(body.get('utmTerm'))}, {esc(body.get('utmContent'))}, {esc(body.get('yclid'))},
                     {esc(body.get('ymClientId'))}, {esc(ua)}, {esc(ip)})"""
     )
+    vk = (body.get('visitKey') or '').strip().upper()[:16]
+    cid = (body.get('ymClientId') or '').strip()
+    if vk and cid:
+        cur.execute(
+            f"""UPDATE {schema}.ad_visits SET ym_client_id = {esc(cid)}
+                WHERE visit_key = {esc(vk)} AND ym_client_id IS NULL"""
+        )
     return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True})}
 
 
@@ -329,6 +336,15 @@ def create_deal(body, cur, schema):
             yclid = yclid or v[1]
             for i, k in enumerate(keys):
                 utm[k] = utm[k] or v[2 + i]
+        if not ym_client_id:
+            cur.execute(
+                f"""SELECT ym_client_id FROM {schema}.lead_clicks
+                    WHERE visit_key = {esc(visit_key)} AND ym_client_id IS NOT NULL
+                    ORDER BY created_at DESC LIMIT 1"""
+            )
+            lc = cur.fetchone()
+            if lc:
+                ym_client_id = lc[0]
 
     amount = num(body.get('amount'))
     costs = num(body.get('costs'))

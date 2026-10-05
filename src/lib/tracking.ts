@@ -1,4 +1,4 @@
-import { captureAdSource, getAdSource, getYmClientId, type AdSource } from "./adSource";
+import { captureAdSource, getAdSource, getYmClientId, getYmClientIdSync, type AdSource } from "./adSource";
 import func2url from "../../backend/func2url.json";
 
 const URLS = func2url as Record<string, string>;
@@ -13,6 +13,19 @@ export async function registerVisit(): Promise<AdSource> {
 
   try {
     const ymClientId = await getYmClientId();
+    if (!ymClientId) {
+      window.setTimeout(() => {
+        const late = getYmClientIdSync();
+        if (late) {
+          fetch(endpoint + "?action=visit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...source, ymClientId: late }),
+            keepalive: true,
+          }).catch(() => {});
+        }
+      }, 6000);
+    }
     await fetch(endpoint + "?action=visit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -45,6 +58,7 @@ export function trackLeadClick(channel: string) {
       utmTerm: p.get("utm_term") || p.get("keyword") || s.utmTerm || "",
       utmContent: p.get("utm_content") || s.utmContent || "",
       yclid: p.get("yclid") || s.yclid || "",
+      ymClientId: getYmClientIdSync() || "",
     });
 
     const url = endpoint + "?action=click";

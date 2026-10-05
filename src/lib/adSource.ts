@@ -42,12 +42,19 @@ function write(v: AdSource) {
   }
 }
 
+/** Код клиента из cookie Метрики — доступен сразу, без ожидания загрузки счётчика. */
+export function getYmClientIdSync(): string | undefined {
+  const m = document.cookie.match(/(?:^|;\s*)_ym_uid=(\d+)/);
+  return m ? m[1] : undefined;
+}
+
 /** Идентификатор посетителя в Яндекс.Метрике (нужен для передачи оплат). */
 export function getYmClientId(): Promise<string | undefined> {
   return new Promise((resolve) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ym = (window as any).ym;
-    if (typeof ym !== "function") return resolve(undefined);
+    const cookieId = getYmClientIdSync();
+    if (typeof ym !== "function") return resolve(cookieId);
     let done = false;
     const finish = (v?: string) => {
       if (!done) {
@@ -55,11 +62,11 @@ export function getYmClientId(): Promise<string | undefined> {
         resolve(v);
       }
     };
-    window.setTimeout(() => finish(undefined), 1500);
+    window.setTimeout(() => finish(cookieId), 4000);
     try {
       ym(YM_ID, "getClientID", (id: string) => finish(id));
     } catch {
-      finish(undefined);
+      finish(cookieId);
     }
   });
 }
