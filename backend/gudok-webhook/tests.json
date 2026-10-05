@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {"name": "OPTIONS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+    {
+      "name": "Gudok call webhook",
+      "method": "POST",
+      "path": "/",
+      "body": {"call_id": "test-call-1", "caller": "+79001112233", "dst": "+79956455125", "status": "answered", "duration": 45, "utm_campaign": "715034456", "utm_term": "такси межгород"},
+      "expectedStatus": 200,
+      "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

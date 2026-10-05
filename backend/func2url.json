@@ -1,4 +1,5 @@
 {
+  "gudok-webhook": "https://functions.poehali.dev/24ee26d2-80d2-40a7-bd61-e7067d94af73",
   "track-visit": "https://functions.poehali.dev/fce17f46-bcb5-4859-adb2-b5909be71318",
   "telegram-webhook": "https://functions.poehali.dev/e4b2bada-212e-433e-991c-4c3ad851834a",
   "orders-status": "https://functions.poehali.dev/0670100a-e59e-4981-9670-46c82afdb6b4",
