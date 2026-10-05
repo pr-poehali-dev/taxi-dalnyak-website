@@ -383,9 +383,21 @@ export default function Deals() {
                       )}
                     </span>
                   ) : (
-                    <span style={{ fontSize: 12.5, color: d.sentToMetrika ? GREEN : d.ymClientId ? MUTED : ORANGE2, display: "flex", alignItems: "center", gap: 5 }}>
-                      <Icon name={d.sentToMetrika ? "CircleCheck" : d.ymClientId ? "Clock" : "CircleAlert"} size={14} />
-                      {d.sentToMetrika ? "В Метрике" : d.ymClientId ? "Ждёт отправки" : "Без кода клиента — в Метрику не уйдёт"}
+                    <span
+                      style={{
+                        fontSize: 12.5,
+                        fontWeight: 700,
+                        padding: "3px 10px",
+                        borderRadius: 999,
+                        color: d.sentToMetrika ? GREEN : d.ymClientId ? ORANGE2 : "#ef4444",
+                        background: d.sentToMetrika ? "rgba(55,214,122,0.14)" : d.ymClientId ? "rgba(255,159,69,0.14)" : "rgba(239,68,68,0.12)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 5,
+                      }}
+                    >
+                      <Icon name={d.sentToMetrika ? "CircleCheck" : d.ymClientId ? "Clock" : "CircleX"} size={14} />
+                      {d.sentToMetrika ? "В Метрике" : d.ymClientId ? "Ждёт отправки" : "Не уйдёт, нет кода клиента"}
                     </span>
                   )}
                   <button
