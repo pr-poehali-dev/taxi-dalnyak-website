@@ -285,8 +285,11 @@ def list_deals(cur, schema):
         f"""SELECT id, client_name, client_phone, route_from, route_to, channel,
                    utm_source, utm_campaign, utm_term, amount, costs, profit, status,
                    comment, sent_to_metrika, visit_key, ym_client_id, created_at,
-                   max_user_id, max_goal_sent, max_goal_response, yclid
-            FROM {schema}.deals ORDER BY created_at DESC LIMIT 300"""
+                   max_user_id, max_goal_sent, max_goal_response, yclid,
+                   EXISTS (SELECT 1 FROM {schema}.gudok_calls g
+                           WHERE g.caller_digits IS NOT NULL AND d.client_phone IS NOT NULL
+                             AND g.caller_digits = RIGHT(REGEXP_REPLACE(d.client_phone, '[^0-9]', '', 'g'), 10))
+            FROM {schema}.deals d ORDER BY created_at DESC LIMIT 300"""
     )
     deals = [
         {
@@ -297,6 +300,7 @@ def list_deals(cur, schema):
             'sentToMetrika': r[14], 'visitKey': r[15], 'ymClientId': r[16] or r[21],
             'createdAt': r[17].isoformat() if r[17] else None,
             'maxUserId': r[18], 'maxGoalSent': r[19], 'maxGoalInfo': r[20],
+            'gudokCall': bool(r[22]),
         }
         for r in cur.fetchall()
     ]

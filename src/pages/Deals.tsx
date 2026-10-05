@@ -32,6 +32,7 @@ interface Deal {
   comment?: string;
   visitKey?: string;
   ymClientId?: string;
+  gudokCall?: boolean;
   sentToMetrika?: boolean;
   maxUserId?: string;
   maxGoalSent?: boolean;
@@ -400,6 +401,22 @@ export default function Deals() {
                       {d.sentToMetrika ? "В Метрике" : d.ymClientId ? "Ждёт отправки" : "Не уйдёт, нет кода клиента"}
                     </span>
                   )}
+                  <span
+                    style={{
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                      padding: "3px 10px",
+                      borderRadius: 999,
+                      color: d.gudokCall ? GREEN : MUTED,
+                      background: d.gudokCall ? "rgba(55,214,122,0.14)" : "rgba(255,255,255,0.06)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5,
+                    }}
+                  >
+                    <Icon name={d.gudokCall ? "PhoneIncoming" : "PhoneOff"} size={14} />
+                    {d.gudokCall ? "Найден звонок из Гудка" : "Звонок не найден"}
+                  </span>
                   <button
                     type="button"
                     onClick={() => remove(d.id)}
