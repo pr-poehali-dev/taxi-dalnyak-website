@@ -15,9 +15,9 @@ ALIASES = {
     'gudok_call_id': ('call_id', 'id', 'callid', 'uniqueid', 'call_uuid'),
     'caller': ('caller', 'caller_number', 'phone', 'src', 'from', 'callerid', 'client_phone', 'caller_id'),
     'dst': ('dst', 'called', 'to', 'called_number', 'virtual_number', 'number', 'tracking_number'),
-    'channel_name': ('channel', 'channel_name', 'source_name', 'source', 'channel_title'),
+    'channel_name': ('adv_channel_name', 'channel', 'channel_name', 'source_name', 'source', 'channel_title'),
     'project_title': ('project', 'project_title', 'site', 'site_title'),
-    'call_status': ('status', 'call_status', 'disposition'),
+    'call_status': ('callstatus', 'status', 'call_status', 'disposition'),
     'duration': ('duration', 'call_duration'),
     'billsec': ('billsec', 'talk_duration', 'conversation_duration'),
     'region': ('region', 'city', 'caller_region'),
@@ -102,8 +102,10 @@ def handler(event: dict, context) -> dict:
     f = {k: pick(data, k) for k in ALIASES}
 
     caller_digits = ''.join(ch for ch in (f['caller'] or '') if ch.isdigit())[-10:] or None
-    gid = f['gudok_call_id'] or ('t' + str(context.request_id))[:64]
-    called_at = f['called_at']
+    gid = f['gudok_call_id']
+    if not gid or gid == '0':
+        gid = ('t' + str(context.request_id))[:64]
+    called_at = (f['called_at'] or '').replace(' UTC', '').replace('T', ' ')[:19] or None
     ts_sql = 'NOW()'
     if called_at:
         ts_sql = f"COALESCE(NULLIF({esc(called_at)}, '')::timestamp, NOW())"

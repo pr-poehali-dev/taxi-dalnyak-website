@@ -1,0 +1,1 @@
+UPDATE gudok_calls SET call_status = 'ANSWERED', channel_name = '0', project_title = 'Test', duration = 60, billsec = 30, audio_url = 'https://in.gudok.tel/api/audio/test' WHERE id = 2;
