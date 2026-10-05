@@ -147,7 +147,31 @@ def list_clicks(cur, schema):
     }
 
 
-def send_to_metrika(rows):
+def enrich_from_calls(cur, schema):
+    """Подтягивает код клиента Метрики, yclid и метки из звонков Гудка по номеру телефона."""
+    cur.execute(
+        f"""UPDATE {schema}.deals d SET
+                ym_client_id = COALESCE(d.ym_client_id, c.ym_client_id),
+                yclid = COALESCE(d.yclid, c.yclid),
+                utm_source = COALESCE(d.utm_source, c.utm_source),
+                utm_medium = COALESCE(d.utm_medium, c.utm_medium),
+                utm_campaign = COALESCE(d.utm_campaign, c.utm_campaign),
+                utm_term = COALESCE(d.utm_term, c.utm_term),
+                utm_content = COALESCE(d.utm_content, c.utm_content)
+            FROM (
+                SELECT DISTINCT ON (caller_digits) caller_digits, ym_client_id, yclid,
+                       utm_source, utm_medium, utm_campaign, utm_term, utm_content
+                FROM {schema}.gudok_calls
+                WHERE caller_digits IS NOT NULL AND (ym_client_id IS NOT NULL OR yclid IS NOT NULL)
+                ORDER BY caller_digits, called_at DESC
+            ) c
+            WHERE d.sent_to_metrika = FALSE AND d.ym_client_id IS NULL
+              AND d.client_phone IS NOT NULL
+              AND RIGHT(REGEXP_REPLACE(d.client_phone, '[^0-9]', '', 'g'), 10) = c.caller_digits"""
+    )
+
+
+def send_to_metrika(rows, id_type='CLIENT_ID'):
     """Загружает оплаты в Яндекс.Метрику как офлайн-конверсии."""
     token = os.environ.get('YANDEX_METRIKA_TOKEN1') or os.environ.get('YANDEX_METRIKA_TOKEN')
     if not token:
@@ -157,7 +181,7 @@ def send_to_metrika(rows):
 
     buf = io.StringIO()
     w = csv.writer(buf)
-    w.writerow(['ClientId', 'Target', 'DateTime', 'Price', 'Currency'])
+    w.writerow([('Yclid' if id_type == 'YCLID' else 'ClientId'), 'Target', 'DateTime', 'Price', 'Currency'])
     for r in rows:
         w.writerow([r['ym_client_id'], 'payment', int(r['ts']), r['amount'], 'RUB'])
     payload = buf.getvalue().encode('utf-8')
@@ -171,7 +195,7 @@ def send_to_metrika(rows):
 
     url = (
         'https://api-metrika.yandex.net/management/v1/counter/%s'
-        '/offline_conversions/upload?client_id_type=CLIENT_ID' % YM_COUNTER
+        '/offline_conversions/upload?client_id_type=%s' % (YM_COUNTER, id_type)
     )
     req = urllib.request.Request(url, data=body, method='POST')
     req.add_header('Authorization', 'OAuth ' + token)
@@ -253,11 +277,15 @@ def max_leads():
 
 
 def list_deals(cur, schema):
+    try:
+        enrich_from_calls(cur, schema)
+    except Exception:
+        pass
     cur.execute(
         f"""SELECT id, client_name, client_phone, route_from, route_to, channel,
                    utm_source, utm_campaign, utm_term, amount, costs, profit, status,
                    comment, sent_to_metrika, visit_key, ym_client_id, created_at,
-                   max_user_id, max_goal_sent, max_goal_response
+                   max_user_id, max_goal_sent, max_goal_response, yclid
             FROM {schema}.deals ORDER BY created_at DESC LIMIT 300"""
     )
     deals = [
@@ -266,7 +294,7 @@ def list_deals(cur, schema):
             'routeTo': r[4], 'channel': r[5], 'utmSource': r[6], 'utmCampaign': r[7],
             'utmTerm': r[8], 'amount': float(r[9] or 0), 'costs': float(r[10] or 0),
             'profit': float(r[11] or 0), 'status': r[12], 'comment': r[13],
-            'sentToMetrika': r[14], 'visitKey': r[15], 'ymClientId': r[16],
+            'sentToMetrika': r[14], 'visitKey': r[15], 'ymClientId': r[16] or r[21],
             'createdAt': r[17].isoformat() if r[17] else None,
             'maxUserId': r[18], 'maxGoalSent': r[19], 'maxGoalInfo': r[20],
         }
@@ -297,7 +325,7 @@ def list_deals(cur, schema):
     cur.execute(
         f"""SELECT COUNT(*) FROM {schema}.deals
             WHERE status = 'paid' AND sent_to_metrika = FALSE
-              AND ym_client_id IS NOT NULL AND amount > 0"""
+              AND (ym_client_id IS NOT NULL OR yclid IS NOT NULL) AND amount > 0"""
     )
     pending = cur.fetchone()[0]
 
@@ -369,6 +397,10 @@ def create_deal(body, cur, schema):
             RETURNING id"""
     )
     deal_id = cur.fetchone()[0]
+    try:
+        enrich_from_calls(cur, schema)
+    except Exception:
+        pass
     goal = None
     if max_uid and status == 'paid':
         ok, info = max_send_goal(max_uid)
@@ -381,26 +413,39 @@ def create_deal(body, cur, schema):
 
 
 def sync_metrika(cur, schema):
+    enrich_from_calls(cur, schema)
     cur.execute(
-        f"""SELECT id, ym_client_id, amount, EXTRACT(EPOCH FROM created_at)
+        f"""SELECT id, ym_client_id, yclid, amount, EXTRACT(EPOCH FROM created_at)
             FROM {schema}.deals
             WHERE status = 'paid' AND sent_to_metrika = FALSE
-              AND ym_client_id IS NOT NULL AND amount > 0 LIMIT 500"""
+              AND (ym_client_id IS NOT NULL OR yclid IS NOT NULL) AND amount > 0 LIMIT 500"""
     )
-    rows = [
-        {'id': r[0], 'ym_client_id': r[1], 'amount': float(r[2]), 'ts': r[3]}
-        for r in cur.fetchall()
-    ]
-    ok, info = send_to_metrika(rows)
-    if ok and rows:
-        ids = ','.join(str(r['id']) for r in rows)
-        cur.execute(
-            f"""UPDATE {schema}.deals SET sent_to_metrika = TRUE, sent_at = NOW(),
-                metrika_response = {esc(info)} WHERE id IN ({ids})"""
-        )
+    by_cid, by_yclid = [], []
+    for r in cur.fetchall():
+        if r[1]:
+            by_cid.append({'id': r[0], 'ym_client_id': r[1], 'amount': float(r[3]), 'ts': r[4]})
+        else:
+            by_yclid.append({'id': r[0], 'ym_client_id': r[2], 'amount': float(r[3]), 'ts': r[4]})
+
+    ok_all, infos, sent = True, [], 0
+    for rows, id_type in ((by_cid, 'CLIENT_ID'), (by_yclid, 'YCLID')):
+        if not rows:
+            continue
+        ok, info = send_to_metrika(rows, id_type)
+        infos.append(info)
+        if ok:
+            sent += len(rows)
+            ids = ','.join(str(r['id']) for r in rows)
+            cur.execute(
+                f"""UPDATE {schema}.deals SET sent_to_metrika = TRUE, sent_at = NOW(),
+                    metrika_response = {esc(info)} WHERE id IN ({ids})"""
+            )
+        else:
+            ok_all = False
+    info = ' | '.join(infos) if infos else 'Новых оплат для отправки нет'
     return {
         'statusCode': 200, 'headers': CORS,
-        'body': json.dumps({'ok': ok, 'sent': len(rows) if ok else 0, 'info': info}),
+        'body': json.dumps({'ok': ok_all, 'sent': sent, 'info': info}),
     }
 
 
@@ -420,7 +465,7 @@ def auto_sync_if_due(cur, schema):
     cur.execute(
         f"""SELECT COUNT(*) FROM {schema}.deals
             WHERE status = 'paid' AND sent_to_metrika = FALSE
-              AND ym_client_id IS NOT NULL AND amount > 0"""
+              AND (ym_client_id IS NOT NULL OR yclid IS NOT NULL) AND amount > 0"""
     )
     if not cur.fetchone()[0]:
         return
