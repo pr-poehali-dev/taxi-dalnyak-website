@@ -26,6 +26,7 @@ import Nizhny from "./pages/regions/Nizhny";
 import Izhevsk from "./pages/regions/Izhevsk";
 import Krasnodar from "./pages/regions/Krasnodar";
 import Rostov from "./pages/regions/Rostov";
+import Samara from "./pages/regions/Samara";
 import Stavropol from "./pages/regions/Stavropol";
 import Novosibirsk from "./pages/regions/Novosibirsk";
 import Tyumen from "./pages/regions/Tyumen";
@@ -86,6 +87,7 @@ const App = () => (
           <Route path="/izhevsk" element={<Izhevsk />} />
           <Route path="/krasnodar" element={<Krasnodar />} />
           <Route path="/rostov" element={<Rostov />} />
+          <Route path="/samara" element={<Samara />} />
           <Route path="/stavropol" element={<Stavropol />} />
           <Route path="/novosibirsk" element={<Novosibirsk />} />
           <Route path="/tyumen" element={<Tyumen />} />

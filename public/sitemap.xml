@@ -109,6 +109,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://taxidalnyack.ru/samara</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://taxidalnyack.ru/stavropol</loc>
     <lastmod>2026-09-05</lastmod>
     <changefreq>weekly</changefreq>

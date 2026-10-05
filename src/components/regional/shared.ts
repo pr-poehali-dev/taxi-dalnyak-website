@@ -41,6 +41,7 @@ export const REGIONS = [
   { label: "Ижевск",          href: "/izhevsk" },
   { label: "Краснодар",       href: "/krasnodar" },
   { label: "Ростов-на-Дону",  href: "/rostov" },
+  { label: "Самара",          href: "/samara" },
   { label: "Ставрополь",      href: "/stavropol" },
   { label: "Новосибирск",     href: "/novosibirsk" },
   { label: "Тюмень",          href: "/tyumen" },
