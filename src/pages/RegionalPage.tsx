@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { DEFAULT_CONTACTS, type Contacts } from "@/lib/contacts";
+import { DEFAULT_CONTACTS, MAX_TRACK_CHAT, type Contacts } from "@/lib/contacts";
 import FloatingContacts from "@/components/FloatingContacts";
 import { routeFromQuery, cityFromQuery } from "@/lib/routeFromQuery";
 import { BASE_REVIEWS, ymGoal, ymLead, type RegionConfig } from "@/components/regional/shared";
 import { useRegionalSeo } from "@/components/regional/useRegionalSeo";
+import { useMaxTrack } from "@/components/regional/useMaxTrack";
 import RegionalHero from "@/components/regional/RegionalHero";
 import RegionalContent from "@/components/regional/RegionalContent";
 import RegionalCta from "@/components/regional/RegionalCta";
@@ -25,6 +26,8 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
   }, []);
 
   useRegionalSeo(config, PHONE);
+  const maxTracked = !source;
+  useMaxTrack(maxTracked);
 
   const queryRoute = useMemo(() => routeFromQuery(utmParams.term), [utmParams.term]);
   const queryCity  = useMemo(() => cityFromQuery(utmParams.term), [utmParams.term]);
@@ -50,13 +53,14 @@ export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, sour
   }, [utmParams]);
 
   const maxHref = useMemo(() => {
+    if (maxTracked) return MAX_TRACK_CHAT;
     const u = new URL(MAX_HREF);
     u.searchParams.set("utm_source", utmParams.source);
     u.searchParams.set("utm_medium", utmParams.medium);
     u.searchParams.set("utm_campaign", utmParams.campaign);
     u.searchParams.set("utm_content", "max_button");
     return u.toString();
-  }, [utmParams]);
+  }, [utmParams, maxTracked]);
 
   return (
     <>

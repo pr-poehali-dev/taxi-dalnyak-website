@@ -1,7 +1,7 @@
 import Icon from "@/components/ui/icon";
 import { cityRod } from "@/lib/routeFromQuery";
 import {
-  GOLD, GOLD2, HERO_IMG, LOGO, REGIONS,
+  GOLD, GOLD2, HERO_IMG, LOGO, MAX_LOGO, REGIONS,
   ymGoal, ymLead,
   type RegionConfig, type UtmParams,
 } from "@/components/regional/shared";
@@ -160,7 +160,7 @@ export default function RegionalHero({
                     onClick={() => { ymGoal("hero_max", { city: config.slug }); ymLead("max", utmParams, source); }}
                     className="flex items-center justify-center gap-2 rounded-2xl py-3.5 transition-transform active:scale-[0.97]"
                     style={{ background: "rgba(127,90,240,0.14)", border: "1.5px solid rgba(127,90,240,0.5)" }}>
-                    <Icon name="MessageCircle" size={18} style={{ color: "#a98bff" }} />
+                    <img src={MAX_LOGO} alt="MAX" width={20} height={20} className="w-5 h-5 rounded-full object-cover" />
                     <span style={{ fontFamily: "Oswald", fontSize: 14, fontWeight: 800, color: "#fff", textTransform: "uppercase", letterSpacing: "0.03em" }}>Макс</span>
                   </a>
                 )}

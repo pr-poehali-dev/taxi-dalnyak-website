@@ -7,6 +7,8 @@ export interface Contacts {
   MAX_HREF: string;
 }
 
+export const MAX_TRACK_CHAT = "https://max.ru/u/f9LHodD0cOL6nTizIr_Gpc-Jl7ldXX47wo9bapZMQZ1lX1GwxV-5HUzaEvE";
+
 export const DEFAULT_CONTACTS: Contacts = {
   PHONE: "+7 (995) 645-51-25",
   PHONE_HREF: "tel:+79956455125",
