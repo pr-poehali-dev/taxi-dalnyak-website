@@ -350,6 +350,54 @@ def list_deals(cur, schema):
     }
 
 
+def list_calls(cur, schema):
+    cur.execute(
+        f"""SELECT g.id, g.caller, g.dst, g.call_status, g.duration, g.called_at, g.ym_client_id,
+                   g.yclid, g.utm_campaign, g.utm_term, g.is_spam, g.deal_id, g.audio_url,
+                   d.amount, d.sent_to_metrika
+            FROM {schema}.gudok_calls g LEFT JOIN {schema}.deals d ON d.id = g.deal_id
+            ORDER BY g.called_at DESC NULLS LAST, g.id DESC LIMIT 100"""
+    )
+    return [
+        {
+            'id': r[0], 'caller': r[1], 'dst': r[2], 'status': r[3], 'duration': r[4],
+            'calledAt': r[5].isoformat() if r[5] else None, 'hasClientId': bool(r[6] or r[7]),
+            'campaign': r[8], 'term': r[9], 'spam': r[10], 'dealId': r[11], 'audio': r[12],
+            'amount': float(r[13]) if r[13] is not None else None, 'sent': bool(r[14]),
+        }
+        for r in cur.fetchall()
+    ]
+
+
+def call_deal(body, cur, schema):
+    call_id = int(body.get('callId') or 0)
+    cur.execute(
+        f"""SELECT caller, ym_client_id, yclid, utm_source, utm_medium, utm_campaign, utm_term,
+                   utm_content, visit_key, deal_id FROM {schema}.gudok_calls WHERE id = {call_id}"""
+    )
+    c = cur.fetchone()
+    if not c:
+        return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'ok': False, 'error': 'Звонок не найден'})}
+    if c[9]:
+        return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'ok': False, 'error': 'Оплата по этому звонку уже внесена'})}
+
+    payload = {
+        'visitKey': c[8], 'ymClientId': c[1], 'yclid': c[2], 'utmSource': c[3] or 'gudok',
+        'utmMedium': c[4], 'utmCampaign': c[5], 'utmTerm': c[6], 'utmContent': c[7],
+        'channel': 'phone', 'clientPhone': c[0], 'clientName': body.get('clientName'),
+        'routeFrom': body.get('routeFrom'), 'routeTo': body.get('routeTo'),
+        'amount': body.get('amount'), 'costs': body.get('costs'), 'status': 'paid',
+    }
+    res = create_deal(payload, cur, schema)
+    deal_id = json.loads(res['body']).get('id')
+    cur.execute(f"UPDATE {schema}.gudok_calls SET deal_id = {int(deal_id)}, is_spam = FALSE WHERE id = {call_id}")
+    try:
+        sync_metrika(cur, schema)
+    except Exception:
+        pass
+    return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True, 'id': deal_id})}
+
+
 def create_deal(body, cur, schema):
     visit_key = (body.get('visitKey') or '').strip().upper()[:16] or None
     ym_client_id = body.get('ymClientId')
@@ -522,6 +570,18 @@ def handler(event: dict, context) -> dict:
     try:
         if method == 'GET' and action == 'clicks':
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(list_clicks(cur, schema))}
+
+        if method == 'GET' and action == 'calls':
+            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'calls': list_calls(cur, schema)})}
+
+        if method == 'POST' and action == 'call_deal':
+            return call_deal(body, cur, schema)
+
+        if method == 'POST' and action == 'call_spam':
+            cid = int(body.get('callId') or 0)
+            flag = 'TRUE' if body.get('spam') else 'FALSE'
+            cur.execute(f"UPDATE {schema}.gudok_calls SET is_spam = {flag} WHERE id = {cid}")
+            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True})}
 
         if method == 'GET' and action == 'max_leads':
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(max_leads())}
