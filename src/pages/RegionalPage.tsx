@@ -8,10 +8,18 @@ import { useMaxTrack } from "@/components/regional/useMaxTrack";
 import RegionalHero from "@/components/regional/RegionalHero";
 import RegionalContent from "@/components/regional/RegionalContent";
 import RegionalCta from "@/components/regional/RegionalCta";
+import CityLanding from "@/components/lp/CityLanding";
 
 export type { RegionConfig };
 
-export default function RegionalPage({ config, contacts = DEFAULT_CONTACTS, source }: { config: RegionConfig; contacts?: Contacts; source?: string }) {
+export default function RegionalPage(props: { config: RegionConfig; contacts?: Contacts; source?: string }) {
+  if (props.config.slug && !props.source) {
+    return <CityLanding config={props.config} contacts={props.contacts ?? DEFAULT_CONTACTS} />;
+  }
+  return <ClassicRegionalPage {...props} />;
+}
+
+function ClassicRegionalPage({ config, contacts = DEFAULT_CONTACTS, source }: { config: RegionConfig; contacts?: Contacts; source?: string }) {
   const { PHONE, PHONE_HREF, VK_HREF, TG_HREF, MAX_HREF } = contacts;
   const [utmParams, setUtmParams] = useState({ source: "direct", medium: "none", campaign: "none", term: "", content: "none" });
   const [splash, setSplash]       = useState(true);

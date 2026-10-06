@@ -8,14 +8,20 @@ const FAQ = [
   { q: "Будут ли попутчики?", a: "Нет. Это индивидуальный трансфер: машина только для вас." },
 ];
 
-export default function LpFaq() {
+export interface FaqItem {
+  q: string;
+  a: string;
+}
+
+export default function LpFaq({ extra = [] }: { extra?: FaqItem[] }) {
+  const list = [...extra, ...FAQ];
   return (
     <section className="px-5 py-8 max-w-xl mx-auto">
       <h2 className="text-2xl sm:text-3xl font-bold uppercase text-center" style={{ fontFamily: "Oswald, sans-serif" }}>
         Частые вопросы
       </h2>
       <div className="mt-6 space-y-3">
-        {FAQ.map((f) => (
+        {list.map((f) => (
           <details key={f.q} className="group rounded-2xl px-4 py-3.5" style={{ background: "#14141a", border: "1px solid rgba(255,255,255,0.1)" }}>
             <summary className="flex items-center justify-between gap-3 cursor-pointer list-none font-bold">
               {f.q}

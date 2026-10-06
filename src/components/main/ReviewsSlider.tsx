@@ -1,8 +1,10 @@
 import Icon from "@/components/ui/icon";
 import { REVIEWS } from "@/lib/reviews";
 
-export default function ReviewsSlider() {
-  const list = REVIEWS.slice(0, 12);
+export default function ReviewsSlider({ city }: { city?: string } = {}) {
+  const key = (city || "").toLowerCase().slice(0, 5);
+  const sorted = key ? [...REVIEWS].sort((a, b) => Number(b.route.toLowerCase().includes(key)) - Number(a.route.toLowerCase().includes(key))) : REVIEWS;
+  const list = sorted.slice(0, 12);
 
   return (
     <section id="reviews" className="pt-12 pb-8 scroll-mt-4">

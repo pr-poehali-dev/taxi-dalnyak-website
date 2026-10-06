@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Icon from "@/components/ui/icon";
 import LpCta, { type LpLinks } from "./LpCta";
 
@@ -9,30 +10,44 @@ const FACTS = [
   { icon: "AlarmClock", text: "Подача от 30 минут, 24/7" },
 ];
 
-export default function LpHero({ links, onLead }: { links: LpLinks; onLead: (c: string) => void }) {
+interface Props {
+  links: LpLinks;
+  onLead: (c: string) => void;
+  badge?: string;
+  title?: ReactNode;
+  sub?: string;
+  phone?: string;
+  alt?: string;
+  menu?: ReactNode;
+}
+
+export default function LpHero({ links, onLead, badge, title, sub, phone = "+7 995 645-51-25", alt, menu }: Props) {
   return (
     <section className="relative overflow-hidden">
-      <img src={HERO} alt="Междугороднее такси Дальняк" className="absolute inset-0 w-full h-full object-cover object-[22%_center]" {...({ fetchpriority: "high" } as Record<string, string>)} />
+      <img src={HERO} alt={alt ?? "Междугороднее такси Дальняк"} className="absolute inset-0 w-full h-full object-cover object-[22%_center]" {...({ fetchpriority: "high" } as Record<string, string>)} />
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black" />
 
       <div className="relative z-10 px-5 pt-6 pb-10 max-w-xl mx-auto">
-        <div className="flex items-center justify-between">
-          <img src="/logo-dalnyak.webp" alt="Такси Дальняк" width={600} height={371} className="w-24 rounded-xl" />
-          <a href={links.phone} onClick={() => onLead("phone")} className="text-sm font-bold text-amber-300 flex items-center gap-1.5">
-            <Icon name="Phone" size={16} /> +7 995 645-51-25
-          </a>
+        <div className="flex items-center justify-between gap-3">
+          <a href="/"><img src="/logo-dalnyak.webp" alt="Такси Дальняк" width={600} height={371} className="w-24 rounded-xl" /></a>
+          <div className="flex items-center gap-3">
+            {menu}
+            <a href={links.phone} onClick={() => onLead("phone")} className="text-sm font-bold text-amber-300 flex items-center gap-1.5">
+              <Icon name="Phone" size={16} /> {phone}
+            </a>
+          </div>
         </div>
 
         <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur px-3 py-1.5 text-xs font-bold">
-          <Icon name="Star" size={14} style={{ color: "#f59e0b", fill: "#f59e0b" }} />
-          Реальные отзывы клиентов — ниже на странице
+          <Icon name="MapPin" size={14} style={{ color: "#f59e0b" }} />
+          {badge ?? "Междугороднее такси по России"}
         </div>
 
-        <h1 className="mt-4 text-[34px] sm:text-5xl font-bold uppercase leading-[1.05]" style={{ fontFamily: "Oswald, sans-serif" }}>
-          Такси межгород <span className="text-amber-400">по фиксированной цене</span>
+        <h1 className="mt-4 text-[32px] sm:text-5xl font-bold uppercase leading-[1.05]" style={{ fontFamily: "Oswald, sans-serif" }}>
+          {title ?? (<>Такси межгород <span className="text-amber-400">по фиксированной цене</span></>)}
         </h1>
         <p className="mt-4 text-base sm:text-lg font-semibold text-white/90 leading-snug">
-          В любой город России, а также в ДНР, ЛНР, Запорожье и Херсон. Домой из отпуска, в часть, на вахту.
+          {sub ?? "В любой город России, а также в ДНР, ЛНР, Запорожье и Херсон. Домой из отпуска, в часть, на вахту."}
         </p>
 
         <ul className="mt-5 space-y-2.5">
