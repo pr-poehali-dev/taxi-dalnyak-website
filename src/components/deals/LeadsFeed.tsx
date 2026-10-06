@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
 
 interface Item {
-  src: "click" | "call";
-  id: number;
+  src: "click" | "call" | "max";
+  id: number | string;
+  utm?: { s?: string; c?: string; t?: string };
+  info?: string | null;
   channel: string;
   caller?: string;
   page?: string;
@@ -58,8 +60,25 @@ export default function LeadsFeed({ api, onChanged }: { api: string; onChanged: 
 
   const load = useCallback(async () => {
     try {
-      const d = await (await fetch(api + "?action=feed")).json();
-      setItems(d.feed || []);
+      const [fd, md] = await Promise.all([
+        fetch(api + "?action=feed").then((r) => r.json()),
+        fetch(api + "?action=max_leads").then((r) => r.json()).catch(() => ({ leads: [] })),
+      ]);
+      const deals = fd.maxDeals || {};
+      const maxItems: Item[] = (md.leads || []).map((l: any) => {
+        const d = deals[l.userId];
+        const iso = l.date ? new Date(l.date * 1000).toISOString() : undefined;
+        return {
+          src: "max", id: l.userId, channel: "max", name: l.name, at: iso,
+          campaign: l.utmCampaign || undefined, term: l.utmTerm || undefined,
+          utm: { s: l.utmSource, c: l.utmCampaign, t: l.utmTerm },
+          hasId: true, dealId: d?.dealId, dealStatus: d?.status, amount: d?.amount,
+          paidSent: !!d?.paidSent, orderSent: !!d?.orderSent, spam: false, info: d?.info,
+        } as Item;
+      });
+      const all = [...(fd.feed || []), ...maxItems];
+      all.sort((a, b) => (b.at || "").localeCompare(a.at || ""));
+      setItems(all);
     } catch {
       setMsg("Не удалось загрузить обращения");
     }
@@ -83,10 +102,21 @@ export default function LeadsFeed({ api, onChanged }: { api: string; onChanged: 
   const send = async (i: Item, stage: "order" | "paid") => {
     if (stage === "paid" && !f.amount) return setMsg("Укажите сумму оплаты");
     setBusy(true);
-    const d = await post("stage", { src: i.src, id: i.id, stage, ...f });
+    const d = await post("stage", {
+      src: i.src, id: i.id, stage, name: i.name,
+      utmSource: i.utm?.s, utmCampaign: i.utm?.c, utmTerm: i.utm?.t, ...f,
+    });
     setBusy(false);
     if (!d.ok) return setMsg(d.error || "Не удалось сохранить");
-    if (!i.hasId) setMsg("Записано, но у обращения нет кода клиента Метрики — в Метрику не уйдёт");
+    if (i.src === "max") {
+      setMsg(
+        d.sent
+          ? "Передано в Метрику через «Откуда Подписки»"
+          : /tracking link/.test(d.info || "")
+            ? "Записано у нас, но Макс не принял: этот человек пришёл не по рекламной ссылке, связать его с рекламой нельзя"
+            : `Записано, но Метрика не приняла: ${d.info || "ошибка"}`,
+      );
+    } else if (!i.hasId) setMsg("Записано, но у обращения нет кода клиента Метрики — в Метрику не уйдёт");
     else if (d.metrika && d.metrika.ok === false) setMsg(`Записано, Метрика ответила ошибкой: ${d.metrika.info}`);
     else setMsg(stage === "paid" ? "Оплата передана в Метрику" : "Заказ передан в Метрику");
     setOpen(null);
@@ -149,6 +179,9 @@ export default function LeadsFeed({ api, onChanged }: { api: string; onChanged: 
                   </span>
                 ) : (
                   <>
+                    {i.src === "max" && i.dealStatus === "order" && !i.orderSent && (
+                      <span style={{ color: RED, fontSize: 12.5 }}>заказ не принят</span>
+                    )}
                     {ordered ? (
                       <span style={{ color: GREEN, fontSize: 13, fontWeight: 700 }}>
                         Заказал · {i.orderSent ? "в Метрике" : "ждёт отправки"}
@@ -161,13 +194,13 @@ export default function LeadsFeed({ api, onChanged }: { api: string; onChanged: 
                     <button type="button" onClick={() => setOpen(open === k ? null : k)} style={btn(ORANGE, "#1a0c00")}>
                       Оплатил
                     </button>
-                    <button
+                    {i.src !== "max" && <button
                       type="button"
                       onClick={() => spam(i)}
                       style={{ ...btn("none", i.spam ? GREEN : MUTED), border: `1px solid ${LINE}` }}
                     >
                       {i.spam ? "Не спам" : "Спам"}
-                    </button>
+                    </button>}
                   </>
                 )}
               </div>

@@ -1,0 +1,1 @@
+UPDATE deals SET max_goal_sent = FALSE WHERE max_goal_response LIKE '%"status":"error"%';

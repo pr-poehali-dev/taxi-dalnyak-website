@@ -16,6 +16,7 @@ CORS = {
 
 YM_COUNTER = '111028538'
 MAX_GOAL = 'max_payment'
+MAX_ORDER_GOAL = 'max_order'
 TGTRACK_MAX = 'https://max.tgtrack.ru/API/bot-api/v1/%s/send_reach_goal'
 TGTRACK_MAX_REPORT = 'https://report.tgtrack.ru/max/api/%s?ver=1.0&platform=api&format=csv&apiKey=%s&date_from=%d&limit=%d'
 
@@ -210,17 +211,23 @@ def send_to_metrika(rows, id_type='CLIENT_ID', target='payment'):
         return False, str(e)[:300]
 
 
-def max_send_goal(user_id):
+def max_send_goal(user_id, target=None):
     """Передаёт цель «оплата» в «Откуда Подписки» (Макс) — сервис сам отправит её в Метрику."""
     key = os.environ.get('TGTRACK_MAX_API_KEY')
     if not key:
         return False, 'Добавьте API-ключ «Откуда Подписки»'
-    data = json.dumps({'user_id': str(user_id), 'target': MAX_GOAL}).encode()
+    data = json.dumps({'user_id': str(user_id), 'target': target or MAX_GOAL}).encode()
     req = urllib.request.Request(TGTRACK_MAX % key, data=data, method='POST')
     req.add_header('Content-Type', 'application/json')
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
-            return True, resp.read().decode('utf-8')[:300]
+            text = resp.read().decode('utf-8')[:300]
+            try:
+                if json.loads(text).get('status') == 'error':
+                    return False, text
+            except ValueError:
+                pass
+            return True, text
     except urllib.error.HTTPError as e:
         return False, 'Откуда Подписки: %s' % e.read().decode('utf-8')[:200]
     except Exception as e:
@@ -438,8 +445,63 @@ def list_feed(cur, schema):
             'dealStatus': r[10], 'amount': float(r[11]) if r[11] is not None else None,
             'paidSent': bool(r[12]), 'orderSent': bool(r[13]), 'name': r[14],
         })
+    items = [i for i in items if not (i['src'] == 'click' and i['channel'] == 'max')]
     items.sort(key=lambda x: x['at'] or '', reverse=True)
     return items
+
+
+def max_deals_map(cur, schema):
+    cur.execute(
+        f"""SELECT max_user_id, id, status, amount, order_sent, max_goal_sent, max_goal_response
+            FROM {schema}.deals WHERE max_user_id IS NOT NULL ORDER BY id"""
+    )
+    out = {}
+    for r in cur.fetchall():
+        out[r[0]] = {'dealId': r[1], 'status': r[2], 'amount': float(r[3] or 0),
+                     'orderSent': bool(r[4]), 'paidSent': bool(r[5]), 'info': r[6]}
+    return out
+
+
+def max_stage(body, cur, schema):
+    uid = ''.join(ch for ch in str(body.get('id') or '') if ch.isdigit())[:30]
+    stage = body.get('stage')
+    if not uid:
+        return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'ok': False, 'error': 'Нет ID клиента'})}
+    amount = num(body.get('amount'))
+    costs = num(body.get('costs'))
+    if stage == 'paid' and amount <= 0:
+        return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'ok': False, 'error': 'Укажите сумму оплаты'})}
+
+    cur.execute(f"SELECT id FROM {schema}.deals WHERE max_user_id = {esc(uid)} ORDER BY id DESC LIMIT 1")
+    row = cur.fetchone()
+    if row:
+        deal_id = row[0]
+        if stage == 'paid':
+            cur.execute(
+                f"""UPDATE {schema}.deals SET status = 'paid', amount = {amount}, costs = {costs},
+                    profit = {round(amount - costs, 2)}, updated_at = NOW() WHERE id = {deal_id}"""
+            )
+    else:
+        res = create_deal({
+            'channel': 'max', 'maxUserId': uid, 'clientName': body.get('clientName') or body.get('name'),
+            'routeFrom': body.get('routeFrom'), 'routeTo': body.get('routeTo'),
+            'amount': amount if stage == 'paid' else 0, 'costs': costs,
+            'status': 'paid' if stage == 'paid' else 'order',
+            'maxUtmSource': body.get('utmSource'), 'maxUtmCampaign': body.get('utmCampaign'),
+            'maxUtmTerm': body.get('utmTerm'),
+        }, cur, schema)
+        deal_id = json.loads(res['body']).get('id')
+
+    if stage == 'order':
+        ok, info = max_send_goal(uid, MAX_ORDER_GOAL)
+        cur.execute(f"UPDATE {schema}.deals SET order_sent = {'TRUE' if ok else 'FALSE'} WHERE id = {int(deal_id)}")
+    else:
+        ok, info = max_send_goal(uid)
+        cur.execute(
+            f"""UPDATE {schema}.deals SET max_goal_sent = {'TRUE' if ok else 'FALSE'},
+                max_goal_response = {esc(info)} WHERE id = {int(deal_id)}"""
+        )
+    return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True, 'id': deal_id, 'sent': ok, 'info': info})}
 
 
 def load_source(cur, schema, src, sid):
@@ -710,9 +772,11 @@ def handler(event: dict, context) -> dict:
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(list_clicks(cur, schema))}
 
         if method == 'GET' and action == 'feed':
-            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'feed': list_feed(cur, schema)})}
+            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'feed': list_feed(cur, schema), 'maxDeals': max_deals_map(cur, schema)})}
 
         if method == 'POST' and action == 'stage':
+            if body.get('src') == 'max':
+                return max_stage(body, cur, schema)
             return set_stage(body, cur, schema)
 
         if method == 'POST' and action == 'feed_spam':
