@@ -158,7 +158,6 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
         routes={cards}
         onPick={pickKm}
         title={`Популярные направления из ${config.cityRod}`}
-        note={`Цены по тарифу «${tariffs[0].name}» (${baseRate} ₽/км), расстояние приблизительное. Точную стоимость назовёт диспетчер`}
       />
 
       <LpSteps />

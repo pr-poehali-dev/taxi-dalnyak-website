@@ -51,7 +51,7 @@ export default function NewHome() {
   return (
     <main className="min-h-screen bg-black text-white pb-24" style={{ fontFamily: "Manrope, sans-serif" }}>
       <LpHero links={links} onLead={onLead} />
-      <LpRoutes onPick={toOrder} note="Цены по тарифу «Стандарт», расстояние приблизительное. Точную стоимость назовёт диспетчер" />
+      <LpRoutes onPick={toOrder} />
       <LpSteps />
       <AudienceBlock />
       <ReviewsSlider />

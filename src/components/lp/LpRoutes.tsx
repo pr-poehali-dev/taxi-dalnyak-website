@@ -1,5 +1,3 @@
-import Icon from "@/components/ui/icon";
-
 export interface LpRouteCard {
   from: string;
   to: string;
@@ -43,15 +41,13 @@ export default function LpRoutes({ onPick, routes = DEFAULT, title, note }: Prop
               <span className="block font-extrabold">{r.from} — {r.to}</span>
               <span className="block text-xs text-white/60 mt-0.5">≈ {fmt(r.km)} км</span>
             </span>
-            <span className="text-right">
-              <span className="block text-xs text-white/60">от</span>
-              <span className="block text-xl font-extrabold text-amber-400">{fmt(r.km * r.rate)} ₽</span>
+            <span className="ml-2 shrink-0 rounded-xl px-3 py-2 text-xs font-extrabold uppercase" style={{ background: "linear-gradient(135deg,#fcd34d,#f59e0b)", color: "#111" }}>
+              Узнать цену
             </span>
-            <Icon name="ChevronRight" size={20} className="text-white/50 ml-2" />
-          </button>
+                      </button>
         ))}
       </div>
-      <p className="mt-3 text-center text-xs text-white/50">{note ?? "Цены по тарифу «Стандарт», расстояние приблизительное"}</p>
+      <p className="mt-3 text-center text-xs text-white/50">{note ?? "Нажмите «Узнать цену» — диспетчер назовёт точную стоимость за 2 минуты"}</p>
     </section>
   );
 }
