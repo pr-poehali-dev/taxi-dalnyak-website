@@ -46,6 +46,7 @@ import Deals from "./pages/Deals";
 import Clicks from "./pages/Clicks";
 import PosterHome from "./pages/PosterHome";
 import MainHome from "./pages/MainHome";
+import NewHome from "./pages/NewHome";
 import { ROUTE_LANDINGS } from "./lib/routeLandings";
 import MoscowBusiness from "./pages/MoscowBusiness";
 import Otzyv from "./pages/Otzyv";
@@ -61,6 +62,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<MainHome />} />
           <Route path="/poster" element={<PosterHome />} />
+          <Route path="/new" element={<NewHome />} />
           <Route path="/full" element={<Home />} />
           <Route path="/info" element={<Index />} />
           <Route path="/voennye" element={<Military />} />
