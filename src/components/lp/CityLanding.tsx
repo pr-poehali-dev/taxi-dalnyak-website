@@ -7,7 +7,7 @@ import { useRegionalSeo } from "@/components/regional/useRegionalSeo";
 import { useMaxTrack } from "@/components/regional/useMaxTrack";
 import Icon from "@/components/ui/icon";
 import LpHero from "./LpHero";
-import LpCalc, { type LpTariff } from "./LpCalc";
+import { type LpTariff } from "./LpCalc";
 import LpRoutes, { type LpRouteCard } from "./LpRoutes";
 import LpSteps from "./LpSteps";
 import LpFaq, { type FaqItem } from "./LpFaq";
@@ -39,7 +39,6 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
   const { PHONE, PHONE_HREF, TG_HREF } = contacts;
   const [utm, setUtm] = useState({ source: "direct", medium: "none", campaign: "none", term: "", content: "none" });
   const [allChips, setAllChips] = useState(false);
-  const [preset, setPreset] = useState<{ km: number; key: number } | null>(null);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -91,16 +90,8 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
     return out;
   }, [config.routes, minKm, baseRate]);
 
-  const routeKm = queryRoute ? roadKm(queryRoute.from, queryRoute.to) : null;
-  const initialKm = Math.max(minKm, cards[0]?.km ?? 500);
-
-  useEffect(() => {
-    if (routeKm && routeKm >= minKm) setPreset({ km: routeKm, key: 1 });
-  }, [routeKm, minKm]);
-
-  const pickKm = (km: number) => {
-    setPreset({ km, key: Date.now() });
-    document.getElementById("calc")?.scrollIntoView({ behavior: "smooth" });
+  const pickKm = () => {
+    document.getElementById("order")?.scrollIntoView({ behavior: "smooth" });
   };
 
   const faqExtra: FaqItem[] = useMemo(() => {
@@ -163,23 +154,11 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
     <main className="min-h-screen bg-black text-white pb-24" style={{ fontFamily: "Manrope, sans-serif" }}>
       <LpHero links={links} onLead={onLead} badge={badge} title={title} sub={sub} phone={PHONE} alt={config.heroAlt ?? `Междугороднее такси из ${config.cityRod}`} />
 
-      <LpCalc
-        links={links}
-        onLead={onLead}
-        tariffs={tariffs}
-        minKm={minKm}
-        initialKm={routeKm && routeKm >= minKm ? routeKm : initialKm}
-        presetKm={preset?.km}
-        presetKey={preset?.key}
-        title={`Цена такси из ${config.cityRod}`}
-        onCalc={(km, tariff) => ymGoal("calc_used", { city: config.slug, km: String(km), tariff })}
-      />
-
       <LpRoutes
         routes={cards}
         onPick={pickKm}
         title={`Популярные направления из ${config.cityRod}`}
-        note={`Цены по тарифу «${tariffs[0].name}» (${baseRate} ₽/км), расстояние приблизительное. Нажмите на маршрут — посчитаем в калькуляторе`}
+        note={`Цены по тарифу «${tariffs[0].name}» (${baseRate} ₽/км), расстояние приблизительное. Точную стоимость назовёт диспетчер`}
       />
 
       <LpSteps />
@@ -242,7 +221,7 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
         </div>
       </section>
 
-      <section className="px-5 pb-10 max-w-xl mx-auto">
+      <section id="order" className="px-5 pb-10 max-w-xl mx-auto scroll-mt-4">
         <h2 className="text-2xl font-bold uppercase text-center mb-5" style={{ fontFamily: "Oswald, sans-serif" }}>
           Закажите поездку из {config.cityRod}
         </h2>

@@ -3,7 +3,6 @@ import { useSeo } from "@/hooks/use-seo";
 import { DEFAULT_CONTACTS } from "@/lib/contacts";
 import { withVisitKey, trackLeadClick } from "@/lib/tracking";
 import LpHero from "@/components/lp/LpHero";
-import LpCalc from "@/components/lp/LpCalc";
 import LpRoutes from "@/components/lp/LpRoutes";
 import LpSteps from "@/components/lp/LpSteps";
 import LpFaq from "@/components/lp/LpFaq";
@@ -47,18 +46,17 @@ export default function NewHome() {
     trackLeadClick(channel);
   };
 
-  const toCalc = () => document.getElementById("calc")?.scrollIntoView({ behavior: "smooth" });
+  const toOrder = () => document.getElementById("order")?.scrollIntoView({ behavior: "smooth" });
 
   return (
     <main className="min-h-screen bg-black text-white pb-24" style={{ fontFamily: "Manrope, sans-serif" }}>
       <LpHero links={links} onLead={onLead} />
-      <LpCalc links={links} onLead={onLead} />
-      <LpRoutes onPick={toCalc} />
+      <LpRoutes onPick={toOrder} note="Цены по тарифу «Стандарт», расстояние приблизительное. Точную стоимость назовёт диспетчер" />
       <LpSteps />
       <AudienceBlock />
       <ReviewsSlider />
       <LpFaq />
-      <section className="px-5 pb-10 max-w-xl mx-auto">
+      <section id="order" className="px-5 pb-10 max-w-xl mx-auto scroll-mt-4">
         <h2 className="text-2xl font-bold uppercase text-center mb-5" style={{ fontFamily: "Oswald, sans-serif" }}>
           Закажите поездку сейчас
         </h2>
