@@ -87,6 +87,42 @@ def pick(data, field):
     return None
 
 
+def match_click(cur, schema, call_row_id):
+    cur.execute(
+        f"""SELECT c.id, c.visit_key, c.utm_source, c.utm_medium, c.utm_campaign, c.utm_term,
+                   c.utm_content, c.yclid, c.ym_client_id
+            FROM {schema}.gudok_calls g
+            JOIN {schema}.lead_clicks c
+              ON c.channel IN ('phone', 'call')
+             AND c.created_at BETWEEN g.created_at - INTERVAL '20 minutes' AND g.created_at + INTERVAL '1 minute'
+            WHERE g.id = {int(call_row_id)}
+            ORDER BY ABS(EXTRACT(EPOCH FROM (g.created_at - c.created_at - INTERVAL '1 minute'))) ASC
+            LIMIT 1"""
+    )
+    c = cur.fetchone()
+    if not c:
+        return
+    ym, yclid, vk = c[8], c[7], c[1]
+    if vk and not (ym and yclid):
+        cur.execute(f"SELECT ym_client_id, yclid FROM {schema}.ad_visits WHERE visit_key = {esc(vk)}")
+        v = cur.fetchone()
+        if v:
+            ym = ym or v[0]
+            yclid = yclid or v[1]
+    cur.execute(
+        f"""UPDATE {schema}.gudok_calls SET
+                visit_key = COALESCE(visit_key, {esc(vk)}),
+                utm_source = COALESCE(utm_source, {esc(c[2])}),
+                utm_medium = COALESCE(utm_medium, {esc(c[3])}),
+                utm_campaign = COALESCE(utm_campaign, {esc(c[4])}),
+                utm_term = COALESCE(utm_term, {esc(c[5])}),
+                utm_content = COALESCE(utm_content, {esc(c[6])}),
+                yclid = COALESCE(yclid, {esc(yclid)}),
+                ym_client_id = COALESCE(ym_client_id, {esc(ym)})
+            WHERE id = {int(call_row_id)}"""
+    )
+
+
 def handler(event: dict, context) -> dict:
     """Принимает вебхуки Гудка о звонках и сохраняет их для связки с оплатами."""
     method = event.get('httpMethod')
@@ -143,6 +179,13 @@ def handler(event: dict, context) -> dict:
                     utm_campaign = COALESCE(EXCLUDED.utm_campaign, {schema}.gudok_calls.utm_campaign),
                     utm_term = COALESCE(EXCLUDED.utm_term, {schema}.gudok_calls.utm_term)"""
         )
+
+        cur.execute(
+            f"""SELECT id, utm_campaign, gudok_call_id FROM {schema}.gudok_calls WHERE gudok_call_id = {esc(gid)}"""
+        )
+        row = cur.fetchone()
+        if row and not row[1]:
+            match_click(cur, schema, row[0])
     finally:
         cur.close()
         conn.close()
