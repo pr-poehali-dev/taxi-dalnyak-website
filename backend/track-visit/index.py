@@ -171,7 +171,7 @@ def enrich_from_calls(cur, schema):
     )
 
 
-def send_to_metrika(rows, id_type='CLIENT_ID'):
+def send_to_metrika(rows, id_type='CLIENT_ID', target='payment'):
     """Загружает оплаты в Яндекс.Метрику как офлайн-конверсии."""
     token = os.environ.get('YANDEX_METRIKA_TOKEN1') or os.environ.get('YANDEX_METRIKA_TOKEN')
     if not token:
@@ -183,7 +183,7 @@ def send_to_metrika(rows, id_type='CLIENT_ID'):
     w = csv.writer(buf)
     w.writerow([('Yclid' if id_type == 'YCLID' else 'ClientId'), 'Target', 'DateTime', 'Price', 'Currency'])
     for r in rows:
-        w.writerow([r['ym_client_id'], 'payment', int(r['ts']), r['amount'], 'RUB'])
+        w.writerow([r['ym_client_id'], target, int(r['ts']), r['amount'], 'RUB'])
     payload = buf.getvalue().encode('utf-8')
 
     boundary = '----metrika' + os.urandom(8).hex()
@@ -398,6 +398,118 @@ def call_deal(body, cur, schema):
     return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True, 'id': deal_id})}
 
 
+def list_feed(cur, schema):
+    items = []
+    cur.execute(
+        f"""SELECT c.id, c.channel, c.page, c.utm_campaign, c.utm_term, c.created_at,
+                   COALESCE(c.ym_client_id, v.ym_client_id), COALESCE(c.yclid, v.yclid),
+                   c.deal_id, c.is_spam, d.status, d.amount, d.sent_to_metrika, d.order_sent, d.client_name
+            FROM {schema}.lead_clicks c
+            LEFT JOIN {schema}.deals d ON d.id = c.deal_id
+            LEFT JOIN {schema}.ad_visits v ON v.visit_key = c.visit_key
+            WHERE c.created_at > NOW() - INTERVAL '30 days'
+              AND NOT (c.channel IN ('phone', 'call') AND c.visit_key IS NOT NULL AND EXISTS (
+                    SELECT 1 FROM {schema}.gudok_calls g WHERE g.visit_key = c.visit_key))
+            ORDER BY c.created_at DESC LIMIT 150"""
+    )
+    for r in cur.fetchall():
+        items.append({
+            'src': 'click', 'id': r[0], 'channel': r[1], 'page': r[2], 'campaign': r[3], 'term': r[4],
+            'at': r[5].isoformat() if r[5] else None, 'hasId': bool(r[6] or r[7]),
+            'dealId': r[8], 'spam': r[9], 'dealStatus': r[10],
+            'amount': float(r[11]) if r[11] is not None else None,
+            'paidSent': bool(r[12]), 'orderSent': bool(r[13]), 'name': r[14],
+        })
+    cur.execute(
+        f"""SELECT g.id, g.caller, g.created_at, COALESCE(g.ym_client_id, v.ym_client_id),
+                   COALESCE(g.yclid, v.yclid), g.utm_campaign, g.utm_term, g.duration,
+                   g.deal_id, g.is_spam, d.status, d.amount, d.sent_to_metrika, d.order_sent, d.client_name
+            FROM {schema}.gudok_calls g
+            LEFT JOIN {schema}.deals d ON d.id = g.deal_id
+            LEFT JOIN {schema}.ad_visits v ON v.visit_key = g.visit_key
+            WHERE g.created_at > NOW() - INTERVAL '30 days'
+            ORDER BY g.created_at DESC LIMIT 100"""
+    )
+    for r in cur.fetchall():
+        items.append({
+            'src': 'call', 'id': r[0], 'channel': 'gudok', 'caller': r[1],
+            'at': r[2].isoformat() if r[2] else None, 'hasId': bool(r[3] or r[4]),
+            'campaign': r[5], 'term': r[6], 'duration': r[7], 'dealId': r[8], 'spam': r[9],
+            'dealStatus': r[10], 'amount': float(r[11]) if r[11] is not None else None,
+            'paidSent': bool(r[12]), 'orderSent': bool(r[13]), 'name': r[14],
+        })
+    items.sort(key=lambda x: x['at'] or '', reverse=True)
+    return items
+
+
+def load_source(cur, schema, src, sid):
+    if src == 'call':
+        cur.execute(
+            f"""SELECT visit_key, ym_client_id, yclid, utm_source, utm_medium, utm_campaign, utm_term,
+                       utm_content, deal_id, caller FROM {schema}.gudok_calls WHERE id = {sid}"""
+        )
+        channel = 'phone'
+    else:
+        cur.execute(
+            f"""SELECT visit_key, ym_client_id, yclid, utm_source, utm_medium, utm_campaign, utm_term,
+                       utm_content, deal_id, NULL, channel FROM {schema}.lead_clicks WHERE id = {sid}"""
+        )
+        channel = None
+    r = cur.fetchone()
+    if not r:
+        return None
+    return {
+        'visitKey': r[0], 'ymClientId': r[1], 'yclid': r[2], 'utmSource': r[3], 'utmMedium': r[4],
+        'utmCampaign': r[5], 'utmTerm': r[6], 'utmContent': r[7], 'dealId': r[8], 'clientPhone': r[9],
+        'channel': channel or (r[10] if len(r) > 10 else None),
+    }
+
+
+def set_stage(body, cur, schema):
+    src = 'call' if body.get('src') == 'call' else 'click'
+    sid = int(body.get('id') or 0)
+    stage = body.get('stage')
+    row = load_source(cur, schema, src, sid)
+    if not row:
+        return {'statusCode': 404, 'headers': CORS, 'body': json.dumps({'ok': False, 'error': 'Обращение не найдено'})}
+
+    amount = num(body.get('amount'))
+    costs = num(body.get('costs'))
+    if stage == 'paid' and amount <= 0:
+        return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'ok': False, 'error': 'Укажите сумму оплаты'})}
+
+    deal_id = row['dealId']
+    if deal_id:
+        if stage == 'paid':
+            cur.execute(
+                f"""UPDATE {schema}.deals SET status = 'paid', amount = {amount}, costs = {costs},
+                    profit = {round(amount - costs, 2)}, sent_to_metrika = FALSE, updated_at = NOW()
+                    WHERE id = {int(deal_id)}"""
+            )
+        else:
+            cur.execute(f"UPDATE {schema}.deals SET order_pending = TRUE WHERE id = {int(deal_id)} AND order_sent = FALSE")
+    else:
+        payload = dict(row)
+        payload.update({
+            'clientName': body.get('clientName'), 'routeFrom': body.get('routeFrom'),
+            'routeTo': body.get('routeTo'), 'amount': amount if stage == 'paid' else 0,
+            'costs': costs, 'status': 'paid' if stage == 'paid' else 'order',
+        })
+        res = create_deal(payload, cur, schema)
+        deal_id = json.loads(res['body']).get('id')
+        if stage == 'order':
+            cur.execute(f"UPDATE {schema}.deals SET order_pending = TRUE WHERE id = {int(deal_id)}")
+        tbl = 'gudok_calls' if src == 'call' else 'lead_clicks'
+        cur.execute(f"UPDATE {schema}.{tbl} SET deal_id = {int(deal_id)} WHERE id = {sid}")
+
+    sent = None
+    try:
+        sent = json.loads(sync_metrika(cur, schema)['body'])
+    except Exception:
+        pass
+    return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True, 'id': deal_id, 'metrika': sent})}
+
+
 def create_deal(body, cur, schema):
     visit_key = (body.get('visitKey') or '').strip().upper()[:16] or None
     ym_client_id = body.get('ymClientId')
@@ -494,6 +606,32 @@ def sync_metrika(cur, schema):
             )
         else:
             ok_all = False
+    cur.execute(
+        f"""SELECT id, ym_client_id, yclid, EXTRACT(EPOCH FROM created_at)
+            FROM {schema}.deals
+            WHERE order_pending = TRUE AND order_sent = FALSE
+              AND (ym_client_id IS NOT NULL OR yclid IS NOT NULL) LIMIT 500"""
+    )
+    o_cid, o_yclid = [], []
+    for r in cur.fetchall():
+        if r[1]:
+            o_cid.append({'id': r[0], 'ym_client_id': r[1], 'amount': 0, 'ts': r[3]})
+        else:
+            o_yclid.append({'id': r[0], 'ym_client_id': r[2], 'amount': 0, 'ts': r[3]})
+    for rows, id_type in ((o_cid, 'CLIENT_ID'), (o_yclid, 'YCLID')):
+        if not rows:
+            continue
+        ok, info = send_to_metrika(rows, id_type, 'order')
+        infos.append(info)
+        if ok:
+            sent += len(rows)
+            ids = ','.join(str(r['id']) for r in rows)
+            cur.execute(
+                f"""UPDATE {schema}.deals SET order_sent = TRUE, order_pending = FALSE
+                    WHERE id IN ({ids})"""
+            )
+        else:
+            ok_all = False
     info = ' | '.join(infos) if infos else 'Новых оплат для отправки нет'
     return {
         'statusCode': 200, 'headers': CORS,
@@ -570,6 +708,18 @@ def handler(event: dict, context) -> dict:
     try:
         if method == 'GET' and action == 'clicks':
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(list_clicks(cur, schema))}
+
+        if method == 'GET' and action == 'feed':
+            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'feed': list_feed(cur, schema)})}
+
+        if method == 'POST' and action == 'stage':
+            return set_stage(body, cur, schema)
+
+        if method == 'POST' and action == 'feed_spam':
+            tbl = 'gudok_calls' if body.get('src') == 'call' else 'lead_clicks'
+            flag = 'TRUE' if body.get('spam') else 'FALSE'
+            cur.execute(f"UPDATE {schema}.{tbl} SET is_spam = {flag} WHERE id = {int(body.get('id') or 0)}")
+            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True})}
 
         if method == 'GET' and action == 'calls':
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'calls': list_calls(cur, schema)})}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
-import GudokCalls from "@/components/deals/GudokCalls";
+import LeadsFeed from "@/components/deals/LeadsFeed";
 import MaxLeadPicker, { type MaxLead } from "@/components/deals/MaxLeadPicker";
 import func2url from "../../backend/func2url.json";
 
@@ -214,7 +214,7 @@ export default function Deals() {
           ))}
         </div>
 
-        <GudokCalls api={API} onChanged={load} />
+        <LeadsFeed api={API} onChanged={load} />
 
         <section style={{ background: CARD, border: `1px solid ${LINE}`, borderRadius: 16, padding: 16, marginBottom: 24 }}>
           <h2 style={{ fontWeight: 800, fontSize: 19, marginBottom: 14 }}>Новая оплата</h2>
