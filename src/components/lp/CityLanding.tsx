@@ -6,19 +6,15 @@ import { REGIONS, ymGoal, ymLead, type RegionConfig } from "@/components/regiona
 import { useRegionalSeo } from "@/components/regional/useRegionalSeo";
 import { useMaxTrack } from "@/components/regional/useMaxTrack";
 import Icon from "@/components/ui/icon";
-import LpHero from "./LpHero";
 import { type LpTariff } from "./LpCalc";
 import LpRoutes, { type LpRouteCard } from "./LpRoutes";
 import LpSteps from "./LpSteps";
 import LpFaq, { type FaqItem } from "./LpFaq";
 import LpCta from "./LpCta";
 import LpStickyBar from "./LpStickyBar";
+import LpCityHero from "./LpCityHero";
 import LpWhyPrice from "./LpWhyPrice";
 import LpCalm from "./LpCalm";
-import LpWho from "./LpWho";
-import LpCallback from "./LpCallback";
-import LpTrust from "./LpTrust";
-import LpPhotoBlock from "./LpPhotoBlock";
 import ReviewsSlider from "@/components/main/ReviewsSlider";
 
 const DEFAULT_TARIFFS: LpTariff[] = [
@@ -30,13 +26,6 @@ const DEFAULT_TARIFFS: LpTariff[] = [
 
 const CHANNEL_GOAL: Record<string, string> = { phone: "phone_click", telegram: "tg_click", max: "max_click", form: "callback_form" };
 const LEGACY_GOAL: Record<string, string> = { phone: "hero_phone", telegram: "hero_telegram", max: "hero_max" };
-const IMG_RIDE = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/c408cc05-7219-42e7-918f-f08ffb8dbb51.jpg";
-const IMG_DRIVER = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/3737e630-c3fc-4d6e-a0b6-9ea366f89e29.jpg";
-const HERO_FACTS = [
-  { icon: "Scale", text: "Объясним, из чего складывается цена" },
-  { icon: "BadgeCheck", text: "Без предоплаты, платите при посадке" },
-  { icon: "UserCheck", text: "Только вы в машине, без попутчиков" },
-];
 const CHIPS_PREVIEW = 30;
 
 function goldTitle(h1: string): ReactNode {
@@ -107,8 +96,9 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
     return out;
   }, [config.routes, minKm, baseRate]);
 
-  const pickKm = () => {
-    document.getElementById("order")?.scrollIntoView({ behavior: "smooth" });
+  const callNow = () => {
+    onLead("phone");
+    window.location.href = links.phone;
   };
 
   const faqExtra: FaqItem[] = useMemo(() => {
@@ -169,33 +159,17 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
 
   return (
     <main className="min-h-screen bg-black text-white pb-24" style={{ fontFamily: "Manrope, sans-serif" }}>
-      <LpHero links={links} onLead={onLead} badge={badge} title={title} sub={sub} phone={PHONE} facts={HERO_FACTS} ctaLabel="Узнать стоимость поездки" form={<LpCallback city={config.city} utm={utm} onLead={onLead} compact />} note="Назовите маршрут — за 2 минуты скажем цену и объясним её" alt={config.heroAlt ?? `Междугороднее такси из ${config.cityRod}`} />
-
-      <LpTrust />
-      <LpWhyPrice city={config.cityRod} />
-      <LpPhotoBlock
-        image={IMG_DRIVER}
-        alt={`Водитель встречает пассажира, междугороднее такси из ${config.cityRod}`}
-        title="Встретим и довезём до двери"
-        text="Водитель подаст автомобиль к подъезду, поможет с багажом и поедет по удобному вам маршруту. Остановки по пути, детское кресло, тишина или разговор: как скажете."
-      />
-      <LpCalm />
-      <LpPhotoBlock
-        image={IMG_RIDE}
-        alt="Пассажир отдыхает на заднем сиденье в дальней поездке"
-        title="Дорога, в которой можно отдохнуть"
-        text="Просторный салон, кондиционер, ровная скорость. Поспите, поработайте или просто посмотрите в окно. Это ваше время, водитель в него не вмешивается."
-      />
-      <LpWho />
+      <LpCityHero links={links} onLead={onLead} phone={PHONE} badge={badge} title={title} sub={sub} />
 
       <LpRoutes
         routes={cards}
-        onPick={pickKm}
+        onPick={callNow}
         title={`Популярные направления из ${config.cityRod}`}
       />
 
       <LpSteps />
-
+      <LpWhyPrice city={config.cityRod} />
+      <LpCalm />
       <section className="px-5 py-8 max-w-xl mx-auto">
         <h2 className="text-2xl sm:text-3xl font-bold uppercase text-center" style={{ fontFamily: "Oswald, sans-serif" }}>
           {config.aboutTitle ?? `Такси из ${config.cityRod}`}
@@ -214,10 +188,6 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
       </section>
 
       <ReviewsSlider city={config.city} />
-
-      <section className="px-5 py-6 max-w-xl mx-auto">
-        <LpCallback city={config.city} utm={utm} onLead={onLead} title="Узнайте цену вашей поездки" subtitle="Назовите маршрут. Перезвоним за 2 минуты, назовём цену и объясним её" />
-      </section>
 
       <section className="px-5 py-8 max-w-xl mx-auto">
         <h2 className="text-2xl sm:text-3xl font-bold uppercase text-center" style={{ fontFamily: "Oswald, sans-serif" }}>
@@ -259,7 +229,7 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
 
       <section id="order" className="px-5 pb-10 max-w-xl mx-auto scroll-mt-4">
         <h2 className="text-2xl font-bold uppercase text-center mb-5" style={{ fontFamily: "Oswald, sans-serif" }}>
-          Закажите поездку из {config.cityRod}
+          Нужна машина из {config.cityRod}?
         </h2>
         <LpCta links={links} onLead={onLead} />
       </section>
