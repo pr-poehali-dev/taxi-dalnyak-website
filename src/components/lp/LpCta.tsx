@@ -10,9 +10,10 @@ interface Props {
   links: LpLinks;
   onLead: (channel: string) => void;
   size?: "lg" | "md";
+  label?: string;
 }
 
-export default function LpCta({ links, onLead, size = "lg" }: Props) {
+export default function LpCta({ links, onLead, size = "lg", label = "Позвонить и узнать цену" }: Props) {
   const pad = size === "lg" ? "py-4 text-base" : "py-3 text-sm";
   return (
     <div className="space-y-3">
@@ -23,7 +24,7 @@ export default function LpCta({ links, onLead, size = "lg" }: Props) {
         style={{ background: "linear-gradient(135deg,#fcd34d,#f59e0b)", color: "#111", boxShadow: "0 8px 30px rgba(245,158,11,0.35)" }}
       >
         <Icon name="Phone" size={20} />
-        Позвонить и узнать цену
+        {label}
       </a>
       <div className="grid grid-cols-2 gap-3">
         <a

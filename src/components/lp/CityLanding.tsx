@@ -13,7 +13,9 @@ import LpSteps from "./LpSteps";
 import LpFaq, { type FaqItem } from "./LpFaq";
 import LpCta from "./LpCta";
 import LpStickyBar from "./LpStickyBar";
-import AudienceBlock from "@/components/main/AudienceBlock";
+import LpWhyPrice from "./LpWhyPrice";
+import LpCalm from "./LpCalm";
+import LpWho from "./LpWho";
 import ReviewsSlider from "@/components/main/ReviewsSlider";
 
 const DEFAULT_TARIFFS: LpTariff[] = [
@@ -24,8 +26,13 @@ const DEFAULT_TARIFFS: LpTariff[] = [
 ];
 
 const CHANNEL_GOAL: Record<string, string> = { phone: "phone_click", telegram: "tg_click", max: "max_click" };
+const LEGACY_GOAL: Record<string, string> = { phone: "hero_phone", telegram: "hero_telegram", max: "hero_max" };
+const HERO_FACTS = [
+  { icon: "Scale", text: "Объясним, из чего складывается цена" },
+  { icon: "BadgeCheck", text: "Без предоплаты, платите при посадке" },
+  { icon: "UserCheck", text: "Только вы в машине, без попутчиков" },
+];
 const CHIPS_PREVIEW = 30;
-const fmt = (n: number) => n.toLocaleString("ru-RU");
 
 function goldTitle(h1: string): ReactNode {
   const parts = h1.split(/(\[gold\].*?\[\/gold\])/g);
@@ -70,6 +77,11 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
     ymGoal(CHANNEL_GOAL[channel] ?? `${channel}_click`, {
       utm_source: utm.source, utm_medium: utm.medium, utm_campaign: utm.campaign, city: config.slug,
     });
+    if (LEGACY_GOAL[channel]) {
+      ymGoal(LEGACY_GOAL[channel], {
+        utm_source: utm.source, utm_medium: utm.medium, utm_campaign: utm.campaign, city: config.slug,
+      });
+    }
     ymLead(channel, utm);
   };
 
@@ -99,8 +111,8 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
     const c = cards[0];
     if (c) {
       out.push({
-        q: `Сколько стоит такси из ${cityRod(c.from)} в ${c.to}?`,
-        a: `Ориентировочно от ${fmt(c.km * baseRate)} ₽ по тарифу «${tariffs[0].name}» — это примерно ${fmt(c.km)} км по ${baseRate} ₽/км. Точную цену диспетчер назовёт до выезда, и она не изменится в дороге.`,
+        q: `Как узнать стоимость такси из ${cityRod(c.from)} в ${c.to}?`,
+        a: `Стоимость зависит от маршрута, времени в пути и класса автомобиля. Диспетчер назовёт цену до выезда, объяснит, из чего она состоит, и она не изменится в дороге.`,
       });
     }
     out.push({
@@ -137,7 +149,7 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
     <>Такси <span className="text-amber-400">{queryRoute.from} — {queryRoute.to}</span> по фиксированной цене</>
   ) : queryCity ? (
     <>Такси межгород <span className="text-amber-400">из {cityRod(queryCity)}</span> по фиксированной цене</>
-  ) : config.h1 ? (
+  ) : config.h1 && !/₽/.test(config.h1) ? (
     goldTitle(config.h1)
   ) : (
     <>Такси из {config.cityRod} <span className="text-amber-400">в другой город</span></>
@@ -145,14 +157,18 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
 
   const sub = queryRoute
     ? `Выполняем маршрут ${queryRoute.from} – ${queryRoute.to}. Цену фиксируем до выезда — она не меняется из-за пробок и времени в пути. Машина едет только за вами.`
-    : config.lead ?? `Из ${config.cityRod} в любой город России. Цену называем до выезда и фиксируем — в дороге она не меняется. Машина едет только за вами, без попутчиков.`;
+    : config.lead && !/₽/.test(config.lead) ? config.lead : `Из ${config.cityRod} в любой город России. Цену называем до выезда и фиксируем — в дороге она не меняется. Машина едет только за вами, без попутчиков.`;
 
   const chips = config.routes;
   const otherCities = REGIONS.filter((r) => r.href !== `/${config.slug}`);
 
   return (
     <main className="min-h-screen bg-black text-white pb-24" style={{ fontFamily: "Manrope, sans-serif" }}>
-      <LpHero links={links} onLead={onLead} badge={badge} title={title} sub={sub} phone={PHONE} alt={config.heroAlt ?? `Междугороднее такси из ${config.cityRod}`} />
+      <LpHero links={links} onLead={onLead} badge={badge} title={title} sub={sub} phone={PHONE} facts={HERO_FACTS} ctaLabel="Узнать стоимость поездки" note="Назовите маршрут — за 2 минуты скажем цену и объясним её" alt={config.heroAlt ?? `Междугороднее такси из ${config.cityRod}`} />
+
+      <LpWhyPrice city={config.cityRod} />
+      <LpCalm />
+      <LpWho />
 
       <LpRoutes
         routes={cards}
@@ -179,7 +195,6 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
         </ul>
       </section>
 
-      <AudienceBlock />
       <ReviewsSlider city={config.city} />
 
       <section className="px-5 py-8 max-w-xl mx-auto">
@@ -216,7 +231,7 @@ export default function CityLanding({ config, contacts }: { config: RegionConfig
 
       <section className="px-5 pb-6 max-w-xl mx-auto">
         <div className="rounded-2xl p-4 text-sm text-white/65 leading-relaxed" style={{ background: "#14141a", border: "1px solid rgba(255,255,255,0.08)" }}>
-          Работаем только на дальних маршрутах — от {minKm} км. Поездки с попутчиками и короткие внутренние поездки не выполняем.
+          Работаем на дальних маршрутах от {minKm} км. Поездки с попутчиками и короткие поездки по городу не выполняем.
         </div>
       </section>
 

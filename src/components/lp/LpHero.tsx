@@ -4,7 +4,7 @@ import LpCta, { type LpLinks } from "./LpCta";
 
 const HERO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/b9e41dff-bcd4-4590-98e3-349a9d051abb.jpg";
 
-const FACTS = [
+const DEFAULT_FACTS = [
   { icon: "HandCoins", text: "Цена фиксируется до поездки" },
   { icon: "BadgeCheck", text: "Без предоплаты — платите при посадке" },
   { icon: "AlarmClock", text: "Подача от 30 минут, 24/7" },
@@ -19,9 +19,12 @@ interface Props {
   phone?: string;
   alt?: string;
   menu?: ReactNode;
+  facts?: { icon: string; text: string }[];
+  ctaLabel?: string;
+  note?: string;
 }
 
-export default function LpHero({ links, onLead, badge, title, sub, phone = "+7 995 645-51-25", alt, menu }: Props) {
+export default function LpHero({ links, onLead, badge, title, sub, phone = "+7 995 645-51-25", alt, menu, facts = DEFAULT_FACTS, ctaLabel, note }: Props) {
   return (
     <section className="relative overflow-hidden">
       <img src={HERO} alt={alt ?? "Междугороднее такси Дальняк"} className="absolute inset-0 w-full h-full object-cover object-[22%_center]" {...({ fetchpriority: "high" } as Record<string, string>)} />
@@ -51,7 +54,7 @@ export default function LpHero({ links, onLead, badge, title, sub, phone = "+7 9
         </p>
 
         <ul className="mt-5 space-y-2.5">
-          {FACTS.map((f) => (
+          {facts.map((f) => (
             <li key={f.text} className="flex items-center gap-3 text-[15px] font-bold">
               <span className="w-8 h-8 rounded-full bg-amber-400/20 flex items-center justify-center shrink-0">
                 <Icon name={f.icon} fallback="Check" size={16} className="text-amber-300" />
@@ -62,8 +65,8 @@ export default function LpHero({ links, onLead, badge, title, sub, phone = "+7 9
         </ul>
 
         <div className="mt-7">
-          <LpCta links={links} onLead={onLead} />
-          <p className="mt-3 text-center text-xs text-white/60">Ответим за 5 минут и назовём точную цену</p>
+          <LpCta links={links} onLead={onLead} label={ctaLabel} />
+          <p className="mt-3 text-center text-xs text-white/60">{note ?? "Ответим за 5 минут и назовём точную цену"}</p>
         </div>
       </div>
     </section>
