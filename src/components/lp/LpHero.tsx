@@ -22,9 +22,10 @@ interface Props {
   facts?: { icon: string; text: string }[];
   ctaLabel?: string;
   note?: string;
+  form?: ReactNode;
 }
 
-export default function LpHero({ links, onLead, badge, title, sub, phone = "+7 995 645-51-25", alt, menu, facts = DEFAULT_FACTS, ctaLabel, note }: Props) {
+export default function LpHero({ links, onLead, badge, title, sub, phone = "+7 995 645-51-25", alt, menu, facts = DEFAULT_FACTS, ctaLabel, note, form }: Props) {
   return (
     <section className="relative overflow-hidden">
       <img src={HERO} alt={alt ?? "Междугороднее такси Дальняк"} className="absolute inset-0 w-full h-full object-cover object-[22%_center]" {...({ fetchpriority: "high" } as Record<string, string>)} />
@@ -67,6 +68,7 @@ export default function LpHero({ links, onLead, badge, title, sub, phone = "+7 9
         <div className="mt-7">
           <LpCta links={links} onLead={onLead} label={ctaLabel} />
           <p className="mt-3 text-center text-xs text-white/60">{note ?? "Ответим за 5 минут и назовём точную цену"}</p>
+          {form && <div className="mt-5">{form}</div>}
         </div>
       </div>
     </section>
