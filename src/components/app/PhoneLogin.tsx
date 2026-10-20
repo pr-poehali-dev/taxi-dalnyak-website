@@ -10,9 +10,10 @@ interface Props {
   hint: string;
   onToken: (t: string) => void;
   extra?: React.ReactNode;
+  heading?: string;
 }
 
-export default function PhoneLogin({ action, withName, withPassword, hint, onToken, extra }: Props) {
+export default function PhoneLogin({ action, withName, withPassword, hint, onToken, extra, heading }: Props) {
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +37,7 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
 
   return (
     <form onSubmit={submit} className="mx-auto max-w-md space-y-3 p-5">
-      <h1 className="pt-6 text-2xl font-extrabold">Вход по номеру телефона</h1>
+      <h1 className={`${heading ? "pt-1" : "pt-6"} text-2xl font-extrabold`}>{heading || "Вход по номеру телефона"}</h1>
       <p className="text-sm text-neutral-500">{hint}</p>
       {withName && <Field label="Как вас зовут" value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя" />}
       <Field label="Телефон" type="tel" inputMode="tel" value={phone} onFocus={() => !phone && setPhone("+7")}

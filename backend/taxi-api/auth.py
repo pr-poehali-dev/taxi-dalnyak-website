@@ -28,6 +28,10 @@ def user_by_token(cur, token, role):
 
 def logout(cur, token):
     if token:
+        cur.execute(
+            f"DELETE FROM {S}.app_push_subs WHERE user_id = (SELECT user_id FROM {S}.app_sessions WHERE token_hash = %s)",
+            (sha(token),),
+        )
         cur.execute(f"DELETE FROM {S}.app_sessions WHERE token_hash = %s", (sha(token),))
     return {'ok': True}
 
@@ -47,11 +51,6 @@ def push_subscribe(cur, user, body):
     auth = str(body.get('auth') or '')
     if not endpoint.startswith('https://') or not p256dh or not auth or len(endpoint) > 1000:
         raise ApiError(400, 'Неверная подписка')
-    cur.execute(
-        f"""DELETE FROM {S}.app_push_subs s USING {S}.app_users o, {S}.app_users me
-            WHERE s.endpoint = %s AND s.user_id = o.id AND me.id = %s AND o.id <> me.id AND o.phone <> me.phone""",
-        (endpoint, user['id']),
-    )
     cur.execute(
         f"""INSERT INTO {S}.app_push_subs (user_id, endpoint, p256dh, auth) VALUES (%s, %s, %s, %s)
             ON CONFLICT (user_id, endpoint) DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth""",

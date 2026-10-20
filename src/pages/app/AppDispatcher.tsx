@@ -13,6 +13,7 @@ import DriverForm, { DriverFormValue } from "@/components/app/DriverForm";
 import PushBanner from "@/components/app/PushBanner";
 import FleetTab from "@/components/app/FleetTab";
 import ReportsTab from "@/components/app/ReportsTab";
+import ExternalDriverForm from "@/components/app/ExternalDriverForm";
 import { Badge, Btn, Field, Shell, tripTone } from "@/components/app/ui";
 import Icon from "@/components/ui/icon";
 
@@ -22,7 +23,7 @@ interface Trip {
   from_text: string | null; to_text: string; comment: string | null; price: number | null; status: string;
   created_at: string; driver_id: number | null; assigned_by: string | null;
   client_phone: string; client_name: string | null; driver_name: string | null; driver_phone: string | null;
-  last_msg_role?: string | null; eta_at?: string | null; car_model: string | null; car_plate: string | null; pay_method: string; from_city: string | null; from_street: string | null; from_house: string | null;
+  manual_driver?: boolean; last_msg_role?: string | null; eta_at?: string | null; car_model: string | null; car_plate: string | null; pay_method: string; from_city: string | null; from_street: string | null; from_house: string | null;
 }
 interface Driver {
   id: number; name: string; phone: string; car_model: string; car_plate: string; car_color: string; status: string;
@@ -170,6 +171,7 @@ function DriverCard({ d, onAct, onCreds }: { d: Driver; onAct: Act; onCreds: (c:
 function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; onAct: Act; onChat: () => void }) {
   const [pick, setPick] = useState(t.status === "new");
   const [charge, setCharge] = useState(false);
+  const [ext, setExt] = useState(false);
   const free = drivers.filter((d) => d.status === "approved").sort((a, b) => Number(b.online && !b.busy) - Number(a.online && !a.busy));
   const finished = t.status === "done" || t.status === "cancelled";
   return (
@@ -196,19 +198,20 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
         {t.comment && <div className="text-neutral-500">Комментарий: {t.comment}</div>}
         <a href={`tel:${t.client_phone}`} className="font-semibold text-sky-700">{t.client_name || "Клиент"} · {t.client_phone}</a>
         {t.eta_at && ["assigned", "enroute"].includes(t.status) && <div className="font-bold text-amber-700">Водитель обещал приехать к {new Date(t.eta_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}</div>}
-        {t.driver_name && <div className="mt-1 rounded-xl bg-neutral-100 p-2">Водитель: <b>{t.driver_name}</b>, {t.car_model} {t.car_plate}{t.driver_phone ? ` · ${t.driver_phone}` : ""} {t.assigned_by === "dispatcher" ? "(назначен вами)" : "(взял сам)"}</div>}
+        {t.driver_name && <div className="mt-1 rounded-xl bg-neutral-100 p-2">Водитель: <b>{t.driver_name}</b>, {t.car_model} {t.car_plate}{t.driver_phone ? ` · ${t.driver_phone}` : ""} {t.manual_driver ? "(не из системы, вы вписали вручную)" : t.assigned_by === "dispatcher" ? "(назначен вами)" : "(взял сам)"}</div>}
         {t.rating && <div className="mt-1 font-bold text-amber-600">Оценка пассажира: {"★".repeat(t.rating)}{t.rating_comment ? ` · ${t.rating_comment}` : ""}</div>}
         {t.cancelled_by && <div className="text-red-600">Отменил: {{ client: "пассажир", dispatcher: "диспетчер" }[t.cancelled_by] || t.cancelled_by}</div>}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        {t.driver_id && <Btn kind="dark" onClick={onChat} className="!py-2.5 !text-sm"><Icon name="MessageCircle" size={14} className="mr-1 inline" />Переписка{t.last_msg_id ? "" : " (пусто)"}</Btn>}
+        {(t.driver_id || t.manual_driver) && <Btn kind="dark" onClick={onChat} className="!py-2.5 !text-sm"><Icon name="MessageCircle" size={14} className="mr-1 inline" />Переписка{t.last_msg_id ? "" : " (пусто)"}</Btn>}
         {!finished && (t.status === "new" || t.status === "assigned") && <Btn onClick={() => setPick(!pick)} className="!py-2.5 !text-sm">{t.driver_id ? "Переназначить" : "Назначить водителя"}</Btn>}
         {!finished && t.driver_id && t.status !== "in_progress" && <Btn kind="ghost" onClick={() => onAct("disp_trip_status", { trip_id: t.id, status: "in_progress" })} className="!py-2.5 !text-sm">В пути</Btn>}
         {!finished && t.driver_id && <Btn kind="ghost" onClick={() => onAct("disp_trip_status", { trip_id: t.id, status: "done" })} className="!py-2.5 !text-sm">Завершить</Btn>}
         {!finished && <Btn kind="danger" onClick={() => window.confirm("Отменить заказ?") && onAct("disp_trip_status", { trip_id: t.id, status: "cancelled" })} className="!py-2.5 !text-sm">Отменить</Btn>}
       </div>
-      {pick && (
+      {pick && !ext && (
         <div className="mt-3 space-y-2">
+          <Btn kind="dark" onClick={() => setExt(true)} className="w-full !py-3 !text-sm">Отдать водителю не из системы (вписать вручную)</Btn>
           {free.length === 0 && <p className="text-sm text-neutral-500">Нет одобренных водителей. Добавьте водителя во вкладке «Водители».</p>}
           <label className="flex items-center gap-2 text-sm font-semibold text-neutral-600"><input type="checkbox" checked={charge} onChange={(e) => setCharge(e.target.checked)} className="h-4 w-4 accent-neutral-900" />Списать комиссию с баланса водителя</label>
           {free.map((d) => (
@@ -218,6 +221,12 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
               <span className={d.online ? "font-bold text-emerald-600" : "text-neutral-400"}>{d.busy ? "на заказе" : d.online ? "на линии" : "не на линии"}</span>
             </button>
           ))}
+        </div>
+      )}
+      {pick && ext && (
+        <div className="mt-3">
+          <ExternalDriverForm onCancel={() => setExt(false)}
+            onSubmit={(v) => { onAct("disp_assign_external", { trip_id: t.id, name: v.name, phone: v.phone, car_model: v.car_model, car_plate: v.car_plate, car_color: v.car_color, eta_minutes: v.eta_minutes || null }); setPick(false); setExt(false); }} />
         </div>
       )}
     </div>

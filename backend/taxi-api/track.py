@@ -10,7 +10,8 @@ def track(cur, body):
         raise ApiError(404, 'Ссылка недействительна')
     cur.execute(
         f"""SELECT t.status, t.from_text, t.to_text, t.from_lat, t.from_lng, t.to_lat, t.to_lng, t.eta_at, t.scheduled_at,
-                   t.updated_at, d.name AS driver_name, dr.car_model, dr.car_plate, dr.car_color,
+                   t.updated_at, COALESCE(d.name, t.ext_driver_name) AS driver_name, COALESCE(dr.car_model, t.ext_car_model) AS car_model,
+                   COALESCE(dr.car_plate, t.ext_car_plate) AS car_plate, COALESCE(dr.car_color, t.ext_car_color) AS car_color,
                    dr.lat AS driver_lat, dr.lng AS driver_lng, dr.loc_at, now() AS server_now
             FROM {S}.app_trips t
             LEFT JOIN {S}.app_users d ON d.id = t.driver_id

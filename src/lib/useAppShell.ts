@@ -46,6 +46,7 @@ export function useAppShell(kind: AppKind) {
 
     const onMsg = (e: MessageEvent) => {
       if (e.data?.type === "push") pushNotify(e.data.title);
+      if (e.data?.type === "open-chat") window.dispatchEvent(new Event("app-open-chat"));
     };
     navigator.serviceWorker?.addEventListener("message", onMsg);
 

@@ -1,0 +1,3 @@
+UPDATE app_sessions SET expires_at = now() WHERE user_id IN (SELECT id FROM app_users WHERE phone IN ('+79990001122', '+79990003344')) OR (user_id = 4 AND token_hash = encode(sha256(convert_to('tmp-test-session-7f3a91c2d8e04b6a', 'UTF8')), 'hex'));
+UPDATE app_drivers SET status = 'rejected', on_line = false WHERE user_id IN (SELECT id FROM app_users WHERE phone = '+79990001122' AND role = 'driver');
+UPDATE app_trips SET status = 'cancelled', cancelled_by = 'dispatcher', updated_at = now() WHERE status IN ('new', 'assigned', 'enroute', 'arrived', 'in_progress') AND client_id IN (SELECT id FROM app_users WHERE phone = '+79990003344');

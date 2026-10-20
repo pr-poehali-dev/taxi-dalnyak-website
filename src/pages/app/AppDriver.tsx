@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { appCall, DRIVER_STATUS, TARIFF_NAME, money, whenText } from "@/lib/appApi";
 import { pushNotify } from "@/lib/notify";
 import { useAppSession } from "@/lib/useAppSession";
@@ -9,6 +9,7 @@ import { useAppShell } from "@/lib/useAppShell";
 import { useChatAlert } from "@/lib/useChatAlert";
 import { useReadMap } from "@/lib/useReadMap";
 import PushBanner from "@/components/app/PushBanner";
+import SupportLinks from "@/components/app/SupportLinks";
 import DocsRecheck from "@/components/app/DocsRecheck";
 import PhoneLogin from "@/components/app/PhoneLogin";
 import DriverRegister from "@/components/app/DriverRegister";
@@ -19,6 +20,7 @@ import Tutorial, { DRIVER_SLIDES } from "@/components/app/Tutorial";
 import TripChat from "@/components/app/TripChat";
 import AppMap, { MapPoint } from "@/components/app/AppMap";
 import { Badge, Btn, Shell } from "@/components/app/ui";
+import TakeOrder from "@/components/app/TakeOrder";
 import Icon from "@/components/ui/icon";
 
 interface Me {
@@ -61,6 +63,14 @@ export default function AppDriver() {
   }, [token, gps, seen]);
 
   usePoll(refresh, 4000, !!token && ready, () => setToken(null));
+
+  useEffect(() => {
+    const openChat = () => { if (data?.active) setChatId(data.active.id); };
+    const q = new URLSearchParams(window.location.search).get("chat");
+    if (q && data?.active) { openChat(); window.history.replaceState(window.history.state, "", window.location.pathname); }
+    window.addEventListener("app-open-chat", openChat);
+    return () => window.removeEventListener("app-open-chat", openChat);
+  }, [data?.active?.id]);
 
   const act = async (action: string, body: Record<string, unknown> = {}) => {
     setErr("");
@@ -185,7 +195,9 @@ export default function AppDriver() {
                       <span>{t.distance_km ? `${t.distance_km} км` : ""}</span>
                       <span>{money(t.price)} · комиссия {money(Math.round(Number(t.price) * commission_pct / 100))}</span>
                     </div>
-                    <Btn onClick={() => act("driver_take", { trip_id: t.id })} disabled={t.can_take === false} className="w-full">{t.can_take === false ? `Нужен тариф «${TARIFF_NAME[t.tariff]}»` : "Взять заказ"}</Btn>
+                    {t.can_take === false
+                      ? <Btn disabled className="w-full">{`Нужен тариф «${TARIFF_NAME[t.tariff]}»`}</Btn>
+                      : <TakeOrder preorder={!!t.scheduled_at} onTake={(eta) => act("driver_take", { trip_id: t.id, ...(eta ? { eta_minutes: eta } : {}) })} />}
                   </div>
                 ))}
               </div>
@@ -246,12 +258,7 @@ export default function AppDriver() {
               </div>
             </div>
             <Btn kind="ghost" onClick={() => setShowHelp(true)} className="w-full">Как работать в приложении</Btn>
-            {(data.support_telegram || data.support_max) && (
-              <div className="flex gap-2">
-                {data.support_telegram && <a href={data.support_telegram} target="_blank" rel="noopener noreferrer" className="flex-1 rounded-2xl bg-sky-50 py-3 text-center text-sm font-bold text-sky-700">Поддержка в Telegram</a>}
-                {data.support_max && <a href={data.support_max} target="_blank" rel="noopener noreferrer" className="flex-1 rounded-2xl bg-violet-50 py-3 text-center text-sm font-bold text-violet-700">Поддержка в Max</a>}
-              </div>
-            )}
+            <SupportLinks telegram={data.support_telegram} max={data.support_max} />
             <a href="/app/client" className="block rounded-2xl bg-neutral-100 py-3.5 text-center text-sm font-bold text-neutral-800">Нужно такси? Приложение для пассажиров</a>
             <Btn kind="danger" onClick={logout} className="w-full">Выйти из аккаунта</Btn>
           </>

@@ -5,6 +5,7 @@ import chat
 import client
 import driver
 import dispatcher
+import push
 import track
 from common import ApiError, connect, resp
 
@@ -43,6 +44,7 @@ PROTECTED = {
     'driver_push_subscribe': ('driver', auth.push_subscribe),
     'disp_poll': ('dispatcher', dispatcher.poll),
     'disp_assign': ('dispatcher', dispatcher.assign),
+    'disp_assign_external': ('dispatcher', dispatcher.assign_external),
     'disp_trip_status': ('dispatcher', dispatcher.trip_status),
     'disp_broadcast': ('dispatcher', dispatcher.broadcast),
     'disp_broadcast_remove': ('dispatcher', dispatcher.broadcast_remove),
@@ -93,6 +95,7 @@ def handler(event: dict, context) -> dict:
     headers = {k.lower(): v for k, v in (event.get('headers') or {}).items()}
     token = headers.get('x-auth-token')
 
+    push.reset()
     conn = connect()
     try:
         cur = conn.cursor()
@@ -107,9 +110,11 @@ def handler(event: dict, context) -> dict:
         else:
             raise ApiError(400, 'Неизвестное действие')
         conn.commit()
+        push.flush(conn)
         return resp(200, result)
     except ApiError as e:
         conn.rollback()
+        push.reset()
         return resp(e.code, {'error': e.message})
     finally:
         conn.close()

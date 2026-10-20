@@ -10,6 +10,7 @@ export interface ClientTrip {
   car_plate: string | null; car_color: string | null; driver_lat: number | null; driver_lng: number | null;
   driver_rating: number | null; rating: number | null; last_msg_id: number | null; last_msg_role?: string | null;
   pay_method?: string; eta_at?: string | null; share_token?: string | null; cancelled_by?: string | null;
+  manual_driver?: boolean; driver_phone?: string | null;
 }
 
 const STEPS = [
@@ -72,6 +73,9 @@ export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise }:
               </div>
               <div className="text-xs text-neutral-400">Ваш водитель</div>
             </div>
+            {t.driver_phone && (
+              <a href={`tel:${t.driver_phone}`} aria-label="Позвонить водителю" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white"><Icon name="Phone" size={20} /></a>
+            )}
             <button onClick={onChat} className="relative flex h-12 items-center gap-2 rounded-2xl bg-[#fcd34d] px-4 font-extrabold text-neutral-900">
               <Icon name="MessageCircle" size={20} /> Чат
               {unread && <span className="absolute -right-1 -top-1 h-4 w-4 animate-pulse rounded-full bg-red-500 ring-2 ring-neutral-800" />}
@@ -84,6 +88,11 @@ export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise }:
         <button onClick={onChat} className="flex w-full items-center gap-3 rounded-2xl bg-red-50 p-3 text-left ring-2 ring-red-200">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white"><Icon name="MessageCircle" size={20} /></span>
           <span className="flex-1"><span className="block font-extrabold text-red-700">Водитель написал вам</span><span className="text-sm text-red-600">Нажмите, чтобы прочитать и ответить</span></span>
+        </button>
+      )}
+      {t.driver_name && !unread && (
+        <button onClick={onChat} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-neutral-100 py-3 text-sm font-extrabold text-neutral-800">
+          <Icon name="MessageCircle" size={18} /> Написать водителю
         </button>
       )}
 

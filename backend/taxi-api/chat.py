@@ -12,7 +12,7 @@ def mask(text):
 
 def _trip(cur, trip_id):
     cur.execute(
-        f"SELECT id, client_id, driver_id, status FROM {S}.app_trips WHERE id = %s",
+        f"SELECT id, client_id, driver_id, status, manual_driver FROM {S}.app_trips WHERE id = %s",
         (trip_id,),
     )
     t = cur.fetchone()
@@ -51,7 +51,7 @@ def send_message(cur, role, user, body):
     if not text:
         raise ApiError(400, 'Введите сообщение')
     if role != 'dispatcher':
-        if not t['driver_id'] or t['status'] not in ('assigned', 'enroute', 'arrived', 'in_progress'):
+        if (not t['driver_id'] and not t['manual_driver']) or t['status'] not in ('assigned', 'enroute', 'arrived', 'in_progress'):
             raise ApiError(400, 'Чат доступен, когда назначен водитель')
         rate_limit(cur, f'chat:{user["id"]}', 30, 60)
     cur.execute(

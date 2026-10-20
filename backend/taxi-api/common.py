@@ -35,7 +35,7 @@ DEFAULT_CONFIG = {
     'cancel_limit_7d': 5,
     'payment_info': '',
     'support_telegram': 'https://t.me/Mezhgorod1816',
-    'support_max': '',
+    'support_max': 'https://max.ru/u/f9LHodD0cOIdPXLl7V9DCE5kMQ2FL1vfqw6MCfELM52z8xxUwdUJxz923vI',
 }
 
 

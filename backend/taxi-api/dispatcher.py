@@ -1,6 +1,6 @@
 import chat
 import trips
-from common import S, ApiError, TARIFFS, ACTIVE, get_config, log_balance, refund_commission, charge_commission, clean, DEFAULT_CONFIG
+from common import norm_phone, S, ApiError, TARIFFS, ACTIVE, get_config, log_balance, refund_commission, charge_commission, clean, DEFAULT_CONFIG
 from push import send_push, dispatcher_ids, drivers_for_trip, trip_line
 
 STATUSES = ('new', 'assigned', 'enroute', 'arrived', 'in_progress', 'done', 'cancelled')
@@ -14,7 +14,8 @@ def poll(cur, user, body):
                    t.distance_km, t.scheduled_at, t.created_at, t.driver_id, t.assigned_by, t.commission, t.rating,
                    t.rating_comment, t.cancelled_by, t.pay_method, t.eta_at, t.from_city, t.from_street, t.from_house,
                    c.phone AS client_phone, c.name AS client_name,
-                   d.name AS driver_name, d.phone AS driver_phone, dr.car_model, dr.car_plate,
+                   COALESCE(d.name, t.ext_driver_name) AS driver_name, COALESCE(d.phone, t.ext_driver_phone) AS driver_phone,
+                   COALESCE(dr.car_model, t.ext_car_model) AS car_model, COALESCE(dr.car_plate, t.ext_car_plate) AS car_plate, t.manual_driver,
                    (SELECT max(m.id) FROM {S}.app_messages m WHERE m.trip_id = t.id) AS last_msg_id,
                    (SELECT m.sender_role FROM {S}.app_messages m WHERE m.trip_id = t.id ORDER BY m.id DESC LIMIT 1) AS last_msg_role
             FROM {S}.app_trips t
@@ -75,7 +76,9 @@ def assign(cur, user, body):
     else:
         cur.execute(f"UPDATE {S}.app_trips SET commission = 0 WHERE id = %s", (t['id'],))
     cur.execute(
-        f"UPDATE {S}.app_trips SET driver_id = %s, status = 'assigned', assigned_by = 'dispatcher', reminder_stage = 0, updated_at = now() WHERE id = %s",
+        f"""UPDATE {S}.app_trips SET driver_id = %s, status = 'assigned', assigned_by = 'dispatcher', reminder_stage = 0,
+            manual_driver = false, ext_driver_name = NULL, ext_driver_phone = NULL, ext_car_model = NULL, ext_car_plate = NULL,
+            ext_car_color = NULL, updated_at = now() WHERE id = %s""",
         (d['user_id'], t['id']),
     )
     cur.execute(f"SELECT * FROM {S}.app_trips WHERE id = %s", (t['id'],))
@@ -87,15 +90,53 @@ def assign(cur, user, body):
     return {'ok': True}
 
 
+def assign_external(cur, user, body):
+    name = clean(body.get('name'), 60)
+    model = clean(body.get('car_model'), 60)
+    plate = clean(body.get('car_plate'), 20).upper()
+    color = clean(body.get('car_color'), 30) or None
+    if not name or not model or not plate:
+        raise ApiError(400, 'Укажите имя водителя, марку машины и госномер')
+    phone = None
+    if clean(body.get('phone'), 30):
+        phone = norm_phone(body.get('phone'))
+    eta = None
+    if body.get('eta_minutes') not in (None, ''):
+        try:
+            eta = int(body.get('eta_minutes'))
+        except (TypeError, ValueError):
+            raise ApiError(400, 'Время подачи указывается числом минут')
+        if not 1 <= eta <= 1440:
+            raise ApiError(400, 'Время подачи от 1 минуты до 24 часов')
+    cur.execute(f"SELECT id, status, driver_id, client_id FROM {S}.app_trips WHERE id = %s FOR UPDATE", (body.get('trip_id'),))
+    t = cur.fetchone()
+    if not t or t['status'] not in ('new', 'assigned'):
+        raise ApiError(400, 'Заказ уже нельзя переназначить')
+    if t['driver_id']:
+        refund_commission(cur, t['id'])
+        send_push(cur, [t['driver_id']], 'Заказ снят с вас', f"Заказ №{t['id']} переназначен", '/app/driver', f"trip-{t['id']}")
+    cur.execute(
+        f"""UPDATE {S}.app_trips SET driver_id = NULL, status = 'assigned', assigned_by = 'dispatcher', manual_driver = true,
+            ext_driver_name = %s, ext_driver_phone = %s, ext_car_model = %s, ext_car_plate = %s, ext_car_color = %s,
+            commission = 0, commission_charged = false, reminder_stage = 0, updated_at = now() WHERE id = %s""",
+        (name, phone, model, plate, color, t['id']),
+    )
+    if eta:
+        cur.execute(f"UPDATE {S}.app_trips SET eta_at = now() + make_interval(mins => %s) WHERE id = %s", (eta, t['id']))
+    car = ' '.join(x for x in [color, model, plate] if x)
+    send_push(cur, [t['client_id']], 'Водитель назначен', f"{name}, {car}", '/app/client', f"trip-{t['id']}")
+    return {'ok': True}
+
+
 def trip_status(cur, user, body):
     status = body.get('status')
     if status not in STATUSES:
         raise ApiError(400, 'Неверный статус')
-    cur.execute(f"SELECT id, status, driver_id, client_id FROM {S}.app_trips WHERE id = %s FOR UPDATE", (body.get('trip_id'),))
+    cur.execute(f"SELECT id, status, driver_id, client_id, manual_driver FROM {S}.app_trips WHERE id = %s FOR UPDATE", (body.get('trip_id'),))
     t = cur.fetchone()
     if not t:
         raise ApiError(404, 'Заказ не найден')
-    if status in ('assigned', 'enroute', 'arrived', 'in_progress', 'done') and not t['driver_id']:
+    if status in ('assigned', 'enroute', 'arrived', 'in_progress', 'done') and not t['driver_id'] and not t['manual_driver']:
         raise ApiError(400, 'Сначала назначьте водителя')
     if status == 'cancelled':
         refund_commission(cur, t['id'])

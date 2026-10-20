@@ -9,6 +9,8 @@ import { useReadMap } from "@/lib/useReadMap";
 import { reachGoal } from "@/lib/metrika";
 import TariffPicker from "@/components/app/TariffPicker";
 import DriverBanner from "@/components/app/DriverBanner";
+import ClientWelcome from "@/components/app/ClientWelcome";
+import SupportLinks from "@/components/app/SupportLinks";
 import PushBanner from "@/components/app/PushBanner";
 import { useSeen } from "@/lib/useSeen";
 import { pushNotify } from "@/lib/notify";
@@ -124,6 +126,14 @@ export default function AppClient() {
 
   usePoll(refresh, 4000, !!token && ready, () => setToken(null));
 
+  useEffect(() => {
+    const openChat = () => { if (data?.active) setChatId(data.active.id); };
+    const q = new URLSearchParams(window.location.search).get("chat");
+    if (q && data?.active) { openChat(); window.history.replaceState(window.history.state, "", window.location.pathname); }
+    window.addEventListener("app-open-chat", openChat);
+    return () => window.removeEventListener("app-open-chat", openChat);
+  }, [data?.active?.id]);
+
   const toRate = useMemo(() => data?.history.find((h) => h.status === "done" && !h.rating && !skipRate.includes(h.id)) || null, [data, skipRate]);
 
   const basePrice = quote ? quote.prices[tariff] : 0;
@@ -164,7 +174,11 @@ export default function AppClient() {
   if (!token) {
     return (
       <Shell title="Дальняк">
-        <PhoneLogin action="client_login" withName hint="Междугороднее такси по фиксированной цене. Введите имя и номер телефона." onToken={setToken} />
+        <ClientWelcome>
+          <div className="rounded-3xl bg-white shadow-sm">
+            <PhoneLogin action="client_login" withName hint="Введите имя и номер телефона, это займёт десять секунд." onToken={setToken} heading="Начнём поездку" />
+          </div>
+        </ClientWelcome>
       </Shell>
     );
   }
@@ -305,12 +319,7 @@ export default function AppClient() {
           </div>
         )}
 
-        {data && (data.support_telegram || data.support_max) && (
-          <div className="mt-6 flex gap-2">
-            {data.support_telegram && <a href={data.support_telegram} target="_blank" rel="noopener noreferrer" className="flex-1 rounded-2xl bg-sky-50 py-3 text-center text-sm font-bold text-sky-700">Поддержка в Telegram</a>}
-            {data.support_max && <a href={data.support_max} target="_blank" rel="noopener noreferrer" className="flex-1 rounded-2xl bg-violet-50 py-3 text-center text-sm font-bold text-violet-700">Поддержка в Max</a>}
-          </div>
-        )}
+        {data && <SupportLinks telegram={data.support_telegram} max={data.support_max} className="mt-6" />}
       </div>
 
       {chatId && <TripChat role="client" tripId={chatId} token={token} onClose={() => setChatId(null)} onUnauthorized={() => setToken(null)}

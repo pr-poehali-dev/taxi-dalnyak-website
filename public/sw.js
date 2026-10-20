@@ -1,4 +1,4 @@
-const CACHE = "dalnyak-v4";
+const CACHE = "dalnyak-v5";
 const ASSETS = ["/", "/index.html"];
 
 self.addEventListener("install", e => {
@@ -57,7 +57,7 @@ self.addEventListener("push", e => {
       renotify: true,
       requireInteraction: true,
       vibrate: [300, 150, 300, 150, 300],
-      data: { url: d.url || "/app/client" },
+      data: { url: (d.tag || "").indexOf("chat-") === 0 ? (d.url || "/app/client") + "?chat=1" : (d.url || "/app/client") },
     })
   ]));
 });
@@ -67,8 +67,12 @@ self.addEventListener("notificationclick", e => {
   const url = (e.notification.data && e.notification.data.url) || "/app/client";
   e.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+      const base = url.split("?")[0];
       for (const c of list) {
-        if (c.url.includes(url) && "focus" in c) { c.navigate(url).catch(() => {}); return c.focus(); }
+        if (c.url.includes(base) && "focus" in c) {
+          if (url !== base) c.postMessage({ type: "open-chat" });
+          return c.focus();
+        }
       }
       return self.clients.openWindow(url);
     })

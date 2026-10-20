@@ -44,8 +44,8 @@ export default function DispatcherSettings({ cfg, onSave }: { cfg: Cfg; onSave: 
           <textarea value={c.payment_info} onChange={(e) => setC({ ...c, payment_info: e.target.value })} rows={3}
             className="w-full rounded-2xl bg-neutral-100 p-3 text-[15px] font-semibold outline-none focus:ring-2 focus:ring-[#fcd34d]" />
         </label>
-        <Field label="Ссылка на Telegram поддержки" value={c.support_telegram} onChange={(e) => setC({ ...c, support_telegram: e.target.value })} />
-        <Field label="Ссылка на Max поддержки" value={c.support_max} onChange={(e) => setC({ ...c, support_max: e.target.value })} />
+        <Field label="Telegram поддержки (ссылка или @имя)" value={c.support_telegram} onChange={(e) => setC({ ...c, support_telegram: e.target.value })} />
+        <Field label="MAX поддержки (ссылка)" value={c.support_max} onChange={(e) => setC({ ...c, support_max: e.target.value })} />
       </div>
       <Btn onClick={() => onSave(c)} className="w-full">Сохранить настройки</Btn>
     </div>

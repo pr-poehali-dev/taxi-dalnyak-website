@@ -110,6 +110,11 @@ def set_line(cur, user, body):
     return {'on_line': on}
 
 
+def human_minutes(minutes):
+    h, m = divmod(minutes, 60)
+    return f'{h} ч {m} мин' if h and m else (f'{h} ч' if h else f'{m} мин')
+
+
 def take(cur, user, body):
     rate_limit(cur, f'take:{user["id"]}', 30, 60)
     me = _me(cur, user['id'])
@@ -147,12 +152,23 @@ def take(cur, user, body):
         )
         if cur.fetchone():
             raise ApiError(409, 'У вас уже есть предзаказ на близкое время')
+    eta = None
+    if t['scheduled_at'] is None:
+        try:
+            eta = int(body.get('eta_minutes'))
+        except (TypeError, ValueError):
+            raise ApiError(400, 'Укажите, через сколько минут приедете к клиенту')
+        if not 1 <= eta <= 1440:
+            raise ApiError(400, 'Время подачи от 1 минуты до 24 часов')
     charge_commission(cur, user['id'], t['id'])
     cur.execute(
         f"UPDATE {S}.app_trips SET driver_id = %s, status = 'assigned', assigned_by = 'driver', updated_at = now() WHERE id = %s",
         (user['id'], t['id']),
     )
-    send_push(cur, [t['client_id']], 'Водитель найден', f"{me['name']}, {me['car_color'] or ''} {me['car_model']} {me['car_plate']}".replace('  ', ' '), '/app/client', f"trip-{t['id']}")
+    if eta:
+        cur.execute(f"UPDATE {S}.app_trips SET eta_at = now() + make_interval(mins => %s) WHERE id = %s", (eta, t['id']))
+    car = f"{me['name']}, {me['car_color'] or ''} {me['car_model']} {me['car_plate']}".replace('  ', ' ')
+    send_push(cur, [t['client_id']], 'Водитель найден', f"{car}. Приедет через {human_minutes(eta)}" if eta else car, '/app/client', f"trip-{t['id']}")
     send_push(cur, dispatcher_ids(cur), 'Водитель взял заказ', f"№{t['id']}: {me['name']}", '/app/office-k7x2', f"trip-{t['id']}")
     return {'ok': True}
 
@@ -215,9 +231,7 @@ def set_eta(cur, user, body):
     row = cur.fetchone()
     if not row:
         raise ApiError(400, 'Время подачи можно указать, пока водитель едет к клиенту')
-    h, m = divmod(minutes, 60)
-    human = f'{h} ч {m} мин' if h and m else (f'{h} ч' if h else f'{m} мин')
-    send_push(cur, [row['client_id']], 'Время подачи', f'Водитель приедет через {human}', '/app/client', f"eta-{body.get('trip_id')}")
+    send_push(cur, [row['client_id']], 'Время подачи', f'Водитель приедет через {human_minutes(minutes)}', '/app/client', f"eta-{body.get('trip_id')}")
     return {'ok': True}
 
 

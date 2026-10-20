@@ -1,5 +1,6 @@
 import base64
 import json
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 from cryptography.hazmat.primitives import serialization
@@ -29,28 +30,42 @@ def vapid_keys(cur):
     return json.loads(cur.fetchone()['value'])
 
 
-def _send_one(sub, payload, priv):
+_QUEUE = []
+
+
+def reset():
+    _QUEUE.clear()
+
+
+def _send_one(sub, payload, priv, deadline):
     from pywebpush import webpush, WebPushException
     from py_vapid import Vapid02
-    try:
-        vapid = Vapid02.from_raw(priv.encode())
-        webpush(
-            subscription_info={'endpoint': sub['endpoint'], 'keys': {'p256dh': sub['p256dh'], 'auth': sub['auth']}},
-            data=payload,
-            vapid_private_key=vapid,
-            vapid_claims={'sub': 'mailto:support@taxidalnyack.ru'},
-            ttl=3600,
-            timeout=4,
-            headers={'Urgency': 'high'},
-        )
+    for attempt in (1, 2):
+        code = None
+        try:
+            vapid = Vapid02.from_raw(priv.encode())
+            webpush(
+                subscription_info={'endpoint': sub['endpoint'], 'keys': {'p256dh': sub['p256dh'], 'auth': sub['auth']}},
+                data=payload,
+                vapid_private_key=vapid,
+                vapid_claims={'sub': 'mailto:support@taxidalnyack.ru'},
+                ttl=3600,
+                timeout=3,
+                headers={'Urgency': 'high'},
+            )
+            return None
+        except WebPushException as e:
+            code = getattr(getattr(e, 'response', None), 'status_code', None)
+            print(f'push failed sub={sub["id"]} status={code} attempt={attempt}')
+            if code in (401, 403, 404, 410):
+                return sub['id']
+        except Exception as e:
+            print(f'push error sub={sub["id"]} {type(e).__name__}: {e} attempt={attempt}')
+        if attempt == 1 and time.time() < deadline - 1.5:
+            time.sleep(0.3)
+            continue
         return None
-    except WebPushException as e:
-        code = getattr(getattr(e, 'response', None), 'status_code', None)
-        print(f'push failed sub={sub["id"]} status={code}')
-        return sub['id'] if code in (404, 410) else None
-    except Exception as e:
-        print(f'push error sub={sub["id"]} {type(e).__name__}: {e}')
-        return None
+    return None
 
 
 def send_push(cur, user_ids, title, body, url='/app/client', tag=None):
@@ -59,14 +74,23 @@ def send_push(cur, user_ids, title, body, url='/app/client', tag=None):
         return
     keys = vapid_keys(cur)
     cur.execute(f"SELECT id, endpoint, p256dh, auth FROM {S}.app_push_subs WHERE user_id = ANY(%s::bigint[])", (ids,))
-    subs = cur.fetchall()
-    if not subs:
-        return
     payload = json.dumps({'title': title, 'body': body, 'url': url, 'tag': tag or 'taxi'}, ensure_ascii=False)
-    with ThreadPoolExecutor(max_workers=min(8, len(subs))) as ex:
-        gone = [g for g in ex.map(lambda s: _send_one(s, payload, keys['private']), subs) if g]
+    for sub in cur.fetchall():
+        _QUEUE.append((sub, payload, keys['private']))
+
+
+def flush(conn):
+    items = list(_QUEUE)
+    _QUEUE.clear()
+    if not items:
+        return
+    deadline = time.time() + 4.2
+    with ThreadPoolExecutor(max_workers=min(16, len(items))) as ex:
+        gone = [g for g in ex.map(lambda it: _send_one(it[0], it[1], it[2], deadline), items) if g]
     if gone:
+        cur = conn.cursor()
         cur.execute(f"DELETE FROM {S}.app_push_subs WHERE id = ANY(%s::bigint[])", (gone,))
+        conn.commit()
 
 
 def dispatcher_ids(cur):
