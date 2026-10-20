@@ -16,13 +16,15 @@ def user_by_token(cur, token, role):
     if not token or len(str(token)) > 128:
         raise ApiError(401, 'Нужно войти')
     cur.execute(
-        f"""SELECT u.id, u.phone, u.name, u.role FROM {S}.app_sessions s JOIN {S}.app_users u ON u.id = s.user_id
+        f"""SELECT u.id, u.phone, u.name, u.role, u.is_blocked FROM {S}.app_sessions s JOIN {S}.app_users u ON u.id = s.user_id
             WHERE s.token_hash = %s AND s.expires_at > now() AND u.role = %s""",
         (sha(token), role),
     )
     u = cur.fetchone()
     if not u:
         raise ApiError(401, 'Сессия устарела, войдите снова')
+    if u['is_blocked'] and role == 'client':
+        raise ApiError(403, 'Доступ к сервису ограничен. Свяжитесь с поддержкой')
     return u
 
 
@@ -70,8 +72,10 @@ def client_login(cur, body):
     rate_limit(cur, f'login:ip:{ip}', 40, 600)
     rate_limit(cur, f'login:client:{phone}', 12, 600)
     name = clean(body.get('name'), 60) or None
-    cur.execute(f"SELECT id, name FROM {S}.app_users WHERE phone = %s AND role = 'client'", (phone,))
+    cur.execute(f"SELECT id, name, is_blocked FROM {S}.app_users WHERE phone = %s AND role = 'client'", (phone,))
     u = cur.fetchone()
+    if u and u['is_blocked']:
+        raise ApiError(403, 'Доступ к сервису ограничен. Свяжитесь с поддержкой')
     is_new = not u
     if u:
         if name and name != u['name']:

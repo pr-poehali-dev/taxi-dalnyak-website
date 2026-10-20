@@ -249,7 +249,7 @@ export default function AppClient() {
               <>
                 <div className="flex items-center justify-between text-sm text-neutral-500">
                   <span>{quote.distance_km} км{quote.approx ? " (примерно)" : ""}</span>
-                  {quote.region === "new" && <Badge tone="blue">Новые территории</Badge>}
+                  {quote.region === "new" && <Badge tone="blue">Есть участок по новым территориям</Badge>}
                 </div>
                 <TariffPicker prices={quote.prices} value={tariff} onChange={(t) => { setTariff(t); setBump(0); }} />
 

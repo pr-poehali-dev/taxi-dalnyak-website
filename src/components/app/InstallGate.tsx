@@ -32,7 +32,7 @@ export default function InstallGate({ appName, other }: { who?: string; appName:
         <ul className="mt-5 space-y-2 text-left text-sm font-semibold text-neutral-100">
           {(isClient
             ? ["Фиксированная цена, без накруток", "Водитель и номер авто сразу после заказа", "Уведомления даже при заблокированном экране"]
-            : ["Сигнал о новых заказах", "Свободный график", "Комиссия всего 20%"]).map((x) => (
+            : ["Сигнал о новых заказах", "Свободный график", "Междугородние заказы с хорошей ценой"]).map((x) => (
             <li key={x} className="flex items-center gap-2"><Icon name="CircleCheck" size={18} className="shrink-0 text-[#fcd34d]" />{x}</li>
           ))}
         </ul>

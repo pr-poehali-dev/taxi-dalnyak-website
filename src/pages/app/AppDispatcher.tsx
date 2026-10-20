@@ -13,6 +13,7 @@ import DriverForm, { DriverFormValue } from "@/components/app/DriverForm";
 import PushBanner from "@/components/app/PushBanner";
 import FleetTab from "@/components/app/FleetTab";
 import ReportsTab from "@/components/app/ReportsTab";
+import ClientsTab from "@/components/app/ClientsTab";
 import ExternalDriverForm from "@/components/app/ExternalDriverForm";
 import { Badge, Btn, Field, Shell, tripTone } from "@/components/app/ui";
 import Icon from "@/components/ui/icon";
@@ -23,7 +24,7 @@ interface Trip {
   from_text: string | null; to_text: string; comment: string | null; price: number | null; status: string;
   created_at: string; driver_id: number | null; assigned_by: string | null;
   client_phone: string; client_name: string | null; driver_name: string | null; driver_phone: string | null;
-  manual_driver?: boolean; last_msg_role?: string | null; eta_at?: string | null; car_model: string | null; car_plate: string | null; pay_method: string; from_city: string | null; from_street: string | null; from_house: string | null;
+  client_blocked?: boolean; client_id?: number; manual_driver?: boolean; last_msg_role?: string | null; eta_at?: string | null; car_model: string | null; car_plate: string | null; pay_method: string; from_city: string | null; from_street: string | null; from_house: string | null;
 }
 interface Driver {
   id: number; name: string; phone: string; car_model: string; car_plate: string; car_color: string; status: string;
@@ -39,7 +40,7 @@ interface Poll {
   topups: Topup[]; config: any;
 }
 
-const TABS = ["Заказы", "Водители", "Парк", "Отчёты", "Эфир", "Настройки"] as const;
+const TABS = ["Заказы", "Водители", "Клиенты", "Парк", "Отчёты", "Эфир", "Настройки"] as const;
 type Tab = (typeof TABS)[number];
 type Act = (a: string, b: Record<string, unknown>) => void;
 
@@ -197,6 +198,7 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
         <div className="text-neutral-500">{t.distance_km ? `${t.distance_km} км · ` : ""}{t.price ? money(t.price) : ""}{t.base_price && t.price && Number(t.price) > Number(t.base_price) ? ` (повышена с ${money(t.base_price)})` : ""}{t.commission ? ` · комиссия ${money(t.commission)}` : ""}</div>
         {t.comment && <div className="text-neutral-500">Комментарий: {t.comment}</div>}
         <a href={`tel:${t.client_phone}`} className="font-semibold text-sky-700">{t.client_name || "Клиент"} · {t.client_phone}</a>
+        {t.client_blocked && <div className="font-bold text-red-600">Клиент заблокирован</div>}
         {t.eta_at && ["assigned", "enroute"].includes(t.status) && <div className="font-bold text-amber-700">Водитель обещал приехать к {new Date(t.eta_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}</div>}
         {t.driver_name && <div className="mt-1 rounded-xl bg-neutral-100 p-2">Водитель: <b>{t.driver_name}</b>, {t.car_model} {t.car_plate}{t.driver_phone ? ` · ${t.driver_phone}` : ""} {t.manual_driver ? "(не из системы, вы вписали вручную)" : t.assigned_by === "dispatcher" ? "(назначен вами)" : "(взял сам)"}</div>}
         {t.rating && <div className="mt-1 font-bold text-amber-600">Оценка пассажира: {"★".repeat(t.rating)}{t.rating_comment ? ` · ${t.rating_comment}` : ""}</div>}
@@ -296,7 +298,7 @@ export default function AppDispatcher() {
   return (
     <Shell title="Диспетчер" onLogout={logout} right={<span className="text-xs font-bold text-neutral-500">на линии: {onlineCount}</span>}>
       <div className="mx-auto max-w-2xl p-4 pb-20">
-        <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-white p-1.5 shadow-sm sm:grid-cols-6">
+        <div className="mb-4 grid grid-cols-4 gap-1 rounded-2xl bg-white p-1.5 shadow-sm sm:grid-cols-7">
           {TABS.map((t) => (
             <button key={t} onClick={() => setTab(t)} className={`rounded-xl py-2.5 text-[13px] font-extrabold ${tab === t ? "bg-[#fcd34d]" : "text-neutral-500"}`}>
               {t}
@@ -345,6 +347,8 @@ export default function AppDispatcher() {
         )}
 
         {data && tab === "Парк" && <FleetTab drivers={data.drivers} />}
+
+        {tab === "Клиенты" && <ClientsTab token={token} onUnauthorized={() => setToken(null)} />}
 
         {data && tab === "Отчёты" && <ReportsTab token={token} onUnauthorized={() => setToken(null)} />}
 

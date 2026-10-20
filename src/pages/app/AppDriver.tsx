@@ -211,7 +211,7 @@ export default function AppDriver() {
             <div className="rounded-3xl bg-white p-5 shadow-sm">
               <div className="text-xs font-bold uppercase text-neutral-400">Ваш баланс</div>
               <div className="text-3xl font-extrabold">{money(me.balance)}</div>
-              <div className="mt-1 text-sm text-neutral-500">Комиссия сервиса {commission_pct}% списывается, когда вы берёте заказ. Если заказ отменён, деньги возвращаются.</div>
+              <div className="mt-1 text-sm text-neutral-500">Комиссия сервиса списывается, когда вы берёте заказ. Если заказ отменён, деньги возвращаются.</div>
             </div>
             <div className="rounded-3xl bg-white p-5 shadow-sm">
               <h3 className="font-extrabold">Пополнить баланс</h3>

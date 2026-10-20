@@ -43,6 +43,8 @@ PROTECTED = {
     'driver_chat_send': ('driver', driver.chat_send),
     'driver_push_subscribe': ('driver', auth.push_subscribe),
     'disp_poll': ('dispatcher', dispatcher.poll),
+    'disp_clients': ('dispatcher', dispatcher.clients),
+    'disp_client_block': ('dispatcher', dispatcher.client_block),
     'disp_assign': ('dispatcher', dispatcher.assign),
     'disp_assign_external': ('dispatcher', dispatcher.assign_external),
     'disp_trip_status': ('dispatcher', dispatcher.trip_status),

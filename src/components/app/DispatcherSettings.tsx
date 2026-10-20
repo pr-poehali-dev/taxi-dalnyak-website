@@ -20,7 +20,7 @@ export default function DispatcherSettings({ cfg, onSave }: { cfg: Cfg; onSave: 
     <div className="space-y-3">
       {(["regular", "new"] as const).map((region) => (
         <div key={region} className="rounded-3xl bg-white p-4 shadow-sm">
-          <h3 className="mb-2 font-extrabold">{region === "regular" ? "Тариф по России, ₽ за км" : "Новые территории, ₽ за км"}</h3>
+          <h3 className="mb-2 font-extrabold">{region === "regular" ? "Тариф по России, ₽ за км" : "Новые территории (только участок маршрута до КПП и дальше), ₽ за км"}</h3>
           <div className="grid grid-cols-3 gap-2">
             {TARIFF_LIST.map((t) => (
               <Field key={t.id} label={t.name} inputMode="numeric" value={String(c.rates[region][t.id])} onChange={(e) => setRate(region, t.id, e.target.value)} />

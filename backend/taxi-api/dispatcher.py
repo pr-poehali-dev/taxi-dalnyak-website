@@ -13,7 +13,7 @@ def poll(cur, user, body):
         f"""SELECT t.id, t.from_text, t.to_text, t.comment, t.price, t.base_price, t.status, t.tariff, t.region,
                    t.distance_km, t.scheduled_at, t.created_at, t.driver_id, t.assigned_by, t.commission, t.rating,
                    t.rating_comment, t.cancelled_by, t.pay_method, t.eta_at, t.from_city, t.from_street, t.from_house,
-                   c.phone AS client_phone, c.name AS client_name,
+                   t.client_id, c.phone AS client_phone, c.name AS client_name, c.is_blocked AS client_blocked,
                    COALESCE(d.name, t.ext_driver_name) AS driver_name, COALESCE(d.phone, t.ext_driver_phone) AS driver_phone,
                    COALESCE(dr.car_model, t.ext_car_model) AS car_model, COALESCE(dr.car_plate, t.ext_car_plate) AS car_plate, t.manual_driver,
                    (SELECT max(m.id) FROM {S}.app_messages m WHERE m.trip_id = t.id) AS last_msg_id,
@@ -125,6 +125,48 @@ def assign_external(cur, user, body):
         cur.execute(f"UPDATE {S}.app_trips SET eta_at = now() + make_interval(mins => %s) WHERE id = %s", (eta, t['id']))
     car = ' '.join(x for x in [color, model, plate] if x)
     send_push(cur, [t['client_id']], 'Водитель назначен', f"{name}, {car}", '/app/client', f"trip-{t['id']}")
+    return {'ok': True}
+
+
+def clients(cur, user, body):
+    q = clean(body.get('q'), 40)
+    like = '%' + q.replace('%', '').replace('_', '') + '%'
+    cur.execute(
+        f"""SELECT u.id, u.name, u.phone, u.created_at, u.is_blocked, u.blocked_at, u.block_note,
+                   count(t.id) AS trips_total,
+                   count(t.id) FILTER (WHERE t.status = 'done') AS trips_done,
+                   count(t.id) FILTER (WHERE t.status = 'cancelled' AND t.cancelled_by = 'client') AS trips_cancelled,
+                   count(t.id) FILTER (WHERE t.created_at > now() - interval '24 hours') AS trips_24h
+            FROM {S}.app_users u LEFT JOIN {S}.app_trips t ON t.client_id = u.id
+            WHERE u.role = 'client' AND (%s = '' OR u.phone ILIKE %s OR u.name ILIKE %s)
+            GROUP BY u.id
+            ORDER BY u.is_blocked DESC, count(t.id) FILTER (WHERE t.created_at > now() - interval '24 hours') DESC, u.id DESC
+            LIMIT 60""",
+        (q, like, like),
+    )
+    return {'clients': cur.fetchall()}
+
+
+def client_block(cur, user, body):
+    block = bool(body.get('blocked'))
+    cur.execute(f"SELECT id FROM {S}.app_users WHERE id = %s AND role = 'client'", (body.get('client_id'),))
+    c = cur.fetchone()
+    if not c:
+        raise ApiError(404, 'Клиент не найден')
+    if block:
+        cur.execute(
+            f"UPDATE {S}.app_users SET is_blocked = true, blocked_at = now(), block_note = %s WHERE id = %s",
+            (clean(body.get('note'), 200) or None, c['id']),
+        )
+        cur.execute(f"UPDATE {S}.app_sessions SET expires_at = now() WHERE user_id = %s", (c['id'],))
+        cur.execute(f"SELECT id, status, driver_id FROM {S}.app_trips WHERE client_id = %s AND status IN ('new', 'assigned', 'enroute', 'arrived') FOR UPDATE", (c['id'],))
+        for t in cur.fetchall():
+            refund_commission(cur, t['id'])
+            cur.execute(f"UPDATE {S}.app_trips SET status = 'cancelled', cancelled_by = 'dispatcher', updated_at = now() WHERE id = %s", (t['id'],))
+            if t['driver_id']:
+                send_push(cur, [t['driver_id']], 'Заказ отменён диспетчером', f"Заказ №{t['id']}", '/app/driver', f"trip-{t['id']}")
+    else:
+        cur.execute(f"UPDATE {S}.app_users SET is_blocked = false, blocked_at = NULL, block_note = NULL WHERE id = %s", (c['id'],))
     return {'ok': True}
 
 
