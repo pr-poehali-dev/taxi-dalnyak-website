@@ -159,7 +159,7 @@ export default function AppClient() {
     setToken(null);
   };
 
-  if (needsInstall()) return <InstallGate who="Приложение для пассажиров" />;
+  if (needsInstall()) return <InstallGate who="Приложение для пассажиров" appName="Дальняк" other={{ href: "/app/driver", text: "Если вы ещё и водитель, приложение для водителей устанавливается отдельно, на странице /app/driver." }} />;
 
   if (!token) {
     return (

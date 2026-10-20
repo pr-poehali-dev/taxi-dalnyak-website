@@ -7,7 +7,7 @@ import { canInstallNatively, installApp, isIos, isStandalone } from "@/lib/pushC
 export const isMobile = () => /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
 export const needsInstall = () => isMobile() && !isStandalone();
 
-export default function InstallGate({ who }: { who: string }) {
+export default function InstallGate({ who, appName, other }: { who: string; appName: string; other?: { href: string; text: string } }) {
   const [, force] = useState(0);
   const ios = isIos();
   const native = canInstallNatively();
@@ -25,22 +25,23 @@ export default function InstallGate({ who }: { who: string }) {
           <Icon name="Smartphone" size={44} />
         </span>
         <h1 className="mt-6 text-2xl font-extrabold text-neutral-900">Установите приложение</h1>
-        <p className="mt-2 text-neutral-600">{who} работает только из установленного приложения. Так вы получаете уведомления о заказах, даже когда телефон заблокирован.</p>
+        <p className="mt-2 text-neutral-600">{who} работает только из установленного приложения. Так вы получаете уведомления, даже когда телефон заблокирован.</p>
+        {other && <p className="mt-2 rounded-2xl bg-amber-50 p-3 text-sm font-semibold text-amber-900">Это отдельное приложение. {other.text}</p>}
 
         {ios ? (
           <ol className="mt-6 space-y-3 rounded-3xl bg-neutral-100 p-4 text-left text-sm font-semibold text-neutral-800">
             <li>1. Откройте эту страницу в Safari.</li>
             <li>2. Нажмите кнопку «Поделиться» внизу экрана.</li>
             <li>3. Выберите «На экран Домой».</li>
-            <li>4. Откройте приложение «Дальняк» с экрана телефона.</li>
+            <li>4. Откройте приложение «{appName}» с экрана телефона.</li>
           </ol>
         ) : native ? (
-          <Btn onClick={install} className="mt-6 w-full text-lg">Установить приложение</Btn>
+          <Btn onClick={install} className="mt-6 w-full text-lg">Установить «{appName}»</Btn>
         ) : (
           <ol className="mt-6 space-y-3 rounded-3xl bg-neutral-100 p-4 text-left text-sm font-semibold text-neutral-800">
             <li>1. Откройте меню браузера (три точки вверху).</li>
             <li>2. Выберите «Установить приложение» или «Добавить на главный экран».</li>
-            <li>3. Откройте приложение «Дальняк» с экрана телефона.</li>
+            <li>3. Откройте приложение «{appName}» с экрана телефона.</li>
           </ol>
         )}
       </div>

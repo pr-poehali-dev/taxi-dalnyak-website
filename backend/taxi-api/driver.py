@@ -45,7 +45,11 @@ def poll(cur, user, body):
         )
         if cur.fetchone()['stale']:
             geo = geo_reverse(lat, lng)
-            city = geo.get('city') or geo.get('state') or None
+            parts = []
+            for x in (geo.get('city'), geo.get('state')):
+                if x and x not in parts:
+                    parts.append(x)
+            city = ', '.join(parts) or None
             cur.execute(f"UPDATE {S}.app_drivers SET loc_city = %s, loc_city_at = now() WHERE user_id = %s", (city, user['id']))
     else:
         cur.execute(f"UPDATE {S}.app_drivers SET last_seen = now() WHERE user_id = %s", (user['id'],))

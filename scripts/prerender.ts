@@ -232,6 +232,32 @@ function head(p: PageData): string {
   ].filter(Boolean).join("\n    ");
 }
 
+interface AppPage { route: string; title: string; short: string; manifest: string; icon: string }
+
+const APP_PAGES: AppPage[] = [
+  { route: "/app/client", title: "Такси Дальняк", short: "Дальняк", manifest: "/app-client.webmanifest", icon: "/apple-touch-icon.png" },
+  { route: "/app/driver", title: "Дальняк Водитель", short: "Водитель", manifest: "/app-driver.webmanifest", icon: "/apple-touch-icon-driver.png" },
+  { route: "/app/office-k7x2", title: "Дальняк Диспетчер", short: "Диспетчер", manifest: "/app-office.webmanifest", icon: "/apple-touch-icon-office.png" },
+];
+
+export function appHtml(tpl: string, a: AppPage): string {
+  let html = tpl;
+  html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${esc(a.title)}</title>`);
+  html = html.replace(/<meta name="description"[^>]*>/, "");
+  html = html.replace(/<meta name="keywords"[^>]*>/, "");
+  html = html.replace(/<link rel="canonical"[^>]*>/, "");
+  html = html.replace(/<meta property="og:[a-z:_]+"[^>]*>/g, "");
+  html = html.replace(/<meta name="twitter:[a-z:_]+"[^>]*>/g, "");
+  html = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g, "");
+  html = html.replace(/<link rel="preload" as="image"[^>]*>/g, "");
+  html = html.replace(/<meta name="robots"[^>]*>/, '<meta name="robots" content="noindex, nofollow"/>');
+  html = html.replace(/<link rel="manifest"[^>]*>/, `<link rel="manifest" href="${a.manifest}">`);
+  html = html.replace(/<link rel="apple-touch-icon"[^>]*>/, `<link rel="apple-touch-icon" href="${a.icon}">`);
+  html = html.replace(/<meta name="apple-mobile-web-app-title"[^>]*>/, `<meta name="apple-mobile-web-app-title" content="${esc(a.short)}">`);
+  html = html.replace(/<meta name="theme-color"[^>]*>/, '<meta name="theme-color" content="#000000">');
+  return html;
+}
+
 export function prerender(): Plugin {
   let root = process.cwd();
   return {
@@ -265,7 +291,12 @@ export function prerender(): Plugin {
         fs.mkdirSync(path.dirname(target), { recursive: true });
         fs.writeFileSync(target, html, "utf-8");
       }
-      console.log(`[seo-prerender] готово: ${pages.length} страниц`);
+      for (const a of APP_PAGES) {
+        const target = path.join(outDir, a.route.slice(1), "index.html");
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, appHtml(tpl, a), "utf-8");
+      }
+      console.log(`[seo-prerender] готово: ${pages.length} страниц, приложений: ${APP_PAGES.length}`);
     },
   };
 }

@@ -78,7 +78,7 @@ export default function AppDriver() {
     setToken(null);
   };
 
-  if (needsInstall()) return <InstallGate who="Приложение для водителей" />;
+  if (needsInstall()) return <InstallGate who="Приложение для водителей" appName="Водитель" other={{ href: "/app/client", text: "Если вы ещё и ездите как пассажир, приложение для пассажиров устанавливается отдельно, на странице /app/client." }} />;
 
   if (!token) {
     if (reg) return <Shell title="Водитель"><DriverRegister onToken={setToken} onBack={() => setReg(false)} /></Shell>;
@@ -252,6 +252,7 @@ export default function AppDriver() {
                 {data.support_max && <a href={data.support_max} target="_blank" rel="noopener noreferrer" className="flex-1 rounded-2xl bg-violet-50 py-3 text-center text-sm font-bold text-violet-700">Поддержка в Max</a>}
               </div>
             )}
+            <a href="/app/client" className="block rounded-2xl bg-neutral-100 py-3.5 text-center text-sm font-bold text-neutral-800">Нужно такси? Приложение для пассажиров</a>
             <Btn kind="danger" onClick={logout} className="w-full">Выйти из аккаунта</Btn>
           </>
         )}

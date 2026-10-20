@@ -14,7 +14,9 @@ interface Props {
   points: MapPoint[];
   className?: string;
   pin?: boolean;
-  fly?: { lat: number; lng: number; n: number } | null;
+  fly?: { lat: number; lng: number; n: number; zoom?: number } | null;
+  fitKey?: string;
+  fitMaxZoom?: number;
   onCenterChange?: (lat: number, lng: number) => void;
 }
 
@@ -27,7 +29,8 @@ function icon(p: MapPoint) {
   });
 }
 
-export default function AppMap({ center, points, className, pin, fly, onCenterChange }: Props) {
+export default function AppMap({ center, points, className, pin, fly, onCenterChange, fitKey, fitMaxZoom }: Props) {
+  const lastFit = useRef<string | undefined>(undefined);
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
@@ -64,7 +67,7 @@ export default function AppMap({ center, points, className, pin, fly, onCenterCh
     const m = map.current;
     if (!m || !fly) return;
     programmatic.current += 1;
-    m.setView([fly.lat, fly.lng], Math.max(m.getZoom(), 15), { animate: false });
+    m.setView([fly.lat, fly.lng], fly.zoom ?? Math.max(m.getZoom(), 15), { animate: false });
     window.setTimeout(() => { if (programmatic.current > 0) programmatic.current -= 1; }, 300);
   }, [fly?.n]);
 
@@ -77,11 +80,13 @@ export default function AppMap({ center, points, className, pin, fly, onCenterCh
       if (p.label) mk.bindTooltip(p.label, { permanent: true, direction: "top", offset: [0, -14] });
     });
     if (pin) return;
+    if (fitKey !== undefined && fitKey === lastFit.current) return;
+    lastFit.current = fitKey;
     programmatic.current += 1;
     if (points.length > 1) {
-      m.fitBounds(L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number])), { padding: [60, 60], maxZoom: 15, animate: false });
+      m.fitBounds(L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number])), { padding: [50, 50], maxZoom: fitMaxZoom ?? 15, animate: false });
     } else if (!centered.current || points.length === 1) {
-      m.setView(points[0] ? [points[0].lat, points[0].lng] : center, centered.current ? m.getZoom() : 15, { animate: false });
+      m.setView(points[0] ? [points[0].lat, points[0].lng] : center, fitKey !== undefined ? (fitMaxZoom ?? 15) : (centered.current ? m.getZoom() : 15), { animate: false });
       centered.current = true;
     }
     window.setTimeout(() => { if (programmatic.current > 0) programmatic.current -= 1; }, 300);

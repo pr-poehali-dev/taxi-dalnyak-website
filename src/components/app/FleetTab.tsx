@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import AppMap, { MapPoint } from "./AppMap";
 import { Badge } from "./ui";
 import { money } from "@/lib/appApi";
 
@@ -26,8 +27,12 @@ export function dur(sec: number) {
 
 type Filter = "all" | "online" | "offline" | "busy";
 
+const RU_CENTER: [number, number] = [55.75, 37.62];
+
 export default function FleetTab({ drivers }: { drivers: FleetDriver[] }) {
   const [f, setF] = useState<Filter>("all");
+  const [focus, setFocus] = useState<{ id: number; lat: number; lng: number; n: number } | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
   const active = drivers.filter((d) => d.status === "approved");
   const online = active.filter((d) => d.online);
   const busy = online.filter((d) => d.busy);
@@ -36,6 +41,21 @@ export default function FleetTab({ drivers }: { drivers: FleetDriver[] }) {
 
   const list = (f === "online" ? free : f === "busy" ? busy : f === "offline" ? offline : active)
     .slice().sort((a, b) => Number(b.online) - Number(a.online) || (a.seen_ago ?? 9e9) - (b.seen_ago ?? 9e9));
+
+  const located = active.filter((d) => d.lat !== null && d.lng !== null);
+  const shown = f === "all" ? located : located.filter((d) => list.includes(d));
+  const points: MapPoint[] = useMemo(() => shown.map((d) => ({
+    lat: d.lat as number, lng: d.lng as number,
+    color: !d.online ? "#a3a3a3" : d.busy ? "#0ea5e9" : "#10b981",
+    label: d.id === focus?.id ? `${d.name} · ${d.car_plate}` : d.name.split(" ")[0],
+  })), [shown.map((d) => `${d.id}:${d.lat}:${d.lng}:${d.online}:${d.busy}`).join("|"), focus?.id]);
+  const fitKey = `${f}:${shown.map((d) => d.id).join(",")}`;
+
+  const showOnMap = (d: FleetDriver) => {
+    if (d.lat === null || d.lng === null) return;
+    setFocus({ id: d.id, lat: d.lat, lng: d.lng, n: Date.now() });
+    mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const byCity = new Map<string, number>();
   online.forEach((d) => byCity.set(d.loc_city || "Город не определён", (byCity.get(d.loc_city || "Город не определён") || 0) + 1));
@@ -54,6 +74,18 @@ export default function FleetTab({ drivers }: { drivers: FleetDriver[] }) {
         <Tile id="online" n={free.length} label="Свободны" color="bg-emerald-100" />
         <Tile id="busy" n={busy.length} label="На заказе" color="bg-sky-100" />
         <Tile id="offline" n={offline.length} label="Не в сети" color="bg-neutral-200" />
+      </div>
+
+      <div ref={mapRef} className="scroll-mt-20 overflow-hidden rounded-3xl bg-white shadow-sm">
+        <div className="relative">
+          <AppMap center={RU_CENTER} points={points} className="h-[46vh] w-full" fitKey={fitKey} fitMaxZoom={11} fly={focus ? { lat: focus.lat, lng: focus.lng, n: focus.n, zoom: 12 } : null} />
+          <div className="pointer-events-none absolute bottom-2 left-2 z-[500] flex gap-2 rounded-xl bg-white/95 px-2.5 py-1.5 text-[11px] font-bold shadow">
+            <span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-full bg-emerald-500" />Свободен</span>
+            <span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-full bg-sky-500" />На заказе</span>
+            <span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-full bg-neutral-400" />Не в сети</span>
+          </div>
+        </div>
+        {located.length === 0 && <p className="p-3 text-center text-sm text-neutral-500">Пока ни от одного водителя нет координат. Они появятся, когда водитель откроет приложение и разрешит геолокацию.</p>}
       </div>
 
       {byCity.size > 0 && (
@@ -86,7 +118,7 @@ export default function FleetTab({ drivers }: { drivers: FleetDriver[] }) {
             <div className="rounded-xl bg-neutral-50 p-2.5">
               <div className="text-xs text-neutral-400">Где находится</div>
               <div className="font-bold">{d.loc_city || (d.lat ? "Город уточняется" : "Нет GPS")}</div>
-              {d.lat && d.lng && <a href={`https://yandex.ru/maps/?pt=${d.lng},${d.lat}&z=12&l=map`} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-sky-700">Открыть на карте</a>}
+              {d.lat && d.lng && <button onClick={() => showOnMap(d)} className="text-xs font-bold text-sky-700 underline">Показать на карте</button>}
             </div>
             <div className="rounded-xl bg-neutral-50 p-2.5">
               <div className="text-xs text-neutral-400">В сети</div>
