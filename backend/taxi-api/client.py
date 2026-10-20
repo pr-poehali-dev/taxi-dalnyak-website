@@ -11,7 +11,7 @@ LIVE = ('assigned', 'enroute', 'arrived', 'in_progress')
 TRIP_SELECT = f"""
     SELECT t.id, t.from_text, t.from_city, t.from_street, t.from_house, t.from_lat, t.from_lng, t.to_text,
            t.comment, t.price, t.base_price, t.status, t.tariff, t.region, t.distance_km, t.scheduled_at,
-           t.created_at, t.rating, t.driver_id,
+           t.created_at, t.rating, t.driver_id, t.pay_method,
            d.name AS driver_name, dr.car_model, dr.car_plate, dr.car_color,
            CASE WHEN t.status IN ('enroute', 'arrived', 'in_progress') THEN dr.lat END AS driver_lat,
            CASE WHEN t.status IN ('enroute', 'arrived', 'in_progress') THEN dr.lng END AS driver_lng,
@@ -66,6 +66,7 @@ def create_trip(cur, user, body):
     if tariff not in TARIFFS:
         raise ApiError(400, 'Выберите тариф')
     when = _parse_when(body.get('scheduled_at'))
+    pay_method = body.get('pay_method') if body.get('pay_method') in ('cash', 'transfer') else 'cash'
     cur.execute(
         f"SELECT count(*) FILTER (WHERE scheduled_at IS NULL) AS now_open, count(*) AS total FROM {S}.app_trips WHERE client_id = %s AND status IN %s",
         (user['id'], OPEN),
@@ -103,11 +104,11 @@ def create_trip(cur, user, body):
     cur.execute(
         f"""INSERT INTO {S}.app_trips
             (client_id, from_text, from_lat, from_lng, from_city, from_street, from_house, to_text, to_lat, to_lng,
-             comment, price, base_price, tariff, region, distance_km, scheduled_at)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+             comment, price, base_price, tariff, region, distance_km, scheduled_at, pay_method)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
         (user['id'], from_text, float(body['from_lat']), float(body['from_lng']), city, street, house, to_text,
          float(body['to_lat']), float(body['to_lng']), clean(body.get('comment'), 300) or None, price, base,
-         tariff, q['region'], q['distance_km'], when),
+         tariff, q['region'], q['distance_km'], when, pay_method),
     )
     trip_id = cur.fetchone()['id']
     notify_new_trip(cur, trip_id)

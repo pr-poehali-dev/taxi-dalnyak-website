@@ -17,7 +17,7 @@ interface Trip {
   from_text: string | null; to_text: string; comment: string | null; price: number | null; status: string;
   created_at: string; driver_id: number | null; assigned_by: string | null;
   client_phone: string; client_name: string | null; driver_name: string | null; driver_phone: string | null;
-  car_model: string | null; car_plate: string | null;
+  car_model: string | null; car_plate: string | null; pay_method: string; from_city: string | null; from_street: string | null; from_house: string | null;
 }
 interface Driver {
   id: number; name: string; phone: string; car_model: string; car_plate: string; car_color: string; status: string;
@@ -147,7 +147,14 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
         {t.scheduled_at && <Badge tone="yellow">Предзаказ: {whenText(t.scheduled_at)}</Badge>}
       </div>
       <div className="mt-2 text-sm">
-        <div><b>{t.from_text || "По GPS"}</b> → <b>{t.to_text}</b></div>
+        <div className="rounded-xl bg-neutral-100 p-2">
+          <div className="text-xs font-bold uppercase text-neutral-400">Отправление</div>
+          <div className="font-extrabold">{t.from_city || "Город не указан"}</div>
+          <div className="font-semibold">{[t.from_street, t.from_house && `д. ${t.from_house}`].filter(Boolean).join(", ") || t.from_text || "По GPS"}</div>
+          <div className="mt-1 text-xs font-bold uppercase text-neutral-400">Назначение</div>
+          <div className="font-semibold">{t.to_text}</div>
+        </div>
+        <div className="text-neutral-500">Оплата: {t.pay_method === "transfer" ? "переводом" : "наличными"}</div>
         <div className="text-neutral-500">{t.distance_km ? `${t.distance_km} км · ` : ""}{t.price ? money(t.price) : ""}{t.base_price && t.price && Number(t.price) > Number(t.base_price) ? ` (повышена с ${money(t.base_price)})` : ""}{t.commission ? ` · комиссия ${money(t.commission)}` : ""}</div>
         {t.comment && <div className="text-neutral-500">Комментарий: {t.comment}</div>}
         <a href={`tel:${t.client_phone}`} className="font-semibold text-sky-700">{t.client_name || "Клиент"} · {t.client_phone}</a>

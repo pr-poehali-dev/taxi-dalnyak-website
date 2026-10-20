@@ -12,7 +12,7 @@ def poll(cur, user, body):
     cur.execute(
         f"""SELECT t.id, t.from_text, t.to_text, t.comment, t.price, t.base_price, t.status, t.tariff, t.region,
                    t.distance_km, t.scheduled_at, t.created_at, t.driver_id, t.assigned_by, t.commission, t.rating,
-                   t.rating_comment, t.cancelled_by,
+                   t.rating_comment, t.cancelled_by, t.pay_method, t.from_city, t.from_street, t.from_house,
                    c.phone AS client_phone, c.name AS client_name,
                    d.name AS driver_name, d.phone AS driver_phone, dr.car_model, dr.car_plate,
                    (SELECT max(m.id) FROM {S}.app_messages m WHERE m.trip_id = t.id) AS last_msg_id

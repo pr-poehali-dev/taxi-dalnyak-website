@@ -13,6 +13,7 @@ interface Props {
   center: [number, number];
   points: MapPoint[];
   className?: string;
+  onPick?: (lat: number, lng: number) => void;
 }
 
 function icon(p: MapPoint) {
@@ -24,7 +25,9 @@ function icon(p: MapPoint) {
   });
 }
 
-export default function AppMap({ center, points, className }: Props) {
+export default function AppMap({ center, points, className, onPick }: Props) {
+  const pickRef = useRef(onPick);
+  pickRef.current = onPick;
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
@@ -35,6 +38,7 @@ export default function AppMap({ center, points, className }: Props) {
     map.current = L.map(el.current, { zoomControl: false, attributionControl: false }).setView(center, 13);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map.current);
     layer.current = L.layerGroup().addTo(map.current);
+    map.current.on("click", (e: L.LeafletMouseEvent) => pickRef.current?.(e.latlng.lat, e.latlng.lng));
     return () => {
       map.current?.remove();
       map.current = null;

@@ -46,7 +46,7 @@ export default function TripChat({ role, tripId, token, onClose, onUnauthorized,
   };
 
   return (
-    <div className="fixed inset-0 z-[2500] flex flex-col bg-neutral-50" style={{ fontFamily: "Manrope, sans-serif" }}>
+    <div className="fixed inset-0 z-[2500] flex flex-col bg-neutral-50 text-neutral-900" style={{ fontFamily: "Manrope, sans-serif" }}>
       <div className="flex items-center gap-3 bg-white px-4 py-3 shadow-sm">
         <button onClick={onClose} aria-label="Закрыть"><Icon name="ChevronLeft" size={26} /></button>
         <div>

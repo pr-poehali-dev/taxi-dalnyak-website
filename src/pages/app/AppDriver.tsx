@@ -10,6 +10,7 @@ import PhoneLogin from "@/components/app/PhoneLogin";
 import DriverRegister from "@/components/app/DriverRegister";
 import DriverTripCard, { DTrip, PickupBlock } from "@/components/app/DriverTripCard";
 import Onboarding from "@/components/app/Onboarding";
+import InstallGate, { needsInstall } from "@/components/app/InstallGate";
 import Tutorial, { DRIVER_SLIDES } from "@/components/app/Tutorial";
 import TripChat from "@/components/app/TripChat";
 import AppMap, { MapPoint } from "@/components/app/AppMap";
@@ -67,6 +68,8 @@ export default function AppDriver() {
     await appCall("logout", {}, token).catch(() => undefined);
     setToken(null);
   };
+
+  if (needsInstall()) return <InstallGate who="Приложение для водителей" />;
 
   if (!token) {
     if (reg) return <Shell title="Водитель"><DriverRegister onToken={setToken} onBack={() => setReg(false)} /></Shell>;

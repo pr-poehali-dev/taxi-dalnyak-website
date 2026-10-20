@@ -47,7 +47,7 @@ export default function Onboarding({ role, token, needLocation, onDone }: Props)
 
   const notifOk = notif === "granted";
   const geoOk = !needLocation || geo === true;
-  const allowSkip = !canPush;
+  const allowSkip = !canPush && !pushSupported();
   const ready = (notifOk || allowSkip) && geoOk;
 
   const Step = ({ icon, title, text, done, action, label, disabled }: {
@@ -70,7 +70,7 @@ export default function Onboarding({ role, token, needLocation, onDone }: Props)
   );
 
   return (
-    <div className="fixed inset-0 z-[3000] overflow-y-auto bg-neutral-50 p-5" style={{ fontFamily: "Manrope, sans-serif" }}>
+    <div className="fixed inset-0 z-[3000] overflow-y-auto bg-neutral-50 p-5 text-neutral-900" style={{ fontFamily: "Manrope, sans-serif" }}>
       <div className="mx-auto max-w-md space-y-3 pb-10 pt-6">
         <h1 className="text-2xl font-extrabold">Настроим приложение</h1>
         <p className="text-sm text-neutral-500">Три быстрых шага, чтобы не пропустить ни одного сообщения о заказе.</p>
@@ -90,11 +90,6 @@ export default function Onboarding({ role, token, needLocation, onDone }: Props)
         )}
 
         <Btn onClick={onDone} disabled={!ready} className="mt-2 w-full text-lg">Продолжить</Btn>
-        {!ready && (
-          <button onClick={onDone} className="w-full text-center text-sm font-semibold text-neutral-400 underline">
-            Пропустить, настрою позже
-          </button>
-        )}
       </div>
     </div>
   );

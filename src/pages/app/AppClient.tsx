@@ -10,6 +10,7 @@ import AppMap, { MapPoint } from "@/components/app/AppMap";
 import AddressSearch, { Place } from "@/components/app/AddressSearch";
 import ClientTripCard, { ClientTrip } from "@/components/app/ClientTripCard";
 import Onboarding from "@/components/app/Onboarding";
+import InstallGate, { needsInstall } from "@/components/app/InstallGate";
 import Tutorial, { CLIENT_SLIDES } from "@/components/app/Tutorial";
 import TripChat from "@/components/app/TripChat";
 import PhoneLogin from "@/components/app/PhoneLogin";
@@ -50,6 +51,8 @@ export default function AppClient() {
   const [scheduled, setScheduled] = useState(false);
   const [when, setWhen] = useState("");
   const [comment, setComment] = useState("");
+  const [pay, setPay] = useState<"cash" | "transfer">("cash");
+  const [fromText, setFromText] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [data, setData] = useState<Poll | null>(null);
@@ -77,6 +80,18 @@ export default function AppClient() {
       .catch((e) => setErr(e.message));
   }, [toPlace, fromPos, token]);
 
+  const pickFrom = useCallback(async (lat: number, lng: number) => {
+    setFromPos([lat, lng]);
+    setEditFrom(true);
+    try {
+      const r = await appCall<{ item: Place }>("client_reverse", { lat, lng }, token);
+      setFrom({ city: r.item.city || "", street: r.item.street || "", house: r.item.house || "" });
+      setFromText(r.item.label || "");
+    } catch {
+      setFrom({ city: "", street: "", house: "" });
+    }
+  }, [token]);
+
   const refresh = useCallback(async () => {
     const r = await appCall<Poll>("client_poll", {}, token);
     const a = r.active;
@@ -101,7 +116,7 @@ export default function AppClient() {
     try {
       await appCall("client_create_trip", {
         from_lat: fromPos[0], from_lng: fromPos[1], from_city: from.city, from_street: from.street, from_house: from.house,
-        to_text: toText, to_lat: toPlace.lat, to_lng: toPlace.lng, tariff, price, comment,
+        to_text: toText, to_lat: toPlace.lat, to_lng: toPlace.lng, tariff, price, comment, pay_method: pay,
         scheduled_at: scheduled && when ? new Date(when).toISOString() : null,
       }, token);
       setToText(""); setToPlace(null); setQuote(null); setComment(""); setScheduled(false); setWhen(""); setBump(0);
@@ -122,6 +137,8 @@ export default function AppClient() {
     await appCall("logout", {}, token).catch(() => undefined);
     setToken(null);
   };
+
+  if (needsInstall()) return <InstallGate who="Приложение для пассажиров" />;
 
   if (!token) {
     return (
@@ -149,7 +166,8 @@ export default function AppClient() {
     <Shell title="Дальняк" onLogout={logout}
       right={<button onClick={() => setShowHelp(true)} aria-label="Помощь"><Icon name="CircleHelp" size={22} /></button>}>
       <div className="relative">
-        <AppMap center={pos || DEFAULT_CENTER} points={points} className="h-[42vh] w-full" />
+        <AppMap center={pos || DEFAULT_CENTER} points={points} className="h-[42vh] w-full" onPick={active ? undefined : pickFrom} />
+        {!active && <div className="pointer-events-none absolute bottom-8 left-3 right-16 z-[500] rounded-xl bg-white/90 px-3 py-1.5 text-xs font-bold text-neutral-700 shadow">Нажмите на карту, чтобы поставить точку подачи</div>}
         <button onClick={locate} aria-label="Моё местоположение" className="absolute right-3 top-3 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg">
           <Icon name="Crosshair" size={20} />
         </button>
@@ -181,10 +199,15 @@ export default function AppClient() {
                 <button onClick={() => setEditFrom(!editFrom)} className="text-sm font-bold text-sky-700">{editFrom ? "Готово" : "Изменить"}</button>
               </div>
               {(editFrom || (pos && !fromOk)) && (
-                <div className="mt-3 grid grid-cols-6 gap-2">
-                  <div className="col-span-6"><Field label="Город" value={from.city} onChange={(e) => setFrom({ ...from, city: e.target.value })} /></div>
-                  <div className="col-span-4"><Field label="Улица" value={from.street} onChange={(e) => setFrom({ ...from, street: e.target.value })} /></div>
-                  <div className="col-span-2"><Field label="Дом" value={from.house} onChange={(e) => setFrom({ ...from, house: e.target.value })} /></div>
+                <div className="mt-3 space-y-2">
+                  <AddressSearch token={token} value={fromText} onChange={setFromText} placeholder="Найти адрес подачи"
+                    onPick={(p) => { setFromPos([p.lat, p.lng]); setFrom({ city: p.city || "", street: p.street || "", house: p.house || "" }); }} near={fromPos} />
+                  <p className="text-xs text-neutral-400">Или поставьте точку на карте. Проверьте город, улицу и дом ниже.</p>
+                  <div className="grid grid-cols-6 gap-2">
+                    <div className="col-span-6"><Field label="Город" value={from.city} onChange={(e) => setFrom({ ...from, city: e.target.value })} /></div>
+                    <div className="col-span-4"><Field label="Улица" value={from.street} onChange={(e) => setFrom({ ...from, street: e.target.value })} /></div>
+                    <div className="col-span-2"><Field label="Дом" value={from.house} onChange={(e) => setFrom({ ...from, house: e.target.value })} /></div>
+                  </div>
                 </div>
               )}
             </div>
@@ -215,6 +238,18 @@ export default function AppClient() {
                   <button onClick={() => setBump(bump + 100)} className="h-11 w-11 rounded-xl bg-white text-xl font-bold">+</button>
                 </div>
 
+                <div className="rounded-2xl bg-amber-50 p-3 text-sm text-amber-900">
+                  <div className="font-extrabold">Что важно знать</div>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                    <li>Платные дороги, мосты и платные участки оплачиваются отдельно.</li>
+                    <li>Водителю платите напрямую: переводом или наличными. Лучше оплатить в начале поездки.</li>
+                  </ul>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {([["cash", "Наличными"], ["transfer", "Переводом"]] as const).map(([k, l]) => (
+                    <button key={k} onClick={() => setPay(k)} className={`rounded-2xl border-2 py-3 text-sm font-extrabold ${pay === k ? "border-neutral-900 bg-neutral-50" : "border-transparent bg-neutral-100 text-neutral-500"}`}>{l}</button>
+                  ))}
+                </div>
                 <label className="flex items-center gap-3 rounded-2xl bg-neutral-100 p-3">
                   <input type="checkbox" checked={scheduled} onChange={(e) => setScheduled(e.target.checked)} className="h-5 w-5 accent-neutral-900" />
                   <span className="font-bold">Предзаказ на дату и время</span>
@@ -262,6 +297,15 @@ export default function AppClient() {
             </div>
           </div>
         )}
+
+        <a href="/app/driver" className="mt-6 flex items-center gap-3 rounded-3xl bg-neutral-900 p-4 text-white">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#fcd34d] text-neutral-900"><Icon name="Car" size={24} /></span>
+          <span className="flex-1">
+            <span className="block font-extrabold text-white">Приглашаем водителей в команду</span>
+            <span className="text-sm text-neutral-300">Есть свой автомобиль? Зарегистрируйтесь и принимайте заказы на междугородние поездки.</span>
+          </span>
+          <Icon name="ChevronRight" size={20} />
+        </a>
 
         {data && (data.support_telegram || data.support_max) && (
           <div className="mt-6 flex gap-2">
