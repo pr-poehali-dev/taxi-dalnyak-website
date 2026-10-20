@@ -8,7 +8,7 @@ export interface DTrip {
   id: number; from_city: string | null; from_street: string | null; from_house: string | null; from_text: string | null;
   to_text: string; comment: string | null; price: number; tariff: string; region: string; distance_km: number | null;
   scheduled_at: string | null; status: string; commission: number | null; client_name?: string | null;
-  from_lat: number | null; from_lng: number | null; last_msg_id?: number | null; last_msg_role?: string | null; pay_method?: string; eta_at?: string | null;
+  from_lat: number | null; from_lng: number | null; last_msg_id?: number | null; last_msg_role?: string | null; pay_method?: string; eta_at?: string | null; can_take?: boolean;
 }
 
 export function PickupBlock({ t }: { t: DTrip }) {

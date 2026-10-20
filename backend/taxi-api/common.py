@@ -30,6 +30,7 @@ DEFAULT_CONFIG = {
     'priority_price': 1000,
     'priority_days': 30,
     'priority_delay_sec': 20,
+    'dispatcher_alert_min': 3,
     'cancel_limit_24h': 3,
     'cancel_limit_7d': 5,
     'payment_info': '',

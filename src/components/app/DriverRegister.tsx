@@ -6,8 +6,10 @@ import Icon from "@/components/ui/icon";
 import { reachGoal } from "@/lib/metrika";
 
 export const PHOTO_SLOTS = [
-  { key: "license", label: "Водительское удостоверение" },
-  { key: "sts", label: "СТС" },
+  { key: "license", label: "Права, лицевая сторона" },
+  { key: "license_back", label: "Права, оборот" },
+  { key: "sts", label: "СТС, лицевая сторона" },
+  { key: "sts_back", label: "СТС, оборот" },
   { key: "car_front", label: "Авто спереди" },
   { key: "car_back", label: "Авто сзади" },
   { key: "car_left", label: "Авто слева" },
@@ -60,7 +62,7 @@ export default function DriverRegister({ onToken, onBack }: { onToken: (t: strin
         <Field label="Цвет" value={f.car_color} onChange={(e) => setF({ ...f, car_color: e.target.value })} placeholder="Чёрный" />
       </div>
 
-      <h2 className="pt-2 text-sm font-extrabold uppercase text-neutral-400">Фотографии (все 6)</h2>
+      <h2 className="pt-2 text-sm font-extrabold uppercase text-neutral-400">Фотографии (все 8)</h2>
       <div className="grid grid-cols-2 gap-3">
         {PHOTO_SLOTS.map((s) => (
           <label key={s.key} className="relative flex aspect-[4/3] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-neutral-300 bg-white text-center text-xs font-bold text-neutral-500">

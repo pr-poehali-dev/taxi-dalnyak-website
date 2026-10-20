@@ -31,7 +31,12 @@ def poll(cur, user, body):
                    EXISTS (SELECT 1 FROM {S}.app_trips t WHERE t.driver_id = u.id AND t.status IN ('assigned', 'enroute', 'arrived', 'in_progress') AND t.scheduled_at IS NULL) AS busy,
                    (SELECT round(avg(x.rating)::numeric, 2) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.rating IS NOT NULL) AS rating,
                    (SELECT count(*) FROM {S}.app_driver_events e WHERE e.driver_id = u.id AND e.kind = 'cancel' AND e.created_at > now() - interval '7 days') AS cancels_7d,
-                   dr.photo_license, dr.photo_sts, dr.photo_car_front, dr.photo_car_back, dr.photo_car_left, dr.photo_car_right
+                   dr.photo_license, dr.photo_license_back, dr.photo_sts, dr.photo_sts_back, dr.photo_car_front, dr.photo_car_back,
+                   dr.photo_car_left, dr.photo_car_right, dr.recheck_fields, dr.recheck_note,
+                   dr.on_line AS wants_line, dr.lat, dr.lng, dr.loc_city, dr.loc_at, dr.last_seen,
+                   extract(epoch FROM now() - dr.last_seen)::int AS seen_ago,
+                   coalesce((SELECT p.seconds FROM {S}.app_driver_presence p WHERE p.driver_id = u.id AND p.day = (now() AT TIME ZONE 'Europe/Moscow')::date), 0) AS online_today_sec,
+                   coalesce((SELECT sum(p.seconds) FROM {S}.app_driver_presence p WHERE p.driver_id = u.id AND p.day >= (now() AT TIME ZONE 'Europe/Moscow')::date - 6), 0)::int AS online_week_sec
             FROM {S}.app_users u JOIN {S}.app_drivers dr ON dr.user_id = u.id
             ORDER BY (dr.status = 'pending') DESC, online DESC, u.id DESC"""
     )
@@ -241,6 +246,90 @@ def reset_password(cur, user, body):
     return {'phone': row['phone'], 'password': password}
 
 
+DOC_NAMES = {
+    'license': 'Права (лицевая сторона)', 'license_back': 'Права (оборот)', 'sts': 'СТС (лицевая сторона)', 'sts_back': 'СТС (оборот)',
+    'car_front': 'Авто спереди', 'car_back': 'Авто сзади', 'car_left': 'Авто слева', 'car_right': 'Авто справа',
+}
+
+
+def request_recheck(cur, user, body):
+    fields = [f for f in (body.get('fields') or []) if f in DOC_NAMES]
+    if not fields:
+        raise ApiError(400, 'Отметьте, что нужно переснять')
+    note = clean(body.get('note'), 200) or None
+    cur.execute(
+        f"""UPDATE {S}.app_drivers SET recheck_fields = %s, recheck_note = %s,
+            status = CASE WHEN status = 'rejected' THEN 'pending' ELSE status END WHERE user_id = %s RETURNING user_id""",
+        (fields, note, body.get('driver_id')),
+    )
+    if not cur.fetchone():
+        raise ApiError(404, 'Водитель не найден')
+    names = ', '.join(DOC_NAMES[f] for f in fields)
+    send_push(cur, [body.get('driver_id')], 'Переснимите документы', f"{names}.{' ' + note if note else ''}", '/app/driver', 'recheck')
+    return {'ok': True}
+
+
+def report(cur, user, body):
+    try:
+        days = int(body.get('days') or 7)
+    except (TypeError, ValueError):
+        days = 7
+    days = max(1, min(days, 365))
+    since = f"((now() AT TIME ZONE 'Europe/Moscow')::date - {days - 1})"
+    cond = f"(t.created_at AT TIME ZONE 'Europe/Moscow')::date >= {since}"
+    cur.execute(
+        f"""SELECT count(*) AS total,
+                   count(*) FILTER (WHERE t.status = 'done') AS done,
+                   count(*) FILTER (WHERE t.status = 'cancelled') AS cancelled,
+                   count(*) FILTER (WHERE t.status = 'cancelled' AND t.cancelled_by = 'client') AS cancelled_client,
+                   count(*) FILTER (WHERE t.status = 'cancelled' AND t.cancelled_by = 'dispatcher') AS cancelled_dispatcher,
+                   count(*) FILTER (WHERE t.status = 'cancelled' AND t.driver_id IS NULL AND t.cancelled_by IS NULL) AS cancelled_other,
+                   count(*) FILTER (WHERE t.status IN ('new', 'assigned', 'enroute', 'arrived', 'in_progress')) AS open,
+                   count(*) FILTER (WHERE t.scheduled_at IS NOT NULL) AS preorders,
+                   count(*) FILTER (WHERE t.region = 'new') AS new_regions,
+                   coalesce(sum(t.price) FILTER (WHERE t.status = 'done'), 0) AS revenue,
+                   coalesce(sum(t.commission) FILTER (WHERE t.status = 'done'), 0) AS commission,
+                   coalesce(round(avg(t.price) FILTER (WHERE t.status = 'done')), 0) AS avg_price,
+                   coalesce(round(avg(t.distance_km) FILTER (WHERE t.status = 'done')), 0) AS avg_km,
+                   round(avg(t.rating)::numeric, 2) AS avg_rating
+            FROM {S}.app_trips t WHERE {cond}"""
+    )
+    summary = cur.fetchone()
+    cur.execute(f"SELECT count(*) AS n FROM {S}.app_users WHERE role = 'client' AND (created_at AT TIME ZONE 'Europe/Moscow')::date >= {since}")
+    summary['new_clients'] = cur.fetchone()['n']
+    cur.execute(f"SELECT count(*) AS n FROM {S}.app_driver_events WHERE kind = 'cancel' AND (created_at AT TIME ZONE 'Europe/Moscow')::date >= {since}")
+    summary['driver_refusals'] = cur.fetchone()['n']
+    cur.execute(
+        f"""SELECT (t.created_at AT TIME ZONE 'Europe/Moscow')::date AS day, count(*) AS total,
+                   count(*) FILTER (WHERE t.status = 'done') AS done,
+                   coalesce(sum(t.price) FILTER (WHERE t.status = 'done'), 0) AS revenue
+            FROM {S}.app_trips t WHERE {cond} GROUP BY 1 ORDER BY 1 DESC"""
+    )
+    by_day = cur.fetchall()
+    cur.execute(
+        f"""SELECT t.tariff, count(*) AS total, count(*) FILTER (WHERE t.status = 'done') AS done,
+                   coalesce(sum(t.price) FILTER (WHERE t.status = 'done'), 0) AS revenue
+            FROM {S}.app_trips t WHERE {cond} GROUP BY 1 ORDER BY 2 DESC"""
+    )
+    by_tariff = cur.fetchall()
+    cur.execute(
+        f"""SELECT u.id, u.name, dr.car_model, dr.car_plate,
+                   count(t.id) FILTER (WHERE t.status = 'done') AS done,
+                   coalesce(sum(t.price) FILTER (WHERE t.status = 'done'), 0) AS revenue,
+                   coalesce(sum(t.commission) FILTER (WHERE t.status = 'done'), 0) AS commission,
+                   round(avg(t.rating)::numeric, 2) AS rating,
+                   (SELECT count(*) FROM {S}.app_driver_events e WHERE e.driver_id = u.id AND e.kind = 'cancel'
+                       AND (e.created_at AT TIME ZONE 'Europe/Moscow')::date >= {since}) AS refusals,
+                   coalesce((SELECT sum(p.seconds) FROM {S}.app_driver_presence p WHERE p.driver_id = u.id
+                       AND p.day >= {since}), 0)::int AS online_sec
+            FROM {S}.app_users u JOIN {S}.app_drivers dr ON dr.user_id = u.id
+            LEFT JOIN {S}.app_trips t ON t.driver_id = u.id AND {cond}
+            WHERE dr.status IN ('approved', 'blocked') GROUP BY u.id, u.name, dr.car_model, dr.car_plate
+            ORDER BY done DESC, revenue DESC"""
+    )
+    return {'days': days, 'summary': summary, 'by_day': by_day, 'by_tariff': by_tariff, 'by_driver': cur.fetchall()}
+
+
 def driver_tariffs(cur, user, body):
     tariffs = [t for t in (body.get('tariffs') or []) if t in TARIFFS]
     cur.execute(
@@ -282,7 +371,7 @@ def save_config(cur, user, body):
             v = new.get('rates', {}).get(region, {}).get(t)
             if v is not None:
                 cfg['rates'][region][t] = max(1, min(int(v), 1000))
-    for k, lo, hi in (('min_price', 0, 100000), ('commission_pct', 0, 90), ('priority_price', 0, 100000),
+    for k, lo, hi in (('dispatcher_alert_min', 1, 120), ('min_price', 0, 100000), ('commission_pct', 0, 90), ('priority_price', 0, 100000),
                       ('priority_days', 1, 365), ('priority_delay_sec', 0, 600), ('cancel_limit_24h', 1, 50), ('cancel_limit_7d', 1, 100)):
         if new.get(k) is not None:
             cfg[k] = max(lo, min(int(new[k]), hi))

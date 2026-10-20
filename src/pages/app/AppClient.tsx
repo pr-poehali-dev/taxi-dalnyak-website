@@ -201,6 +201,7 @@ export default function AppClient() {
           </div>
         )}
         <div className="mb-3"><PushBanner role="client" token={token} /></div>
+        {!active && <div className="mb-4 -mt-2"><DriverBanner /></div>}
         {err && <p className="mb-3 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-600">{err}</p>}
 
         {active ? (
@@ -303,8 +304,6 @@ export default function AppClient() {
             </div>
           </div>
         )}
-
-        <DriverBanner />
 
         {data && (data.support_telegram || data.support_max) && (
           <div className="mt-6 flex gap-2">

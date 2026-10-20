@@ -116,9 +116,8 @@ export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise }:
 
       {t.status === "new" && (
         <>
-          <div className="rounded-2xl bg-emerald-50 p-3 text-sm text-emerald-900">
-            <div className="flex items-center gap-2 font-extrabold"><Icon name="BellRing" size={18} /> Не нужно ждать у экрана</div>
-            <p className="mt-1">Диспетчер подбирает водителя вручную. Закройте приложение или заблокируйте телефон: мы сообщим голосом и уведомлением, как только машина будет назначена.</p>
+          <div className="flex items-center gap-2 rounded-2xl bg-neutral-50 p-3 text-sm font-semibold text-neutral-600">
+            <Icon name="Loader" size={16} className="animate-spin" /> Ищем машину. Уведомим, как только она будет назначена.
           </div>
           <div className="rounded-2xl bg-amber-50 p-3">
             <p className="mb-2 text-sm font-semibold text-amber-900">Хотите уехать быстрее? Предложите больше.</p>

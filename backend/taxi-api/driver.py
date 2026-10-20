@@ -3,6 +3,9 @@ import trips
 from pricing import haversine
 from common import S, ApiError, get_config, charge_commission, refund_commission, log_balance, rate_limit, clean
 from push import send_push, dispatcher_ids, trip_line
+from pricing import reverse as geo_reverse
+from common import TRIP_TEXT
+import auth
 
 LIVE = ('enroute', 'arrived', 'in_progress')
 
@@ -15,7 +18,7 @@ TRIP_COLS = """t.id, t.from_city, t.from_street, t.from_house, t.from_text, t.fr
 def _me(cur, uid):
     cur.execute(
         f"""SELECT u.id, u.name, dr.car_model, dr.car_plate, dr.car_color, dr.status, dr.on_line, dr.balance,
-                   dr.tariffs, dr.block_reason, dr.priority_until, (dr.priority_until > now()) AS has_priority,
+                   dr.tariffs, dr.block_reason, dr.recheck_fields, dr.recheck_note, dr.priority_until, (dr.priority_until > now()) AS has_priority,
                    (SELECT round(avg(x.rating)::numeric, 2) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.rating IS NOT NULL) AS rating,
                    (SELECT count(*) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.status = 'done') AS done_count
             FROM {S}.app_users u JOIN {S}.app_drivers dr ON dr.user_id = u.id WHERE u.id = %s""",
@@ -27,11 +30,23 @@ def _me(cur, uid):
 def poll(cur, user, body):
     trips.tick(cur)
     lat, lng = body.get('lat'), body.get('lng')
+    cur.execute(
+        f"""INSERT INTO {S}.app_driver_presence (driver_id, day, seconds)
+            SELECT user_id, (now() AT TIME ZONE 'Europe/Moscow')::date, LEAST(GREATEST(extract(epoch FROM now() - last_seen), 0), 30)::int
+            FROM {S}.app_drivers WHERE user_id = %s AND on_line AND last_seen IS NOT NULL
+            ON CONFLICT (driver_id, day) DO UPDATE SET seconds = {S}.app_driver_presence.seconds + EXCLUDED.seconds""",
+        (user['id'],),
+    )
     if isinstance(lat, (int, float)) and isinstance(lng, (int, float)) and -90 <= lat <= 90 and -180 <= lng <= 180:
         cur.execute(
-            f"UPDATE {S}.app_drivers SET lat = %s, lng = %s, loc_at = now(), last_seen = now() WHERE user_id = %s",
+            f"""UPDATE {S}.app_drivers SET lat = %s, lng = %s, loc_at = now(), last_seen = now() WHERE user_id = %s
+                RETURNING (loc_city_at IS NULL OR loc_city_at < now() - interval '10 minutes') AS stale""",
             (lat, lng, user['id']),
         )
+        if cur.fetchone()['stale']:
+            geo = geo_reverse(lat, lng)
+            city = geo.get('city') or geo.get('state') or None
+            cur.execute(f"UPDATE {S}.app_drivers SET loc_city = %s, loc_city_at = now() WHERE user_id = %s", (city, user['id']))
     else:
         cur.execute(f"UPDATE {S}.app_drivers SET last_seen = now() WHERE user_id = %s", (user['id'],))
     me = _me(cur, user['id'])
@@ -51,13 +66,13 @@ def poll(cur, user, body):
     active = live or now_asg
     upcoming = [t for t in mine if t is not active]
     available = []
-    if me['status'] == 'approved' and me['on_line'] and me['tariffs']:
+    if me['status'] == 'approved' and me['on_line']:
         cur.execute(
-            f"""SELECT {TRIP_COLS} FROM {S}.app_trips t
-                WHERE t.status = 'new' AND t.driver_id IS NULL AND t.tariff = ANY(%s)
+            f"""SELECT {TRIP_COLS}, (t.tariff = ANY(%s)) AS can_take FROM {S}.app_trips t
+                WHERE t.status = 'new' AND t.driver_id IS NULL
                   AND (%s OR t.created_at <= now() - make_interval(secs => %s))
-                ORDER BY t.scheduled_at NULLS FIRST, t.id DESC LIMIT 30""",
-            (me['tariffs'], bool(me['has_priority']), int(cfg['priority_delay_sec'])),
+                ORDER BY (t.tariff = ANY(%s)) DESC, t.scheduled_at NULLS FIRST, t.id DESC LIMIT 30""",
+            (me['tariffs'], bool(me['has_priority']), int(cfg['priority_delay_sec']), me['tariffs']),
         )
         available = cur.fetchall()
     cur.execute(
@@ -87,8 +102,6 @@ def set_line(cur, user, body):
     me = _me(cur, user['id'])
     if on and me['status'] != 'approved':
         raise ApiError(403, 'Выйти на линию можно после одобрения анкеты')
-    if on and not me['tariffs']:
-        raise ApiError(403, 'Диспетчер ещё не назначил вам тариф')
     cur.execute(f"UPDATE {S}.app_drivers SET on_line = %s, last_seen = now() WHERE user_id = %s", (on, user['id']))
     return {'on_line': on}
 
@@ -106,7 +119,7 @@ def take(cur, user, body):
     if not t or t['status'] != 'new' or t['driver_id'] is not None:
         raise ApiError(409, 'Заказ уже забрал другой водитель')
     if t['tariff'] not in me['tariffs']:
-        raise ApiError(403, 'Этот тариф вам не назначен')
+        raise ApiError(403, f"Этот заказ в тарифе «{TRIP_TEXT.get(t['tariff'], '')}». Для него нужен другой автомобиль, обратитесь к диспетчеру")
     cur.execute(f"SELECT phone FROM {S}.app_users WHERE id = %s", (t['client_id'],))
     cp = cur.fetchone()['phone']
     cur.execute(f"SELECT 1 FROM {S}.app_users WHERE phone = %s AND role = 'driver'", (cp,))
@@ -207,6 +220,35 @@ def set_eta(cur, user, body):
 def cancel(cur, user, body):
     blocked = trips.driver_cancel(cur, user['id'], body.get('trip_id'))
     return {'ok': True, 'blocked': blocked}
+
+
+DOC_COLUMNS = {
+    'license': 'photo_license', 'license_back': 'photo_license_back', 'sts': 'photo_sts', 'sts_back': 'photo_sts_back',
+    'car_front': 'photo_car_front', 'car_back': 'photo_car_back', 'car_left': 'photo_car_left', 'car_right': 'photo_car_right',
+}
+
+
+def upload_docs(cur, user, body):
+    rate_limit(cur, f'docs:{user["id"]}', 10, 3600)
+    photos = body.get('photos') or {}
+    cur.execute(f"SELECT recheck_fields FROM {S}.app_drivers WHERE user_id = %s FOR UPDATE", (user['id'],))
+    need = list(cur.fetchone()['recheck_fields'] or [])
+    if not need:
+        raise ApiError(400, 'Диспетчер не просил переснимать документы')
+    sent = [f for f in need if photos.get(f)]
+    if not sent:
+        raise ApiError(400, 'Добавьте фотографии')
+    for f in sent:
+        url = auth.upload_photo(user['id'], f, photos[f])
+        cur.execute(f"UPDATE {S}.app_drivers SET {DOC_COLUMNS[f]} = %s WHERE user_id = %s", (url, user['id']))
+    left = [f for f in need if f not in sent]
+    cur.execute(
+        f"UPDATE {S}.app_drivers SET recheck_fields = %s, recheck_note = CASE WHEN cardinality(%s::text[]) = 0 THEN NULL ELSE recheck_note END WHERE user_id = %s",
+        (left, left, user['id']),
+    )
+    if not left:
+        send_push(cur, dispatcher_ids(cur), 'Водитель переснял документы', f'Водитель #{user["id"]} ждёт повторной проверки', '/app/office-k7x2', f'docs-{user["id"]}')
+    return {'ok': True, 'left': left}
 
 
 def request_topup(cur, user, body):

@@ -9,6 +9,7 @@ import { useAppShell } from "@/lib/useAppShell";
 import { useChatAlert } from "@/lib/useChatAlert";
 import { useReadMap } from "@/lib/useReadMap";
 import PushBanner from "@/components/app/PushBanner";
+import DocsRecheck from "@/components/app/DocsRecheck";
 import PhoneLogin from "@/components/app/PhoneLogin";
 import DriverRegister from "@/components/app/DriverRegister";
 import DriverTripCard, { DTrip, PickupBlock } from "@/components/app/DriverTripCard";
@@ -22,7 +23,7 @@ import Icon from "@/components/ui/icon";
 
 interface Me {
   id: number; name: string; car_model: string; car_plate: string; status: string; on_line: boolean; balance: number;
-  tariffs: string[]; block_reason: string | null; priority_until: string | null; has_priority: boolean;
+  tariffs: string[]; recheck_fields: string[]; recheck_note: string | null; block_reason: string | null; priority_until: string | null; has_priority: boolean;
   rating: number | null; done_count: number;
 }
 interface Poll {
@@ -118,9 +119,9 @@ export default function AppDriver() {
     <div className="flex items-center justify-between rounded-3xl bg-white p-4 shadow-sm">
       <div>
         <div className="text-lg font-extrabold">{me.on_line ? "Вы на линии" : "Вы не на линии"}</div>
-        <div className="text-sm text-neutral-500">{me.on_line ? "Новые заказы придут сюда" : approved && me.tariffs.length ? "Включите, чтобы видеть заказы" : "Ждём одобрения диспетчера"}</div>
+        <div className="text-sm text-neutral-500">{me.on_line ? "Новые заказы придут сюда" : approved ? "Включите, чтобы видеть заказы" : "Ждём одобрения диспетчера"}</div>
       </div>
-      <button onClick={() => act("driver_set_line", { on: !me.on_line })} disabled={!approved || !me.tariffs.length} aria-label="Линия"
+      <button onClick={() => act("driver_set_line", { on: !me.on_line })} disabled={!approved} aria-label="Линия"
         className={`relative h-9 w-16 rounded-full transition disabled:opacity-40 ${me.on_line ? "bg-emerald-500" : "bg-neutral-300"}`}>
         <span className={`absolute top-1 h-7 w-7 rounded-full bg-white shadow transition-all ${me.on_line ? "left-8" : "left-1"}`} />
       </button>
@@ -135,10 +136,12 @@ export default function AppDriver() {
       <div className="mx-auto max-w-md space-y-4 p-4 pb-28">
         {errBox}
         <PushBanner role="driver" token={token} />
+        {me.recheck_fields?.length > 0 && <DocsRecheck fields={me.recheck_fields} note={me.recheck_note} onSend={async (photos) => { await appCall("driver_upload_docs", { photos }, token); await refresh(); }} />}
 
         {tab === "orders" && (
           <>
             {lineBar}
+            {approved && me.on_line && !me.tariffs.length && <p className="rounded-2xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">Тариф вашего автомобиля пока не указан, брать заказы нельзя. Диспетчер скоро назначит.</p>}
             {me.status === "pending" && <p className="rounded-2xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">Диспетчер проверяет документы. Мы пришлём уведомление, когда анкета будет одобрена.</p>}
             {me.status === "blocked" && <p className="rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-700">Аккаунт заблокирован: {me.block_reason}. Свяжитесь с диспетчером.</p>}
             {me.status === "rejected" && <p className="rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-700">Анкета отклонена. Свяжитесь с диспетчером.</p>}
@@ -182,12 +185,12 @@ export default function AppDriver() {
                       <span>{t.distance_km ? `${t.distance_km} км` : ""}</span>
                       <span>{money(t.price)} · комиссия {money(Math.round(Number(t.price) * commission_pct / 100))}</span>
                     </div>
-                    <Btn onClick={() => act("driver_take", { trip_id: t.id })} className="w-full">Взять заказ</Btn>
+                    <Btn onClick={() => act("driver_take", { trip_id: t.id })} disabled={t.can_take === false} className="w-full">{t.can_take === false ? `Нужен тариф «${TARIFF_NAME[t.tariff]}»` : "Взять заказ"}</Btn>
                   </div>
                 ))}
               </div>
             )}
-            {!active && approved && !me.on_line && me.tariffs.length > 0 && <p className="rounded-3xl bg-white p-5 text-center text-sm text-neutral-500">Включите «Вы на линии», чтобы видеть заказы.</p>}
+            {!active && approved && !me.on_line && <p className="rounded-3xl bg-white p-5 text-center text-sm text-neutral-500">Включите «Вы на линии», чтобы видеть заказы.</p>}
           </>
         )}
 

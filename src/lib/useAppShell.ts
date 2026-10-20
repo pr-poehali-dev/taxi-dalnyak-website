@@ -21,6 +21,13 @@ export function useAppShell(kind: AppKind) {
       document.head.appendChild(robots);
     }
 
+    window.history.pushState({ guard: true }, "");
+    const onPop = () => {
+      const st = window.history.state;
+      if (!st?.guard && !st?.overlay) window.history.pushState({ guard: true }, "");
+    };
+    window.addEventListener("popstate", onPop);
+
     const unlock = () => unlockAudio();
     window.addEventListener("pointerdown", unlock);
     window.addEventListener("keydown", unlock);
@@ -34,6 +41,7 @@ export function useAppShell(kind: AppKind) {
       if (prev) link?.setAttribute("href", prev);
       if (theme && prevTheme) theme.content = prevTheme;
       if (robots && prevRobots) robots.content = prevRobots;
+      window.removeEventListener("popstate", onPop);
       window.removeEventListener("pointerdown", unlock);
       window.removeEventListener("keydown", unlock);
       navigator.serviceWorker?.removeEventListener("message", onMsg);

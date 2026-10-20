@@ -80,11 +80,11 @@ def tick(cur):
     cur.execute(
         f"""UPDATE {S}.app_trips SET reminder_stage = 1
             WHERE status = 'new' AND driver_id IS NULL AND scheduled_at IS NULL AND reminder_stage < 1
-              AND created_at <= now() - interval '120 seconds' RETURNING *"""
+              AND created_at <= now() - make_interval(mins => %s) RETURNING *""",
+        (int(cfg['dispatcher_alert_min']),),
     )
     for t in cur.fetchall():
-        send_push(cur, [t['client_id']], 'Ищем вам машину', 'Диспетчер уже подбирает водителя. Можно закрыть приложение, мы сообщим', '/app/client', f"trip-{t['id']}")
-        send_push(cur, dispatcher_ids(cur), 'Заказ без водителя', f"№{t['id']}: {trip_line(t)}", '/app/office-k7x2', f"trip-{t['id']}")
+        send_push(cur, dispatcher_ids(cur), 'Нужен водитель', f"Заказ №{t['id']} ждёт уже {int(cfg['dispatcher_alert_min'])} мин. {trip_line(t)}", '/app/office-k7x2', f"trip-{t['id']}")
 
     cur.execute(
         f"""UPDATE {S}.app_trips SET reminder_stage = 2

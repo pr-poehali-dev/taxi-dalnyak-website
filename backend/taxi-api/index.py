@@ -35,6 +35,7 @@ PROTECTED = {
     'driver_trip_status': ('driver', driver.trip_status),
     'driver_cancel': ('driver', driver.cancel),
     'driver_set_eta': ('driver', driver.set_eta),
+    'driver_upload_docs': ('driver', driver.upload_docs),
     'driver_request_topup': ('driver', driver.request_topup),
     'driver_buy_priority': ('driver', driver.buy_priority),
     'driver_chat_get': ('driver', driver.chat_get),
@@ -55,6 +56,8 @@ PROTECTED = {
     'disp_create_driver': ('dispatcher', dispatcher.create_driver),
     'disp_update_driver': ('dispatcher', dispatcher.update_driver),
     'disp_reset_password': ('dispatcher', dispatcher.reset_password),
+    'disp_request_recheck': ('dispatcher', dispatcher.request_recheck),
+    'disp_report': ('dispatcher', dispatcher.report),
     'disp_save_config': ('dispatcher', dispatcher.save_config),
     'disp_push_subscribe': ('dispatcher', auth.push_subscribe),
 }

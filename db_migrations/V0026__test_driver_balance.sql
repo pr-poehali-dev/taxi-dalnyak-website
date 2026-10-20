@@ -1,0 +1,1 @@
+UPDATE app_drivers SET balance = 10000 WHERE user_id IN (SELECT id FROM app_users WHERE phone = '+79990001122' AND role = 'driver');

@@ -116,7 +116,7 @@ def dispatcher_login(cur, body):
     return {'token': create_session(cur, uid, 7)}
 
 
-PHOTO_FIELDS = ['license', 'sts', 'car_front', 'car_back', 'car_left', 'car_right']
+PHOTO_FIELDS = ['license', 'license_back', 'sts', 'sts_back', 'car_front', 'car_back', 'car_left', 'car_right']
 
 
 def upload_photo(user_id, field, data_url):
@@ -156,7 +156,7 @@ def driver_register(cur, body):
     if len(pw) < 8 or len(pw) > 64:
         raise ApiError(400, 'Пароль должен быть не короче 8 символов')
     if any(not photos.get(f) for f in PHOTO_FIELDS):
-        raise ApiError(400, 'Нужны все 6 фотографий')
+        raise ApiError(400, 'Нужны все 8 фотографий: права и СТС с двух сторон и 4 фото авто')
     cur.execute(f"SELECT id FROM {S}.app_users WHERE phone = %s AND role = 'driver'", (phone,))
     if cur.fetchone():
         raise ApiError(409, 'Этот номер уже зарегистрирован. Нажмите «Войти»')
@@ -168,10 +168,10 @@ def driver_register(cur, body):
     urls = {f: upload_photo(uid, f, photos[f]) for f in PHOTO_FIELDS}
     cur.execute(
         f"""INSERT INTO {S}.app_drivers
-            (user_id, car_model, car_plate, car_color, status, photo_license, photo_sts,
+            (user_id, car_model, car_plate, car_color, status, photo_license, photo_license_back, photo_sts, photo_sts_back,
              photo_car_front, photo_car_back, photo_car_left, photo_car_right)
-            VALUES (%s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s)""",
-        (uid, car_model, car_plate, car_color, urls['license'], urls['sts'],
+            VALUES (%s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s, %s, %s)""",
+        (uid, car_model, car_plate, car_color, urls['license'], urls['license_back'], urls['sts'], urls['sts_back'],
          urls['car_front'], urls['car_back'], urls['car_left'], urls['car_right']),
     )
     send_push(cur, dispatcher_ids(cur), 'Новый водитель', f'{name} · {car_model} ждёт проверки', '/app/office-k7x2', 'driver-new')

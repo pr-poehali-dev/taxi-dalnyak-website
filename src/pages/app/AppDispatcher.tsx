@@ -11,6 +11,8 @@ import TripChat from "@/components/app/TripChat";
 import DispatcherSettings from "@/components/app/DispatcherSettings";
 import DriverForm, { DriverFormValue } from "@/components/app/DriverForm";
 import PushBanner from "@/components/app/PushBanner";
+import FleetTab from "@/components/app/FleetTab";
+import ReportsTab from "@/components/app/ReportsTab";
 import { Badge, Btn, Field, Shell, tripTone } from "@/components/app/ui";
 import Icon from "@/components/ui/icon";
 
@@ -26,7 +28,9 @@ interface Driver {
   id: number; name: string; phone: string; car_model: string; car_plate: string; car_color: string; status: string;
   balance: number; online: boolean; busy: boolean; tariffs: string[]; block_reason: string | null; has_priority: boolean;
   priority_until: string | null; rating: number | null; cancels_7d: number;
-  photo_license: string; photo_sts: string; photo_car_front: string; photo_car_back: string; photo_car_left: string; photo_car_right: string;
+  photo_license: string; photo_license_back: string | null; photo_sts: string; photo_sts_back: string | null; recheck_fields: string[]; recheck_note: string | null;
+  loc_city: string | null; lat: number | null; lng: number | null; seen_ago: number | null; wants_line: boolean; online_today_sec: number; online_week_sec: number;
+ photo_car_front: string; photo_car_back: string; photo_car_left: string; photo_car_right: string;
 }
 interface Topup { id: number; driver_id: number; amount: number; name: string; phone: string }
 interface Poll {
@@ -34,7 +38,7 @@ interface Poll {
   topups: Topup[]; config: any;
 }
 
-const TABS = ["Заказы", "Водители", "Эфир", "Настройки"] as const;
+const TABS = ["Заказы", "Водители", "Парк", "Отчёты", "Эфир", "Настройки"] as const;
 type Tab = (typeof TABS)[number];
 type Act = (a: string, b: Record<string, unknown>) => void;
 
@@ -64,10 +68,14 @@ function DriverCard({ d, onAct, onCreds }: { d: Driver; onAct: Act; onCreds: (c:
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState(false);
   const [amount, setAmount] = useState("");
-  const photos = [
-    ["Права", d.photo_license], ["СТС", d.photo_sts], ["Спереди", d.photo_car_front],
-    ["Сзади", d.photo_car_back], ["Слева", d.photo_car_left], ["Справа", d.photo_car_right],
+  const photos: [string, string, string][] = [
+    ["license", "Права, лицо", d.photo_license], ["license_back", "Права, оборот", d.photo_license_back || ""],
+    ["sts", "СТС, лицо", d.photo_sts], ["sts_back", "СТС, оборот", d.photo_sts_back || ""],
+    ["car_front", "Авто спереди", d.photo_car_front], ["car_back", "Авто сзади", d.photo_car_back],
+    ["car_left", "Авто слева", d.photo_car_left], ["car_right", "Авто справа", d.photo_car_right],
   ];
+  const [sel, setSel] = useState<string[]>([]);
+  const [note, setNote] = useState("");
   const toggleTariff = (id: string) => {
     const next = d.tariffs.includes(id) ? d.tariffs.filter((x) => x !== id) : [...d.tariffs, id];
     onAct("disp_driver_tariffs", { driver_id: d.id, tariffs: next });
@@ -134,14 +142,25 @@ function DriverCard({ d, onAct, onCreds }: { d: Driver; onAct: Act; onCreds: (c:
             onCancel={() => setEdit(false)} onSave={(v) => { onAct("disp_update_driver", { driver_id: d.id, ...v }); setEdit(false); }} />
         </div>
       )}
+      {d.recheck_fields?.length > 0 && <p className="mt-2 rounded-xl bg-amber-50 p-2 text-sm font-semibold text-amber-800">Ждём пересъёмку: {d.recheck_fields.length} шт.{d.recheck_note ? ` · ${d.recheck_note}` : ""}</p>}
       {open && (
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {photos.map(([l, u]) => (
-            <a key={l} href={u} target="_blank" rel="noopener noreferrer" className="block">
-              <img src={u} alt={l} className="aspect-square w-full rounded-xl object-cover" />
-              <span className="text-[11px] font-bold text-neutral-500">{l}</span>
-            </a>
-          ))}
+        <div className="mt-3">
+          <p className="mb-2 text-xs text-neutral-500">Нажмите на фото, чтобы открыть. Отметьте галочкой то, что нужно переснять.</p>
+          <div className="grid grid-cols-2 gap-2">
+            {photos.map(([k, l, u]) => (
+              <div key={k} className={`rounded-xl p-1.5 ${sel.includes(k) ? "bg-red-50 ring-2 ring-red-300" : "bg-neutral-50"}`}>
+                {u ? (
+                  <a href={u} target="_blank" rel="noopener noreferrer"><img src={u} alt={l} className="aspect-[4/3] w-full rounded-lg object-cover" /></a>
+                ) : <div className="flex aspect-[4/3] items-center justify-center rounded-lg bg-neutral-200 text-xs text-neutral-500">нет фото</div>}
+                <label className="mt-1 flex items-center gap-2 text-[12px] font-bold text-neutral-700">
+                  <input type="checkbox" checked={sel.includes(k)} onChange={() => setSel(sel.includes(k) ? sel.filter((x) => x !== k) : [...sel, k])} className="h-4 w-4 accent-red-600" />{l}
+                </label>
+              </div>
+            ))}
+          </div>
+          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Что не так? Например: права не читаются" maxLength={200}
+            className="mt-2 w-full rounded-xl bg-neutral-100 px-3 py-2.5 text-sm font-semibold text-neutral-900 outline-none" />
+          <Btn kind="danger" disabled={!sel.length} onClick={() => { onAct("disp_request_recheck", { driver_id: d.id, fields: sel, note }); setSel([]); setNote(""); }} className="mt-2 w-full !py-2.5">Отправить на пересъёмку ({sel.length})</Btn>
         </div>
       )}
     </div>
@@ -268,7 +287,7 @@ export default function AppDispatcher() {
   return (
     <Shell title="Диспетчер" onLogout={logout} right={<span className="text-xs font-bold text-neutral-500">на линии: {onlineCount}</span>}>
       <div className="mx-auto max-w-2xl p-4 pb-20">
-        <div className="mb-4 grid grid-cols-4 gap-1 rounded-2xl bg-white p-1.5 shadow-sm">
+        <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-white p-1.5 shadow-sm sm:grid-cols-6">
           {TABS.map((t) => (
             <button key={t} onClick={() => setTab(t)} className={`rounded-xl py-2.5 text-[13px] font-extrabold ${tab === t ? "bg-[#fcd34d]" : "text-neutral-500"}`}>
               {t}
@@ -315,6 +334,10 @@ export default function AppDispatcher() {
             {data.drivers.map((d) => <DriverCard key={d.id} d={d} onAct={act} onCreds={setCreds} />)}
           </div>
         )}
+
+        {data && tab === "Парк" && <FleetTab drivers={data.drivers} />}
+
+        {data && tab === "Отчёты" && <ReportsTab token={token} onUnauthorized={() => setToken(null)} />}
 
         {data && tab === "Эфир" && (
           <div className="space-y-3">
