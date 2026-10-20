@@ -10,7 +10,15 @@ export interface ClientTrip {
   car_plate: string | null; car_color: string | null; driver_lat: number | null; driver_lng: number | null;
   driver_rating: number | null; rating: number | null; last_msg_id: number | null; last_msg_role?: string | null;
   pay_method?: string; eta_at?: string | null; share_token?: string | null; cancelled_by?: string | null;
-  manual_driver?: boolean; driver_phone?: string | null;
+  manual_driver?: boolean; driver_phone?: string | null; created_at?: string | null;
+}
+
+function SearchTimer({ since }: { since: string }) {
+  const now = useNow(1000);
+  const sec = Math.max(0, Math.floor((now - new Date(since).getTime()) / 1000));
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return <span className="font-mono tabular-nums">{h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`}</span>;
 }
 
 const STEPS = [
@@ -125,8 +133,18 @@ export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise }:
 
       {t.status === "new" && (
         <>
-          <div className="flex items-center gap-2 rounded-2xl bg-neutral-50 p-3 text-sm font-semibold text-neutral-600">
-            <Icon name="Loader" size={16} className="animate-spin" /> Ищем машину. Уведомим, как только она будет назначена.
+          <div className="rounded-2xl bg-neutral-900 p-4 text-white">
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2 text-sm font-semibold text-neutral-300">
+                <Icon name="Loader" size={16} className="animate-spin text-[#fcd34d]" /> {t.scheduled_at ? "Подбираем водителя к нужному времени" : "Ищем водителя"}
+              </span>
+              {!t.scheduled_at && t.created_at && <span className="text-2xl font-extrabold text-[#fcd34d]"><SearchTimer since={t.created_at} /></span>}
+            </div>
+            {!t.scheduled_at && (
+              <p className="mt-3 text-sm leading-snug text-neutral-300">
+                Поиск водителя на межгород обычно занимает от 10 минут: подбираем машину, готовую к дальней дороге. Можно закрыть приложение, мы пришлём уведомление, как только водитель будет назначен.
+              </p>
+            )}
           </div>
           <div className="rounded-2xl bg-amber-50 p-3">
             <p className="mb-2 text-sm font-semibold text-amber-900">Хотите уехать быстрее? Предложите больше.</p>
