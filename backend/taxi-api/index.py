@@ -126,5 +126,13 @@ def handler(event: dict, context) -> dict:
         conn.rollback()
         push.reset()
         return resp(e.code, {'error': e.message})
+    except Exception as e:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        push.reset()
+        print('unhandled', type(e).__name__, str(e)[:200])
+        return resp(503, {'error': 'Сервис занят, повторите через несколько секунд'})
     finally:
         conn.close()

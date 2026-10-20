@@ -13,13 +13,27 @@ export class AppApiError extends Error {
 }
 
 export async function appCall<T = any>(action: string, body: Record<string, unknown> = {}, token?: string | null): Promise<T> {
-  const res = await fetch(URL_API, {
+  const send = () => fetch(URL_API, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(token ? { "X-Auth-Token": token } : {}) },
     body: JSON.stringify({ action, ...body }),
   });
+  let res: Response;
+  try {
+    res = await send();
+  } catch {
+    await new Promise((r) => setTimeout(r, 1200));
+    try {
+      res = await send();
+    } catch {
+      throw new AppApiError(0, "Нет связи с сервером. Проверьте интернет и повторите");
+    }
+  }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new AppApiError(res.status, data.error || "Ошибка соединения");
+  if (!res.ok) {
+    const fallback = res.status >= 500 ? "Сервис занят, повторите через несколько секунд" : "Ошибка соединения";
+    throw new AppApiError(res.status, data.error || fallback);
+  }
   return data as T;
 }
 

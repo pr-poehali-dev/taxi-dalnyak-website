@@ -64,7 +64,15 @@ def driver_cancel(cur, driver_id, trip_id):
     return blocked
 
 
+_LAST_TICK = [0.0]
+
+
 def tick(cur):
+    import time
+    now = time.time()
+    if now - _LAST_TICK[0] < 6:
+        return
+    _LAST_TICK[0] = now
     cfg = get_config(cur)
     delay = int(cfg['priority_delay_sec'])
     cur.execute(

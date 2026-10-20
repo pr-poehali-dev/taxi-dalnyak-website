@@ -283,7 +283,7 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng):
         with ThreadPoolExecutor(max_workers=10) as ex:
             return list(ex.map(lambda p: zone(reverse(p[0], p[1])), points))
 
-    new_km = min(km, max(0.0, new_territory_km(coords, km, za, zb, classify, started + 3.3)))
+    new_km = min(km, max(0.0, new_territory_km(coords, km, za, zb, classify, started + 2.4)))
     if new_km < 3:
         new_km = 0.0
     reg_km = km - new_km
