@@ -4,6 +4,8 @@
     { "name": "Unknown action", "method": "POST", "path": "/", "body": { "action": "nope" }, "expectedStatus": 400 },
     { "name": "Client login bad phone", "method": "POST", "path": "/", "body": { "action": "client_login", "phone": "123" }, "expectedStatus": 400 },
     { "name": "Protected without token", "method": "POST", "path": "/", "body": { "action": "disp_poll" }, "expectedStatus": 401 },
-    { "name": "Client login", "method": "POST", "path": "/", "body": { "action": "client_login", "phone": "+79990000001", "name": "Тест" }, "expectedStatus": 200, "expectedBody": { "token": "string" }, "bodyMatcher": "partial" }
+    { "name": "Public config", "method": "POST", "path": "/", "body": { "action": "config" }, "expectedStatus": 200, "expectedBody": { "min_price": 2000 }, "bodyMatcher": "partial" },
+    { "name": "Client login", "method": "POST", "path": "/", "body": { "action": "client_login", "phone": "+79990000001", "name": "Тест" }, "expectedStatus": 200, "expectedBody": { "token": "string" }, "bodyMatcher": "partial" },
+    { "name": "Driver login wrong password", "method": "POST", "path": "/", "body": { "action": "driver_login", "phone": "+79990000002", "password": "wrongpass1" }, "expectedStatus": 401 }
   ]
 }

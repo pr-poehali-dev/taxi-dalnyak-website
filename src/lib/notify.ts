@@ -1,7 +1,5 @@
 export function askNotifyPermission() {
-  if (typeof Notification !== "undefined" && Notification.permission === "default") {
-    Notification.requestPermission().catch(() => undefined);
-  }
+  return;
 }
 
 let audioCtx: AudioContext | null = null;
@@ -25,14 +23,7 @@ function beep() {
   }
 }
 
-export function pushNotify(title: string, body: string) {
+export function pushNotify(_title?: string, _body?: string) {
   beep();
   if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
-  if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-    try {
-      new Notification(title, { body, tag: "taxi-order", requireInteraction: true });
-    } catch {
-      return;
-    }
-  }
 }

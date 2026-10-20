@@ -26,6 +26,7 @@ export async function appCall<T = any>(action: string, body: Record<string, unkn
 export const TRIP_STATUS: Record<string, string> = {
   new: "Ищем водителя",
   assigned: "Водитель назначен",
+  enroute: "Водитель выехал",
   arrived: "Водитель на месте",
   in_progress: "В пути",
   done: "Завершён",
@@ -36,7 +37,21 @@ export const DRIVER_STATUS: Record<string, string> = {
   pending: "На проверке",
   approved: "Одобрен",
   rejected: "Отклонён",
+  blocked: "Заблокирован",
 };
+
+export type Tariff = "standard" | "comfort" | "minivan";
+export const TARIFF_LIST: { id: Tariff; name: string; car: string; icon: string }[] = [
+  { id: "standard", name: "Стандарт", car: "Седан, 4 места", icon: "Car" },
+  { id: "comfort", name: "Комфорт", car: "Бизнес-класс, 4 места", icon: "Sparkles" },
+  { id: "minivan", name: "Минивэн", car: "До 6 пассажиров", icon: "Bus" },
+];
+export const TARIFF_NAME: Record<string, string> = { standard: "Стандарт", comfort: "Комфорт", minivan: "Минивэн" };
+
+export function whenText(iso: string | null | undefined) {
+  if (!iso) return "Сейчас";
+  return new Date(iso).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+}
 
 export function money(v: number | string | null | undefined) {
   return `${Math.round(Number(v || 0)).toLocaleString("ru-RU")} ₽`;

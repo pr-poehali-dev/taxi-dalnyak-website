@@ -11,7 +11,7 @@ export default function AppHome() {
     <div className="min-h-screen bg-neutral-50 p-5 text-neutral-900" style={{ fontFamily: "Manrope, sans-serif" }}>
       <div className="mx-auto max-w-md pt-10">
         <h1 className="text-3xl font-extrabold">Такси Дальняк</h1>
-        <p className="mt-1 text-neutral-500">Прототип приложения. Выберите, кем войти.</p>
+        <p className="mt-1 text-neutral-500">Междугороднее такси. Выберите, кем войти.</p>
         <div className="mt-6 space-y-3">
           {ROLES.map((r) => (
             <a key={r.href} href={r.href} className="flex items-center gap-4 rounded-3xl bg-white p-5 shadow-sm active:scale-[0.99]">

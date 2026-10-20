@@ -1,80 +1,137 @@
+import base64
 import hmac
 import os
 import uuid
-import base64
 
 import boto3
 
-from common import S, ApiError, norm_phone, new_token
+from common import (
+    S, ApiError, norm_phone, clean, sha, hash_password, check_password, create_session,
+    placeholder_token, rate_limit, get_config,
+)
+from push import send_push, dispatcher_ids, vapid_keys
 
 
 def user_by_token(cur, token, role):
-    if not token:
+    if not token or len(str(token)) > 128:
         raise ApiError(401, 'Нужно войти')
-    cur.execute(f"SELECT * FROM {S}.app_users WHERE token = %s AND role = %s", (token, role))
+    cur.execute(
+        f"""SELECT u.id, u.phone, u.name, u.role FROM {S}.app_sessions s JOIN {S}.app_users u ON u.id = s.user_id
+            WHERE s.token_hash = %s AND s.expires_at > now() AND u.role = %s""",
+        (sha(token), role),
+    )
     u = cur.fetchone()
     if not u:
         raise ApiError(401, 'Сессия устарела, войдите снова')
     return u
 
 
+def logout(cur, token):
+    if token:
+        cur.execute(f"DELETE FROM {S}.app_sessions WHERE token_hash = %s", (sha(token),))
+    return {'ok': True}
+
+
+def public_config(cur, body):
+    cfg = get_config(cur)
+    return {
+        'rates': cfg['rates'], 'min_price': cfg['min_price'],
+        'support_telegram': cfg['support_telegram'], 'support_max': cfg['support_max'],
+        'vapid_public': vapid_keys(cur)['public'],
+    }
+
+
+def push_subscribe(cur, user, body):
+    endpoint = str(body.get('endpoint') or '')
+    p256dh = str(body.get('p256dh') or '')
+    auth = str(body.get('auth') or '')
+    if not endpoint.startswith('https://') or not p256dh or not auth or len(endpoint) > 1000:
+        raise ApiError(400, 'Неверная подписка')
+    cur.execute(
+        f"""INSERT INTO {S}.app_push_subs (user_id, endpoint, p256dh, auth) VALUES (%s, %s, %s, %s)
+            ON CONFLICT (user_id, endpoint) DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth""",
+        (user['id'], endpoint, p256dh, auth),
+    )
+    cur.execute(
+        f"""DELETE FROM {S}.app_push_subs WHERE user_id = %s AND id NOT IN
+            (SELECT id FROM {S}.app_push_subs WHERE user_id = %s ORDER BY id DESC LIMIT 5)""",
+        (user['id'], user['id']),
+    )
+    return {'ok': True}
+
+
 def client_login(cur, body):
+    ip = body.get('_ip', '')
     phone = norm_phone(body.get('phone'))
-    name = (body.get('name') or '').strip() or None
-    cur.execute(f"SELECT * FROM {S}.app_users WHERE phone = %s AND role = 'client'", (phone,))
+    rate_limit(cur, f'login:ip:{ip}', 40, 600)
+    rate_limit(cur, f'login:client:{phone}', 12, 600)
+    name = clean(body.get('name'), 60) or None
+    cur.execute(f"SELECT id, name FROM {S}.app_users WHERE phone = %s AND role = 'client'", (phone,))
     u = cur.fetchone()
     if u:
         if name and name != u['name']:
             cur.execute(f"UPDATE {S}.app_users SET name = %s WHERE id = %s", (name, u['id']))
-        return {'token': u['token'], 'name': name or u['name'], 'phone': phone}
-    token = new_token()
-    cur.execute(
-        f"INSERT INTO {S}.app_users (phone, role, name, token) VALUES (%s, 'client', %s, %s)",
-        (phone, name, token),
-    )
-    return {'token': token, 'name': name, 'phone': phone}
+        uid, name = u['id'], name or u['name']
+    else:
+        cur.execute(
+            f"INSERT INTO {S}.app_users (phone, role, name, token) VALUES (%s, 'client', %s, %s) RETURNING id",
+            (phone, name, placeholder_token()),
+        )
+        uid = cur.fetchone()['id']
+    return {'token': create_session(cur, uid), 'name': name, 'phone': phone}
 
 
 def driver_login(cur, body):
+    ip = body.get('_ip', '')
     phone = norm_phone(body.get('phone'))
-    cur.execute(f"SELECT * FROM {S}.app_users WHERE phone = %s AND role = 'driver'", (phone,))
+    pw = str(body.get('password') or '')
+    rate_limit(cur, f'login:ip:{ip}', 40, 600)
+    rate_limit(cur, f'login:driver:{phone}', 8, 600)
+    cur.execute(f"SELECT id, password_hash FROM {S}.app_users WHERE phone = %s AND role = 'driver'", (phone,))
     u = cur.fetchone()
-    if not u:
-        raise ApiError(404, 'Водитель с таким номером не найден. Пройдите регистрацию')
-    return {'token': u['token']}
+    if not u or not u['password_hash'] or not check_password(pw, u['password_hash']):
+        raise ApiError(401, 'Неверный номер или пароль')
+    return {'token': create_session(cur, u['id'])}
 
 
 def dispatcher_login(cur, body):
+    ip = body.get('_ip', '')
+    rate_limit(cur, f'login:disp:{ip}', 6, 600)
     pwd = os.environ.get('DISPATCHER_PASSWORD', '')
     given = str(body.get('password') or '')
     if not pwd or not hmac.compare_digest(pwd.encode(), given.encode()):
         raise ApiError(401, 'Неверный пароль')
-    cur.execute(f"SELECT * FROM {S}.app_users WHERE role = 'dispatcher' LIMIT 1")
+    cur.execute(f"SELECT id FROM {S}.app_users WHERE role = 'dispatcher' LIMIT 1")
     u = cur.fetchone()
     if u:
-        token = new_token()
-        cur.execute(f"UPDATE {S}.app_users SET token = %s WHERE id = %s", (token, u['id']))
+        uid = u['id']
     else:
-        token = new_token()
         cur.execute(
-            f"INSERT INTO {S}.app_users (phone, role, name, token) VALUES ('dispatcher', 'dispatcher', 'Диспетчер', %s)",
-            (token,),
+            f"INSERT INTO {S}.app_users (phone, role, name, token) VALUES ('dispatcher', 'dispatcher', 'Диспетчер', %s) RETURNING id",
+            (placeholder_token(),),
         )
-    return {'token': token}
+        uid = cur.fetchone()['id']
+    return {'token': create_session(cur, uid, 7)}
 
 
 PHOTO_FIELDS = ['license', 'sts', 'car_front', 'car_back', 'car_left', 'car_right']
 
 
 def upload_photo(user_id, field, data_url):
+    if not str(data_url).startswith('data:image/'):
+        raise ApiError(400, 'Нужны фотографии')
     raw = data_url.split(',', 1)[-1]
-    content = base64.b64decode(raw)
-    if len(content) > 4_000_000:
+    try:
+        content = base64.b64decode(raw, validate=True)
+    except Exception:
+        raise ApiError(400, 'Не удалось прочитать фото')
+    if len(content) > 1_500_000:
         raise ApiError(400, 'Фото слишком большое')
-    key = f"drivers/{user_id}/{field}_{uuid.uuid4().hex[:8]}.jpg"
+    if not content.startswith(b'\xff\xd8'):
+        raise ApiError(400, 'Фото должно быть в формате JPEG')
+    key = f"drivers/{user_id}/{field}_{uuid.uuid4().hex}.jpg"
     s3 = boto3.client(
-        's3',
-        endpoint_url='https://bucket.poehali.dev',
+        's3', endpoint_url='https://bucket.poehali.dev',
         aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
         aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
     )
@@ -83,33 +140,37 @@ def upload_photo(user_id, field, data_url):
 
 
 def driver_register(cur, body):
+    ip = body.get('_ip', '')
+    rate_limit(cur, f'reg:ip:{ip}', 5, 3600)
     phone = norm_phone(body.get('phone'))
-    name = (body.get('name') or '').strip()
-    car_model = (body.get('car_model') or '').strip()
-    car_plate = (body.get('car_plate') or '').strip().upper()
-    car_color = (body.get('car_color') or '').strip()
+    name = clean(body.get('name'), 80)
+    car_model = clean(body.get('car_model'), 60)
+    car_plate = clean(body.get('car_plate'), 15).upper()
+    car_color = clean(body.get('car_color'), 30)
+    pw = str(body.get('password') or '')
     photos = body.get('photos') or {}
     if not name or not car_model or not car_plate:
         raise ApiError(400, 'Заполните имя, марку и госномер')
-    missing = [f for f in PHOTO_FIELDS if not photos.get(f)]
-    if missing:
+    if len(pw) < 8 or len(pw) > 64:
+        raise ApiError(400, 'Пароль должен быть не короче 8 символов')
+    if any(not photos.get(f) for f in PHOTO_FIELDS):
         raise ApiError(400, 'Нужны все 6 фотографий')
     cur.execute(f"SELECT id FROM {S}.app_users WHERE phone = %s AND role = 'driver'", (phone,))
     if cur.fetchone():
         raise ApiError(409, 'Этот номер уже зарегистрирован. Нажмите «Войти»')
-    token = new_token()
     cur.execute(
-        f"INSERT INTO {S}.app_users (phone, role, name, token) VALUES (%s, 'driver', %s, %s) RETURNING id",
-        (phone, name, token),
+        f"INSERT INTO {S}.app_users (phone, role, name, token, password_hash) VALUES (%s, 'driver', %s, %s, %s) RETURNING id",
+        (phone, name, placeholder_token(), hash_password(pw)),
     )
     uid = cur.fetchone()['id']
     urls = {f: upload_photo(uid, f, photos[f]) for f in PHOTO_FIELDS}
     cur.execute(
         f"""INSERT INTO {S}.app_drivers
-            (user_id, car_model, car_plate, car_color, status,
-             photo_license, photo_sts, photo_car_front, photo_car_back, photo_car_left, photo_car_right)
+            (user_id, car_model, car_plate, car_color, status, photo_license, photo_sts,
+             photo_car_front, photo_car_back, photo_car_left, photo_car_right)
             VALUES (%s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s)""",
         (uid, car_model, car_plate, car_color, urls['license'], urls['sts'],
          urls['car_front'], urls['car_back'], urls['car_left'], urls['car_right']),
     )
-    return {'token': token}
+    send_push(cur, dispatcher_ids(cur), 'Новый водитель', f'{name} · {car_model} ждёт проверки', '/app/dispatcher', 'driver-new')
+    return {'token': create_session(cur, uid)}

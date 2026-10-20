@@ -14,7 +14,7 @@ export const PHOTO_SLOTS = [
 ];
 
 export default function DriverRegister({ onToken, onBack }: { onToken: (t: string) => void; onBack: () => void }) {
-  const [f, setF] = useState({ name: "", phone: "", car_model: "", car_plate: "", car_color: "" });
+  const [f, setF] = useState({ name: "", phone: "", car_model: "", car_plate: "", car_color: "", password: "" });
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -29,7 +29,7 @@ export default function DriverRegister({ onToken, onBack }: { onToken: (t: strin
     }
   };
 
-  const ready = f.name && f.car_model && f.car_plate && f.phone.replace(/\D/g, "").length === 11 && PHOTO_SLOTS.every((s) => photos[s.key]);
+  const ready = f.name && f.car_model && f.car_plate && f.phone.replace(/\D/g, "").length === 11 && f.password.length >= 8 && PHOTO_SLOTS.every((s) => photos[s.key]);
 
   const submit = async () => {
     setBusy(true);
@@ -51,6 +51,7 @@ export default function DriverRegister({ onToken, onBack }: { onToken: (t: strin
       <Field label="Имя и фамилия" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
       <Field label="Телефон" type="tel" value={f.phone} onFocus={() => !f.phone && setF({ ...f, phone: "+7" })}
         onChange={(e) => setF({ ...f, phone: formatPhone(e.target.value) })} placeholder="+7 (___) ___-__-__" />
+      <Field label="Пароль (не короче 8 символов)" type="password" autoComplete="new-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} />
       <Field label="Марка и модель авто" value={f.car_model} onChange={(e) => setF({ ...f, car_model: e.target.value })} placeholder="Toyota Camry" />
       <div className="grid grid-cols-2 gap-3">
         <Field label="Госномер" value={f.car_plate} onChange={(e) => setF({ ...f, car_plate: e.target.value })} placeholder="А123ВС77" />
