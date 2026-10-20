@@ -22,14 +22,34 @@ def _key():
 
 
 def _item(p):
+    city = p.get('city') or p.get('town') or p.get('village') or p.get('hamlet') or p.get('county') or ''
+    street = p.get('street') or ''
+    house = p.get('housenumber') or ''
+    name = p.get('name') or ''
+    line = ', '.join(x for x in [street, house] if x)
+    title = name or line or p.get('address_line1') or city or p.get('formatted') or ''
+    if name and line and name != street:
+        sub_parts = [line, city]
+    elif line and not name:
+        sub_parts = [city]
+    else:
+        sub_parts = [city]
+    state = p.get('state') or ''
+    if state and state != city:
+        sub_parts.append(state)
+    sub = ', '.join(x for x in sub_parts if x and x != title)
+    if title == city and not line:
+        sub = state if state and state != city else (p.get('country') or '')
     return {
         'label': p.get('formatted') or '',
+        'title': title,
+        'subtitle': sub,
         'lat': p.get('lat'),
         'lng': p.get('lon'),
-        'city': p.get('city') or p.get('town') or p.get('village') or p.get('hamlet') or p.get('county') or '',
-        'street': p.get('street') or '',
-        'house': p.get('housenumber') or '',
-        'state': p.get('state') or '',
+        'city': city,
+        'street': street,
+        'house': house,
+        'state': state,
         'country': p.get('country') or '',
     }
 

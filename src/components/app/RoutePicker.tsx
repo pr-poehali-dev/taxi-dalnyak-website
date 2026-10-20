@@ -6,6 +6,23 @@ import { useBackClose } from "@/lib/useBackClose";
 
 type Which = "from" | "to";
 
+const RECENT_KEY = "app_recent_places";
+
+function loadRecent(): Place[] {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); } catch { return []; }
+}
+
+function saveRecent(p: Place) {
+  const list = [p, ...loadRecent().filter((x) => x.label !== p.label)].slice(0, 6);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+}
+
+function parts(p: Place): { title: string; sub: string } {
+  if (p.title) return { title: p.title, sub: p.subtitle || "" };
+  const [first, ...rest] = (p.label || "").split(", ");
+  return { title: first, sub: rest.join(", ") };
+}
+
 export default function RoutePicker({ token, fromText, toText, near, start, onPickFrom, onPickTo, onMyLocation, onMap, onClose }: {
   token: string; fromText: string; toText: string; near: [number, number] | null; start: Which;
   onPickFrom: (p: Place) => void; onPickTo: (p: Place) => void; onMyLocation: () => void; onMap: (w: Which) => void; onClose: () => void;
@@ -42,7 +59,10 @@ export default function RoutePicker({ token, fromText, toText, near, start, onPi
     return () => clearTimeout(timer.current);
   }, [q, dirty, token, near]);
 
+  const recent = loadRecent();
+
   const pick = (p: Place) => {
+    saveRecent(p);
     setItems([]);
     setDirty(false);
     if (which === "from") {
@@ -88,15 +108,23 @@ export default function RoutePicker({ token, fromText, toText, near, start, onPi
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100"><Icon name="MapPin" size={18} /></span>
           <span className="font-bold">Указать на карте</span>
         </button>
-        {loading && <p className="px-5 py-3 text-sm text-neutral-400">Ищем адреса...</p>}
-        {items.map((p, i) => (
-          <button key={i} onClick={() => pick(p)} className="flex w-full items-start gap-3 border-t border-neutral-50 px-5 py-3 text-left active:bg-neutral-50">
-            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100"><Icon name="MapPin" size={16} className="text-neutral-500" /></span>
-            <span className="min-w-0 text-[15px] font-semibold leading-snug">{p.label}</span>
-          </button>
-        ))}
+        {loading && items.length === 0 && <p className="px-5 py-3 text-sm text-neutral-400">Ищем адреса...</p>}
+        {(dirty && items.length > 0 ? items : !dirty ? recent : []).map((p, i) => {
+          const { title, sub } = parts(p);
+          return (
+            <button key={i} onClick={() => pick(p)} className="flex w-full items-center gap-3 px-5 py-2.5 text-left active:bg-neutral-50">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100">
+                <Icon name={!dirty ? "Clock" : "MapPin"} size={18} className="text-neutral-500" />
+              </span>
+              <span className="min-w-0 flex-1 border-b border-neutral-100 py-1.5">
+                <span className="block truncate text-[16px] font-bold leading-tight text-neutral-900">{title}</span>
+                {sub && <span className="block truncate text-[13px] leading-tight text-neutral-400">{sub}</span>}
+              </span>
+            </button>
+          );
+        })}
         {!loading && dirty && q.trim().length >= 3 && items.length === 0 && <p className="px-5 py-3 text-sm text-neutral-400">Ничего не нашли. Попробуйте написать город и улицу.</p>}
-        {!dirty && which === "to" && <p className="px-5 py-4 text-sm text-neutral-400">Введите город или адрес, куда едете.</p>}
+        {!dirty && recent.length === 0 && <p className="px-5 py-4 text-sm text-neutral-400">{which === "to" ? "Введите город или адрес, куда едете." : "Введите адрес подачи или выберите на карте."}</p>}
       </div>
     </div>
   );

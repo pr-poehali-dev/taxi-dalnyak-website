@@ -19,6 +19,7 @@ import RoutePicker from "@/components/app/RoutePicker";
 import ClientMenu, { MenuAction } from "@/components/app/ClientMenu";
 import { HistoryPanel, PromoPanel, BonusPanel } from "@/components/app/ClientPanels";
 import BonusBanner from "@/components/app/BonusBanner";
+import WhenPicker, { whenError, whenLabel } from "@/components/app/WhenPicker";
 import ClientTripCard, { ClientTrip } from "@/components/app/ClientTripCard";
 import Onboarding from "@/components/app/Onboarding";
 import InstallGate, { needsInstall } from "@/components/app/InstallGate";
@@ -44,12 +45,6 @@ interface Quote {
 interface Poll {
   active: ClientTrip | null; upcoming: ClientTrip[]; history: (ClientTrip & { id: number })[];
   support_telegram: string; support_max: string; bonus_km?: number; me?: { name: string | null; phone: string };
-}
-
-function minLocal() {
-  const d = new Date(Date.now() + 40 * 60000);
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 16);
 }
 
 export default function AppClient() {
@@ -320,14 +315,10 @@ export default function AppClient() {
                     <button key={k} onClick={() => setPay(k)} className={`rounded-2xl border-2 py-3 text-sm font-extrabold ${pay === k ? "border-neutral-900 bg-neutral-50" : "border-transparent bg-neutral-100 text-neutral-500"}`}>{l}</button>
                   ))}
                 </div>
-                <label className="flex items-center gap-3 rounded-2xl bg-neutral-100 p-3">
-                  <input type="checkbox" checked={scheduled} onChange={(e) => setScheduled(e.target.checked)} className="h-5 w-5 accent-neutral-900" />
-                  <span className="font-bold">Предзаказ на дату и время</span>
-                </label>
-                {scheduled && <Field type="datetime-local" min={minLocal()} value={when} onChange={(e) => setWhen(e.target.value)} />}
+                <WhenPicker enabled={scheduled} value={when} onToggle={setScheduled} onChange={setWhen} />
                 <Field value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Комментарий: багаж, дети, подъезд" maxLength={300} />
-                <Btn onClick={order} disabled={busy || !fromOk || (scheduled && !when)} className="w-full text-lg">
-                  {busy ? "Отправляем..." : scheduled ? "Оформить предзаказ" : `Заказать ${TARIFF_LIST.find((x) => x.id === tariff)?.name} за ${money(bump === 0 ? payPrice : price)}`}
+                <Btn onClick={order} disabled={busy || !fromOk || (scheduled && !!whenError(when))} className="w-full text-lg">
+                  {busy ? "Отправляем..." : scheduled ? `Оформить предзаказ на ${whenLabel(when)}` : `Заказать ${TARIFF_LIST.find((x) => x.id === tariff)?.name} за ${money(bump === 0 ? payPrice : price)}`}
                 </Btn>
               </>
             )}

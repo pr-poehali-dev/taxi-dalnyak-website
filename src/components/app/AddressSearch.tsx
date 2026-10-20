@@ -3,7 +3,7 @@ import { appCall } from "@/lib/appApi";
 import Icon from "@/components/ui/icon";
 
 export interface Place {
-  label: string; lat: number; lng: number; city: string; street: string; house: string; state?: string;
+  label: string; lat: number; lng: number; city: string; street: string; house: string; state?: string; title?: string; subtitle?: string;
 }
 
 export default function AddressSearch({ token, value, onChange, onPick, placeholder, near }: {
