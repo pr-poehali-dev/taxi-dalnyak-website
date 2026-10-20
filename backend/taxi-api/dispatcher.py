@@ -12,7 +12,7 @@ def poll(cur, user, body):
     cur.execute(
         f"""SELECT t.id, t.from_text, t.to_text, t.comment, t.price, t.base_price, t.status, t.tariff, t.region,
                    t.distance_km, t.scheduled_at, t.created_at, t.driver_id, t.assigned_by, t.commission, t.rating,
-                   t.rating_comment, t.cancelled_by, t.pay_method, t.from_city, t.from_street, t.from_house,
+                   t.rating_comment, t.cancelled_by, t.pay_method, t.eta_at, t.from_city, t.from_street, t.from_house,
                    c.phone AS client_phone, c.name AS client_name,
                    d.name AS driver_name, d.phone AS driver_phone, dr.car_model, dr.car_plate,
                    (SELECT max(m.id) FROM {S}.app_messages m WHERE m.trip_id = t.id) AS last_msg_id,
@@ -61,11 +61,14 @@ def assign(cur, user, body):
     if not t or t['status'] not in ('new', 'assigned'):
         raise ApiError(400, 'Заказ уже нельзя переназначить')
     if t['tariff'] not in d['tariffs']:
-        raise ApiError(400, 'У водителя нет такого тарифа. Сначала назначьте тариф в карточке водителя')
+        cur.execute(f"UPDATE {S}.app_drivers SET tariffs = array_append(tariffs, %s) WHERE user_id = %s", (t['tariff'], d['user_id']))
     if t['driver_id'] == d['user_id']:
         return {'ok': True}
     refund_commission(cur, t['id'])
-    charge_commission(cur, d['user_id'], t['id'])
+    if body.get('charge'):
+        charge_commission(cur, d['user_id'], t['id'])
+    else:
+        cur.execute(f"UPDATE {S}.app_trips SET commission = 0 WHERE id = %s", (t['id'],))
     cur.execute(
         f"UPDATE {S}.app_trips SET driver_id = %s, status = 'assigned', assigned_by = 'dispatcher', reminder_stage = 0, updated_at = now() WHERE id = %s",
         (d['user_id'], t['id']),
@@ -176,6 +179,66 @@ def driver_status(cur, user, body):
     if status in texts:
         send_push(cur, [body.get('driver_id')], texts[status][0], texts[status][1], '/app/driver', 'status')
     return {'ok': True}
+
+
+def _driver_fields(body):
+    name = clean(body.get('name'), 80)
+    car_model = clean(body.get('car_model'), 60)
+    car_plate = clean(body.get('car_plate'), 15).upper()
+    car_color = clean(body.get('car_color'), 30)
+    if not name or not car_model or not car_plate:
+        raise ApiError(400, 'Заполните имя, марку авто и госномер')
+    tariffs = [t for t in (body.get('tariffs') or []) if t in TARIFFS]
+    return name, car_model, car_plate, car_color, tariffs
+
+
+def create_driver(cur, user, body):
+    import secrets
+    from common import norm_phone, hash_password, placeholder_token
+    name, car_model, car_plate, car_color, tariffs = _driver_fields(body)
+    phone = norm_phone(body.get('phone'))
+    cur.execute(f"SELECT id FROM {S}.app_users WHERE phone = %s AND role = 'driver'", (phone,))
+    if cur.fetchone():
+        raise ApiError(409, 'Водитель с таким номером уже есть')
+    password = clean(body.get('password'), 64) or secrets.token_hex(4)
+    if len(password) < 8:
+        raise ApiError(400, 'Пароль не короче 8 символов')
+    cur.execute(
+        f"INSERT INTO {S}.app_users (phone, role, name, token, password_hash) VALUES (%s, 'driver', %s, %s, %s) RETURNING id",
+        (phone, name, placeholder_token(), hash_password(password)),
+    )
+    uid = cur.fetchone()['id']
+    cur.execute(
+        f"""INSERT INTO {S}.app_drivers (user_id, car_model, car_plate, car_color, status, tariffs)
+            VALUES (%s, %s, %s, %s, 'approved', %s)""",
+        (uid, car_model, car_plate, car_color, tariffs or ['standard']),
+    )
+    return {'id': uid, 'phone': phone, 'password': password}
+
+
+def update_driver(cur, user, body):
+    name, car_model, car_plate, car_color, _ = _driver_fields(body)
+    cur.execute(f"UPDATE {S}.app_users SET name = %s WHERE id = %s AND role = 'driver'", (name, body.get('driver_id')))
+    cur.execute(
+        f"UPDATE {S}.app_drivers SET car_model = %s, car_plate = %s, car_color = %s WHERE user_id = %s",
+        (car_model, car_plate, car_color, body.get('driver_id')),
+    )
+    return {'ok': True}
+
+
+def reset_password(cur, user, body):
+    import secrets
+    from common import hash_password
+    password = secrets.token_hex(4)
+    cur.execute(
+        f"UPDATE {S}.app_users SET password_hash = %s WHERE id = %s AND role = 'driver' RETURNING phone",
+        (hash_password(password), body.get('driver_id')),
+    )
+    row = cur.fetchone()
+    if not row:
+        raise ApiError(404, 'Водитель не найден')
+    cur.execute(f"DELETE FROM {S}.app_sessions WHERE user_id = %s", (body.get('driver_id'),))
+    return {'phone': row['phone'], 'password': password}
 
 
 def driver_tariffs(cur, user, body):

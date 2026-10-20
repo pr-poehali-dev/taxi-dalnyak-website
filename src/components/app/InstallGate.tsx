@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Btn } from "./ui";
+import { reachGoal } from "@/lib/metrika";
 import { canInstallNatively, installApp, isIos, isStandalone } from "@/lib/pushClient";
 
 export const isMobile = () => /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
@@ -13,6 +14,7 @@ export default function InstallGate({ who }: { who: string }) {
 
   const install = async () => {
     await installApp();
+    reachGoal("app_install");
     force((n) => n + 1);
   };
 

@@ -55,17 +55,18 @@ def send_message(cur, role, user, body):
             raise ApiError(400, 'Чат доступен, когда назначен водитель')
         rate_limit(cur, f'chat:{user["id"]}', 30, 60)
     cur.execute(
-        f"INSERT INTO {S}.app_messages (trip_id, sender_role, sender_id, text) VALUES (%s, %s, %s, %s)",
+        f"INSERT INTO {S}.app_messages (trip_id, sender_role, sender_id, text) VALUES (%s, %s, %s, %s) RETURNING id, sender_role, text, created_at",
         (t['id'], role, user['id'], text),
     )
+    created = cur.fetchone()
     shown = mask(text) if role != 'dispatcher' else text
     if role == 'client':
-        send_push(cur, [t['driver_id']], 'Сообщение от пассажира', shown, '/app/driver', f'chat-{t["id"]}')
+        send_push(cur, [t['driver_id']], 'Вам написал пассажир', shown, '/app/driver', f'chat-{t["id"]}')
     elif role == 'driver':
-        send_push(cur, [t['client_id']], 'Сообщение от водителя', shown, '/app/client', f'chat-{t["id"]}')
+        send_push(cur, [t['client_id']], 'Вам написал водитель', shown, '/app/client', f'chat-{t["id"]}')
     else:
         send_push(cur, [t['client_id']], 'Сообщение от диспетчера', shown, '/app/client', f'chat-{t["id"]}')
         send_push(cur, [t['driver_id']], 'Сообщение от диспетчера', shown, '/app/driver', f'chat-{t["id"]}')
     if role != 'dispatcher':
-        send_push(cur, dispatcher_ids(cur), f'Чат заказа №{t["id"]}', text, '/app/office-k7x2', f'dchat-{t["id"]}')
-    return {'ok': True}
+        send_push(cur, dispatcher_ids(cur), f'Новое сообщение в чате заказа №{t["id"]}', text, '/app/office-k7x2', f'dchat-{t["id"]}')
+    return {'ok': True, 'message': created}

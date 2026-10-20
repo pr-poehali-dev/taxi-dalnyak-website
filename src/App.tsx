@@ -51,6 +51,7 @@ import { ROUTE_LANDINGS } from "./lib/routeLandings";
 import MoscowBusiness from "./pages/MoscowBusiness";
 import Otzyv from "./pages/Otzyv";
 import AppClient from "./pages/app/AppClient";
+import AppTrack from "./pages/app/AppTrack";
 import AppDriver from "./pages/app/AppDriver";
 import AppDispatcher from "./pages/app/AppDispatcher";
 
@@ -115,6 +116,7 @@ const App = () => (
 
           <Route path="/app" element={<Navigate to="/app/client" replace />} />
           <Route path="/app/client" element={<AppClient />} />
+          <Route path="/track/:token" element={<AppTrack />} />
           <Route path="/app/driver" element={<AppDriver />} />
           <Route path="/app/office-k7x2" element={<AppDispatcher />} />
 

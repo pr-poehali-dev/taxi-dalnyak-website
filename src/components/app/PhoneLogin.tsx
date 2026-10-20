@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { appCall, formatPhone } from "@/lib/appApi";
 import { Btn, Field } from "./ui";
+import { reachGoal } from "@/lib/metrika";
 
 interface Props {
   action: "client_login" | "driver_login";
@@ -23,7 +24,8 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
     setBusy(true);
     setErr("");
     try {
-      const r = await appCall<{ token: string }>(action, { phone, name, password });
+      const r = await appCall<{ token: string; is_new?: boolean }>(action, { phone, name, password });
+      if (action === "client_login" && r.is_new) reachGoal("app_signup");
       onToken(r.token);
     } catch (e2) {
       setErr((e2 as Error).message);

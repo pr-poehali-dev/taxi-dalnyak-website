@@ -57,7 +57,12 @@ function speak(text: string) {
   }
 }
 
+let lastAt = 0;
+
 export function pushNotify(text?: string) {
+  const now = Date.now();
+  if (now - lastAt < 2500) return;
+  lastAt = now;
   beep();
   if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
   if (text) setTimeout(() => speak(text), 750);

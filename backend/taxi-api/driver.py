@@ -9,7 +9,7 @@ LIVE = ('enroute', 'arrived', 'in_progress')
 NEXT = {'assigned': 'enroute', 'enroute': 'arrived', 'arrived': 'in_progress', 'in_progress': 'done'}
 
 TRIP_COLS = """t.id, t.from_city, t.from_street, t.from_house, t.from_text, t.from_lat, t.from_lng, t.to_text, t.to_lat, t.to_lng,
-               t.comment, t.price, t.pay_method, t.tariff, t.region, t.distance_km, t.scheduled_at, t.status, t.commission"""
+               t.comment, t.price, t.pay_method, t.eta_at, t.tariff, t.region, t.distance_km, t.scheduled_at, t.status, t.commission"""
 
 
 def _me(cur, uid):
@@ -66,11 +66,19 @@ def poll(cur, user, body):
     )
     casts = cur.fetchall()
     cur.execute(f"SELECT id, amount, status, created_at FROM {S}.app_topups WHERE driver_id = %s ORDER BY id DESC LIMIT 5", (user['id'],))
-    return {
+    topups = cur.fetchall()
+    cur.execute(
+        f"""SELECT id, from_city, to_text, cancelled_by FROM {S}.app_trips
+            WHERE driver_id = %s AND status = 'cancelled' AND cancelled_by IN ('client', 'dispatcher')
+              AND updated_at > now() - interval '30 minutes' ORDER BY id DESC LIMIT 5""",
+        (user['id'],),
+    )
+    cancelled = cur.fetchall()
+    return {'cancelled': cancelled,
         'me': me, 'active': active, 'upcoming': upcoming, 'available': available, 'broadcasts': casts,
         'commission_pct': cfg['commission_pct'], 'priority_price': cfg['priority_price'],
         'priority_days': cfg['priority_days'], 'payment_info': cfg['payment_info'],
-        'topups': cur.fetchall(), 'support_telegram': cfg['support_telegram'], 'support_max': cfg['support_max'],
+        'topups': topups, 'support_telegram': cfg['support_telegram'], 'support_max': cfg['support_max'],
     }
 
 
@@ -146,12 +154,14 @@ def _near(cur, trip_id, driver_id, field_lat, field_lng, km, what):
 def trip_status(cur, user, body):
     target = body.get('status')
     cur.execute(
-        f"SELECT id, status, scheduled_at FROM {S}.app_trips WHERE id = %s AND driver_id = %s FOR UPDATE",
+        f"SELECT id, status, scheduled_at, eta_at FROM {S}.app_trips WHERE id = %s AND driver_id = %s FOR UPDATE",
         (body.get('trip_id'), user['id']),
     )
     t = cur.fetchone()
     if not t or NEXT.get(t['status']) != target:
         raise ApiError(400, 'Неверное действие для этого заказа')
+    if target == 'enroute' and t['scheduled_at'] is None and t['eta_at'] is None:
+        raise ApiError(400, 'Сначала укажите время подачи, клиент ждёт')
     if target == 'enroute':
         cur.execute(
             f"SELECT 1 FROM {S}.app_trips WHERE driver_id = %s AND status IN ('enroute', 'arrived', 'in_progress') AND id <> %s",
@@ -170,6 +180,27 @@ def trip_status(cur, user, body):
         extra = ', finished_at = now()'
     cur.execute(f"UPDATE {S}.app_trips SET status = %s{extra}, updated_at = now() WHERE id = %s", (target, t['id']))
     trips.notify_status(cur, t['id'], target)
+    return {'ok': True}
+
+
+def set_eta(cur, user, body):
+    try:
+        minutes = int(body.get('minutes'))
+    except (TypeError, ValueError):
+        raise ApiError(400, 'Укажите время подачи')
+    if not 1 <= minutes <= 1440:
+        raise ApiError(400, 'Время подачи от 1 минуты до 24 часов')
+    cur.execute(
+        f"""UPDATE {S}.app_trips SET eta_at = now() + make_interval(mins => %s), updated_at = now()
+            WHERE id = %s AND driver_id = %s AND status IN ('assigned', 'enroute') RETURNING client_id""",
+        (minutes, body.get('trip_id'), user['id']),
+    )
+    row = cur.fetchone()
+    if not row:
+        raise ApiError(400, 'Время подачи можно указать, пока водитель едет к клиенту')
+    h, m = divmod(minutes, 60)
+    human = f'{h} ч {m} мин' if h and m else (f'{h} ч' if h else f'{m} мин')
+    send_push(cur, [row['client_id']], 'Время подачи', f'Водитель приедет через {human}', '/app/client', f"eta-{body.get('trip_id')}")
     return {'ok': True}
 
 

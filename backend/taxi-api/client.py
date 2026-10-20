@@ -1,7 +1,9 @@
+import secrets
 from datetime import datetime, timedelta, timezone
 
 import chat
 import pricing
+import trips
 from common import S, ApiError, TARIFFS, clean, get_config, rate_limit
 from push import send_push, dispatcher_ids, drivers_for_trip, trip_line
 
@@ -11,7 +13,7 @@ LIVE = ('assigned', 'enroute', 'arrived', 'in_progress')
 TRIP_SELECT = f"""
     SELECT t.id, t.from_text, t.from_city, t.from_street, t.from_house, t.from_lat, t.from_lng, t.to_text,
            t.comment, t.price, t.base_price, t.status, t.tariff, t.region, t.distance_km, t.scheduled_at,
-           t.created_at, t.rating, t.driver_id, t.pay_method,
+           t.created_at, t.rating, t.driver_id, t.pay_method, t.eta_at, t.share_token, t.cancelled_by,
            d.name AS driver_name, dr.car_model, dr.car_plate, dr.car_color,
            CASE WHEN t.status IN ('enroute', 'arrived', 'in_progress') THEN dr.lat END AS driver_lat,
            CASE WHEN t.status IN ('enroute', 'arrived', 'in_progress') THEN dr.lng END AS driver_lng,
@@ -106,11 +108,11 @@ def create_trip(cur, user, body):
     cur.execute(
         f"""INSERT INTO {S}.app_trips
             (client_id, from_text, from_lat, from_lng, from_city, from_street, from_house, to_text, to_lat, to_lng,
-             comment, price, base_price, tariff, region, distance_km, scheduled_at, pay_method)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+             comment, price, base_price, tariff, region, distance_km, scheduled_at, pay_method, share_token)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
         (user['id'], from_text, float(body['from_lat']), float(body['from_lng']), city, street, house, to_text,
          float(body['to_lat']), float(body['to_lng']), clean(body.get('comment'), 300) or None, price, base,
-         tariff, q['region'], q['distance_km'], when, pay_method),
+         tariff, q['region'], q['distance_km'], when, pay_method, secrets.token_urlsafe(16)),
     )
     trip_id = cur.fetchone()['id']
     notify_new_trip(cur, trip_id)
@@ -134,6 +136,7 @@ def notify_new_trip(cur, trip_id):
 
 
 def poll(cur, user, body):
+    trips.tick(cur)
     cur.execute(TRIP_SELECT + " WHERE t.client_id = %s ORDER BY t.id DESC LIMIT 30", (user['id'],))
     rows = cur.fetchall()
     active = next((r for r in rows if r['status'] in OPEN and (r['scheduled_at'] is None or r['status'] in ('enroute', 'arrived', 'in_progress'))), None)

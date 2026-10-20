@@ -78,6 +78,15 @@ def tick(cur):
         send_push(cur, rest, 'Новый заказ', f"{trip_line(t)} · {int(t['price'])} ₽", '/app/driver', f"trip-{t['id']}")
 
     cur.execute(
+        f"""UPDATE {S}.app_trips SET reminder_stage = 1
+            WHERE status = 'new' AND driver_id IS NULL AND scheduled_at IS NULL AND reminder_stage < 1
+              AND created_at <= now() - interval '120 seconds' RETURNING *"""
+    )
+    for t in cur.fetchall():
+        send_push(cur, [t['client_id']], 'Ищем вам машину', 'Диспетчер уже подбирает водителя. Можно закрыть приложение, мы сообщим', '/app/client', f"trip-{t['id']}")
+        send_push(cur, dispatcher_ids(cur), 'Заказ без водителя', f"№{t['id']}: {trip_line(t)}", '/app/office-k7x2', f"trip-{t['id']}")
+
+    cur.execute(
         f"""UPDATE {S}.app_trips SET reminder_stage = 2
             WHERE status = 'assigned' AND scheduled_at IS NOT NULL AND reminder_stage < 2
               AND scheduled_at <= now() + interval '15 minutes' RETURNING *"""

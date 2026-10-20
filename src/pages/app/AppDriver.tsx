@@ -7,6 +7,8 @@ import { useGeo } from "@/lib/useGeo";
 import { useSeen } from "@/lib/useSeen";
 import { useAppShell } from "@/lib/useAppShell";
 import { useChatAlert } from "@/lib/useChatAlert";
+import { useReadMap } from "@/lib/useReadMap";
+import PushBanner from "@/components/app/PushBanner";
 import PhoneLogin from "@/components/app/PhoneLogin";
 import DriverRegister from "@/components/app/DriverRegister";
 import DriverTripCard, { DTrip, PickupBlock } from "@/components/app/DriverTripCard";
@@ -26,12 +28,12 @@ interface Me {
 interface Poll {
   me: Me; active: DTrip | null; upcoming: DTrip[]; available: DTrip[]; broadcasts: { id: number; text: string }[];
   commission_pct: number; priority_price: number; priority_days: number; payment_info: string;
-  topups: { id: number; amount: number; status: string }[]; support_telegram: string; support_max: string;
+  cancelled: { id: number }[]; topups: { id: number; amount: number; status: string }[]; support_telegram: string; support_max: string;
 }
 
 export default function AppDriver() {
   useAppShell("driver");
-  const chatAlert = useChatAlert("driver", "Новое сообщение от пассажира");
+  const chatAlert = useChatAlert("driver", "Вам написал пассажир");
   const [tab, setTab] = useState<"orders" | "profile" | "money">("orders");
   const { token, setToken } = useAppSession("driver");
   const [reg, setReg] = useState(false);
@@ -42,7 +44,7 @@ export default function AppDriver() {
   const [err, setErr] = useState("");
   const [amount, setAmount] = useState("");
   const [chatId, setChatId] = useState<number | null>(null);
-  const [readMap, setReadMap] = useState<Record<number, number>>({});
+  const { read: readMap, mark: markRead } = useReadMap("driver");
   const { ref: gps } = useGeo(!!token && ready, true);
   const seen = useSeen();
 
@@ -52,6 +54,7 @@ export default function AppDriver() {
     chatAlert(r.active ? [r.active, ...r.upcoming] : r.upcoming);
     if (seen("trips", r.available.map((t) => t.id)).length) pushNotify("Новый заказ");
     if (seen("cast", r.broadcasts.map((b) => b.id)).length) pushNotify("Сообщение от диспетчера");
+    if (seen("cancelled", (r.cancelled || []).map((c) => c.id)).length) pushNotify("Заказ отменён");
     if (seen("mine", [...(r.active ? [r.active.id] : []), ...r.upcoming.map((t) => t.id)]).length) pushNotify("Вам назначен заказ");
     setData(r);
   }, [token, gps, seen]);
@@ -93,7 +96,7 @@ export default function AppDriver() {
 
   const { me, active, upcoming, available, broadcasts, commission_pct, priority_price, priority_days } = data;
   const approved = me.status === "approved";
-  const unread = (t: DTrip) => !!t.last_msg_id && (readMap[t.id] || 0) < t.last_msg_id;
+  const unread = (t: DTrip) => !!t.last_msg_id && t.last_msg_role === "client" && (readMap[t.id] || 0) < t.last_msg_id;
   const points: MapPoint[] = [];
   const target = active || available[0];
   if (target?.from_lat && target?.from_lng) points.push({ lat: target.from_lat, lng: target.from_lng, color: "#2563eb", label: "Подача" });
@@ -131,6 +134,7 @@ export default function AppDriver() {
       right={<><span className="rounded-full bg-neutral-100 px-3 py-1 text-sm font-extrabold">{money(me.balance)}</span><button onClick={() => setShowHelp(true)} aria-label="Помощь"><Icon name="CircleHelp" size={22} /></button></>}>
       <div className="mx-auto max-w-md space-y-4 p-4 pb-28">
         {errBox}
+        <PushBanner role="driver" token={token} />
 
         {tab === "orders" && (
           <>
@@ -147,6 +151,7 @@ export default function AppDriver() {
             {points.length > 0 && (active || available[0]) && <AppMap center={[55.75, 37.62]} points={points} className="h-44 w-full overflow-hidden rounded-3xl" />}
 
             {active && <DriverTripCard t={active} unread={unread(active)} onChat={() => setChatId(active.id)}
+              onEta={(m) => act("driver_set_eta", { trip_id: active.id, minutes: m })}
               onStep={(to) => act("driver_trip_status", { trip_id: active.id, status: to })}
               onCancel={() => window.confirm("Отказ от заказа учитывается. При частых отказах аккаунт блокируется. Отказаться?") && act("driver_cancel", { trip_id: active.id })} />}
 
@@ -155,6 +160,7 @@ export default function AppDriver() {
                 <h2 className="text-sm font-extrabold uppercase text-neutral-400">Мои предзаказы</h2>
                 {upcoming.map((t) => (
                   <DriverTripCard key={t.id} t={t} unread={unread(t)} onChat={() => setChatId(t.id)}
+                    onEta={(m) => act("driver_set_eta", { trip_id: t.id, minutes: m })}
                     onStep={(to) => act("driver_trip_status", { trip_id: t.id, status: to })}
                     onCancel={() => window.confirm("Отказ от заказа учитывается. При частых отказах аккаунт блокируется. Отказаться?") && act("driver_cancel", { trip_id: t.id })} />
                 ))}
@@ -250,7 +256,7 @@ export default function AppDriver() {
 
       {chatBtnNav}
       {chatId && <TripChat role="driver" tripId={chatId} token={token} onClose={() => setChatId(null)} onUnauthorized={() => setToken(null)}
-        onRead={(id) => setReadMap((m) => ({ ...m, [chatId]: id }))} />}
+        onRead={(id) => markRead(chatId, id)} />}
       {showHelp && <Tutorial slides={DRIVER_SLIDES} onClose={() => setShowHelp(false)} />}
     </Shell>
   );

@@ -9,6 +9,8 @@ import { useChatAlert } from "@/lib/useChatAlert";
 import Onboarding from "@/components/app/Onboarding";
 import TripChat from "@/components/app/TripChat";
 import DispatcherSettings from "@/components/app/DispatcherSettings";
+import DriverForm, { DriverFormValue } from "@/components/app/DriverForm";
+import PushBanner from "@/components/app/PushBanner";
 import { Badge, Btn, Field, Shell, tripTone } from "@/components/app/ui";
 import Icon from "@/components/ui/icon";
 
@@ -18,7 +20,7 @@ interface Trip {
   from_text: string | null; to_text: string; comment: string | null; price: number | null; status: string;
   created_at: string; driver_id: number | null; assigned_by: string | null;
   client_phone: string; client_name: string | null; driver_name: string | null; driver_phone: string | null;
-  last_msg_role?: string | null; car_model: string | null; car_plate: string | null; pay_method: string; from_city: string | null; from_street: string | null; from_house: string | null;
+  last_msg_role?: string | null; eta_at?: string | null; car_model: string | null; car_plate: string | null; pay_method: string; from_city: string | null; from_street: string | null; from_house: string | null;
 }
 interface Driver {
   id: number; name: string; phone: string; car_model: string; car_plate: string; car_color: string; status: string;
@@ -58,8 +60,9 @@ function Login({ onToken }: { onToken: (t: string) => void }) {
   );
 }
 
-function DriverCard({ d, onAct }: { d: Driver; onAct: Act }) {
+function DriverCard({ d, onAct, onCreds }: { d: Driver; onAct: Act; onCreds: (c: { phone: string; password: string }) => void }) {
   const [open, setOpen] = useState(false);
+  const [edit, setEdit] = useState(false);
   const [amount, setAmount] = useState("");
   const photos = [
     ["Права", d.photo_license], ["СТС", d.photo_sts], ["Спереди", d.photo_car_front],
@@ -118,6 +121,19 @@ function DriverCard({ d, onAct }: { d: Driver; onAct: Act }) {
           {d.has_priority && <Btn kind="ghost" onClick={() => onAct("disp_driver_priority", { driver_id: d.id, days: 0 })} className="flex-1 !py-2 !text-sm">Снять приоритет</Btn>}
         </div>
       )}
+      <div className="mt-2 flex gap-2">
+        <Btn kind="ghost" onClick={() => setEdit(!edit)} className="flex-1 !py-2 !text-sm">Изменить данные</Btn>
+        <Btn kind="ghost" onClick={async () => {
+          if (!window.confirm("Сбросить пароль? Водитель выйдет из приложения.")) return;
+          try { onCreds(await appCall("disp_reset_password", { driver_id: d.id }, localStorage.getItem("app_token_dispatcher"))); } catch (e) { window.alert((e as Error).message); }
+        }} className="flex-1 !py-2 !text-sm">Новый пароль</Btn>
+      </div>
+      {edit && (
+        <div className="mt-3">
+          <DriverForm editing initial={{ name: d.name, car_model: d.car_model, car_plate: d.car_plate, car_color: d.car_color }}
+            onCancel={() => setEdit(false)} onSave={(v) => { onAct("disp_update_driver", { driver_id: d.id, ...v }); setEdit(false); }} />
+        </div>
+      )}
       {open && (
         <div className="mt-3 grid grid-cols-3 gap-2">
           {photos.map(([l, u]) => (
@@ -133,8 +149,9 @@ function DriverCard({ d, onAct }: { d: Driver; onAct: Act }) {
 }
 
 function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; onAct: Act; onChat: () => void }) {
-  const [pick, setPick] = useState(false);
-  const free = drivers.filter((d) => d.status === "approved" && d.tariffs.includes(t.tariff) && d.online && !d.busy);
+  const [pick, setPick] = useState(t.status === "new");
+  const [charge, setCharge] = useState(false);
+  const free = drivers.filter((d) => d.status === "approved").sort((a, b) => Number(b.online && !b.busy) - Number(a.online && !a.busy));
   const finished = t.status === "done" || t.status === "cancelled";
   return (
     <div className={`rounded-3xl bg-white p-4 shadow-sm ${finished ? "opacity-75" : ""}`}>
@@ -159,6 +176,7 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
         <div className="text-neutral-500">{t.distance_km ? `${t.distance_km} км · ` : ""}{t.price ? money(t.price) : ""}{t.base_price && t.price && Number(t.price) > Number(t.base_price) ? ` (повышена с ${money(t.base_price)})` : ""}{t.commission ? ` · комиссия ${money(t.commission)}` : ""}</div>
         {t.comment && <div className="text-neutral-500">Комментарий: {t.comment}</div>}
         <a href={`tel:${t.client_phone}`} className="font-semibold text-sky-700">{t.client_name || "Клиент"} · {t.client_phone}</a>
+        {t.eta_at && ["assigned", "enroute"].includes(t.status) && <div className="font-bold text-amber-700">Водитель обещал приехать к {new Date(t.eta_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}</div>}
         {t.driver_name && <div className="mt-1 rounded-xl bg-neutral-100 p-2">Водитель: <b>{t.driver_name}</b>, {t.car_model} {t.car_plate}{t.driver_phone ? ` · ${t.driver_phone}` : ""} {t.assigned_by === "dispatcher" ? "(назначен вами)" : "(взял сам)"}</div>}
         {t.rating && <div className="mt-1 font-bold text-amber-600">Оценка пассажира: {"★".repeat(t.rating)}{t.rating_comment ? ` · ${t.rating_comment}` : ""}</div>}
         {t.cancelled_by && <div className="text-red-600">Отменил: {{ client: "пассажир", dispatcher: "диспетчер" }[t.cancelled_by] || t.cancelled_by}</div>}
@@ -172,12 +190,13 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
       </div>
       {pick && (
         <div className="mt-3 space-y-2">
-          {free.length === 0 && <p className="text-sm text-neutral-500">Нет свободных водителей на линии с тарифом «{TARIFF_NAME[t.tariff]}».</p>}
+          {free.length === 0 && <p className="text-sm text-neutral-500">Нет одобренных водителей. Добавьте водителя во вкладке «Водители».</p>}
+          <label className="flex items-center gap-2 text-sm font-semibold text-neutral-600"><input type="checkbox" checked={charge} onChange={(e) => setCharge(e.target.checked)} className="h-4 w-4 accent-neutral-900" />Списать комиссию с баланса водителя</label>
           {free.map((d) => (
-            <button key={d.id} onClick={() => { onAct("disp_assign", { trip_id: t.id, driver_id: d.id }); setPick(false); }}
+            <button key={d.id} onClick={() => { onAct("disp_assign", { trip_id: t.id, driver_id: d.id, charge }); setPick(false); }}
               className="flex w-full items-center justify-between rounded-2xl bg-neutral-100 p-3 text-left text-sm active:bg-[#fcd34d]">
-              <span><b>{d.name}</b> · {d.car_model} {d.car_plate}{d.rating ? ` · ★${Number(d.rating).toFixed(1)}` : ""}</span>
-              <span className="text-neutral-500">{money(d.balance)}</span>
+              <span><b>{d.name}</b> · {d.car_model} {d.car_plate}{d.tariffs.includes(t.tariff) ? "" : " · добавит тариф"}</span>
+              <span className={d.online ? "font-bold text-emerald-600" : "text-neutral-400"}>{d.busy ? "на заказе" : d.online ? "на линии" : "не на линии"}</span>
             </button>
           ))}
         </div>
@@ -197,6 +216,8 @@ export default function AppDispatcher() {
   const [minutes, setMinutes] = useState("60");
   const [err, setErr] = useState("");
   const [chatId, setChatId] = useState<number | null>(null);
+  const [addDriver, setAddDriver] = useState(false);
+  const [creds, setCreds] = useState<{ phone: string; password: string } | null>(null);
   const seen = useSeen();
 
   const refresh = useCallback(async () => {
@@ -214,6 +235,18 @@ export default function AppDispatcher() {
     setErr("");
     try {
       await appCall(action, body, token);
+      await refresh();
+    } catch (e) {
+      setErr((e as Error).message);
+    }
+  };
+
+  const createDriver = async (v: DriverFormValue) => {
+    setErr("");
+    try {
+      const r = await appCall<{ phone: string; password: string }>("disp_create_driver", { ...v }, token);
+      setCreds(r);
+      setAddDriver(false);
       await refresh();
     } catch (e) {
       setErr((e as Error).message);
@@ -245,6 +278,7 @@ export default function AppDispatcher() {
           ))}
         </div>
 
+        <div className="mb-3"><PushBanner role="dispatcher" token={token} /></div>
         {err && <p className="mb-3 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-600">{err}</p>}
         {!data && <p className="text-neutral-500">Загрузка...</p>}
 
@@ -257,6 +291,16 @@ export default function AppDispatcher() {
 
         {data && tab === "Водители" && (
           <div className="space-y-3">
+            {creds && (
+              <div className="rounded-3xl bg-emerald-50 p-4 ring-2 ring-emerald-200">
+                <div className="font-extrabold text-emerald-800">Данные для входа водителя</div>
+                <div className="mt-1 text-sm text-emerald-900">Передайте их водителю. Пароль показывается один раз.</div>
+                <div className="mt-2 rounded-xl bg-white p-3 font-mono text-sm text-neutral-900">Телефон: {creds.phone}<br />Пароль: {creds.password}<br />Вход: {window.location.origin}/app/driver</div>
+                <Btn kind="ghost" onClick={() => { navigator.clipboard?.writeText(`Приложение для водителей: ${window.location.origin}/app/driver\nЛогин: ${creds.phone}\nПароль: ${creds.password}`); }} className="mt-2 w-full !py-2.5">Скопировать для отправки</Btn>
+                <button onClick={() => setCreds(null)} className="mt-2 w-full text-center text-sm text-neutral-500">Закрыть</button>
+              </div>
+            )}
+            {addDriver ? <DriverForm onCancel={() => setAddDriver(false)} onSave={createDriver} /> : <Btn onClick={() => setAddDriver(true)} className="w-full">+ Добавить водителя вручную</Btn>}
             {data.topups.map((p) => (
               <div key={p.id} className="rounded-3xl bg-amber-50 p-4">
                 <div className="font-extrabold">Заявка на пополнение: {money(p.amount)}</div>
@@ -268,7 +312,7 @@ export default function AppDispatcher() {
               </div>
             ))}
             {data.drivers.length === 0 && <p className="rounded-3xl bg-white p-6 text-center text-neutral-500">Водителей пока нет.</p>}
-            {data.drivers.map((d) => <DriverCard key={d.id} d={d} onAct={act} />)}
+            {data.drivers.map((d) => <DriverCard key={d.id} d={d} onAct={act} onCreds={setCreds} />)}
           </div>
         )}
 

@@ -10,7 +10,7 @@ export function useAppShell(kind: AppKind) {
     link?.setAttribute("href", `/app-${kind}.webmanifest`);
     const theme = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     const prevTheme = theme?.content;
-    if (theme) theme.content = "#fcd34d";
+    if (theme) theme.content = "#000000";
     let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
     const prevRobots = robots?.content;
     if (robots) robots.content = "noindex, nofollow";

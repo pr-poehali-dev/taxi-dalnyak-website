@@ -28,7 +28,7 @@ export default function TripChat({ role, tripId, token, onClose, onUnauthorized,
     }
   }, [prefix, tripId, token, onRead]);
 
-  usePoll(load, 3000, true, onUnauthorized);
+  usePoll(load, 1500, true, onUnauthorized);
 
   useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs.length]);
 
@@ -39,8 +39,12 @@ export default function TripChat({ role, tripId, token, onClose, onUnauthorized,
     setText("");
     setErr("");
     try {
-      await appCall(`${prefix}_chat_send`, { trip_id: tripId, text: t }, token);
-      await load();
+      const r = await appCall<{ message: Msg }>(`${prefix}_chat_send`, { trip_id: tripId, text: t }, token);
+      if (r.message) {
+        setMsgs((m) => (m.some((x) => x.id === r.message.id) ? m : [...m, r.message]));
+        last.current = Math.max(last.current, r.message.id);
+        onRead?.(last.current);
+      }
     } catch (e2) {
       setErr((e2 as Error).message);
       setText(t);

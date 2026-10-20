@@ -1,6 +1,6 @@
 const YM_ID = 111028538;
 
-function reachGoal(goal: string, params?: Record<string, string>) {
+export function reachGoal(goal: string, params?: Record<string, string>) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ym = (window as any).ym;
   if (typeof ym === "function") ym(YM_ID, "reachGoal", goal, params);

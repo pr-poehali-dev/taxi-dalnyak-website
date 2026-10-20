@@ -5,8 +5,11 @@ import { usePoll } from "@/lib/usePoll";
 import { useGeo } from "@/lib/useGeo";
 import { useAppShell } from "@/lib/useAppShell";
 import { useChatAlert } from "@/lib/useChatAlert";
+import { useReadMap } from "@/lib/useReadMap";
+import { reachGoal } from "@/lib/metrika";
 import TariffPicker from "@/components/app/TariffPicker";
 import DriverBanner from "@/components/app/DriverBanner";
+import PushBanner from "@/components/app/PushBanner";
 import { useSeen } from "@/lib/useSeen";
 import { pushNotify } from "@/lib/notify";
 import AppMap, { MapPoint } from "@/components/app/AppMap";
@@ -21,7 +24,7 @@ import { Badge, Btn, Field, Shell, tripTone } from "@/components/app/ui";
 import Icon from "@/components/ui/icon";
 
 const STATUS_VOICE: Record<string, string> = {
-  assigned: "Водитель найден",
+  assigned: "Водитель найден. Откройте приложение, чтобы увидеть машину",
   enroute: "Машина выехала",
   arrived: "Машина приехала",
   in_progress: "Поездка началась",
@@ -46,7 +49,7 @@ function minLocal() {
 
 export default function AppClient() {
   useAppShell("client");
-  const chatAlert = useChatAlert("client", "Новое сообщение от водителя");
+  const chatAlert = useChatAlert("client", "Вам написал водитель");
   const { token, setToken } = useAppSession("client");
   const [ready, setReady] = useState(() => localStorage.getItem("app_onb_client") === "1");
   const [tutor, setTutor] = useState(() => localStorage.getItem("app_tut_client") !== "1");
@@ -69,7 +72,7 @@ export default function AppClient() {
   const [busy, setBusy] = useState(false);
   const [data, setData] = useState<Poll | null>(null);
   const [chatId, setChatId] = useState<number | null>(null);
-  const [readMap, setReadMap] = useState<Record<number, number>>({});
+  const { read: readMap, mark: markRead } = useReadMap("client");
   const [stars, setStars] = useState(0);
   const [skipRate, setSkipRate] = useState<number[]>([]);
   const [showHelp, setShowHelp] = useState(false);
@@ -113,7 +116,9 @@ export default function AppClient() {
     statusRef.current = a ? a.status : "";
     chatAlert(a ? [a, ...r.upcoming] : r.upcoming);
     const fresh = seen("done", r.history.filter((h) => h.status === "done").map((h) => h.id));
-    if (fresh.length) pushNotify("Поездка завершена. Оцените, пожалуйста");
+    if (fresh.length) { pushNotify("Поездка завершена. Оцените, пожалуйста"); reachGoal("app_trip_done"); }
+    const cancelledNow = seen("cancelled", r.history.filter((h) => h.status === "cancelled" && h.cancelled_by === "dispatcher").map((h) => h.id));
+    if (cancelledNow.length) pushNotify("Заказ отменён диспетчером");
     setData(r);
   }, [token, seen]);
 
@@ -134,6 +139,7 @@ export default function AppClient() {
         to_text: toText, to_lat: toPlace.lat, to_lng: toPlace.lng, tariff, price, comment, pay_method: pay,
         scheduled_at: scheduled && when ? new Date(when).toISOString() : null,
       }, token);
+      reachGoal(scheduled ? "app_preorder" : "app_order", { tariff });
       setToText(""); setToPlace(null); setQuote(null); setComment(""); setScheduled(false); setWhen(""); setBump(0);
       await refresh();
     } catch (e) {
@@ -174,7 +180,7 @@ export default function AppClient() {
   if (fromPos && (active || toPlace)) points.push({ lat: fromPos[0], lng: fromPos[1], color: "#2563eb", label: "Подача" });
   if (toPlace && !active) points.push({ lat: toPlace.lat, lng: toPlace.lng, color: "#171717", label: "Куда" });
   if (active?.driver_lat && active?.driver_lng) points.push({ lat: active.driver_lat, lng: active.driver_lng, color: "#f59e0b", label: "Водитель" });
-  const unread = (t: ClientTrip) => !!t.last_msg_id && (readMap[t.id] || 0) < t.last_msg_id;
+  const unread = (t: ClientTrip) => !!t.last_msg_id && t.last_msg_role === "driver" && (readMap[t.id] || 0) < t.last_msg_id;
   const fromOk = !!from.city;
 
   return (
@@ -194,6 +200,7 @@ export default function AppClient() {
             {gpsErr} <button onClick={locate} className="ml-1 underline">Повторить</button>
           </div>
         )}
+        <div className="mb-3"><PushBanner role="client" token={token} /></div>
         {err && <p className="mb-3 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-600">{err}</p>}
 
         {active ? (
@@ -308,7 +315,7 @@ export default function AppClient() {
       </div>
 
       {chatId && <TripChat role="client" tripId={chatId} token={token} onClose={() => setChatId(null)} onUnauthorized={() => setToken(null)}
-        onRead={(id) => setReadMap((m) => ({ ...m, [chatId]: id }))} />}
+        onRead={(id) => markRead(chatId, id)} />}
 
       {toRate && (
         <div className="fixed inset-0 z-[2800] flex items-end bg-black/50">

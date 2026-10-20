@@ -69,6 +69,7 @@ def client_login(cur, body):
     name = clean(body.get('name'), 60) or None
     cur.execute(f"SELECT id, name FROM {S}.app_users WHERE phone = %s AND role = 'client'", (phone,))
     u = cur.fetchone()
+    is_new = not u
     if u:
         if name and name != u['name']:
             cur.execute(f"UPDATE {S}.app_users SET name = %s WHERE id = %s", (name, u['id']))
@@ -79,7 +80,7 @@ def client_login(cur, body):
             (phone, name, placeholder_token()),
         )
         uid = cur.fetchone()['id']
-    return {'token': create_session(cur, uid), 'name': name, 'phone': phone}
+    return {'token': create_session(cur, uid), 'name': name, 'phone': phone, 'is_new': is_new}
 
 
 def driver_login(cur, body):

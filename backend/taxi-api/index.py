@@ -5,6 +5,7 @@ import chat
 import client
 import driver
 import dispatcher
+import track
 from common import ApiError, connect, resp
 
 PUBLIC = {
@@ -13,6 +14,7 @@ PUBLIC = {
     'driver_login': auth.driver_login,
     'driver_register': auth.driver_register,
     'dispatcher_login': auth.dispatcher_login,
+    'track': track.track,
 }
 
 PROTECTED = {
@@ -32,6 +34,7 @@ PROTECTED = {
     'driver_take': ('driver', driver.take),
     'driver_trip_status': ('driver', driver.trip_status),
     'driver_cancel': ('driver', driver.cancel),
+    'driver_set_eta': ('driver', driver.set_eta),
     'driver_request_topup': ('driver', driver.request_topup),
     'driver_buy_priority': ('driver', driver.buy_priority),
     'driver_chat_get': ('driver', driver.chat_get),
@@ -49,6 +52,9 @@ PROTECTED = {
     'disp_driver_priority': ('dispatcher', dispatcher.driver_priority),
     'disp_chat_get': ('dispatcher', dispatcher.trip_chat_get),
     'disp_chat_send': ('dispatcher', dispatcher.trip_chat_send),
+    'disp_create_driver': ('dispatcher', dispatcher.create_driver),
+    'disp_update_driver': ('dispatcher', dispatcher.update_driver),
+    'disp_reset_password': ('dispatcher', dispatcher.reset_password),
     'disp_save_config': ('dispatcher', dispatcher.save_config),
     'disp_push_subscribe': ('dispatcher', auth.push_subscribe),
 }

@@ -5,6 +5,7 @@ import {
   askLocation, askNotifications, canInstallNatively, installApp, isIos, isStandalone, pushSupported, subscribePush,
 } from "@/lib/pushClient";
 import type { Role } from "@/lib/appApi";
+import { reachGoal } from "@/lib/metrika";
 
 interface Props {
   role: Role;
@@ -22,7 +23,7 @@ export default function Onboarding({ role, token, needLocation, onDone }: Props)
   const canPush = pushSupported() && (!ios || installed);
 
   useEffect(() => {
-    if (notif === "granted") subscribePush(role, token).catch(() => undefined);
+    if (notif === "granted") subscribePush(role, token).then(() => reachGoal("app_push_on")).catch(() => undefined);
   }, [notif, role, token]);
 
   const doInstall = async () => {

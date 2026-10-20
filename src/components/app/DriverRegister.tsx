@@ -3,6 +3,7 @@ import { appCall, formatPhone } from "@/lib/appApi";
 import { compressPhoto } from "@/lib/photo";
 import { Btn, Field } from "./ui";
 import Icon from "@/components/ui/icon";
+import { reachGoal } from "@/lib/metrika";
 
 export const PHOTO_SLOTS = [
   { key: "license", label: "Водительское удостоверение" },
@@ -36,6 +37,7 @@ export default function DriverRegister({ onToken, onBack }: { onToken: (t: strin
     setErr("");
     try {
       const r = await appCall<{ token: string }>("driver_register", { ...f, photos });
+      reachGoal("app_driver_signup");
       onToken(r.token);
     } catch (e) {
       setErr((e as Error).message);
