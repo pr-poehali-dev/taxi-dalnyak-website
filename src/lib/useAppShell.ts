@@ -23,14 +23,17 @@ export function useAppShell(kind: AppKind) {
     const theme = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     const prevTheme = theme?.content;
     if (theme) theme.content = "#000000";
+    const isHome = window.location.pathname === "/";
     let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
     const prevRobots = robots?.content;
-    if (robots) robots.content = "noindex, nofollow";
-    else {
-      robots = document.createElement("meta");
-      robots.name = "robots";
-      robots.content = "noindex, nofollow";
-      document.head.appendChild(robots);
+    if (!isHome) {
+      if (robots) robots.content = "noindex, nofollow";
+      else {
+        robots = document.createElement("meta");
+        robots.name = "robots";
+        robots.content = "noindex, nofollow";
+        document.head.appendChild(robots);
+      }
     }
 
     window.history.pushState({ guard: true }, "");
@@ -55,7 +58,7 @@ export function useAppShell(kind: AppKind) {
       if (prevTouch) touch?.setAttribute("href", prevTouch);
       if (appTitle && prevAppTitle) appTitle.content = prevAppTitle;
       if (theme && prevTheme) theme.content = prevTheme;
-      if (robots && prevRobots) robots.content = prevRobots;
+      if (!isHome && robots && prevRobots) robots.content = prevRobots;
       window.removeEventListener("popstate", onPop);
       window.removeEventListener("pointerdown", unlock);
       window.removeEventListener("keydown", unlock);
