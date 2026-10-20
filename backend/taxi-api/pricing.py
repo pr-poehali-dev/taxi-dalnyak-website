@@ -54,15 +54,51 @@ def _item(p):
     }
 
 
+BAD_TITLE = ('городской округ', 'муниципальн', 'сельсовет', 'сельское поселение', 'городское поселение', 'административн')
+
+
+def _features(url, q):
+    try:
+        data = _get(url + '?' + urllib.parse.urlencode(q))
+    except Exception:
+        return []
+    return [f['properties'] for f in data.get('features', []) if f.get('properties', {}).get('lat') is not None]
+
+
 def suggest(text, lat=None, lng=None):
-    q = {'text': text, 'lang': 'ru', 'limit': 6, 'apiKey': _key()}
+    q = {'text': text, 'lang': 'ru', 'limit': 8, 'apiKey': _key(), 'filter': 'countrycode:ru,by,kz,ua,none'}
+    q.pop('filter')
     if lat is not None and lng is not None:
         q['bias'] = f'proximity:{lng},{lat}'
-    try:
-        data = _get('https://api.geoapify.com/v1/geocode/autocomplete?' + urllib.parse.urlencode(q))
-    except Exception:
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        f1 = ex.submit(_features, 'https://api.geoapify.com/v1/geocode/autocomplete', q)
+        f2 = ex.submit(_features, 'https://api.geoapify.com/v1/geocode/search', dict(q, limit=6))
+        props = f1.result() + f2.result()
+    if not props:
         raise ApiError(503, 'Поиск адресов временно недоступен')
-    return [_item(f['properties']) for f in data.get('features', []) if f.get('properties', {}).get('lat') is not None]
+    low = text.lower().strip()
+    seen, out = set(), []
+    for p in props:
+        it = _item(p)
+        if any(m in it['title'].lower() for m in BAD_TITLE):
+            continue
+        key = (it['title'].lower(), it['subtitle'].lower())
+        if key in seen:
+            continue
+        seen.add(key)
+        score = 0
+        t = it['title'].lower()
+        if t == low:
+            score -= 3
+        elif t.startswith(low):
+            score -= 2
+        elif low in t or low in (it['label'] or '').lower():
+            score -= 1
+        if p.get('result_type') in ('city', 'town', 'village', 'street', 'building', 'amenity'):
+            score -= 1
+        out.append((score, len(out), it))
+    out.sort(key=lambda x: (x[0], x[1]))
+    return [x[2] for x in out[:8]]
 
 
 _REV_CACHE = {}

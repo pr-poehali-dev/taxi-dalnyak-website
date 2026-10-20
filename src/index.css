@@ -341,3 +341,5 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--amber) / 0.7);
 }
+
+.soft-tiles { filter: saturate(0.75) contrast(0.92) brightness(1.06); }
