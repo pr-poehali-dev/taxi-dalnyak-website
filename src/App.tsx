@@ -50,6 +50,10 @@ import NewHome from "./pages/NewHome";
 import { ROUTE_LANDINGS } from "./lib/routeLandings";
 import MoscowBusiness from "./pages/MoscowBusiness";
 import Otzyv from "./pages/Otzyv";
+import AppHome from "./pages/app/AppHome";
+import AppClient from "./pages/app/AppClient";
+import AppDriver from "./pages/app/AppDriver";
+import AppDispatcher from "./pages/app/AppDispatcher";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +113,11 @@ const App = () => (
           {ROUTE_LANDINGS.map((r) => (
             <Route key={r.slug} path={`/${r.slug}`} element={<RouteLandingPage />} />
           ))}
+
+          <Route path="/app" element={<AppHome />} />
+          <Route path="/app/client" element={<AppClient />} />
+          <Route path="/app/driver" element={<AppDriver />} />
+          <Route path="/app/dispatcher" element={<AppDispatcher />} />
 
           <Route path="/:slug" element={<TownPage />} />
           <Route path="*" element={<PageNotFound />} />
