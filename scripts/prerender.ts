@@ -242,6 +242,8 @@ const APP_PAGES: AppPage[] = [
 
 export function appHtml(tpl: string, a: AppPage): string {
   let html = tpl;
+  html = html.replace(/<script>(?:(?!<\/script>)[\s\S])*__appKind(?:(?!<\/script>)[\s\S])*<\/script>/g, "");
+  html = html.replace("</head>", `    <link rel="manifest" href="${a.manifest}">\n    <link rel="apple-touch-icon" href="${a.icon}">\n    <meta name="apple-mobile-web-app-title" content="${esc(a.short)}">\n</head>`);
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${esc(a.title)}</title>`);
   html = html.replace(/<meta name="description"[^>]*>/, "");
   html = html.replace(/<meta name="keywords"[^>]*>/, "");
@@ -251,9 +253,6 @@ export function appHtml(tpl: string, a: AppPage): string {
   html = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g, "");
   html = html.replace(/<link rel="preload" as="image"[^>]*>/g, "");
   html = html.replace(/<meta name="robots"[^>]*>/, '<meta name="robots" content="noindex, nofollow"/>');
-  html = html.replace(/<link rel="manifest"[^>]*>/, `<link rel="manifest" href="${a.manifest}">`);
-  html = html.replace(/<link rel="apple-touch-icon"[^>]*>/, `<link rel="apple-touch-icon" href="${a.icon}">`);
-  html = html.replace(/<meta name="apple-mobile-web-app-title"[^>]*>/, `<meta name="apple-mobile-web-app-title" content="${esc(a.short)}">`);
   html = html.replace(/<meta name="theme-color"[^>]*>/, '<meta name="theme-color" content="#000000">');
   return html;
 }

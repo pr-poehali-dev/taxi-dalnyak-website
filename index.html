@@ -16,7 +16,17 @@
     <!-- <meta name="google-site-verification" content="ВАШ_КОД" /> -->
     <link rel="canonical" href="https://taxidalnyack.ru/"/>
     <link rel="icon" type="image/jpg" href="https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/files/favicon-1775385139095.jpg">
-    <link rel="manifest" href="/manifest.json">
+    <script>
+(function () {
+  var p = location.pathname, k = "";
+  if (p.indexOf("/app/driver") === 0) k = "driver";
+  else if (p.indexOf("/app/office-k7x2") === 0) k = "office";
+  else if (p.indexOf("/app/client") === 0 || p === "/app" || p === "/app/") k = "client";
+  var m = k ? "/app-" + k + ".webmanifest" : "/manifest.json";
+  document.write('<link rel="manifest" href="' + m + '">');
+  window.__appKind = k;
+})();
+</script>
     <link rel="preconnect" href="https://cdn.poehali.dev" crossorigin>
     <link rel="preload" as="image" href="/poster-home.webp" type="image/webp" fetchpriority="high">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,8 +37,15 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Дальняк">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <script>document.write('<meta name="apple-mobile-web-app-title" content="' + ({ driver: "Водитель", office: "Диспетчер" }[window.__appKind] || "Дальняк") + '">');</script>
+    <script>
+(function () {
+  var k = window.__appKind, t = { driver: ["/apple-touch-icon-driver.png", "Водитель"], office: ["/apple-touch-icon-office.png", "Диспетчер"], client: ["/apple-touch-icon.png", "Дальняк"] }[k];
+  if (!t) { document.write('<link rel="apple-touch-icon" href="/apple-touch-icon.png">'); return; }
+  document.write('<link rel="apple-touch-icon" href="' + t[0] + '">');
+  document.title = k === "driver" ? "Дальняк Водитель" : k === "office" ? "Дальняк Диспетчер" : "Такси Дальняк";
+})();
+</script>
     <meta name="theme-color" content="#c9a84c">
 
     <!-- Open Graph — для репостов в соцсетях -->
