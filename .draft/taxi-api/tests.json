@@ -1,0 +1,9 @@
+{
+  "tests": [
+    { "name": "OPTIONS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200 },
+    { "name": "Unknown action", "method": "POST", "path": "/", "body": { "action": "nope" }, "expectedStatus": 400 },
+    { "name": "Client login bad phone", "method": "POST", "path": "/", "body": { "action": "client_login", "phone": "123" }, "expectedStatus": 400 },
+    { "name": "Protected without token", "method": "POST", "path": "/", "body": { "action": "disp_poll" }, "expectedStatus": 401 },
+    { "name": "Client login", "method": "POST", "path": "/", "body": { "action": "client_login", "phone": "+79990000001", "name": "Тест" }, "expectedStatus": 200, "expectedBody": { "token": "string" }, "bodyMatcher": "partial" }
+  ]
+}
