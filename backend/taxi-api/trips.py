@@ -28,7 +28,7 @@ def check_blocking(cur, driver_id):
         )
         if cur.rowcount:
             send_push(cur, [driver_id], 'Аккаунт заблокирован', 'Из-за частых отмен заказов. Свяжитесь с диспетчером', '/app/driver', 'blocked')
-            send_push(cur, dispatcher_ids(cur), 'Водитель заблокирован', f'Водитель #{driver_id}: частые отмены', '/app/dispatcher', f'blocked-{driver_id}')
+            send_push(cur, dispatcher_ids(cur), 'Водитель заблокирован', f'Водитель #{driver_id}: частые отмены', '/app/office-k7x2', f'blocked-{driver_id}')
             return True
     return False
 
@@ -59,7 +59,7 @@ def driver_cancel(cur, driver_id, trip_id):
     cur.execute(f"SELECT * FROM {S}.app_trips WHERE id = %s", (trip_id,))
     tr = cur.fetchone()
     send_push(cur, [tr['client_id']], 'Водитель отказался', 'Мы уже ищем вам другую машину', '/app/client', f'trip-{trip_id}')
-    send_push(cur, dispatcher_ids(cur), 'Водитель отказался от заказа', f'Заказ №{trip_id} снова ищет водителя', '/app/dispatcher', f'trip-{trip_id}')
+    send_push(cur, dispatcher_ids(cur), 'Водитель отказался от заказа', f'Заказ №{trip_id} снова ищет водителя', '/app/office-k7x2', f'trip-{trip_id}')
     send_push(cur, drivers_for_trip(cur, tr['tariff']), 'Заказ снова свободен', trip_line(tr), '/app/driver', f'trip-{trip_id}')
     return blocked
 
@@ -83,7 +83,8 @@ def tick(cur):
               AND scheduled_at <= now() + interval '15 minutes' RETURNING *"""
     )
     for t in cur.fetchall():
-        send_push(cur, [t['driver_id'], t['client_id']], 'Предзаказ через 15 минут', trip_line(t), '/app', f"pre-{t['id']}")
+        send_push(cur, [t['driver_id']], 'Предзаказ через 15 минут', trip_line(t), '/app/driver', f"pre-{t['id']}")
+        send_push(cur, [t['client_id']], 'Предзаказ через 15 минут', trip_line(t), '/app/client', f"pre-{t['id']}")
 
     cur.execute(
         f"""UPDATE {S}.app_trips SET reminder_stage = 1
@@ -91,7 +92,8 @@ def tick(cur):
               AND scheduled_at <= now() + interval '60 minutes' RETURNING *"""
     )
     for t in cur.fetchall():
-        send_push(cur, [t['driver_id'], t['client_id']], 'Предзаказ через час', trip_line(t), '/app', f"pre-{t['id']}")
+        send_push(cur, [t['driver_id']], 'Предзаказ через час', trip_line(t), '/app/driver', f"pre-{t['id']}")
+        send_push(cur, [t['client_id']], 'Предзаказ через час', trip_line(t), '/app/client', f"pre-{t['id']}")
 
     cur.execute(
         f"""UPDATE {S}.app_trips SET reminder_stage = 1
@@ -99,5 +101,5 @@ def tick(cur):
               AND scheduled_at <= now() + interval '3 hours' RETURNING *"""
     )
     for t in cur.fetchall():
-        send_push(cur, dispatcher_ids(cur), 'Предзаказ без водителя', f"№{t['id']}: {trip_line(t)}", '/app/dispatcher', f"pre-{t['id']}")
+        send_push(cur, dispatcher_ids(cur), 'Предзаказ без водителя', f"№{t['id']}: {trip_line(t)}", '/app/office-k7x2', f"pre-{t['id']}")
         send_push(cur, drivers_for_trip(cur, t['tariff']), 'Предзаказ ждёт водителя', trip_line(t), '/app/driver', f"pre-{t['id']}")

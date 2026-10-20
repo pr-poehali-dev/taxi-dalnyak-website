@@ -7,7 +7,7 @@ export interface ClientTrip {
   id: number; from_text: string; to_text: string; status: string; price: number; base_price: number; tariff: string;
   scheduled_at: string | null; distance_km: number | null; driver_name: string | null; car_model: string | null;
   car_plate: string | null; car_color: string | null; driver_lat: number | null; driver_lng: number | null;
-  driver_rating: number | null; rating: number | null; last_msg_id: number | null;
+  driver_rating: number | null; rating: number | null; last_msg_id: number | null; last_msg_role?: string | null; pay_method?: string;
 }
 
 const STEPS = [

@@ -15,7 +15,8 @@ def poll(cur, user, body):
                    t.rating_comment, t.cancelled_by, t.pay_method, t.from_city, t.from_street, t.from_house,
                    c.phone AS client_phone, c.name AS client_name,
                    d.name AS driver_name, d.phone AS driver_phone, dr.car_model, dr.car_plate,
-                   (SELECT max(m.id) FROM {S}.app_messages m WHERE m.trip_id = t.id) AS last_msg_id
+                   (SELECT max(m.id) FROM {S}.app_messages m WHERE m.trip_id = t.id) AS last_msg_id,
+                   (SELECT m.sender_role FROM {S}.app_messages m WHERE m.trip_id = t.id ORDER BY m.id DESC LIMIT 1) AS last_msg_role
             FROM {S}.app_trips t
             JOIN {S}.app_users c ON c.id = t.client_id
             LEFT JOIN {S}.app_users d ON d.id = t.driver_id
@@ -98,7 +99,8 @@ def trip_status(cur, user, body):
     cur.execute(f"UPDATE {S}.app_trips SET status = %s{extra}, updated_at = now() WHERE id = %s", (status, t['id']))
     trips.notify_status(cur, t['id'], status)
     if status == 'cancelled':
-        send_push(cur, [t['client_id'], t['driver_id']], 'Заказ отменён диспетчером', f"Заказ №{t['id']}", '/app', f"trip-{t['id']}")
+        send_push(cur, [t['client_id']], 'Заказ отменён диспетчером', f"Заказ №{t['id']}", '/app/client', f"trip-{t['id']}")
+        send_push(cur, [t['driver_id']], 'Заказ отменён диспетчером', f"Заказ №{t['id']}", '/app/driver', f"trip-{t['id']}")
     return {'ok': True}
 
 

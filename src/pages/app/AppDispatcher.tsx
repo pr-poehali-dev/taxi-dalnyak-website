@@ -4,7 +4,8 @@ import { pushNotify } from "@/lib/notify";
 import { useAppSession } from "@/lib/useAppSession";
 import { usePoll } from "@/lib/usePoll";
 import { useSeen } from "@/lib/useSeen";
-import { useAppManifest } from "@/lib/useAppManifest";
+import { useAppShell } from "@/lib/useAppShell";
+import { useChatAlert } from "@/lib/useChatAlert";
 import Onboarding from "@/components/app/Onboarding";
 import TripChat from "@/components/app/TripChat";
 import DispatcherSettings from "@/components/app/DispatcherSettings";
@@ -17,7 +18,7 @@ interface Trip {
   from_text: string | null; to_text: string; comment: string | null; price: number | null; status: string;
   created_at: string; driver_id: number | null; assigned_by: string | null;
   client_phone: string; client_name: string | null; driver_name: string | null; driver_phone: string | null;
-  car_model: string | null; car_plate: string | null; pay_method: string; from_city: string | null; from_street: string | null; from_house: string | null;
+  last_msg_role?: string | null; car_model: string | null; car_plate: string | null; pay_method: string; from_city: string | null; from_street: string | null; from_house: string | null;
 }
 interface Driver {
   id: number; name: string; phone: string; car_model: string; car_plate: string; car_color: string; status: string;
@@ -186,7 +187,8 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
 }
 
 export default function AppDispatcher() {
-  useAppManifest();
+  useAppShell("office");
+  const chatAlert = useChatAlert("dispatcher", "Новое сообщение в чате заказа");
   const { token, setToken } = useAppSession("dispatcher");
   const [ready, setReady] = useState(() => localStorage.getItem("app_onb_dispatcher") === "1");
   const [tab, setTab] = useState<Tab>("Заказы");
@@ -199,9 +201,10 @@ export default function AppDispatcher() {
 
   const refresh = useCallback(async () => {
     const r = await appCall<Poll>("disp_poll", {}, token);
-    if (seen("trips", r.trips.map((t) => t.id)).length) pushNotify();
-    if (seen("drv", r.drivers.filter((d) => d.status === "pending").map((d) => d.id)).length) pushNotify();
-    if (seen("topup", r.topups.map((t) => t.id)).length) pushNotify();
+    chatAlert(r.trips.filter((t) => ["assigned", "enroute", "arrived", "in_progress"].includes(t.status)));
+    if (seen("trips", r.trips.map((t) => t.id)).length) pushNotify("Новый заказ");
+    if (seen("drv", r.drivers.filter((d) => d.status === "pending").map((d) => d.id)).length) pushNotify("Новый водитель на проверку");
+    if (seen("topup", r.topups.map((t) => t.id)).length) pushNotify("Заявка на пополнение");
     setData(r);
   }, [token, seen]);
 

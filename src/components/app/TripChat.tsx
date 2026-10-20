@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { appCall, Role } from "@/lib/appApi";
 import { usePoll } from "@/lib/usePoll";
 import Icon from "@/components/ui/icon";
+import { useBackClose } from "@/lib/useBackClose";
 
 interface Msg { id: number; sender_role: string; text: string; created_at: string }
 
@@ -10,6 +11,7 @@ const WHO: Record<string, string> = { client: "Пассажир", driver: "Во�
 export default function TripChat({ role, tripId, token, onClose, onUnauthorized, onRead }: {
   role: Role; tripId: number; token: string; onClose: () => void; onUnauthorized: () => void; onRead?: (id: number) => void;
 }) {
+  useBackClose(onClose);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [err, setErr] = useState("");

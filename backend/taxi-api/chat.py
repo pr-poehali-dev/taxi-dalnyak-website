@@ -64,7 +64,8 @@ def send_message(cur, role, user, body):
     elif role == 'driver':
         send_push(cur, [t['client_id']], 'Сообщение от водителя', shown, '/app/client', f'chat-{t["id"]}')
     else:
-        send_push(cur, [t['client_id'], t['driver_id']], 'Сообщение от диспетчера', shown, '/app', f'chat-{t["id"]}')
+        send_push(cur, [t['client_id']], 'Сообщение от диспетчера', shown, '/app/client', f'chat-{t["id"]}')
+        send_push(cur, [t['driver_id']], 'Сообщение от диспетчера', shown, '/app/driver', f'chat-{t["id"]}')
     if role != 'dispatcher':
-        send_push(cur, dispatcher_ids(cur), f'Чат заказа №{t["id"]}', text, '/app/dispatcher', f'dchat-{t["id"]}')
+        send_push(cur, dispatcher_ids(cur), f'Чат заказа №{t["id"]}', text, '/app/office-k7x2', f'dchat-{t["id"]}')
     return {'ok': True}

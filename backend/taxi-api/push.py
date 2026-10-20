@@ -33,8 +33,7 @@ def _send_one(sub, payload, priv):
     from pywebpush import webpush, WebPushException
     from py_vapid import Vapid02
     try:
-        raw = base64.urlsafe_b64decode(priv + '=' * (-len(priv) % 4))
-        vapid = Vapid02.from_raw(raw)
+        vapid = Vapid02.from_raw(priv.encode())
         webpush(
             subscription_info={'endpoint': sub['endpoint'], 'keys': {'p256dh': sub['p256dh'], 'auth': sub['auth']}},
             data=payload,
@@ -42,16 +41,19 @@ def _send_one(sub, payload, priv):
             vapid_claims={'sub': 'mailto:support@taxidalnyack.ru'},
             ttl=3600,
             timeout=4,
+            headers={'Urgency': 'high'},
         )
         return None
     except WebPushException as e:
         code = getattr(getattr(e, 'response', None), 'status_code', None)
+        print(f'push failed sub={sub["id"]} status={code}')
         return sub['id'] if code in (404, 410) else None
-    except Exception:
+    except Exception as e:
+        print(f'push error sub={sub["id"]} {type(e).__name__}: {e}')
         return None
 
 
-def send_push(cur, user_ids, title, body, url='/app', tag=None):
+def send_push(cur, user_ids, title, body, url='/app/client', tag=None):
     ids = [int(i) for i in set(user_ids) if i]
     if not ids:
         return

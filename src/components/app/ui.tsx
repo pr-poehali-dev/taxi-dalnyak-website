@@ -53,7 +53,7 @@ export function Shell({ title, onLogout, children, right }: { title: string; onL
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900" style={{ fontFamily: "Manrope, sans-serif" }}>
       <header className="sticky top-0 z-[1000] flex items-center justify-between bg-white px-4 py-3 shadow-sm">
-        <a href="/app" className="text-lg font-extrabold">{title}</a>
+        <span className="text-lg font-extrabold">{title}</span>
         <div className="flex items-center gap-3">
           {right}
           {onLogout && <button onClick={onLogout} className="text-sm font-semibold text-neutral-500">Выйти</button>}

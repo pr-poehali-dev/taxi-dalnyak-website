@@ -38,7 +38,8 @@ def poll(cur, user, body):
     cfg = get_config(cur)
     cur.execute(
         f"""SELECT {TRIP_COLS}, c.name AS client_name,
-                   (SELECT max(m.id) FROM {S}.app_messages m WHERE m.trip_id = t.id) AS last_msg_id
+                   (SELECT max(m.id) FROM {S}.app_messages m WHERE m.trip_id = t.id) AS last_msg_id,
+                   (SELECT m.sender_role FROM {S}.app_messages m WHERE m.trip_id = t.id ORDER BY m.id DESC LIMIT 1) AS last_msg_role
             FROM {S}.app_trips t JOIN {S}.app_users c ON c.id = t.client_id
             WHERE t.driver_id = %s AND t.status IN ('assigned', 'enroute', 'arrived', 'in_progress')
             ORDER BY (t.status IN ('enroute', 'arrived', 'in_progress')) DESC, t.scheduled_at NULLS FIRST, t.id""",
@@ -127,7 +128,7 @@ def take(cur, user, body):
         (user['id'], t['id']),
     )
     send_push(cur, [t['client_id']], 'Водитель найден', f"{me['name']}, {me['car_color'] or ''} {me['car_model']} {me['car_plate']}".replace('  ', ' '), '/app/client', f"trip-{t['id']}")
-    send_push(cur, dispatcher_ids(cur), 'Водитель взял заказ', f"№{t['id']}: {me['name']}", '/app/dispatcher', f"trip-{t['id']}")
+    send_push(cur, dispatcher_ids(cur), 'Водитель взял заказ', f"№{t['id']}: {me['name']}", '/app/office-k7x2', f"trip-{t['id']}")
     return {'ok': True}
 
 
@@ -189,7 +190,7 @@ def request_topup(cur, user, body):
     if cur.fetchone():
         raise ApiError(409, 'Предыдущая заявка ещё обрабатывается')
     cur.execute(f"INSERT INTO {S}.app_topups (driver_id, amount) VALUES (%s, %s)", (user['id'], amount))
-    send_push(cur, dispatcher_ids(cur), 'Заявка на пополнение', f'{amount} ₽ от водителя #{user["id"]}', '/app/dispatcher', f'topup-{user["id"]}')
+    send_push(cur, dispatcher_ids(cur), 'Заявка на пополнение', f'{amount} ₽ от водителя #{user["id"]}', '/app/office-k7x2', f'topup-{user["id"]}')
     return {'ok': True}
 
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Btn } from "./ui";
+import { useBackClose } from "@/lib/useBackClose";
 
 export interface Slide {
   icon: string;
@@ -29,6 +30,7 @@ export const DRIVER_SLIDES: Slide[] = [
 ];
 
 export default function Tutorial({ slides, onClose }: { slides: Slide[]; onClose: () => void }) {
+  useBackClose(onClose);
   const [i, setI] = useState(0);
   const s = slides[i];
   const last = i === slides.length - 1;

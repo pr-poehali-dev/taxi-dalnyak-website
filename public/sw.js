@@ -1,4 +1,4 @@
-const CACHE = "dalnyak-v3";
+const CACHE = "dalnyak-v4";
 const ASSETS = ["/", "/index.html"];
 
 self.addEventListener("install", e => {
@@ -47,7 +47,8 @@ self.addEventListener("fetch", e => {
 self.addEventListener("push", e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch { d = { title: "Такси Дальняк", body: e.data ? e.data.text() : "" }; }
-  e.waitUntil(
+  e.waitUntil(Promise.all([
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => list.forEach(c => c.postMessage({ type: "push", title: d.title, body: d.body }))),
     self.registration.showNotification(d.title || "Такси Дальняк", {
       body: d.body || "",
       icon: "/app-icon-192.png",
@@ -56,18 +57,18 @@ self.addEventListener("push", e => {
       renotify: true,
       requireInteraction: true,
       vibrate: [300, 150, 300, 150, 300],
-      data: { url: d.url || "/app" },
+      data: { url: d.url || "/app/client" },
     })
-  );
+  ]));
 });
 
 self.addEventListener("notificationclick", e => {
   e.notification.close();
-  const url = (e.notification.data && e.notification.data.url) || "/app";
+  const url = (e.notification.data && e.notification.data.url) || "/app/client";
   e.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
       for (const c of list) {
-        if (c.url.includes("/app") && "focus" in c) { c.navigate(url).catch(() => {}); return c.focus(); }
+        if (c.url.includes(url) && "focus" in c) { c.navigate(url).catch(() => {}); return c.focus(); }
       }
       return self.clients.openWindow(url);
     })

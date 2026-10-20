@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Military from "./pages/Military";
 import Quick from "./pages/Quick";
@@ -50,7 +50,6 @@ import NewHome from "./pages/NewHome";
 import { ROUTE_LANDINGS } from "./lib/routeLandings";
 import MoscowBusiness from "./pages/MoscowBusiness";
 import Otzyv from "./pages/Otzyv";
-import AppHome from "./pages/app/AppHome";
 import AppClient from "./pages/app/AppClient";
 import AppDriver from "./pages/app/AppDriver";
 import AppDispatcher from "./pages/app/AppDispatcher";
@@ -114,10 +113,10 @@ const App = () => (
             <Route key={r.slug} path={`/${r.slug}`} element={<RouteLandingPage />} />
           ))}
 
-          <Route path="/app" element={<AppHome />} />
+          <Route path="/app" element={<Navigate to="/app/client" replace />} />
           <Route path="/app/client" element={<AppClient />} />
           <Route path="/app/driver" element={<AppDriver />} />
-          <Route path="/app/dispatcher" element={<AppDispatcher />} />
+          <Route path="/app/office-k7x2" element={<AppDispatcher />} />
 
           <Route path="/:slug" element={<TownPage />} />
           <Route path="*" element={<PageNotFound />} />

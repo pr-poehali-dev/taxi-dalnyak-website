@@ -16,7 +16,8 @@ TRIP_SELECT = f"""
            CASE WHEN t.status IN ('enroute', 'arrived', 'in_progress') THEN dr.lat END AS driver_lat,
            CASE WHEN t.status IN ('enroute', 'arrived', 'in_progress') THEN dr.lng END AS driver_lng,
            (SELECT round(avg(x.rating)::numeric, 2) FROM {S}.app_trips x WHERE x.driver_id = t.driver_id AND x.rating IS NOT NULL) AS driver_rating,
-           (SELECT max(m.id) FROM {S}.app_messages m WHERE m.trip_id = t.id) AS last_msg_id
+           (SELECT max(m.id) FROM {S}.app_messages m WHERE m.trip_id = t.id) AS last_msg_id,
+           (SELECT m.sender_role FROM {S}.app_messages m WHERE m.trip_id = t.id ORDER BY m.id DESC LIMIT 1) AS last_msg_role
     FROM {S}.app_trips t
     LEFT JOIN {S}.app_users d ON d.id = t.driver_id
     LEFT JOIN {S}.app_drivers dr ON dr.user_id = t.driver_id
@@ -91,15 +92,16 @@ def create_trip(cur, user, body):
             raise ApiError(400, 'Слишком высокая цена')
 
     geo = q['from_geo'] or {}
-    city = clean(body.get('from_city'), 80) or geo.get('city', '')
+    city = clean(body.get('from_city'), 80) or geo.get('city', '') or geo.get('state', '')
     street = clean(body.get('from_street'), 120) or geo.get('street', '')
     house = clean(body.get('from_house'), 20) or geo.get('house', '')
-    if not city or not street or not house:
-        raise ApiError(400, 'Уточните адрес подачи: нужны город, улица и дом')
+    label = clean(body.get('from_label'), 200) or geo.get('label', '')
+    if not city:
+        raise ApiError(400, 'Не удалось определить город подачи. Сдвиньте точку на карте')
     to_text = clean(body.get('to_text'), 200)
     if not to_text:
         raise ApiError(400, 'Укажите, куда едем')
-    from_text = f'{city}, {street}, {house}'
+    from_text = ', '.join(x for x in [city, street, house] if x) or label
 
     cur.execute(
         f"""INSERT INTO {S}.app_trips
@@ -120,7 +122,7 @@ def notify_new_trip(cur, trip_id):
     t = cur.fetchone()
     title = 'Новый предзаказ' if t['scheduled_at'] else 'Новый заказ'
     line = trip_line(t)
-    send_push(cur, dispatcher_ids(cur), title, line, '/app/dispatcher', f'trip-{trip_id}')
+    send_push(cur, dispatcher_ids(cur), title, line, '/app/office-k7x2', f'trip-{trip_id}')
     prio = drivers_for_trip(cur, t['tariff'], priority_only=True)
     if prio:
         send_push(cur, prio, title, f"{line} · {int(t['price'])} ₽", '/app/driver', f'trip-{trip_id}')
@@ -164,7 +166,7 @@ def raise_price(cur, user, body):
     cur.execute(f"SELECT * FROM {S}.app_trips WHERE id = %s", (body.get('trip_id'),))
     tr = cur.fetchone()
     send_push(cur, drivers_for_trip(cur, tr['tariff']), 'Цена заказа повышена', f"{trip_line(tr)} · {new_price} ₽", '/app/driver', f"trip-{tr['id']}")
-    send_push(cur, dispatcher_ids(cur), 'Клиент повысил цену', f"Заказ №{tr['id']}: {new_price} ₽", '/app/dispatcher', f"trip-{tr['id']}")
+    send_push(cur, dispatcher_ids(cur), 'Клиент повысил цену', f"Заказ №{tr['id']}: {new_price} ₽", '/app/office-k7x2', f"trip-{tr['id']}")
     return {'ok': True}
 
 
@@ -185,7 +187,7 @@ def cancel_trip(cur, user, body):
     )
     if t['driver_id']:
         send_push(cur, [t['driver_id']], 'Заказ отменён пассажиром', f'Заказ №{t["id"]}', '/app/driver', f'trip-{t["id"]}')
-    send_push(cur, dispatcher_ids(cur), 'Клиент отменил заказ', f'Заказ №{t["id"]}', '/app/dispatcher', f'trip-{t["id"]}')
+    send_push(cur, dispatcher_ids(cur), 'Клиент отменил заказ', f'Заказ №{t["id"]}', '/app/office-k7x2', f'trip-{t["id"]}')
     return {'ok': True}
 
 
