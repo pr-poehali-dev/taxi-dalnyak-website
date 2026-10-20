@@ -49,11 +49,11 @@ export function tripTone(s: string): "gray" | "green" | "yellow" | "red" | "blue
   return ({ new: "yellow", assigned: "blue", arrived: "blue", in_progress: "green", done: "gray", cancelled: "red" } as const)[s as "new"] || "gray";
 }
 
-export function Shell({ title, onLogout, children, right }: { title: string; onLogout?: () => void; children: ReactNode; right?: ReactNode }) {
+export function Shell({ title, onLogout, children, right, left }: { title: string; onLogout?: () => void; children: ReactNode; right?: ReactNode; left?: ReactNode }) {
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900" style={{ fontFamily: "Manrope, sans-serif" }}>
       <header className="sticky top-0 z-[1000] flex items-center justify-between bg-white px-4 py-3 shadow-sm">
-        <span className="text-lg font-extrabold">{title}</span>
+        <div className="flex items-center gap-2">{left}<span className="text-lg font-extrabold">{title}</span></div>
         <div className="flex items-center gap-3">
           {right}
           {onLogout && <button onClick={onLogout} className="text-sm font-semibold text-neutral-500">Выйти</button>}

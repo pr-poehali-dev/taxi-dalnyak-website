@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { appCall, formatPhone } from "@/lib/appApi";
 import { Btn, Field } from "./ui";
 import { reachGoal } from "@/lib/metrika";
@@ -19,13 +19,44 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sms, setSms] = useState(false);
+  const [step, setStep] = useState<"phone" | "code">("phone");
+  const [code, setCode] = useState("");
+  const [wait, setWait] = useState(0);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (action !== "client_login") return;
+    appCall<{ sms_login?: boolean }>("config").then((c) => setSms(!!c.sms_login)).catch(() => undefined);
+  }, [action]);
+
+  useEffect(() => {
+    if (wait <= 0) return;
+    const id = window.setTimeout(() => setWait((w) => w - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [wait]);
+
+  const sendCode = async () => {
     setBusy(true);
     setErr("");
     try {
-      const r = await appCall<{ token: string; is_new?: boolean }>(action, { phone, name, password });
+      await appCall("client_send_code", { phone });
+      setStep("code");
+      setCode("");
+      setWait(60);
+    } catch (e2) {
+      setErr((e2 as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (sms && step === "phone") { await sendCode(); return; }
+    setBusy(true);
+    setErr("");
+    try {
+      const r = await appCall<{ token: string; is_new?: boolean }>(action, { phone, name, password, code, ref: localStorage.getItem("app_ref") || undefined });
       if (action === "client_login" && r.is_new) reachGoal("app_signup");
       onToken(r.token);
     } catch (e2) {
@@ -39,15 +70,25 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
     <form onSubmit={submit} className="mx-auto max-w-md space-y-3 p-5">
       <h1 className={`${heading ? "pt-1" : "pt-6"} text-2xl font-extrabold`}>{heading || "Вход по номеру телефона"}</h1>
       <p className="text-sm text-neutral-500">{hint}</p>
-      {withName && <Field label="Как вас зовут" value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя" />}
-      <Field label="Телефон" type="tel" inputMode="tel" value={phone} onFocus={() => !phone && setPhone("+7")}
-        onChange={(e) => setPhone(formatPhone(e.target.value))} placeholder="+7 (___) ___-__-__" />
+      {step === "phone" && withName && <Field label="Как вас зовут" value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя" />}
+      {step === "phone" && <Field label="Телефон" type="tel" inputMode="tel" value={phone} onFocus={() => !phone && setPhone("+7")}
+        onChange={(e) => setPhone(formatPhone(e.target.value))} placeholder="+7 (___) ___-__-__" />}
+      {step === "code" && (
+        <>
+          <p className="rounded-2xl bg-neutral-100 p-3 text-sm font-semibold">Мы отправили код в СМС на {phone}</p>
+          <Field label="Код из СМС" inputMode="numeric" autoComplete="one-time-code" maxLength={4} value={code} autoFocus
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="____" className="text-center text-2xl tracking-[0.5em]" />
+          <div className="flex items-center justify-between text-sm">
+            <button type="button" onClick={() => { setStep("phone"); setErr(""); }} className="font-semibold text-neutral-500">Изменить номер</button>
+            <button type="button" disabled={wait > 0 || busy} onClick={sendCode} className="font-bold text-sky-700 disabled:text-neutral-400">{wait > 0 ? `Отправить снова через ${wait} с` : "Отправить код снова"}</button>
+          </div>
+        </>
+      )}
       {withPassword && <Field label="Пароль" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
       {err && <p className="text-sm font-semibold text-red-600">{err}</p>}
-      <Btn type="submit" disabled={busy || phone.replace(/\D/g, "").length < 11 || (withPassword && password.length < 8)} className="w-full">
-        {busy ? "Входим..." : "Продолжить"}
+      <Btn type="submit" disabled={busy || phone.replace(/\D/g, "").length < 11 || (withPassword && password.length < 8) || (step === "code" && code.length < 4)} className="w-full">
+        {busy ? "Подождите..." : sms ? (step === "phone" ? "Получить код в СМС" : "Войти") : "Продолжить"}
       </Btn>
-      <p className="text-center text-xs text-neutral-400">Подтверждение по СМС появится позже.</p>
       {extra}
     </form>
   );

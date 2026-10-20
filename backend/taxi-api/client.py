@@ -1,6 +1,7 @@
 import secrets
 from datetime import datetime, timedelta, timezone
 
+import bonus
 import chat
 import pricing
 import trips
@@ -13,7 +14,7 @@ LIVE = ('assigned', 'enroute', 'arrived', 'in_progress')
 TRIP_SELECT = f"""
     SELECT t.id, t.from_text, t.from_city, t.from_street, t.from_house, t.from_lat, t.from_lng, t.to_text,
            t.comment, t.price, t.base_price, t.status, t.tariff, t.region, t.distance_km, t.scheduled_at,
-           t.created_at, t.rating, t.driver_id, t.pay_method, t.eta_at, t.share_token, t.cancelled_by,
+           t.created_at, t.rating, t.bonus_discount, t.driver_id, t.pay_method, t.eta_at, t.share_token, t.cancelled_by,
            COALESCE(d.name, t.ext_driver_name) AS driver_name, COALESCE(dr.car_model, t.ext_car_model) AS car_model,
            COALESCE(dr.car_plate, t.ext_car_plate) AS car_plate, COALESCE(dr.car_color, t.ext_car_color) AS car_color,
            t.manual_driver, CASE WHEN t.manual_driver THEN t.ext_driver_phone END AS driver_phone,
@@ -44,7 +45,10 @@ def reverse(cur, user, body):
 def quote(cur, user, body):
     rate_limit(cur, f'quote:{user["id"]}', 40, 60)
     cfg = get_config(cur)
-    return pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'))
+    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'))
+    cur.execute(f"SELECT bonus_km FROM {S}.app_users WHERE id = %s", (user['id'],))
+    q['bonus'] = bonus.options(cfg, cur.fetchone()['bonus_km'], q['prices'])
+    return q
 
 
 def _parse_when(raw):
@@ -90,8 +94,10 @@ def create_trip(cur, user, body):
             price = int(body['price'])
         except (TypeError, ValueError):
             raise ApiError(400, 'Неверная цена')
+        if price < base * 0.93:
+            raise ApiError(400, 'Цена поездки изменилась. Обновите расчёт и повторите заказ')
         if price < base:
-            raise ApiError(400, f'Цену можно только повысить. Минимум для этой поездки {base} ₽')
+            base = price
         if price > base * 5:
             raise ApiError(400, 'Слишком высокая цена')
 
@@ -117,6 +123,8 @@ def create_trip(cur, user, body):
          tariff, q['region'], q['distance_km'], when, pay_method, secrets.token_urlsafe(16)),
     )
     trip_id = cur.fetchone()['id']
+    if body.get('use_bonus'):
+        bonus.spend(cur, user['id'], trip_id, tariff, base, cfg)
     notify_new_trip(cur, trip_id)
     return {'id': trip_id}
 
@@ -145,10 +153,18 @@ def poll(cur, user, body):
     upcoming = [r for r in rows if r['status'] in ('new', 'assigned') and r['scheduled_at'] is not None and r is not active]
     history = [r for r in rows if r['status'] in ('done', 'cancelled')][:10]
     cfg = get_config(cur)
+    cur.execute(f"SELECT bonus_km, name, phone FROM {S}.app_users WHERE id = %s", (user['id'],))
+    me = cur.fetchone()
     return {
         'active': active, 'upcoming': upcoming, 'history': history,
+        'bonus_km': me['bonus_km'], 'me': {'name': me['name'], 'phone': me['phone']},
         'support_telegram': cfg['support_telegram'], 'support_max': cfg['support_max'],
     }
+
+
+def history_all(cur, user, body):
+    cur.execute(TRIP_SELECT + " WHERE t.client_id = %s AND t.status IN ('done', 'cancelled') ORDER BY t.id DESC LIMIT 100", (user['id'],))
+    return {'trips': cur.fetchall()}
 
 
 def raise_price(cur, user, body):
@@ -186,6 +202,7 @@ def cancel_trip(cur, user, body):
     if not t or t['status'] not in ('new', 'assigned', 'enroute', 'arrived'):
         raise ApiError(400, 'Заказ уже нельзя отменить')
     refund_commission(cur, t['id'])
+    bonus.refund(cur, t['id'])
     cur.execute(
         f"UPDATE {S}.app_trips SET status = 'cancelled', cancelled_by = 'client', updated_at = now() WHERE id = %s",
         (t['id'],),

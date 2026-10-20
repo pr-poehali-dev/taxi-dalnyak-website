@@ -1,6 +1,7 @@
 import base64
 import hmac
 import os
+import secrets
 import uuid
 
 import boto3
@@ -42,7 +43,7 @@ def public_config(cur, body):
     cfg = get_config(cur)
     return {
         'rates': cfg['rates'], 'min_price': cfg['min_price'],
-        'support_telegram': cfg['support_telegram'], 'support_max': cfg['support_max'],
+        'support_telegram': cfg['support_telegram'], 'support_max': cfg['support_max'], 'sms_login': sms_enabled(),
         'vapid_public': vapid_keys(cur)['public'],
     }
 
@@ -66,12 +67,66 @@ def push_subscribe(cur, user, body):
     return {'ok': True}
 
 
+def sms_enabled():
+    return bool(os.environ.get('SMSRU_API_ID'))
+
+
+def _send_sms(phone, text):
+    import json
+    import urllib.parse
+    import urllib.request
+    q = urllib.parse.urlencode({'api_id': os.environ['SMSRU_API_ID'], 'to': phone.lstrip('+'), 'msg': text, 'json': 1})
+    try:
+        with urllib.request.urlopen('https://sms.ru/sms/send?' + q, timeout=4) as r:
+            data = json.loads(r.read().decode())
+    except Exception:
+        raise ApiError(503, 'Не удалось отправить СМС. Попробуйте через минуту')
+    if str(data.get('status')) != 'OK':
+        print('sms.ru error', data.get('status_code'))
+        raise ApiError(503, 'Не удалось отправить СМС. Попробуйте через минуту')
+
+
+def client_send_code(cur, body):
+    if not sms_enabled():
+        raise ApiError(400, 'Вход по СМС пока не подключён')
+    ip = body.get('_ip', '')
+    phone = norm_phone(body.get('phone'))
+    rate_limit(cur, f'sms:ip:{ip}', 15, 3600)
+    rate_limit(cur, f'sms:phone:{phone}', 4, 1800)
+    cur.execute(f"SELECT is_blocked FROM {S}.app_users WHERE phone = %s AND role = 'client'", (phone,))
+    u = cur.fetchone()
+    if u and u['is_blocked']:
+        raise ApiError(403, 'Доступ к сервису ограничен. Свяжитесь с поддержкой')
+    code = f"{secrets.randbelow(10000):04d}"
+    cur.execute(
+        f"""INSERT INTO {S}.app_sms_codes (phone, code_hash, expires_at, attempts) VALUES (%s, %s, now() + interval '5 minutes', 0)
+            ON CONFLICT (phone) DO UPDATE SET code_hash = EXCLUDED.code_hash, expires_at = EXCLUDED.expires_at, attempts = 0, created_at = now()""",
+        (phone, sha(f'{phone}:{code}')),
+    )
+    cur.connection.commit()
+    _send_sms(phone, f'Код входа Такси Дальняк: {code}')
+    return {'ok': True}
+
+
 def client_login(cur, body):
     ip = body.get('_ip', '')
     phone = norm_phone(body.get('phone'))
     rate_limit(cur, f'login:ip:{ip}', 40, 600)
     rate_limit(cur, f'login:client:{phone}', 12, 600)
     name = clean(body.get('name'), 60) or None
+    if sms_enabled():
+        code = ''.join(c for c in str(body.get('code') or '') if c.isdigit())
+        cur.execute(f"SELECT code_hash, attempts, (expires_at > now()) AS alive FROM {S}.app_sms_codes WHERE phone = %s FOR UPDATE", (phone,))
+        row = cur.fetchone()
+        if not row or not row['alive']:
+            raise ApiError(400, 'Код устарел. Запросите новый')
+        if row['attempts'] >= 5:
+            raise ApiError(429, 'Слишком много неверных попыток. Запросите новый код')
+        if not hmac.compare_digest(row['code_hash'], sha(f'{phone}:{code}')):
+            cur.execute(f"UPDATE {S}.app_sms_codes SET attempts = attempts + 1 WHERE phone = %s", (phone,))
+            cur.connection.commit()
+            raise ApiError(400, 'Неверный код')
+        cur.execute(f"UPDATE {S}.app_sms_codes SET expires_at = now() WHERE phone = %s", (phone,))
     cur.execute(f"SELECT id, name, is_blocked FROM {S}.app_users WHERE phone = %s AND role = 'client'", (phone,))
     u = cur.fetchone()
     if u and u['is_blocked']:
@@ -87,6 +142,12 @@ def client_login(cur, body):
             (phone, name, placeholder_token()),
         )
         uid = cur.fetchone()['id']
+        ref = clean(body.get('ref'), 12).upper()
+        if ref:
+            cur.execute(f"SELECT id FROM {S}.app_users WHERE ref_code = %s AND role = 'client'", (ref,))
+            fr = cur.fetchone()
+            if fr and fr['id'] != uid:
+                cur.execute(f"UPDATE {S}.app_users SET referred_by = %s WHERE id = %s", (fr['id'], uid))
     return {'token': create_session(cur, uid), 'name': name, 'phone': phone, 'is_new': is_new}
 
 

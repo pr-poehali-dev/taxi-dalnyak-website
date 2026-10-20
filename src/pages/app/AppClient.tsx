@@ -10,12 +10,15 @@ import { reachGoal } from "@/lib/metrika";
 import TariffPicker from "@/components/app/TariffPicker";
 import DriverBanner from "@/components/app/DriverBanner";
 import ClientWelcome from "@/components/app/ClientWelcome";
-import SupportLinks from "@/components/app/SupportLinks";
 import PushBanner from "@/components/app/PushBanner";
 import { useSeen } from "@/lib/useSeen";
 import { pushNotify } from "@/lib/notify";
 import AppMap, { MapPoint } from "@/components/app/AppMap";
-import AddressSearch, { Place } from "@/components/app/AddressSearch";
+import { Place } from "@/components/app/AddressSearch";
+import RoutePicker from "@/components/app/RoutePicker";
+import ClientMenu, { MenuAction } from "@/components/app/ClientMenu";
+import { HistoryPanel, PromoPanel, BonusPanel } from "@/components/app/ClientPanels";
+import BonusBanner from "@/components/app/BonusBanner";
 import ClientTripCard, { ClientTrip } from "@/components/app/ClientTripCard";
 import Onboarding from "@/components/app/Onboarding";
 import InstallGate, { needsInstall } from "@/components/app/InstallGate";
@@ -36,11 +39,11 @@ const DEFAULT_CENTER: [number, number] = [55.751, 37.618];
 
 interface Quote {
   distance_km: number; region: string; prices: Record<Tariff, number>; approx: boolean; min_price: number;
-  from_geo: Place;
+  from_geo: Place; bonus?: Record<string, { rub: number; km: number }>;
 }
 interface Poll {
   active: ClientTrip | null; upcoming: ClientTrip[]; history: (ClientTrip & { id: number })[];
-  support_telegram: string; support_max: string;
+  support_telegram: string; support_max: string; bonus_km?: number; me?: { name: string | null; phone: string };
 }
 
 function minLocal() {
@@ -69,7 +72,6 @@ export default function AppClient() {
   const [pay, setPay] = useState<"cash" | "transfer">("cash");
   const [fromText, setFromText] = useState("");
   const [fly, setFly] = useState<{ lat: number; lng: number; n: number } | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [data, setData] = useState<Poll | null>(null);
@@ -78,6 +80,15 @@ export default function AppClient() {
   const [stars, setStars] = useState(0);
   const [skipRate, setSkipRate] = useState<number[]>([]);
   const [showHelp, setShowHelp] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [startPos, setStartPos] = useState<[number, number] | null>(null);
+  const [startText, setStartText] = useState("");
+  const [startFrom, setStartFrom] = useState({ city: "", street: "", house: "" });
+  const [panel, setPanel] = useState<null | "history" | "promo" | "bonus">(null);
+  const [picker, setPicker] = useState<null | "from" | "to">(null);
+  const [mapPick, setMapPick] = useState<null | "from" | "to">(null);
+  const [useBonus, setUseBonus] = useState(true);
+  const [bonusCfg, setBonusCfg] = useState({ earn: 5, max: 10, ref: 30 });
   const seen = useSeen();
   const statusRef = useRef<string>("");
 
@@ -134,10 +145,23 @@ export default function AppClient() {
     return () => window.removeEventListener("app-open-chat", openChat);
   }, [data?.active?.id]);
 
+  useEffect(() => {
+    if (!token || !ready) return;
+    appCall<{ earn_pct: number; max_pct: number; ref_km: number }>("client_bonus", {}, token)
+      .then((b) => setBonusCfg({ earn: b.earn_pct, max: b.max_pct, ref: b.ref_km })).catch(() => undefined);
+  }, [token, ready]);
+
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) localStorage.setItem("app_ref", ref.toUpperCase().slice(0, 12));
+  }, []);
+
   const toRate = useMemo(() => data?.history.find((h) => h.status === "done" && !h.rating && !skipRate.includes(h.id)) || null, [data, skipRate]);
 
   const basePrice = quote ? quote.prices[tariff] : 0;
   const price = basePrice + bump;
+  const bonusOpt = quote?.bonus?.[tariff];
+  const payPrice = price - (useBonus && bonusOpt ? bonusOpt.rub : 0);
 
   const order = async () => {
     if (!quote || !toPlace || !fromPos) return;
@@ -146,7 +170,7 @@ export default function AppClient() {
     try {
       await appCall("client_create_trip", {
         from_lat: fromPos[0], from_lng: fromPos[1], from_city: from.city, from_street: from.street, from_house: from.house, from_label: fromText,
-        to_text: toText, to_lat: toPlace.lat, to_lng: toPlace.lng, tariff, price, comment, pay_method: pay,
+        to_text: toText, to_lat: toPlace.lat, to_lng: toPlace.lng, tariff, price, comment, pay_method: pay, use_bonus: useBonus && !!bonusOpt && bump === 0,
         scheduled_at: scheduled && when ? new Date(when).toISOString() : null,
       }, token);
       reachGoal(scheduled ? "app_preorder" : "app_order", { tariff });
@@ -198,10 +222,10 @@ export default function AppClient() {
   const fromOk = !!from.city;
 
   return (
-    <Shell title="Дальняк" onLogout={logout}
-      right={<button onClick={() => setShowHelp(true)} aria-label="Помощь"><Icon name="CircleHelp" size={22} /></button>}>
+    <Shell title="Дальняк" left={<button onClick={() => setMenu(true)} aria-label="Меню" className="-ml-1 flex h-10 w-10 items-center justify-center rounded-full active:bg-neutral-100"><Icon name="Menu" size={24} /></button>}>
       <div className="relative">
-        <AppMap center={pos || DEFAULT_CENTER} points={points} className="h-[46vh] w-full" pin={!active && !toPlace} fly={fly} onCenterChange={onCenter} />
+        <AppMap center={pos || DEFAULT_CENTER} points={points} className="h-[50vh] w-full" pin={!active && (!toPlace || mapPick !== null)} fly={fly} onCenterChange={onCenter} />
+        {!active && !toPlace && !mapPick && <BonusBanner km={data?.bonus_km ?? 0} earnPct={bonusCfg.earn} maxPct={bonusCfg.max} refKm={bonusCfg.ref} onMore={() => setPanel("bonus")} />}
         <button onClick={() => { locate(); if (pos) setFly({ lat: pos[0], lng: pos[1], n: Date.now() }); }} aria-label="Моё местоположение" className="absolute right-3 top-3 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg">
           <Icon name="Crosshair" size={20} />
         </button>
@@ -215,7 +239,6 @@ export default function AppClient() {
           </div>
         )}
         <div className="mb-3"><PushBanner role="client" token={token} /></div>
-        {!active && <div className="mb-4 -mt-2"><DriverBanner /></div>}
         {err && <p className="mb-3 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-600">{err}</p>}
 
         {active ? (
@@ -224,26 +247,46 @@ export default function AppClient() {
             onRaise={(p) => act("client_raise_price", { trip_id: active.id, price: p })} />
         ) : (
           <div className="space-y-3">
-            <h2 className="text-xl font-extrabold">Куда поедем?</h2>
-            <div className="flex items-center gap-3 rounded-2xl bg-neutral-50 p-3">
-              <span className="h-3 w-3 shrink-0 rounded-full bg-blue-600" />
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-bold text-neutral-400">Откуда</div>
-                <div className="truncate text-[15px] font-extrabold">{fromText || (from.city ? `${from.city}${from.street ? ", " + from.street : ""}` : "Определяем точку...")}</div>
+            {mapPick ? (
+              <div className="space-y-3">
+                <div className="rounded-2xl bg-neutral-50 p-3">
+                  <div className="text-xs font-bold text-neutral-400">{mapPick === "from" ? "Точка подачи" : "Куда едем"}</div>
+                  <div className="text-[15px] font-extrabold">{fromText || "Определяем адрес..."}</div>
+                </div>
+                <p className="text-xs text-neutral-400">Двигайте карту, чтобы метка встала на нужное место.</p>
+                <Btn className="w-full text-lg" disabled={!fromOk} onClick={() => {
+                  if (mapPick === "to" && fromPos) {
+                    setToPlace({ label: fromText, lat: fromPos[0], lng: fromPos[1], city: from.city, street: from.street, house: from.house });
+                    setToText(fromText);
+                    if (startPos) { setFromPos(startPos); setFromText(startText); setFrom(startFrom); }
+                  }
+                  setMapPick(null);
+                }}>Готово</Btn>
+                <button onClick={() => { if (startPos) { setFromPos(startPos); setFromText(startText); setFrom(startFrom); } setMapPick(null); }} className="w-full text-center text-sm font-semibold text-neutral-500">Отмена</button>
               </div>
-              <button onClick={() => setShowDetails(!showDetails)} className="text-sm font-bold text-sky-700">{showDetails ? "Готово" : "Уточнить"}</button>
-            </div>
-            {!toPlace && <p className="text-xs text-neutral-400">Двигайте карту, чтобы точка подачи встала на нужное место.</p>}
-            {showDetails && (
-              <div className="grid grid-cols-6 gap-2 rounded-2xl bg-neutral-50 p-3">
-                <div className="col-span-6"><Field label="Город" value={from.city} onChange={(e) => setFrom({ ...from, city: e.target.value })} /></div>
-                <div className="col-span-4"><Field label="Улица" value={from.street} onChange={(e) => setFrom({ ...from, street: e.target.value })} /></div>
-                <div className="col-span-2"><Field label="Дом" value={from.house} onChange={(e) => setFrom({ ...from, house: e.target.value })} /></div>
-              </div>
+            ) : (
+              <>
+                <div className="overflow-hidden rounded-3xl bg-neutral-100">
+                  <button onClick={() => setPicker("from")} className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-200">
+                    <span className="h-3 w-3 shrink-0 rounded-full bg-blue-600" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs font-bold text-neutral-400">Откуда</span>
+                      <span className="block truncate text-[15px] font-extrabold">{fromText || (from.city ? `${from.city}${from.street ? ", " + from.street : ""}` : "Определяем точку...")}</span>
+                    </span>
+                  </button>
+                  <div className="mx-4 border-t border-neutral-200" />
+                  <button onClick={() => setPicker("to")} className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-200">
+                    <span className="h-3 w-3 shrink-0 rounded-full bg-neutral-900" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs font-bold text-neutral-400">Куда</span>
+                      <span className={`block truncate text-[15px] font-extrabold ${toText ? "" : "text-neutral-400"}`}>{toText || "Куда едем?"}</span>
+                    </span>
+                    {toPlace && <span onClick={(e) => { e.stopPropagation(); setToText(""); setToPlace(null); }} className="p-1"><Icon name="X" size={18} className="text-neutral-400" /></span>}
+                  </button>
+                </div>
+                {!toPlace && <p className="text-xs text-neutral-400">Двигайте карту, чтобы поставить точку подачи, или нажмите «Куда» и введите город.</p>}
+              </>
             )}
-
-            <AddressSearch token={token} value={toText} onChange={(v) => { setToText(v); setToPlace(null); }} onPick={setToPlace}
-              placeholder="Куда едем? Введите город" near={fromPos} />
 
             {quote && (
               <>
@@ -253,6 +296,12 @@ export default function AppClient() {
                 </div>
                 <TariffPicker prices={quote.prices} value={tariff} onChange={(t) => { setTariff(t); setBump(0); }} />
 
+                {bonusOpt && bump === 0 && (
+                  <label className="flex items-center gap-3 rounded-2xl bg-emerald-50 p-3">
+                    <input type="checkbox" checked={useBonus} onChange={(e) => setUseBonus(e.target.checked)} className="h-5 w-5 accent-emerald-600" />
+                    <span className="flex-1 text-sm"><b className="text-emerald-800">Списать {bonusOpt.km} км</b><span className="block text-emerald-700">Скидка {money(bonusOpt.rub)} (до {bonusCfg.max}% стоимости)</span></span>
+                  </label>
+                )}
                 <div className="flex items-center gap-2 rounded-2xl bg-neutral-100 p-2">
                   <button onClick={() => setBump(Math.max(0, bump - 100))} disabled={bump <= 0} className="h-11 w-11 rounded-xl bg-white text-xl font-bold disabled:opacity-30">−</button>
                   <div className="flex-1 text-center"><div className="text-xs text-neutral-500">Ваша цена</div><div className="text-lg font-extrabold">{money(price)}</div></div>
@@ -278,7 +327,7 @@ export default function AppClient() {
                 {scheduled && <Field type="datetime-local" min={minLocal()} value={when} onChange={(e) => setWhen(e.target.value)} />}
                 <Field value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Комментарий: багаж, дети, подъезд" maxLength={300} />
                 <Btn onClick={order} disabled={busy || !fromOk || (scheduled && !when)} className="w-full text-lg">
-                  {busy ? "Отправляем..." : scheduled ? "Оформить предзаказ" : `Заказать ${TARIFF_LIST.find((x) => x.id === tariff)?.name} за ${money(price)}`}
+                  {busy ? "Отправляем..." : scheduled ? "Оформить предзаказ" : `Заказать ${TARIFF_LIST.find((x) => x.id === tariff)?.name} за ${money(bump === 0 ? payPrice : price)}`}
                 </Btn>
               </>
             )}
@@ -305,21 +354,7 @@ export default function AppClient() {
           </div>
         )}
 
-        {data && data.history.length > 0 && (
-          <div className="mt-6">
-            <h3 className="mb-2 text-sm font-extrabold uppercase text-neutral-400">История</h3>
-            <div className="space-y-2">
-              {data.history.map((h) => (
-                <div key={h.id} className="flex items-center justify-between rounded-2xl bg-neutral-50 p-3 text-sm">
-                  <span className="mr-2 truncate font-semibold">{h.to_text}</span>
-                  <Badge tone={tripTone(h.status)}>{TRIP_STATUS[h.status]}</Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {data && <SupportLinks telegram={data.support_telegram} max={data.support_max} className="mt-6" />}
+        {!active && <div className="mt-6"><DriverBanner /></div>}
       </div>
 
       {chatId && <TripChat role="client" tripId={chatId} token={token} onClose={() => setChatId(null)} onUnauthorized={() => setToken(null)}
@@ -343,6 +378,22 @@ export default function AppClient() {
         </div>
       )}
 
+      {menu && (
+        <ClientMenu name={data?.me?.name || ""} phone={data?.me?.phone || ""} bonusKm={data?.bonus_km ?? 0} telegram={data?.support_telegram} max={data?.support_max}
+          onClose={() => setMenu(false)} onLogout={() => { setMenu(false); logout(); }}
+          onPick={(k: MenuAction) => { setMenu(false); if (k === "help") setShowHelp(true); else setPanel(k); }} />
+      )}
+      {panel === "history" && <HistoryPanel token={token} onClose={() => setPanel(null)} />}
+      {panel === "promo" && <PromoPanel token={token} onClose={() => setPanel(null)} onDone={refresh} />}
+      {panel === "bonus" && <BonusPanel token={token} onClose={() => setPanel(null)} />}
+      {picker && (
+        <RoutePicker token={token} start={picker} fromText={fromText} toText={toText} near={fromPos}
+          onPickFrom={(p) => { setFromPos([p.lat, p.lng]); setFly({ lat: p.lat, lng: p.lng, n: Date.now() }); setFrom({ city: p.city || p.state || "", street: p.street || "", house: p.house || "" }); setFromText(p.label); }}
+          onPickTo={(p) => { setToPlace(p); setToText(p.label); }}
+          onMyLocation={() => { locate(); if (pos) { setFromPos(pos); setFly({ lat: pos[0], lng: pos[1], n: Date.now() }); applyGeo(pos[0], pos[1]); } }}
+          onMap={(w) => { setStartPos(fromPos); setStartText(fromText); setStartFrom(from); setMapPick(w); if (w === "to" && toPlace) setFly({ lat: toPlace.lat, lng: toPlace.lng, n: Date.now() }); }}
+          onClose={() => setPicker(null)} />
+      )}
       {showHelp && <Tutorial slides={CLIENT_SLIDES} onClose={() => setShowHelp(false)} />}
     </Shell>
   );

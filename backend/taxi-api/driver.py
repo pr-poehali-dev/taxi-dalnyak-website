@@ -1,3 +1,4 @@
+import bonus
 import chat
 import trips
 from pricing import haversine
@@ -12,7 +13,7 @@ LIVE = ('enroute', 'arrived', 'in_progress')
 NEXT = {'assigned': 'enroute', 'enroute': 'arrived', 'arrived': 'in_progress', 'in_progress': 'done'}
 
 TRIP_COLS = """t.id, t.from_city, t.from_street, t.from_house, t.from_text, t.from_lat, t.from_lng, t.to_text, t.to_lat, t.to_lng,
-               t.comment, t.price, t.pay_method, t.eta_at, t.tariff, t.region, t.distance_km, t.scheduled_at, t.status, t.commission"""
+               t.comment, t.price, t.bonus_discount, t.pay_method, t.eta_at, t.tariff, t.region, t.distance_km, t.scheduled_at, t.status, t.commission"""
 
 
 def _me(cur, uid):
@@ -213,6 +214,8 @@ def trip_status(cur, user, body):
         extra = ', finished_at = now()'
     cur.execute(f"UPDATE {S}.app_trips SET status = %s{extra}, updated_at = now() WHERE id = %s", (target, t['id']))
     trips.notify_status(cur, t['id'], target)
+    if target == 'done':
+        bonus.on_trip_done(cur, t['id'])
     return {'ok': True}
 
 

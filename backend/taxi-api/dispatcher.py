@@ -1,3 +1,4 @@
+import bonus
 import chat
 import trips
 from common import norm_phone, S, ApiError, TARIFFS, ACTIVE, get_config, log_balance, refund_commission, charge_commission, clean, DEFAULT_CONFIG
@@ -162,6 +163,7 @@ def client_block(cur, user, body):
         cur.execute(f"SELECT id, status, driver_id FROM {S}.app_trips WHERE client_id = %s AND status IN ('new', 'assigned', 'enroute', 'arrived') FOR UPDATE", (c['id'],))
         for t in cur.fetchall():
             refund_commission(cur, t['id'])
+            bonus.refund(cur, t['id'])
             cur.execute(f"UPDATE {S}.app_trips SET status = 'cancelled', cancelled_by = 'dispatcher', updated_at = now() WHERE id = %s", (t['id'],))
             if t['driver_id']:
                 send_push(cur, [t['driver_id']], 'Заказ отменён диспетчером', f"Заказ №{t['id']}", '/app/driver', f"trip-{t['id']}")
@@ -182,6 +184,7 @@ def trip_status(cur, user, body):
         raise ApiError(400, 'Сначала назначьте водителя')
     if status == 'cancelled':
         refund_commission(cur, t['id'])
+        bonus.refund(cur, t['id'])
     extra = ", cancelled_by = 'dispatcher'" if status == 'cancelled' else ''
     if status == 'done':
         extra = ', finished_at = now()'
@@ -189,6 +192,8 @@ def trip_status(cur, user, body):
         extra = ', started_at = now()'
     cur.execute(f"UPDATE {S}.app_trips SET status = %s{extra}, updated_at = now() WHERE id = %s", (status, t['id']))
     trips.notify_status(cur, t['id'], status)
+    if status == 'done':
+        bonus.on_trip_done(cur, t['id'])
     if status == 'cancelled':
         send_push(cur, [t['client_id']], 'Заказ отменён диспетчером', f"Заказ №{t['id']}", '/app/client', f"trip-{t['id']}")
         send_push(cur, [t['driver_id']], 'Заказ отменён диспетчером', f"Заказ №{t['id']}", '/app/driver', f"trip-{t['id']}")
@@ -456,6 +461,9 @@ def save_config(cur, user, body):
                 cfg['rates'][region][t] = max(1, min(int(v), 1000))
     for k, lo, hi in (('dispatcher_alert_min', 1, 120), ('min_price', 0, 100000), ('commission_pct', 0, 90), ('priority_price', 0, 100000),
                       ('priority_days', 1, 365), ('priority_delay_sec', 0, 600), ('cancel_limit_24h', 1, 50), ('cancel_limit_7d', 1, 100)):
+        if new.get(k) is not None:
+            cfg[k] = max(lo, min(int(new[k]), hi))
+    for k, lo, hi in (('bonus_earn_pct', 0, 50), ('bonus_max_pct', 0, 50), ('ref_bonus_km', 0, 10000)):
         if new.get(k) is not None:
             cfg[k] = max(lo, min(int(new[k]), hi))
     for k in ('payment_info', 'support_telegram', 'support_max'):

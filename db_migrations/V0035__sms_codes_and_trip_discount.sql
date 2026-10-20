@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS app_sms_codes (
+    phone TEXT PRIMARY KEY,
+    code_hash TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE app_trips ADD COLUMN IF NOT EXISTS bonus_discount NUMERIC NOT NULL DEFAULT 0;

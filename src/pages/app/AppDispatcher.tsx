@@ -14,6 +14,7 @@ import PushBanner from "@/components/app/PushBanner";
 import FleetTab from "@/components/app/FleetTab";
 import ReportsTab from "@/components/app/ReportsTab";
 import ClientsTab from "@/components/app/ClientsTab";
+import PromosTab from "@/components/app/PromosTab";
 import ExternalDriverForm from "@/components/app/ExternalDriverForm";
 import { Badge, Btn, Field, Shell, tripTone } from "@/components/app/ui";
 import Icon from "@/components/ui/icon";
@@ -40,7 +41,7 @@ interface Poll {
   topups: Topup[]; config: any;
 }
 
-const TABS = ["Заказы", "Водители", "Клиенты", "Парк", "Отчёты", "Эфир", "Настройки"] as const;
+const TABS = ["Заказы", "Водители", "Клиенты", "Промокоды", "Парк", "Отчёты", "Эфир", "Настройки"] as const;
 type Tab = (typeof TABS)[number];
 type Act = (a: string, b: Record<string, unknown>) => void;
 
@@ -169,6 +170,13 @@ function DriverCard({ d, onAct, onCreds }: { d: Driver; onAct: Act; onCreds: (c:
   );
 }
 
+const NEXT_STEP: Record<string, { to: string; label: string }> = {
+  assigned: { to: "enroute", label: "Выехал к клиенту" },
+  enroute: { to: "arrived", label: "Подъехал, на месте" },
+  arrived: { to: "in_progress", label: "Начать поездку" },
+  in_progress: { to: "done", label: "Завершить поездку" },
+};
+
 function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; onAct: Act; onChat: () => void }) {
   const [pick, setPick] = useState(t.status === "new");
   const [charge, setCharge] = useState(false);
@@ -207,8 +215,12 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
       <div className="mt-3 flex flex-wrap gap-2">
         {(t.driver_id || t.manual_driver) && <Btn kind="dark" onClick={onChat} className="!py-2.5 !text-sm"><Icon name="MessageCircle" size={14} className="mr-1 inline" />Переписка{t.last_msg_id ? "" : " (пусто)"}</Btn>}
         {!finished && (t.status === "new" || t.status === "assigned") && <Btn onClick={() => setPick(!pick)} className="!py-2.5 !text-sm">{t.driver_id ? "Переназначить" : "Назначить водителя"}</Btn>}
-        {!finished && t.driver_id && t.status !== "in_progress" && <Btn kind="ghost" onClick={() => onAct("disp_trip_status", { trip_id: t.id, status: "in_progress" })} className="!py-2.5 !text-sm">В пути</Btn>}
-        {!finished && t.driver_id && <Btn kind="ghost" onClick={() => onAct("disp_trip_status", { trip_id: t.id, status: "done" })} className="!py-2.5 !text-sm">Завершить</Btn>}
+        {!finished && (t.driver_id || t.manual_driver) && NEXT_STEP[t.status] && (
+          <Btn kind="dark" onClick={() => onAct("disp_trip_status", { trip_id: t.id, status: NEXT_STEP[t.status].to })} className="!py-2.5 !text-sm">{NEXT_STEP[t.status].label}</Btn>
+        )}
+        {!finished && (t.driver_id || t.manual_driver) && t.status !== "in_progress" && (
+          <Btn kind="ghost" onClick={() => window.confirm("Завершить заказ?") && onAct("disp_trip_status", { trip_id: t.id, status: "done" })} className="!py-2.5 !text-sm">Завершить</Btn>
+        )}
         {!finished && <Btn kind="danger" onClick={() => window.confirm("Отменить заказ?") && onAct("disp_trip_status", { trip_id: t.id, status: "cancelled" })} className="!py-2.5 !text-sm">Отменить</Btn>}
       </div>
       {pick && !ext && (
@@ -298,7 +310,7 @@ export default function AppDispatcher() {
   return (
     <Shell title="Диспетчер" onLogout={logout} right={<span className="text-xs font-bold text-neutral-500">на линии: {onlineCount}</span>}>
       <div className="mx-auto max-w-2xl p-4 pb-20">
-        <div className="mb-4 grid grid-cols-4 gap-1 rounded-2xl bg-white p-1.5 shadow-sm sm:grid-cols-7">
+        <div className="mb-4 grid grid-cols-4 gap-1 rounded-2xl bg-white p-1.5 shadow-sm sm:grid-cols-8">
           {TABS.map((t) => (
             <button key={t} onClick={() => setTab(t)} className={`rounded-xl py-2.5 text-[13px] font-extrabold ${tab === t ? "bg-[#fcd34d]" : "text-neutral-500"}`}>
               {t}
@@ -348,6 +360,7 @@ export default function AppDispatcher() {
 
         {data && tab === "Парк" && <FleetTab drivers={data.drivers} />}
 
+        {tab === "Промокоды" && <PromosTab token={token} onUnauthorized={() => setToken(null)} />}
         {tab === "Клиенты" && <ClientsTab token={token} onUnauthorized={() => setToken(null)} />}
 
         {data && tab === "Отчёты" && <ReportsTab token={token} onUnauthorized={() => setToken(null)} />}

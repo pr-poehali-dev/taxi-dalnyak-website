@@ -1,6 +1,7 @@
 import json
 
 import auth
+import bonus
 import chat
 import client
 import driver
@@ -12,6 +13,7 @@ from common import ApiError, connect, resp
 PUBLIC = {
     'config': auth.public_config,
     'client_login': auth.client_login,
+    'client_send_code': auth.client_send_code,
     'driver_login': auth.driver_login,
     'driver_register': auth.driver_register,
     'dispatcher_login': auth.dispatcher_login,
@@ -27,6 +29,9 @@ PROTECTED = {
     'client_raise_price': ('client', client.raise_price),
     'client_cancel_trip': ('client', client.cancel_trip),
     'client_rate': ('client', client.rate),
+    'client_history': ('client', client.history_all),
+    'client_bonus': ('client', bonus.client_bonus),
+    'client_apply_code': ('client', bonus.apply_code),
     'client_chat_get': ('client', client.chat_get),
     'client_chat_send': ('client', client.chat_send),
     'client_push_subscribe': ('client', auth.push_subscribe),
@@ -45,6 +50,9 @@ PROTECTED = {
     'disp_poll': ('dispatcher', dispatcher.poll),
     'disp_clients': ('dispatcher', dispatcher.clients),
     'disp_client_block': ('dispatcher', dispatcher.client_block),
+    'disp_promos': ('dispatcher', bonus.promos),
+    'disp_promo_save': ('dispatcher', bonus.promo_save),
+    'disp_promo_toggle': ('dispatcher', bonus.promo_toggle),
     'disp_assign': ('dispatcher', dispatcher.assign),
     'disp_assign_external': ('dispatcher', dispatcher.assign_external),
     'disp_trip_status': ('dispatcher', dispatcher.trip_status),

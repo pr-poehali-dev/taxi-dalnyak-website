@@ -5,6 +5,7 @@ import { TARIFF_LIST } from "@/lib/appApi";
 interface Cfg {
   rates: Record<string, Record<string, number>>; min_price: number; commission_pct: number; priority_price: number;
   priority_days: number; priority_delay_sec: number; dispatcher_alert_min: number; cancel_limit_24h: number; cancel_limit_7d: number;
+  bonus_earn_pct: number; bonus_max_pct: number; ref_bonus_km: number;
   payment_info: string; support_telegram: string; support_max: string;
 }
 
@@ -37,6 +38,9 @@ export default function DispatcherSettings({ cfg, onSave }: { cfg: Cfg; onSave: 
         {num("dispatcher_alert_min", "Напомнить мне о заказе без водителя, мин")}
         {num("cancel_limit_24h", "Отказов за сутки до блока")}
         {num("cancel_limit_7d", "Отказов за неделю до блока")}
+        {num("bonus_earn_pct", "Копи-км: % км за поездку")}
+        {num("bonus_max_pct", "Копи-км: макс. % скидки с заказа")}
+        {num("ref_bonus_km", "Копи-км: бонус за друга, км")}
       </div>
       <div className="space-y-2 rounded-3xl bg-white p-4 shadow-sm">
         <label className="block">
