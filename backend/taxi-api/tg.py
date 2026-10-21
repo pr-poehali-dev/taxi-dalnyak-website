@@ -1,6 +1,9 @@
+import http.client
 import os
+import socket
+import ssl
+import time
 import urllib.parse
-import urllib.request
 from datetime import timedelta, timezone
 
 from common import S, TRIP_TEXT
@@ -8,19 +11,58 @@ from common import S, TRIP_TEXT
 MSK = timezone(timedelta(hours=3))
 
 
+_QUEUE = []
+
+
 def _send(text):
-    token = os.environ.get('TELEGRAM_BOT_TOKEN')
-    chat_id = os.environ.get('TELEGRAM_CHAT_ID')
+    _QUEUE.append(text)
+
+
+TG_HOST = 'api.telegram.org'
+TG_IPS = ('149.154.167.220', '149.154.167.99', '149.154.166.110')
+
+
+class _HTTPSAt(http.client.HTTPSConnection):
+    def __init__(self, ip, timeout):
+        super().__init__(TG_HOST, 443, timeout=timeout, context=ssl.create_default_context())
+        self._ip = ip
+
+    def connect(self):
+        sock = socket.create_connection((self._ip, 443), self.timeout)
+        self.sock = self._context.wrap_socket(sock, server_hostname=TG_HOST)
+
+
+def _deliver(text, timeout):
+    token = (os.environ.get('TELEGRAM_BOT_TOKEN') or '').strip()
+    chat_id = (os.environ.get('TELEGRAM_CHAT_ID') or '').strip()
     if not token or not chat_id:
+        print('telegram skipped: no token or chat id')
         return
-    payload = urllib.parse.urlencode({
-        'chat_id': chat_id, 'text': text, 'disable_web_page_preview': 'true',
-    }).encode()
-    try:
-        urllib.request.urlopen(urllib.request.Request(
-            f'https://api.telegram.org/bot{token}/sendMessage', data=payload, method='POST'), timeout=3)
-    except Exception as e:
-        print(f'telegram send failed: {type(e).__name__}')
+    payload = urllib.parse.urlencode({'chat_id': chat_id, 'text': text, 'disable_web_page_preview': 'true'})
+    deadline = time.time() + timeout
+    for ip in TG_IPS:
+        left = deadline - time.time()
+        if left < 0.5:
+            break
+        try:
+            c = _HTTPSAt(ip, min(2.5, left))
+            c.request('POST', f'/bot{token}/sendMessage', body=payload,
+                      headers={'Content-Type': 'application/x-www-form-urlencoded', 'Host': TG_HOST})
+            r = c.getresponse()
+            data = r.read()[:300]
+            c.close()
+            if r.status == 200:
+                return
+            print(f'telegram http {r.status}: {data!r}')
+            return
+        except Exception as e:
+            print(f'telegram {ip} failed: {type(e).__name__}: {e}')
+
+
+def take():
+    items = list(_QUEUE)
+    _QUEUE.clear()
+    return items
 
 
 def notify_new_trip(cur, t):

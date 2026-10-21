@@ -35,6 +35,8 @@ _QUEUE = []
 
 def reset():
     _QUEUE.clear()
+    import tg
+    tg.take()
 
 
 def _send_one(sub, payload, priv, deadline):
@@ -80,13 +82,18 @@ def send_push(cur, user_ids, title, body, url='/app/client', tag=None):
 
 
 def flush(conn):
+    import tg
     items = list(_QUEUE)
     _QUEUE.clear()
-    if not items:
+    tg_items = tg.take()
+    if not items and not tg_items:
         return
     deadline = time.time() + 4.2
-    with ThreadPoolExecutor(max_workers=min(16, len(items))) as ex:
-        gone = [g for g in ex.map(lambda it: _send_one(it[0], it[1], it[2], deadline), items) if g]
+    with ThreadPoolExecutor(max_workers=min(16, len(items)) + len(tg_items)) as ex:
+        tg_futs = [ex.submit(tg._deliver, text, 2.5) for text in tg_items]
+        gone = [g for g in ex.map(lambda it: _send_one(it[0], it[1], it[2], deadline), items) if g] if items else []
+        for f in tg_futs:
+            f.result()
     if gone:
         cur = conn.cursor()
         cur.execute(f"DELETE FROM {S}.app_push_subs WHERE id = ANY(%s::bigint[])", (gone,))
