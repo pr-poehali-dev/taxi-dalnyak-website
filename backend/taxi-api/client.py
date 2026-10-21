@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import bonus
 import chat
 import pricing
+import tg
 import trips
 from common import S, ApiError, TARIFFS, clean, get_config, rate_limit
 from push import send_push, dispatcher_ids, drivers_for_trip, trip_line
@@ -134,6 +135,7 @@ def notify_new_trip(cur, trip_id):
     t = cur.fetchone()
     title = 'Новый предзаказ' if t['scheduled_at'] else 'Новый заказ'
     line = trip_line(t)
+    tg.notify_new_trip(cur, t)
     send_push(cur, dispatcher_ids(cur), title, line, '/app/office-k7x2', f'trip-{trip_id}')
     prio = drivers_for_trip(cur, t['tariff'], priority_only=True)
     if prio:
