@@ -22,7 +22,10 @@ import BonusBanner from "@/components/app/BonusBanner";
 import WhenPicker, { whenError, whenLabel } from "@/components/app/WhenPicker";
 import ClientTripCard, { ClientTrip } from "@/components/app/ClientTripCard";
 import Onboarding from "@/components/app/Onboarding";
-import InstallGate, { needsInstall } from "@/components/app/InstallGate";
+import InstallGate, { needsInstall, isMobile } from "@/components/app/InstallGate";
+import InstallOffer from "@/components/app/InstallOffer";
+import { trackStep } from "@/lib/funnel";
+import { isStandalone } from "@/lib/pushClient";
 import Tutorial, { CLIENT_SLIDES } from "@/components/app/Tutorial";
 import TripChat from "@/components/app/TripChat";
 import PhoneLogin from "@/components/app/PhoneLogin";
@@ -84,6 +87,9 @@ export default function AppClient() {
   const [mapPick, setMapPick] = useState<null | "from" | "to">(null);
   const [useBonus, setUseBonus] = useState(true);
   const [bonusCfg, setBonusCfg] = useState({ earn: 5, max: 10, ref: 30 });
+  const installed = isStandalone() || !isMobile();
+  const [gate, setGate] = useState(() => needsInstall() && sessionStorage.getItem("app_install_skip") !== "1");
+  const skipGate = () => { sessionStorage.setItem("app_install_skip", "1"); setGate(false); };
   const seen = useSeen();
   const statusRef = useRef<string>("");
 
@@ -104,11 +110,19 @@ export default function AppClient() {
     applyGeo(pos[0], pos[1]);
   }, [pos, token, applyGeo]);
 
+  useEffect(() => { trackStep("open"); }, []);
+  useEffect(() => { if (gate) trackStep("install_offer"); }, [gate]);
+  useEffect(() => { if (token) trackStep("login"); }, [token]);
+  useEffect(() => { if (toPlace) trackStep("route", { details: toPlace.label || "" }); }, [toPlace]);
+
   useEffect(() => {
     setQuote(null);
     if (!toPlace || !fromPos || !token) return;
     appCall<Quote>("client_quote", { from_lat: fromPos[0], from_lng: fromPos[1], to_lat: toPlace.lat, to_lng: toPlace.lng }, token)
-      .then((q) => { setQuote(q); setBump(0); setErr(""); })
+      .then((q) => {
+        setQuote(q); setBump(0); setErr("");
+        trackStep("quote", { details: `${from.city || fromText} → ${toPlace.label || ""} · ${q.distance_km} км · Стандарт ${q.prices.standard} ₽`.slice(0, 290) });
+      })
       .catch((e) => setErr(e.message));
   }, [toPlace, fromPos, token]);
 
@@ -155,7 +169,7 @@ export default function AppClient() {
 
   const basePrice = quote ? quote.prices[tariff] : 0;
   const price = basePrice + bump;
-  const bonusOpt = quote?.bonus?.[tariff];
+  const bonusOpt = installed ? quote?.bonus?.[tariff] : undefined;
   const payPrice = price - (useBonus && bonusOpt ? bonusOpt.rub : 0);
 
   const order = async () => {
@@ -165,10 +179,11 @@ export default function AppClient() {
     try {
       await appCall("client_create_trip", {
         from_lat: fromPos[0], from_lng: fromPos[1], from_city: from.city, from_street: from.street, from_house: from.house, from_label: fromText,
-        to_text: toText, to_lat: toPlace.lat, to_lng: toPlace.lng, tariff, price, comment, pay_method: pay, use_bonus: useBonus && !!bonusOpt && bump === 0,
+        to_text: toText, to_lat: toPlace.lat, to_lng: toPlace.lng, tariff, price, comment, pay_method: pay, use_bonus: installed && useBonus && !!bonusOpt && bump === 0, installed,
         scheduled_at: scheduled && when ? new Date(when).toISOString() : null,
       }, token);
       reachGoal(scheduled ? "app_preorder" : "app_order", { tariff });
+      trackStep("order", { details: `${toText} · ${price} ₽`, once: false });
       setToText(""); setToPlace(null); setQuote(null); setComment(""); setScheduled(false); setWhen(""); setBump(0);
       await refresh();
     } catch (e) {
@@ -188,7 +203,7 @@ export default function AppClient() {
     setToken(null);
   };
 
-  if (needsInstall()) return <InstallGate who="Приложение для пассажиров" appName="Дальняк" other={{ href: "/app/driver", text: "Если вы ещё и водитель, приложение для водителей устанавливается отдельно, на странице /app/driver." }} />;
+  if (gate) return <InstallGate who="Приложение для пассажиров" appName="Дальняк" onClose={skipGate} />;
 
   if (!token) {
     return (
@@ -220,7 +235,7 @@ export default function AppClient() {
     <Shell title="Дальняк" left={<button onClick={() => setMenu(true)} aria-label="Меню" className="-ml-1 flex h-10 w-10 items-center justify-center rounded-full active:bg-neutral-100"><Icon name="Menu" size={24} /></button>}>
       <div className="relative">
         <AppMap center={pos || DEFAULT_CENTER} points={points} className="h-[50vh] w-full" pin={!active && (!toPlace || mapPick !== null)} fly={fly} onCenterChange={onCenter} />
-        {!active && !toPlace && !mapPick && <BonusBanner km={data?.bonus_km ?? 0} earnPct={bonusCfg.earn} maxPct={bonusCfg.max} refKm={bonusCfg.ref} onMore={() => setPanel("bonus")} />}
+        {!active && !toPlace && !mapPick && installed && <BonusBanner km={data?.bonus_km ?? 0} earnPct={bonusCfg.earn} maxPct={bonusCfg.max} refKm={bonusCfg.ref} onMore={() => setPanel("bonus")} />}
         <button onClick={() => { locate(); if (pos) setFly({ lat: pos[0], lng: pos[1], n: Date.now() }); }} aria-label="Моё местоположение" className="absolute right-3 top-3 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg">
           <Icon name="Crosshair" size={20} />
         </button>
@@ -233,6 +248,7 @@ export default function AppClient() {
             {gpsErr} <button onClick={locate} className="ml-1 underline">Повторить</button>
           </div>
         )}
+        {!installed && !active && !toPlace && <div className="mb-3"><InstallOffer onOpen={() => setGate(true)} /></div>}
         <div className="mb-3"><PushBanner role="client" token={token} /></div>
         {err && <p className="mb-3 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-600">{err}</p>}
 
@@ -291,6 +307,7 @@ export default function AppClient() {
                 </div>
                 <TariffPicker prices={quote.prices} value={tariff} onChange={(t) => { setTariff(t); setBump(0); }} />
 
+                {!installed && <InstallOffer compact onOpen={() => setGate(true)} />}
                 {bonusOpt && bump === 0 && (
                   <label className="flex items-center gap-3 rounded-2xl bg-emerald-50 p-3">
                     <input type="checkbox" checked={useBonus} onChange={(e) => setUseBonus(e.target.checked)} className="h-5 w-5 accent-emerald-600" />

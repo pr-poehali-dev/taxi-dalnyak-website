@@ -90,7 +90,7 @@ def refund(cur, trip_id):
 
 def on_trip_done(cur, trip_id):
     cur.execute(
-        f"SELECT client_id, distance_km, bonus_earned, bonus_discount, driver_id, manual_driver FROM {S}.app_trips WHERE id = %s FOR UPDATE",
+        f"SELECT client_id, distance_km, bonus_earned, bonus_discount, driver_id, manual_driver, from_installed FROM {S}.app_trips WHERE id = %s FOR UPDATE",
         (trip_id,),
     )
     t = cur.fetchone()
@@ -103,6 +103,8 @@ def on_trip_done(cur, trip_id):
         cur.execute(f"UPDATE {S}.app_drivers SET balance = balance + %s WHERE user_id = %s", (disc, t['driver_id']))
         log_balance(cur, t['driver_id'], disc, f'Компенсация бонусной скидки клиента по заказу №{trip_id}')
     earn = int(math.floor(float(t['distance_km'] or 0) * cfg['bonus_earn_pct'] / 100.0))
+    if not t['from_installed']:
+        earn = 0
     if earn > 0:
         credit(cur, t['client_id'], earn, f'Поездка №{trip_id}', trip_id)
         send_push(cur, [t['client_id']], 'Начислены километры', f'+{earn} км на ваш счёт', '/app/client', f'bonus-{trip_id}')

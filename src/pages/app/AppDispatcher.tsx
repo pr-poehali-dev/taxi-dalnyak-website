@@ -13,6 +13,7 @@ import DriverForm, { DriverFormValue } from "@/components/app/DriverForm";
 import PushBanner from "@/components/app/PushBanner";
 import FleetTab from "@/components/app/FleetTab";
 import ReportsTab from "@/components/app/ReportsTab";
+import FunnelTab from "@/components/app/FunnelTab";
 import ClientsTab from "@/components/app/ClientsTab";
 import PromosTab from "@/components/app/PromosTab";
 import ExternalDriverForm from "@/components/app/ExternalDriverForm";
@@ -41,7 +42,7 @@ interface Poll {
   topups: Topup[]; config: any;
 }
 
-const TABS = ["Заказы", "Водители", "Клиенты", "Промокоды", "Парк", "Отчёты", "Эфир", "Настройки"] as const;
+const TABS = ["Заказы", "Водители", "Клиенты", "Промокоды", "Парк", "Отчёты", "Воронка", "Эфир", "Настройки"] as const;
 type Tab = (typeof TABS)[number];
 type Act = (a: string, b: Record<string, unknown>) => void;
 
@@ -310,7 +311,7 @@ export default function AppDispatcher() {
   return (
     <Shell title="Диспетчер" onLogout={logout} right={<span className="text-xs font-bold text-neutral-500">на линии: {onlineCount}</span>}>
       <div className="mx-auto max-w-2xl p-4 pb-20">
-        <div className="mb-4 grid grid-cols-4 gap-1 rounded-2xl bg-white p-1.5 shadow-sm sm:grid-cols-8">
+        <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-white p-1.5 shadow-sm sm:grid-cols-9">
           {TABS.map((t) => (
             <button key={t} onClick={() => setTab(t)} className={`rounded-xl py-2.5 text-[13px] font-extrabold ${tab === t ? "bg-[#fcd34d]" : "text-neutral-500"}`}>
               {t}
@@ -364,6 +365,7 @@ export default function AppDispatcher() {
         {tab === "Клиенты" && <ClientsTab token={token} onUnauthorized={() => setToken(null)} />}
 
         {data && tab === "Отчёты" && <ReportsTab token={token} onUnauthorized={() => setToken(null)} />}
+        {tab === "Воронка" && <FunnelTab token={token} onUnauthorized={() => setToken(null)} />}
 
         {data && tab === "Эфир" && (
           <div className="space-y-3">

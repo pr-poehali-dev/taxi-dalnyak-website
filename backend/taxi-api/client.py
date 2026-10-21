@@ -76,6 +76,7 @@ def create_trip(cur, user, body):
     if tariff not in TARIFFS:
         raise ApiError(400, 'Выберите тариф')
     when = _parse_when(body.get('scheduled_at'))
+    installed = body.get('installed') is not False
     pay_method = body.get('pay_method') if body.get('pay_method') in ('cash', 'transfer') else 'cash'
     cur.execute(
         f"SELECT count(*) FILTER (WHERE scheduled_at IS NULL) AS now_open, count(*) AS total FROM {S}.app_trips WHERE client_id = %s AND status IN %s",
@@ -117,14 +118,14 @@ def create_trip(cur, user, body):
     cur.execute(
         f"""INSERT INTO {S}.app_trips
             (client_id, from_text, from_lat, from_lng, from_city, from_street, from_house, to_text, to_lat, to_lng,
-             comment, price, base_price, tariff, region, distance_km, scheduled_at, pay_method, share_token)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+             comment, price, base_price, tariff, region, distance_km, scheduled_at, pay_method, share_token, from_installed)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
         (user['id'], from_text, float(body['from_lat']), float(body['from_lng']), city, street, house, to_text,
          float(body['to_lat']), float(body['to_lng']), clean(body.get('comment'), 300) or None, price, base,
-         tariff, q['region'], q['distance_km'], when, pay_method, secrets.token_urlsafe(16)),
+         tariff, q['region'], q['distance_km'], when, pay_method, secrets.token_urlsafe(16), installed),
     )
     trip_id = cur.fetchone()['id']
-    if body.get('use_bonus'):
+    if body.get('use_bonus') and installed:
         bonus.spend(cur, user['id'], trip_id, tariff, base, cfg)
     notify_new_trip(cur, trip_id)
     return {'id': trip_id}

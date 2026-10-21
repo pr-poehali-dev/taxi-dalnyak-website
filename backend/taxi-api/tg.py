@@ -103,6 +103,7 @@ def notify_new_trip(cur, t):
         f"📏 {t['distance_km']} км" if t.get('distance_km') else None,
         f"💰 Цена: {int(t['price'])} ₽ · {'переводом' if t.get('pay_method') == 'transfer' else 'наличными'}",
         f"🚘 Тариф: {TRIP_TEXT.get(t['tariff'], t['tariff'])}",
+        f"📱 Откуда заказ: {'установленное приложение' if t.get('from_installed', True) else 'браузер, без установки'}",
         f"⏰ Подача: {when}",
         f"👤 Пассажир: {u.get('name') or 'без имени'}, {u.get('phone') or 'телефон не указан'}",
         f"💬 Комментарий: {t['comment']}" if t.get('comment') else None,

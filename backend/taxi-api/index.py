@@ -6,6 +6,7 @@ import chat
 import client
 import driver
 import dispatcher
+import funnel
 import push
 import track
 from common import ApiError, connect, resp
@@ -70,6 +71,7 @@ PROTECTED = {
     'disp_reset_password': ('dispatcher', dispatcher.reset_password),
     'disp_request_recheck': ('dispatcher', dispatcher.request_recheck),
     'disp_report': ('dispatcher', dispatcher.report),
+    'disp_funnel': ('dispatcher', funnel.report),
     'disp_save_config': ('dispatcher', dispatcher.save_config),
     'disp_push_subscribe': ('dispatcher', auth.push_subscribe),
 }
@@ -111,6 +113,8 @@ def handler(event: dict, context) -> dict:
         cur = conn.cursor()
         if action == 'logout':
             result = auth.logout(cur, token)
+        elif action == 'funnel':
+            result = funnel.track(cur, body, token)
         elif action in PUBLIC:
             result = PUBLIC[action](cur, body)
         elif action in PROTECTED:

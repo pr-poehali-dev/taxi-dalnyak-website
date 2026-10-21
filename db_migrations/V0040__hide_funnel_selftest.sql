@@ -1,0 +1,1 @@
+UPDATE t_p85334902_taxi_dalnyak_website.app_funnel SET from_ad = false, created_at = '2000-01-01' WHERE visitor = 'selftest-yura';
