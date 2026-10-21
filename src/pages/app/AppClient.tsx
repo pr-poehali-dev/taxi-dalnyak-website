@@ -181,6 +181,7 @@ export default function AppClient() {
 
   const order = async () => {
     if (!quote || !toPlace || !fromPos) return;
+    if (!orderAfterLogin.current) trackStep("order_click", { details: `${toText} · ${price} ₽` });
     if (!token) { orderAfterLogin.current = true; requireLogin(); return; }
     setBusy(true);
     setErr("");

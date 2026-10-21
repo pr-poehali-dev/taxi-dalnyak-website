@@ -2,7 +2,7 @@ import { appCall } from "./appApi";
 import { getAdSource } from "./adSource";
 import { isStandalone } from "./pushClient";
 
-export type FunnelStep = "open" | "login" | "route" | "quote" | "order" | "install_offer" | "install" | "login_prompt";
+export type FunnelStep = "open" | "login" | "route" | "quote" | "order" | "install_offer" | "install" | "login_prompt" | "order_click";
 
 const VKEY = "app_visitor_id";
 
