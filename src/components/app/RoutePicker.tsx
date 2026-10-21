@@ -24,7 +24,7 @@ function parts(p: Place): { title: string; sub: string } {
 }
 
 export default function RoutePicker({ token, fromText, toText, near, start, onPickFrom, onPickTo, onMyLocation, onMap, onClose }: {
-  token: string; fromText: string; toText: string; near: [number, number] | null; start: Which;
+  token: string | null; fromText: string; toText: string; near: [number, number] | null; start: Which;
   onPickFrom: (p: Place) => void; onPickTo: (p: Place) => void; onMyLocation: () => void; onMap: (w: Which) => void; onClose: () => void;
 }) {
   useBackClose(onClose);
@@ -51,7 +51,7 @@ export default function RoutePicker({ token, fromText, toText, near, start, onPi
     setLoading(true);
     timer.current = setTimeout(async () => {
       try {
-        const r = await appCall<{ items: Place[] }>("client_suggest", { text: q, lat: near?.[0], lng: near?.[1] }, token);
+        const r = await appCall<{ items: Place[] }>(token ? "client_suggest" : "guest_suggest", { text: q, lat: near?.[0], lng: near?.[1] }, token);
         setItems(r.items);
       } catch { setItems([]); }
       setLoading(false);

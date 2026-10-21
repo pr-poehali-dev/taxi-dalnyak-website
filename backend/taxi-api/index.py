@@ -21,6 +21,9 @@ PUBLIC = {
     'driver_send_code': auth.driver_send_code,
     'dispatcher_login': auth.dispatcher_login,
     'track': track.track,
+    'guest_suggest': client.guest_suggest,
+    'guest_reverse': client.guest_reverse,
+    'guest_quote': client.guest_quote,
 }
 
 PROTECTED = {

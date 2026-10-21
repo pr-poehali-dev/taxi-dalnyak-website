@@ -38,6 +38,27 @@ def suggest(cur, user, body):
     return {'items': pricing.suggest(text, body.get('lat'), body.get('lng'))}
 
 
+def guest_suggest(cur, body):
+    rate_limit(cur, f'geo:ip:{body.get("_ip", "")}', 60, 60)
+    text = clean(body.get('text'), 120)
+    if len(text) < 3:
+        return {'items': []}
+    return {'items': pricing.suggest(text, body.get('lat'), body.get('lng'))}
+
+
+def guest_reverse(cur, body):
+    rate_limit(cur, f'geo:ip:{body.get("_ip", "")}', 60, 60)
+    return {'item': pricing.reverse(float(body.get('lat')), float(body.get('lng')))}
+
+
+def guest_quote(cur, body):
+    rate_limit(cur, f'quote:ip:{body.get("_ip", "")}', 30, 60)
+    cfg = get_config(cur)
+    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'))
+    q['bonus'] = {}
+    return q
+
+
 def reverse(cur, user, body):
     rate_limit(cur, f'geo:{user["id"]}', 60, 60)
     return {'item': pricing.reverse(float(body.get('lat')), float(body.get('lng')))}

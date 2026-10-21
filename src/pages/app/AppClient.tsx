@@ -29,6 +29,7 @@ import Tutorial, { CLIENT_SLIDES } from "@/components/app/Tutorial";
 import TripChat from "@/components/app/TripChat";
 import PhoneLogin from "@/components/app/PhoneLogin";
 import { Badge, Btn, Field, Shell, tripTone } from "@/components/app/ui";
+import { DIRECT_ADS_CONTACTS } from "@/lib/contacts";
 import Icon from "@/components/ui/icon";
 
 const STATUS_VOICE: Record<string, string> = {
@@ -95,10 +96,11 @@ export default function AppClient() {
   const requireLogin = () => { trackStep("login_prompt"); setNeedLogin(true); };
   const seen = useSeen();
   const statusRef = useRef<string>("");
+  const orderAfterLogin = useRef(false);
 
   const applyGeo = useCallback(async (lat: number, lng: number) => {
     try {
-      const r = await appCall<{ item: Place }>("client_reverse", { lat, lng }, token);
+      const r = await appCall<{ item: Place }>(token ? "client_reverse" : "guest_reverse", { lat, lng }, token);
       setFrom({ city: r.item.city || r.item.state || "", street: r.item.street || "", house: r.item.house || "" });
       setFromText(r.item.label || "");
     } catch {
@@ -110,7 +112,7 @@ export default function AppClient() {
     if (!pos) return;
     setFromPos(pos);
     setFly({ lat: pos[0], lng: pos[1], n: Date.now() });
-    if (token) applyGeo(pos[0], pos[1]);
+    applyGeo(pos[0], pos[1]);
   }, [pos, token, applyGeo]);
 
   useEffect(() => { if (token) setNeedLogin(false); }, [token]);
@@ -122,10 +124,10 @@ export default function AppClient() {
 
   useEffect(() => {
     setQuote(null);
-    if (!toPlace || !fromPos || !token) return;
-    appCall<Quote>("client_quote", { from_lat: fromPos[0], from_lng: fromPos[1], to_lat: toPlace.lat, to_lng: toPlace.lng }, token)
+    if (!toPlace || !fromPos) return;
+    appCall<Quote>(token ? "client_quote" : "guest_quote", { from_lat: fromPos[0], from_lng: fromPos[1], to_lat: toPlace.lat, to_lng: toPlace.lng }, token)
       .then((q) => {
-        setQuote(q); setBump(0); setErr("");
+        setQuote(q); if (!orderAfterLogin.current) setBump(0); setErr("");
         trackStep("quote", { details: `${from.city || fromText} → ${toPlace.label || ""} · ${q.distance_km} км · Стандарт ${q.prices.standard} ₽`.slice(0, 290) });
       })
       .catch((e) => setErr(e.message));
@@ -133,7 +135,7 @@ export default function AppClient() {
 
   const onCenter = useCallback((lat: number, lng: number) => {
     setFromPos([lat, lng]);
-    if (token) applyGeo(lat, lng);
+    applyGeo(lat, lng);
   }, [applyGeo, token]);
 
   const refresh = useCallback(async () => {
@@ -179,6 +181,7 @@ export default function AppClient() {
 
   const order = async () => {
     if (!quote || !toPlace || !fromPos) return;
+    if (!token) { orderAfterLogin.current = true; requireLogin(); return; }
     setBusy(true);
     setErr("");
     try {
@@ -197,6 +200,22 @@ export default function AppClient() {
       setBusy(false);
     }
   };
+
+  const onLogin = (t: string) => {
+    if (orderAfterLogin.current) {
+      localStorage.setItem("app_onb_client", "1");
+      localStorage.setItem("app_tut_client", "1");
+      setReady(true);
+      setTutor(false);
+    }
+    setToken(t);
+  };
+
+  useEffect(() => {
+    if (!token || !quote || !orderAfterLogin.current) return;
+    orderAfterLogin.current = false;
+    order();
+  }, [token, quote]);
 
   const act = async (action: string, body: Record<string, unknown>) => {
     setErr("");
@@ -270,15 +289,15 @@ export default function AppClient() {
             ) : (
               <>
                 <div className="overflow-hidden rounded-3xl bg-neutral-100">
-                  <button onClick={() => (token ? setPicker("from") : requireLogin())} className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-200">
+                  <button onClick={() => setPicker("from")} className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-200">
                     <span className="h-3 w-3 shrink-0 rounded-full bg-blue-600" />
                     <span className="min-w-0 flex-1">
                       <span className="block text-xs font-bold text-neutral-400">Откуда</span>
-                      <span className="block truncate text-[15px] font-extrabold">{!token ? "Моё местоположение" : fromText || (from.city ? `${from.city}${from.street ? ", " + from.street : ""}` : "Определяем точку...")}</span>
+                      <span className="block truncate text-[15px] font-extrabold">{fromText || (from.city ? `${from.city}${from.street ? ", " + from.street : ""}` : "Определяем точку...")}</span>
                     </span>
                   </button>
                   <div className="mx-4 border-t border-neutral-200" />
-                  <button onClick={() => (token ? setPicker("to") : requireLogin())} className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-200">
+                  <button onClick={() => setPicker("to")} className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-200">
                     <span className="h-3 w-3 shrink-0 rounded-full bg-neutral-900" />
                     <span className="min-w-0 flex-1">
                       <span className="block text-xs font-bold text-neutral-400">Куда</span>
@@ -287,9 +306,7 @@ export default function AppClient() {
                     {toPlace && <span onClick={(e) => { e.stopPropagation(); setToText(""); setToPlace(null); }} className="p-1"><Icon name="X" size={18} className="text-neutral-400" /></span>}
                   </button>
                 </div>
-                {!token ? (
-                  <Btn onClick={requireLogin} className="w-full text-lg">Войти и заказать поездку</Btn>
-                ) : !toPlace && <p className="text-xs text-neutral-400">Двигайте карту, чтобы поставить точку подачи, или нажмите «Куда» и введите город.</p>}
+                {!toPlace && <p className="text-xs text-neutral-400">Двигайте карту, чтобы поставить точку подачи, или нажмите «Куда» и введите город.</p>}
               </>
             )}
 
@@ -361,17 +378,25 @@ export default function AppClient() {
       </div>
 
       {needLogin && !token && (
-        <div className="fixed inset-0 z-[3000] flex items-end bg-black/50" onClick={() => setNeedLogin(false)}>
+        <div className="fixed inset-0 z-[3000] flex items-end bg-black/50" onClick={() => { orderAfterLogin.current = false; setNeedLogin(false); }}>
           <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] bg-white pb-8" onClick={(e) => e.stopPropagation()}>
             <div className="mx-auto mt-3 h-1.5 w-10 rounded-full bg-neutral-200" />
             <div className="flex items-start justify-between px-5 pt-3">
               <div>
-                <h2 className="text-xl font-extrabold text-neutral-900">Нужно войти</h2>
-                <p className="mt-0.5 text-sm text-neutral-500">Чтобы указать адреса, узнать цену и заказать поездку. Это займёт 10 секунд.</p>
+                <h2 className="text-xl font-extrabold text-neutral-900">{quote ? "Остался один шаг" : "Вход"}</h2>
+                <p className="mt-0.5 text-sm text-neutral-500">{quote ? "Укажите телефон, чтобы водитель мог с вами связаться. Заказ отправится сразу." : "Укажите телефон: так водитель сможет с вами связаться."}</p>
               </div>
-              <button onClick={() => setNeedLogin(false)} aria-label="Закрыть" className="p-1 text-neutral-400"><Icon name="X" size={22} /></button>
+              <button onClick={() => { orderAfterLogin.current = false; setNeedLogin(false); }} aria-label="Закрыть" className="p-1 text-neutral-400"><Icon name="X" size={22} /></button>
             </div>
-            <PhoneLogin action="client_login" withName hint="Введите имя и номер телефона." onToken={setToken} />
+            <PhoneLogin action="client_login" hint="" bare onToken={onLogin} />
+            <div className="mx-auto max-w-md px-5">
+              <div className="mb-2 text-center text-xs font-bold uppercase text-neutral-400">или закажите без регистрации</div>
+              <div className="grid grid-cols-3 gap-2">
+                <a href={DIRECT_ADS_CONTACTS.PHONE_HREF} className="flex flex-col items-center gap-1 rounded-2xl bg-emerald-50 py-3 text-xs font-extrabold text-emerald-800"><Icon name="Phone" size={20} />Позвонить</a>
+                <a href={DIRECT_ADS_CONTACTS.MAX_HREF} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 rounded-2xl bg-violet-50 py-3 text-xs font-extrabold text-violet-800"><Icon name="MessageCircle" size={20} />Max</a>
+                <a href={DIRECT_ADS_CONTACTS.TG_HREF} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 rounded-2xl bg-sky-50 py-3 text-xs font-extrabold text-sky-800"><Icon name="Send" size={20} />Telegram</a>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -405,7 +430,7 @@ export default function AppClient() {
       {token && panel === "history" && <HistoryPanel token={token} onClose={() => setPanel(null)} />}
       {token && panel === "promo" && <PromoPanel token={token} onClose={() => setPanel(null)} onDone={refresh} />}
       {token && panel === "bonus" && <BonusPanel token={token} onClose={() => setPanel(null)} />}
-      {token && picker && (
+      {picker && (
         <RoutePicker token={token} start={picker} fromText={fromText} toText={toText} near={fromPos}
           onPickFrom={(p) => { setFromPos([p.lat, p.lng]); setFly({ lat: p.lat, lng: p.lng, n: Date.now() }); setFrom({ city: p.city || p.state || "", street: p.street || "", house: p.house || "" }); setFromText(p.label); }}
           onPickTo={(p) => { setToPlace(p); setToText(p.label); }}

@@ -78,6 +78,15 @@
         "name": "Тест"
       },
       "expectedStatus": 400
+    },
+    {
+      "name": "Guest quote validation",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "guest_quote"
+      },
+      "expectedStatus": 400
     }
   ]
 }
