@@ -47,6 +47,8 @@ export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise }:
   const canCancel = ["new", "assigned", "enroute", "arrived"].includes(t.status);
   const eta = ["assigned", "enroute"].includes(t.status) ? etaMinutes(t.eta_at, now) : null;
   const car = [t.car_color, t.car_model].filter(Boolean).join(" ");
+  const searchMin = t.created_at ? (now - new Date(t.created_at).getTime()) / 60000 : 0;
+  const longSearch = t.status === "new" && !t.scheduled_at && searchMin >= 15;
 
   return (
     <div className="space-y-4">
@@ -146,6 +148,18 @@ export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise }:
               </p>
             )}
           </div>
+          {longSearch && (
+            <div className="rounded-2xl border-2 border-[#fcd34d] bg-amber-50 p-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fcd34d] text-neutral-900"><Icon name="Sparkles" size={20} /></span>
+                <div>
+                  <div className="font-extrabold text-neutral-900">Поиск идёт дольше обычного</div>
+                  <p className="mt-1 text-sm leading-snug text-amber-900">Сейчас свободных водителей на это направление немного. Небольшая прибавка к цене поможет быстрее найти того, кто согласится на поездку.</p>
+                </div>
+              </div>
+              <Btn onClick={() => onRaise(t.price + 300)} className="mt-3 w-full">Поднять на 300 ₽ · {money(t.price + 300)}</Btn>
+            </div>
+          )}
           <div className="rounded-2xl bg-amber-50 p-3">
             <p className="mb-2 text-sm font-semibold text-amber-900">Хотите уехать быстрее? Предложите больше.</p>
             <div className="flex items-center gap-2">
