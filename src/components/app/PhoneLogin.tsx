@@ -28,7 +28,6 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
   const [consent, setConsent] = useState(false);
 
   useEffect(() => {
-    if (action !== "client_login") return;
     appCall<{ sms_login?: boolean }>("config").then((c) => setSms(!!c.sms_login)).catch(() => undefined);
   }, [action]);
 
@@ -42,7 +41,7 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
     setBusy(true);
     setErr("");
     try {
-      await appCall("client_send_code", { phone, pd_consent: consent });
+      await appCall(isClient ? "client_send_code" : "driver_send_code", { phone, pd_consent: consent });
       setStep("code");
       setCode("");
       setWait(60);
@@ -72,7 +71,7 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
   return (
     <form onSubmit={submit} className="mx-auto max-w-md space-y-3 p-5">
       <h1 className={`${heading ? "pt-1" : "pt-6"} text-2xl font-extrabold`}>{heading || "Вход по номеру телефона"}</h1>
-      <p className="text-sm text-neutral-500">{hint}</p>
+      <p className="text-sm text-neutral-500">{sms && !isClient ? "Введите номер телефона, указанный при регистрации. Мы пришлём код в СМС." : hint}</p>
       {step === "phone" && withName && <Field label="Как вас зовут" value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя" />}
       {step === "phone" && <Field label="Телефон" type="tel" inputMode="tel" value={phone} onFocus={() => !phone && setPhone("+7")}
         onChange={(e) => setPhone(formatPhone(e.target.value))} placeholder="+7 (___) ___-__-__" />}
@@ -87,10 +86,10 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
           </div>
         </>
       )}
-      {withPassword && <Field label="Пароль" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
+      {withPassword && !sms && <Field label="Пароль" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
       {isClient && step === "phone" && <ConsentCheckbox who="client" checked={consent} onChange={setConsent} />}
       {err && <p className="text-sm font-semibold text-red-600">{err}</p>}
-      <Btn type="submit" disabled={busy || phone.replace(/\D/g, "").length < 11 || (isClient && !consent) || (withPassword && password.length < 8) || (step === "code" && code.length < 4)} className="w-full">
+      <Btn type="submit" disabled={busy || phone.replace(/\D/g, "").length < 11 || (isClient && !consent) || (withPassword && !sms && password.length < 8) || (step === "code" && code.length < 4)} className="w-full">
         {busy ? "Подождите..." : sms ? (step === "phone" ? "Получить код в СМС" : "Войти") : "Продолжить"}
       </Btn>
       {extra}

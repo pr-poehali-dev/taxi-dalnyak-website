@@ -18,6 +18,7 @@ PUBLIC = {
     'client_send_code': auth.client_send_code,
     'driver_login': auth.driver_login,
     'driver_register': auth.driver_register,
+    'driver_send_code': auth.driver_send_code,
     'dispatcher_login': auth.dispatcher_login,
     'track': track.track,
 }

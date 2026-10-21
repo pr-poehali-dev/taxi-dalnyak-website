@@ -48,7 +48,7 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Driver login wrong password",
+      "name": "Driver login unknown phone",
       "method": "POST",
       "path": "/",
       "body": {
@@ -56,7 +56,7 @@
         "phone": "+79990000002",
         "password": "wrongpass1"
       },
-      "expectedStatus": 401
+      "expectedStatus": 404
     },
     {
       "name": "Track bad token",

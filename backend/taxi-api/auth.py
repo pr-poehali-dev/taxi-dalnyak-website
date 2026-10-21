@@ -95,14 +95,55 @@ def client_send_code(cur, body):
     u = cur.fetchone()
     if u and u['is_blocked']:
         raise ApiError(403, 'Доступ к сервису ограничен. Свяжитесь с поддержкой')
+    issue_code(cur, phone, 'Код входа Такси Дальняк')
+    return {'ok': True}
+
+
+def issue_code(cur, phone, title, slot=''):
+    key = slot + phone
     code = f"{secrets.randbelow(10000):04d}"
     cur.execute(
         f"""INSERT INTO {S}.app_sms_codes (phone, code_hash, expires_at, attempts) VALUES (%s, %s, now() + interval '5 minutes', 0)
             ON CONFLICT (phone) DO UPDATE SET code_hash = EXCLUDED.code_hash, expires_at = EXCLUDED.expires_at, attempts = 0, created_at = now()""",
-        (phone, sha(f'{phone}:{code}')),
+        (key, sha(f'{key}:{code}')),
     )
     cur.connection.commit()
-    _send_sms(phone, f'Код входа Такси Дальняк: {code}')
+    _send_sms(phone, f'{title}: {code}')
+
+
+def check_code(cur, phone, raw, slot=''):
+    key = slot + phone
+    code = ''.join(c for c in str(raw or '') if c.isdigit())
+    cur.execute(f"SELECT code_hash, attempts, (expires_at > now()) AS alive FROM {S}.app_sms_codes WHERE phone = %s FOR UPDATE", (key,))
+    row = cur.fetchone()
+    if not row or not row['alive']:
+        raise ApiError(400, 'Код устарел. Запросите новый')
+    if row['attempts'] >= 5:
+        raise ApiError(429, 'Слишком много неверных попыток. Запросите новый код')
+    if not hmac.compare_digest(row['code_hash'], sha(f'{key}:{code}')):
+        cur.execute(f"UPDATE {S}.app_sms_codes SET attempts = attempts + 1 WHERE phone = %s", (key,))
+        cur.connection.commit()
+        raise ApiError(400, 'Неверный код')
+    cur.execute(f"UPDATE {S}.app_sms_codes SET expires_at = now() WHERE phone = %s", (key,))
+
+
+def driver_send_code(cur, body):
+    if not sms_enabled():
+        raise ApiError(400, 'Вход по СМС пока не подключён')
+    ip = body.get('_ip', '')
+    phone = norm_phone(body.get('phone'))
+    rate_limit(cur, f'sms:ip:{ip}', 15, 3600)
+    rate_limit(cur, f'sms:drv:{phone}', 4, 1800)
+    cur.execute(f"SELECT id FROM {S}.app_users WHERE phone = %s AND role = 'driver'", (phone,))
+    exists = bool(cur.fetchone())
+    if body.get('purpose') == 'register':
+        if exists:
+            raise ApiError(409, 'Этот номер уже зарегистрирован. Нажмите «Назад» и войдите')
+        issue_code(cur, phone, 'Код регистрации водителя Дальняк', 'd:')
+    else:
+        if not exists:
+            raise ApiError(404, 'Водитель с таким номером не найден. Зарегистрируйтесь')
+        issue_code(cur, phone, 'Код входа водителя Дальняк', 'd:')
     return {'ok': True}
 
 
@@ -118,18 +159,7 @@ def client_login(cur, body):
     if body.get('pd_consent') is not True:
         raise ApiError(400, 'Нужно согласие на обработку персональных данных')
     if sms_enabled():
-        code = ''.join(c for c in str(body.get('code') or '') if c.isdigit())
-        cur.execute(f"SELECT code_hash, attempts, (expires_at > now()) AS alive FROM {S}.app_sms_codes WHERE phone = %s FOR UPDATE", (phone,))
-        row = cur.fetchone()
-        if not row or not row['alive']:
-            raise ApiError(400, 'Код устарел. Запросите новый')
-        if row['attempts'] >= 5:
-            raise ApiError(429, 'Слишком много неверных попыток. Запросите новый код')
-        if not hmac.compare_digest(row['code_hash'], sha(f'{phone}:{code}')):
-            cur.execute(f"UPDATE {S}.app_sms_codes SET attempts = attempts + 1 WHERE phone = %s", (phone,))
-            cur.connection.commit()
-            raise ApiError(400, 'Неверный код')
-        cur.execute(f"UPDATE {S}.app_sms_codes SET expires_at = now() WHERE phone = %s", (phone,))
+        check_code(cur, phone, body.get('code'))
     cur.execute(f"SELECT id, name, is_blocked FROM {S}.app_users WHERE phone = %s AND role = 'client'", (phone,))
     u = cur.fetchone()
     if u and u['is_blocked']:
@@ -166,7 +196,11 @@ def driver_login(cur, body):
     rate_limit(cur, f'login:driver:{phone}', 8, 600)
     cur.execute(f"SELECT id, password_hash FROM {S}.app_users WHERE phone = %s AND role = 'driver'", (phone,))
     u = cur.fetchone()
-    if not u or not u['password_hash'] or not check_password(pw, u['password_hash']):
+    if sms_enabled():
+        if not u:
+            raise ApiError(404, 'Водитель с таким номером не найден. Зарегистрируйтесь')
+        check_code(cur, phone, body.get('code'), 'd:')
+    elif not u or not u['password_hash'] or not check_password(pw, u['password_hash']):
         raise ApiError(401, 'Неверный номер или пароль')
     return {'token': create_session(cur, u['id'])}
 
@@ -222,7 +256,9 @@ def driver_register(cur, body):
     photos = body.get('photos') or {}
     if not name or not car_model or not car_plate:
         raise ApiError(400, 'Заполните имя, марку и госномер')
-    if len(pw) < 8 or len(pw) > 64:
+    if sms_enabled():
+        pw = secrets.token_urlsafe(18)
+    elif len(pw) < 8 or len(pw) > 64:
         raise ApiError(400, 'Пароль должен быть не короче 8 символов')
     if body.get('pd_consent') is not True:
         raise ApiError(400, 'Нужно согласие на обработку персональных данных')
@@ -231,6 +267,8 @@ def driver_register(cur, body):
     cur.execute(f"SELECT id FROM {S}.app_users WHERE phone = %s AND role = 'driver'", (phone,))
     if cur.fetchone():
         raise ApiError(409, 'Этот номер уже зарегистрирован. Нажмите «Войти»')
+    if sms_enabled():
+        check_code(cur, phone, body.get('code'), 'd:')
     cur.execute(
         f"INSERT INTO {S}.app_users (phone, role, name, token, password_hash) VALUES (%s, 'driver', %s, %s, %s) RETURNING id",
         (phone, name, placeholder_token(), hash_password(pw)),
