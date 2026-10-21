@@ -1,8 +1,8 @@
 from common import S, ApiError, clean, sha
 
-STEPS = ('open', 'login', 'route', 'quote', 'order', 'install_offer', 'install')
+STEPS = ('open', 'login_prompt', 'login', 'route', 'quote', 'order', 'install_offer', 'install')
 STEP_NAMES = {
-    'open': 'Открыли приложение', 'login': 'Вошли по телефону', 'route': 'Ввели маршрут',
+    'open': 'Открыли приложение', 'login_prompt': 'Нажали «Заказать», увидели вход', 'login': 'Вошли по телефону', 'route': 'Ввели маршрут',
     'quote': 'Увидели цену', 'order': 'Оформили заказ',
 }
 
@@ -14,7 +14,7 @@ def track(cur, body, token=None):
     visitor = clean(body.get('visitor'), 40)
     if not visitor:
         raise ApiError(400, 'no visitor')
-    cur.execute(f"SELECT 1 FROM {S}.app_funnel WHERE visitor = %s AND step = %s AND created_at > now() - interval '30 minutes' AND step IN ('open', 'login', 'install_offer') LIMIT 1", (visitor, step))
+    cur.execute(f"SELECT 1 FROM {S}.app_funnel WHERE visitor = %s AND step = %s AND created_at > now() - interval '30 minutes' AND step IN ('open', 'login', 'login_prompt', 'install_offer') LIMIT 1", (visitor, step))
     if cur.fetchone():
         return {'ok': True}
     uid = None

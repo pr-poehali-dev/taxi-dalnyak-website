@@ -9,7 +9,6 @@ import { useReadMap } from "@/lib/useReadMap";
 import { reachGoal } from "@/lib/metrika";
 import TariffPicker from "@/components/app/TariffPicker";
 import DriverBanner from "@/components/app/DriverBanner";
-import ClientWelcome from "@/components/app/ClientWelcome";
 import PushBanner from "@/components/app/PushBanner";
 import { useSeen } from "@/lib/useSeen";
 import { pushNotify } from "@/lib/notify";
@@ -22,7 +21,7 @@ import BonusBanner from "@/components/app/BonusBanner";
 import WhenPicker, { whenError, whenLabel } from "@/components/app/WhenPicker";
 import ClientTripCard, { ClientTrip } from "@/components/app/ClientTripCard";
 import Onboarding from "@/components/app/Onboarding";
-import InstallGate, { needsInstall, isMobile } from "@/components/app/InstallGate";
+import InstallGate, { isMobile } from "@/components/app/InstallGate";
 import InstallOffer from "@/components/app/InstallOffer";
 import { trackStep } from "@/lib/funnel";
 import { isStandalone } from "@/lib/pushClient";
@@ -56,7 +55,7 @@ export default function AppClient() {
   const { token, setToken } = useAppSession("client");
   const [ready, setReady] = useState(() => localStorage.getItem("app_onb_client") === "1");
   const [tutor, setTutor] = useState(() => localStorage.getItem("app_tut_client") !== "1");
-  const { pos, error: gpsErr, locate } = useGeo(!!token && ready);
+  const { pos, error: gpsErr, locate } = useGeo(!token || ready);
   const [from, setFrom] = useState({ city: "", street: "", house: "" });
   const [toText, setToText] = useState("");
   const [toPlace, setToPlace] = useState<Place | null>(null);
@@ -88,8 +87,12 @@ export default function AppClient() {
   const [useBonus, setUseBonus] = useState(true);
   const [bonusCfg, setBonusCfg] = useState({ earn: 5, max: 10, ref: 30 });
   const installed = isStandalone() || !isMobile();
-  const [gate, setGate] = useState(() => needsInstall() && sessionStorage.getItem("app_install_skip") !== "1");
-  const skipGate = () => { sessionStorage.setItem("app_install_skip", "1"); setGate(false); };
+  const [gate, setGate] = useState(false);
+  const skipGate = () => setGate(false);
+  const [offerHidden, setOfferHidden] = useState(() => sessionStorage.getItem("app_install_hide") === "1");
+  const hideOffer = () => { sessionStorage.setItem("app_install_hide", "1"); setOfferHidden(true); };
+  const [needLogin, setNeedLogin] = useState(false);
+  const requireLogin = () => { trackStep("login_prompt"); setNeedLogin(true); };
   const seen = useSeen();
   const statusRef = useRef<string>("");
 
@@ -104,11 +107,13 @@ export default function AppClient() {
   }, [token]);
 
   useEffect(() => {
-    if (!pos || !token) return;
+    if (!pos) return;
     setFromPos(pos);
     setFly({ lat: pos[0], lng: pos[1], n: Date.now() });
-    applyGeo(pos[0], pos[1]);
+    if (token) applyGeo(pos[0], pos[1]);
   }, [pos, token, applyGeo]);
+
+  useEffect(() => { if (token) setNeedLogin(false); }, [token]);
 
   useEffect(() => { trackStep("open"); }, []);
   useEffect(() => { if (gate) trackStep("install_offer"); }, [gate]);
@@ -128,8 +133,8 @@ export default function AppClient() {
 
   const onCenter = useCallback((lat: number, lng: number) => {
     setFromPos([lat, lng]);
-    applyGeo(lat, lng);
-  }, [applyGeo]);
+    if (token) applyGeo(lat, lng);
+  }, [applyGeo, token]);
 
   const refresh = useCallback(async () => {
     const r = await appCall<Poll>("client_poll", {}, token);
@@ -205,23 +210,11 @@ export default function AppClient() {
 
   if (gate) return <InstallGate who="Приложение для пассажиров" appName="Дальняк" onClose={skipGate} />;
 
-  if (!token) {
-    return (
-      <Shell title="Дальняк">
-        <ClientWelcome>
-          <div className="rounded-3xl bg-white shadow-sm">
-            <PhoneLogin action="client_login" withName hint="Введите имя и номер телефона, это займёт десять секунд." onToken={setToken} heading="Начнём поездку" />
-          </div>
-        </ClientWelcome>
-      </Shell>
-    );
-  }
-
-  if (!ready) {
+  if (token && !ready) {
     return <Onboarding role="client" token={token} needLocation onDone={() => { localStorage.setItem("app_onb_client", "1"); setReady(true); }} />;
   }
 
-  if (tutor) return <Tutorial slides={CLIENT_SLIDES} onClose={() => { localStorage.setItem("app_tut_client", "1"); setTutor(false); }} />;
+  if (token && tutor) return <Tutorial slides={CLIENT_SLIDES} onClose={() => { localStorage.setItem("app_tut_client", "1"); setTutor(false); }} />;
 
   const active = data?.active || null;
   const points: MapPoint[] = [];
@@ -232,10 +225,10 @@ export default function AppClient() {
   const fromOk = !!from.city;
 
   return (
-    <Shell title="Дальняк" left={<button onClick={() => setMenu(true)} aria-label="Меню" className="-ml-1 flex h-10 w-10 items-center justify-center rounded-full active:bg-neutral-100"><Icon name="Menu" size={24} /></button>}>
+    <Shell title="Дальняк" right={!token ? <button onClick={requireLogin} className="rounded-full bg-neutral-900 px-4 py-2 text-sm font-extrabold text-white">Войти</button> : undefined} left={<button onClick={() => (token ? setMenu(true) : requireLogin())} aria-label="Меню" className="-ml-1 flex h-10 w-10 items-center justify-center rounded-full active:bg-neutral-100"><Icon name="Menu" size={24} /></button>}>
       <div className="relative">
         <AppMap center={pos || DEFAULT_CENTER} points={points} className="h-[50vh] w-full" pin={!active && (!toPlace || mapPick !== null)} fly={fly} onCenterChange={onCenter} />
-        {!active && !toPlace && !mapPick && installed && <BonusBanner km={data?.bonus_km ?? 0} earnPct={bonusCfg.earn} maxPct={bonusCfg.max} refKm={bonusCfg.ref} onMore={() => setPanel("bonus")} />}
+        {token && !active && !toPlace && !mapPick && installed && <BonusBanner km={data?.bonus_km ?? 0} earnPct={bonusCfg.earn} maxPct={bonusCfg.max} refKm={bonusCfg.ref} onMore={() => setPanel("bonus")} />}
         <button onClick={() => { locate(); if (pos) setFly({ lat: pos[0], lng: pos[1], n: Date.now() }); }} aria-label="Моё местоположение" className="absolute right-3 top-3 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg">
           <Icon name="Crosshair" size={20} />
         </button>
@@ -248,8 +241,7 @@ export default function AppClient() {
             {gpsErr} <button onClick={locate} className="ml-1 underline">Повторить</button>
           </div>
         )}
-        {!installed && !active && !toPlace && <div className="mb-3"><InstallOffer onOpen={() => setGate(true)} /></div>}
-        <div className="mb-3"><PushBanner role="client" token={token} /></div>
+        {token && <div className="mb-3"><PushBanner role="client" token={token} /></div>}
         {err && <p className="mb-3 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-600">{err}</p>}
 
         {active ? (
@@ -278,15 +270,15 @@ export default function AppClient() {
             ) : (
               <>
                 <div className="overflow-hidden rounded-3xl bg-neutral-100">
-                  <button onClick={() => setPicker("from")} className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-200">
+                  <button onClick={() => (token ? setPicker("from") : requireLogin())} className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-200">
                     <span className="h-3 w-3 shrink-0 rounded-full bg-blue-600" />
                     <span className="min-w-0 flex-1">
                       <span className="block text-xs font-bold text-neutral-400">Откуда</span>
-                      <span className="block truncate text-[15px] font-extrabold">{fromText || (from.city ? `${from.city}${from.street ? ", " + from.street : ""}` : "Определяем точку...")}</span>
+                      <span className="block truncate text-[15px] font-extrabold">{!token ? "Моё местоположение" : fromText || (from.city ? `${from.city}${from.street ? ", " + from.street : ""}` : "Определяем точку...")}</span>
                     </span>
                   </button>
                   <div className="mx-4 border-t border-neutral-200" />
-                  <button onClick={() => setPicker("to")} className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-200">
+                  <button onClick={() => (token ? setPicker("to") : requireLogin())} className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-200">
                     <span className="h-3 w-3 shrink-0 rounded-full bg-neutral-900" />
                     <span className="min-w-0 flex-1">
                       <span className="block text-xs font-bold text-neutral-400">Куда</span>
@@ -295,7 +287,9 @@ export default function AppClient() {
                     {toPlace && <span onClick={(e) => { e.stopPropagation(); setToText(""); setToPlace(null); }} className="p-1"><Icon name="X" size={18} className="text-neutral-400" /></span>}
                   </button>
                 </div>
-                {!toPlace && <p className="text-xs text-neutral-400">Двигайте карту, чтобы поставить точку подачи, или нажмите «Куда» и введите город.</p>}
+                {!token ? (
+                  <Btn onClick={requireLogin} className="w-full text-lg">Войти и заказать поездку</Btn>
+                ) : !toPlace && <p className="text-xs text-neutral-400">Двигайте карту, чтобы поставить точку подачи, или нажмите «Куда» и введите город.</p>}
               </>
             )}
 
@@ -307,7 +301,6 @@ export default function AppClient() {
                 </div>
                 <TariffPicker prices={quote.prices} value={tariff} onChange={(t) => { setTariff(t); setBump(0); }} />
 
-                {!installed && <InstallOffer compact onOpen={() => setGate(true)} />}
                 {bonusOpt && bump === 0 && (
                   <label className="flex items-center gap-3 rounded-2xl bg-emerald-50 p-3">
                     <input type="checkbox" checked={useBonus} onChange={(e) => setUseBonus(e.target.checked)} className="h-5 w-5 accent-emerald-600" />
@@ -363,10 +356,27 @@ export default function AppClient() {
           </div>
         )}
 
+        {!installed && !active && !offerHidden && <div className="mt-4"><InstallOffer onOpen={() => setGate(true)} onClose={hideOffer} /></div>}
         {!active && <div className="mt-6"><DriverBanner /></div>}
       </div>
 
-      {chatId && <TripChat role="client" tripId={chatId} token={token} onClose={() => setChatId(null)} onUnauthorized={() => setToken(null)}
+      {needLogin && !token && (
+        <div className="fixed inset-0 z-[3000] flex items-end bg-black/50" onClick={() => setNeedLogin(false)}>
+          <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] bg-white pb-8" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto mt-3 h-1.5 w-10 rounded-full bg-neutral-200" />
+            <div className="flex items-start justify-between px-5 pt-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-neutral-900">Нужно войти</h2>
+                <p className="mt-0.5 text-sm text-neutral-500">Чтобы указать адреса, узнать цену и заказать поездку. Это займёт 10 секунд.</p>
+              </div>
+              <button onClick={() => setNeedLogin(false)} aria-label="Закрыть" className="p-1 text-neutral-400"><Icon name="X" size={22} /></button>
+            </div>
+            <PhoneLogin action="client_login" withName hint="Введите имя и номер телефона." onToken={setToken} />
+          </div>
+        </div>
+      )}
+
+      {token && chatId && <TripChat role="client" tripId={chatId} token={token} onClose={() => setChatId(null)} onUnauthorized={() => setToken(null)}
         onRead={(id) => markRead(chatId, id)} />}
 
       {toRate && (
@@ -392,10 +402,10 @@ export default function AppClient() {
           onClose={() => setMenu(false)} onLogout={() => { setMenu(false); logout(); }}
           onPick={(k: MenuAction) => { setMenu(false); if (k === "help") setShowHelp(true); else setPanel(k); }} />
       )}
-      {panel === "history" && <HistoryPanel token={token} onClose={() => setPanel(null)} />}
-      {panel === "promo" && <PromoPanel token={token} onClose={() => setPanel(null)} onDone={refresh} />}
-      {panel === "bonus" && <BonusPanel token={token} onClose={() => setPanel(null)} />}
-      {picker && (
+      {token && panel === "history" && <HistoryPanel token={token} onClose={() => setPanel(null)} />}
+      {token && panel === "promo" && <PromoPanel token={token} onClose={() => setPanel(null)} onDone={refresh} />}
+      {token && panel === "bonus" && <BonusPanel token={token} onClose={() => setPanel(null)} />}
+      {token && picker && (
         <RoutePicker token={token} start={picker} fromText={fromText} toText={toText} near={fromPos}
           onPickFrom={(p) => { setFromPos([p.lat, p.lng]); setFly({ lat: p.lat, lng: p.lng, n: Date.now() }); setFrom({ city: p.city || p.state || "", street: p.street || "", house: p.house || "" }); setFromText(p.label); }}
           onPickTo={(p) => { setToPlace(p); setToText(p.label); }}
