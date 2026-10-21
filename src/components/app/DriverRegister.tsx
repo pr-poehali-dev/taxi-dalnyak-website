@@ -4,6 +4,7 @@ import { compressPhoto } from "@/lib/photo";
 import { Btn, Field } from "./ui";
 import Icon from "@/components/ui/icon";
 import { reachGoal } from "@/lib/metrika";
+import { ConsentCheckbox } from "./DriverConsent";
 
 export const PHOTO_SLOTS = [
   { key: "license", label: "Права, лицевая сторона" },
@@ -21,6 +22,7 @@ export default function DriverRegister({ onToken, onBack }: { onToken: (t: strin
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [consent, setConsent] = useState(false);
 
   const pick = async (key: string, file?: File) => {
     if (!file) return;
@@ -32,13 +34,13 @@ export default function DriverRegister({ onToken, onBack }: { onToken: (t: strin
     }
   };
 
-  const ready = f.name && f.car_model && f.car_plate && f.phone.replace(/\D/g, "").length === 11 && f.password.length >= 8 && PHOTO_SLOTS.every((s) => photos[s.key]);
+  const ready = f.name && f.car_model && f.car_plate && f.phone.replace(/\D/g, "").length === 11 && f.password.length >= 8 && PHOTO_SLOTS.every((s) => photos[s.key]) && consent;
 
   const submit = async () => {
     setBusy(true);
     setErr("");
     try {
-      const r = await appCall<{ token: string }>("driver_register", { ...f, photos });
+      const r = await appCall<{ token: string }>("driver_register", { ...f, photos, pd_consent: consent });
       reachGoal("app_driver_signup");
       onToken(r.token);
     } catch (e) {
@@ -80,6 +82,7 @@ export default function DriverRegister({ onToken, onBack }: { onToken: (t: strin
         ))}
       </div>
 
+      <ConsentCheckbox checked={consent} onChange={setConsent} />
       {err && <p className="text-sm font-semibold text-red-600">{err}</p>}
       <Btn onClick={submit} disabled={!ready || busy} className="w-full">{busy ? "Отправляем фото..." : "Отправить на проверку"}</Btn>
     </div>

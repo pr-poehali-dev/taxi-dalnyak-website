@@ -6,6 +6,7 @@ import chat
 import client
 import driver
 import dispatcher
+import docs
 import funnel
 import push
 import track
@@ -37,6 +38,7 @@ PROTECTED = {
     'client_chat_send': ('client', client.chat_send),
     'client_push_subscribe': ('client', auth.push_subscribe),
     'driver_poll': ('driver', driver.poll),
+    'driver_pd_consent': ('driver', driver.pd_consent),
     'driver_set_line': ('driver', driver.set_line),
     'driver_take': ('driver', driver.take),
     'driver_trip_status': ('driver', driver.trip_status),
@@ -71,6 +73,7 @@ PROTECTED = {
     'disp_reset_password': ('dispatcher', dispatcher.reset_password),
     'disp_request_recheck': ('dispatcher', dispatcher.request_recheck),
     'disp_report': ('dispatcher', dispatcher.report),
+    'disp_doc': ('dispatcher', docs.get),
     'disp_funnel': ('dispatcher', funnel.report),
     'disp_save_config': ('dispatcher', dispatcher.save_config),
     'disp_push_subscribe': ('dispatcher', auth.push_subscribe),

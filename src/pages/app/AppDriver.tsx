@@ -11,6 +11,7 @@ import { useReadMap } from "@/lib/useReadMap";
 import PushBanner from "@/components/app/PushBanner";
 import SupportLinks from "@/components/app/SupportLinks";
 import DocsRecheck from "@/components/app/DocsRecheck";
+import DriverConsentGate from "@/components/app/DriverConsent";
 import PhoneLogin from "@/components/app/PhoneLogin";
 import DriverRegister from "@/components/app/DriverRegister";
 import DriverTripCard, { DTrip, PickupBlock } from "@/components/app/DriverTripCard";
@@ -25,7 +26,7 @@ import Icon from "@/components/ui/icon";
 
 interface Me {
   id: number; name: string; car_model: string; car_plate: string; status: string; on_line: boolean; balance: number;
-  tariffs: string[]; recheck_fields: string[]; recheck_note: string | null; block_reason: string | null; priority_until: string | null; has_priority: boolean;
+  tariffs: string[]; pd_consent?: boolean; recheck_fields: string[]; recheck_note: string | null; block_reason: string | null; priority_until: string | null; has_priority: boolean;
   rating: number | null; done_count: number;
 }
 interface Poll {
@@ -146,6 +147,7 @@ export default function AppDriver() {
       <div className="mx-auto max-w-md space-y-4 p-4 pb-28">
         {errBox}
         <PushBanner role="driver" token={token} />
+        {me.pd_consent === false && <DriverConsentGate onAgree={async () => { await appCall("driver_pd_consent", { agree: true }, token); await refresh(); }} />}
         {me.recheck_fields?.length > 0 && <DocsRecheck fields={me.recheck_fields} note={me.recheck_note} onSend={async (photos) => { await appCall("driver_upload_docs", { photos }, token); await refresh(); }} />}
 
         {tab === "orders" && (

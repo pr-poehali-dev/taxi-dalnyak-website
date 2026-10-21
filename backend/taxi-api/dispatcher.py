@@ -33,8 +33,13 @@ def poll(cur, user, body):
                    EXISTS (SELECT 1 FROM {S}.app_trips t WHERE t.driver_id = u.id AND t.status IN ('assigned', 'enroute', 'arrived', 'in_progress') AND t.scheduled_at IS NULL) AS busy,
                    (SELECT round(avg(x.rating)::numeric, 2) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.rating IS NOT NULL) AS rating,
                    (SELECT count(*) FROM {S}.app_driver_events e WHERE e.driver_id = u.id AND e.kind = 'cancel' AND e.created_at > now() - interval '7 days') AS cancels_7d,
-                   dr.photo_license, dr.photo_license_back, dr.photo_sts, dr.photo_sts_back, dr.photo_car_front, dr.photo_car_back,
-                   dr.photo_car_left, dr.photo_car_right, dr.recheck_fields, dr.recheck_note,
+                   ARRAY_REMOVE(ARRAY[
+                     CASE WHEN dr.photo_license IS NOT NULL THEN 'license' END, CASE WHEN dr.photo_license_back IS NOT NULL THEN 'license_back' END,
+                     CASE WHEN dr.photo_sts IS NOT NULL THEN 'sts' END, CASE WHEN dr.photo_sts_back IS NOT NULL THEN 'sts_back' END,
+                     CASE WHEN dr.photo_car_front IS NOT NULL THEN 'car_front' END, CASE WHEN dr.photo_car_back IS NOT NULL THEN 'car_back' END,
+                     CASE WHEN dr.photo_car_left IS NOT NULL THEN 'car_left' END, CASE WHEN dr.photo_car_right IS NOT NULL THEN 'car_right' END
+                   ], NULL) AS docs, dr.pd_consent_at,
+                   dr.recheck_fields, dr.recheck_note,
                    dr.on_line AS wants_line, dr.lat, dr.lng, dr.loc_city, dr.loc_at, dr.last_seen,
                    extract(epoch FROM now() - dr.last_seen)::int AS seen_ago,
                    coalesce((SELECT p.seconds FROM {S}.app_driver_presence p WHERE p.driver_id = u.id AND p.day = (now() AT TIME ZONE 'Europe/Moscow')::date), 0) AS online_today_sec,

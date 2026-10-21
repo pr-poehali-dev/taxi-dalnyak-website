@@ -2,10 +2,8 @@ import base64
 import hmac
 import os
 import secrets
-import uuid
 
-import boto3
-
+import docs
 from common import (
     S, ApiError, norm_phone, clean, sha, hash_password, check_password, create_session,
     placeholder_token, rate_limit, get_config,
@@ -184,6 +182,7 @@ def dispatcher_login(cur, body):
     return {'token': create_session(cur, uid, 7)}
 
 
+PD_VERSION = '2026-10-21'
 PHOTO_FIELDS = ['license', 'license_back', 'sts', 'sts_back', 'car_front', 'car_back', 'car_left', 'car_right']
 
 
@@ -199,14 +198,7 @@ def upload_photo(user_id, field, data_url):
         raise ApiError(400, 'Фото слишком большое')
     if not content.startswith(b'\xff\xd8'):
         raise ApiError(400, 'Фото должно быть в формате JPEG')
-    key = f"drivers/{user_id}/{field}_{uuid.uuid4().hex}.jpg"
-    s3 = boto3.client(
-        's3', endpoint_url='https://bucket.poehali.dev',
-        aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
-        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
-    )
-    s3.put_object(Bucket='files', Key=key, Body=content, ContentType='image/jpeg')
-    return f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+    return docs.store(user_id, field, content)
 
 
 def driver_register(cur, body):
@@ -223,6 +215,8 @@ def driver_register(cur, body):
         raise ApiError(400, 'Заполните имя, марку и госномер')
     if len(pw) < 8 or len(pw) > 64:
         raise ApiError(400, 'Пароль должен быть не короче 8 символов')
+    if body.get('pd_consent') is not True:
+        raise ApiError(400, 'Нужно согласие на обработку персональных данных')
     if any(not photos.get(f) for f in PHOTO_FIELDS):
         raise ApiError(400, 'Нужны все 8 фотографий: права и СТС с двух сторон и 4 фото авто')
     cur.execute(f"SELECT id FROM {S}.app_users WHERE phone = %s AND role = 'driver'", (phone,))
@@ -237,10 +231,10 @@ def driver_register(cur, body):
     cur.execute(
         f"""INSERT INTO {S}.app_drivers
             (user_id, car_model, car_plate, car_color, status, photo_license, photo_license_back, photo_sts, photo_sts_back,
-             photo_car_front, photo_car_back, photo_car_left, photo_car_right)
-            VALUES (%s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s, %s, %s)""",
+             photo_car_front, photo_car_back, photo_car_left, photo_car_right, pd_consent_at, pd_consent_ver, pd_consent_ip)
+            VALUES (%s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s, %s, %s, now(), %s, %s)""",
         (uid, car_model, car_plate, car_color, urls['license'], urls['license_back'], urls['sts'], urls['sts_back'],
-         urls['car_front'], urls['car_back'], urls['car_left'], urls['car_right']),
+         urls['car_front'], urls['car_back'], urls['car_left'], urls['car_right'], PD_VERSION, ip[:60]),
     )
     send_push(cur, dispatcher_ids(cur), 'Новый водитель', f'{name} · {car_model} ждёт проверки', '/app/office-k7x2', 'driver-new')
     return {'token': create_session(cur, uid)}

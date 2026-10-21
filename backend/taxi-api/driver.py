@@ -19,7 +19,7 @@ TRIP_COLS = """t.id, t.from_city, t.from_street, t.from_house, t.from_text, t.fr
 def _me(cur, uid):
     cur.execute(
         f"""SELECT u.id, u.name, dr.car_model, dr.car_plate, dr.car_color, dr.status, dr.on_line, dr.balance,
-                   dr.tariffs, dr.block_reason, dr.recheck_fields, dr.recheck_note, dr.priority_until, (dr.priority_until > now()) AS has_priority,
+                   dr.tariffs, dr.block_reason, (dr.pd_consent_at IS NOT NULL) AS pd_consent, dr.recheck_fields, dr.recheck_note, dr.priority_until, (dr.priority_until > now()) AS has_priority,
                    (SELECT round(avg(x.rating)::numeric, 2) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.rating IS NOT NULL) AS rating,
                    (SELECT count(*) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.status = 'done') AS done_count
             FROM {S}.app_users u JOIN {S}.app_drivers dr ON dr.user_id = u.id WHERE u.id = %s""",
@@ -107,6 +107,8 @@ def set_line(cur, user, body):
     me = _me(cur, user['id'])
     if on and me['status'] != 'approved':
         raise ApiError(403, 'Выйти на линию можно после одобрения анкеты')
+    if on and not me['pd_consent']:
+        raise ApiError(403, 'Подтвердите согласие на обработку персональных данных')
     cur.execute(f"UPDATE {S}.app_drivers SET on_line = %s, last_seen = now() WHERE user_id = %s", (on, user['id']))
     return {'on_line': on}
 
@@ -243,10 +245,7 @@ def cancel(cur, user, body):
     return {'ok': True, 'blocked': blocked}
 
 
-DOC_COLUMNS = {
-    'license': 'photo_license', 'license_back': 'photo_license_back', 'sts': 'photo_sts', 'sts_back': 'photo_sts_back',
-    'car_front': 'photo_car_front', 'car_back': 'photo_car_back', 'car_left': 'photo_car_left', 'car_right': 'photo_car_right',
-}
+from docs import DOC_COLUMNS
 
 
 def upload_docs(cur, user, body):
@@ -312,3 +311,13 @@ def chat_get(cur, user, body):
 
 def chat_send(cur, user, body):
     return chat.send_message(cur, 'driver', user, body)
+
+
+def pd_consent(cur, user, body):
+    if body.get('agree') is not True:
+        raise ApiError(400, 'Отметьте согласие')
+    cur.execute(
+        f"UPDATE {S}.app_drivers SET pd_consent_at = now(), pd_consent_ver = %s, pd_consent_ip = %s WHERE user_id = %s",
+        (auth.PD_VERSION, str(body.get('_ip', ''))[:60], user['id']),
+    )
+    return {'ok': True}
