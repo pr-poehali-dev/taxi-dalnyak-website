@@ -106,12 +106,17 @@ def client_send_code(cur, body):
     return {'ok': True}
 
 
+CLIENT_PD_VERSION = '2026-10-21'
+
+
 def client_login(cur, body):
     ip = body.get('_ip', '')
     phone = norm_phone(body.get('phone'))
     rate_limit(cur, f'login:ip:{ip}', 40, 600)
     rate_limit(cur, f'login:client:{phone}', 12, 600)
     name = clean(body.get('name'), 60) or None
+    if body.get('pd_consent') is not True:
+        raise ApiError(400, 'Нужно согласие на обработку персональных данных')
     if sms_enabled():
         code = ''.join(c for c in str(body.get('code') or '') if c.isdigit())
         cur.execute(f"SELECT code_hash, attempts, (expires_at > now()) AS alive FROM {S}.app_sms_codes WHERE phone = %s FOR UPDATE", (phone,))
@@ -146,6 +151,10 @@ def client_login(cur, body):
             fr = cur.fetchone()
             if fr and fr['id'] != uid:
                 cur.execute(f"UPDATE {S}.app_users SET referred_by = %s WHERE id = %s", (fr['id'], uid))
+    cur.execute(
+        f"UPDATE {S}.app_users SET pd_consent_at = now(), pd_consent_ver = %s, pd_consent_ip = %s WHERE id = %s",
+        (CLIENT_PD_VERSION, str(ip)[:60], uid),
+    )
     return {'token': create_session(cur, uid), 'name': name, 'phone': phone, 'is_new': is_new}
 
 

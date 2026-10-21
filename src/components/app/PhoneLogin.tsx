@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { appCall, formatPhone } from "@/lib/appApi";
 import { Btn, Field } from "./ui";
 import { reachGoal } from "@/lib/metrika";
+import { ConsentCheckbox } from "./DriverConsent";
 
 interface Props {
   action: "client_login" | "driver_login";
@@ -23,6 +24,8 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
   const [step, setStep] = useState<"phone" | "code">("phone");
   const [code, setCode] = useState("");
   const [wait, setWait] = useState(0);
+  const isClient = action === "client_login";
+  const [consent, setConsent] = useState(false);
 
   useEffect(() => {
     if (action !== "client_login") return;
@@ -39,7 +42,7 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
     setBusy(true);
     setErr("");
     try {
-      await appCall("client_send_code", { phone });
+      await appCall("client_send_code", { phone, pd_consent: consent });
       setStep("code");
       setCode("");
       setWait(60);
@@ -56,7 +59,7 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
     setBusy(true);
     setErr("");
     try {
-      const r = await appCall<{ token: string; is_new?: boolean }>(action, { phone, name, password, code, ref: localStorage.getItem("app_ref") || undefined });
+      const r = await appCall<{ token: string; is_new?: boolean }>(action, { phone, name, password, code, ref: localStorage.getItem("app_ref") || undefined, ...(isClient ? { pd_consent: consent } : {}) });
       if (action === "client_login" && r.is_new) reachGoal("app_signup");
       onToken(r.token);
     } catch (e2) {
@@ -85,8 +88,9 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
         </>
       )}
       {withPassword && <Field label="Пароль" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
+      {isClient && step === "phone" && <ConsentCheckbox who="client" checked={consent} onChange={setConsent} />}
       {err && <p className="text-sm font-semibold text-red-600">{err}</p>}
-      <Btn type="submit" disabled={busy || phone.replace(/\D/g, "").length < 11 || (withPassword && password.length < 8) || (step === "code" && code.length < 4)} className="w-full">
+      <Btn type="submit" disabled={busy || phone.replace(/\D/g, "").length < 11 || (isClient && !consent) || (withPassword && password.length < 8) || (step === "code" && code.length < 4)} className="w-full">
         {busy ? "Подождите..." : sms ? (step === "phone" ? "Получить код в СМС" : "Войти") : "Продолжить"}
       </Btn>
       {extra}

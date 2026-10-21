@@ -1,4 +1,5 @@
 import DriverPrivacy from "./pages/DriverPrivacy";
+import ClientPrivacy from "./pages/ClientPrivacy";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -120,6 +121,7 @@ const App = () => (
           <Route path="/track/:token" element={<AppTrack />} />
           <Route path="/app/driver" element={<AppDriver />} />
           <Route path="/privacy-drivers" element={<DriverPrivacy />} />
+          <Route path="/privacy" element={<ClientPrivacy />} />
           <Route path="/app/office-k7x2" element={<AppDispatcher />} />
 
           <Route path="/:slug" element={<TownPage />} />

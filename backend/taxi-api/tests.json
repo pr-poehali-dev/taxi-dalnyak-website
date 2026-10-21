@@ -54,7 +54,8 @@
       "body": {
         "action": "client_login",
         "phone": "+79990000001",
-        "name": "Тест"
+        "name": "Тест",
+        "pd_consent": true
       },
       "expectedStatus": 200,
       "expectedBody": {
@@ -82,6 +83,17 @@
         "token": "x"
       },
       "expectedStatus": 404
+    },
+    {
+      "name": "Client login without consent",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "client_login",
+        "phone": "+79990000001",
+        "name": "Тест"
+      },
+      "expectedStatus": 400
     }
   ]
 }
