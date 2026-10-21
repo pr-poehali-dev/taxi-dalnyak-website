@@ -74,6 +74,7 @@ PROTECTED = {
     'disp_reset_password': ('dispatcher', dispatcher.reset_password),
     'disp_request_recheck': ('dispatcher', dispatcher.request_recheck),
     'disp_report': ('dispatcher', dispatcher.report),
+    'disp_sms_diag': ('dispatcher', auth.sms_diag),
     'disp_doc': ('dispatcher', docs.get),
     'disp_funnel': ('dispatcher', funnel.report),
     'disp_save_config': ('dispatcher', dispatcher.save_config),
