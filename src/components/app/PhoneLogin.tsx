@@ -29,7 +29,7 @@ export default function PhoneLogin({ action, withName, withPassword, hint, onTok
 
   useEffect(() => {
     if (action !== "client_login") return;
-    setSms(false);
+    appCall<{ sms_login?: boolean }>("config").then((c) => setSms(!!c.sms_login)).catch(() => undefined);
   }, [action]);
 
   useEffect(() => {

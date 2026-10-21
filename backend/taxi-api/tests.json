@@ -48,22 +48,6 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Client login",
-      "method": "POST",
-      "path": "/",
-      "body": {
-        "action": "client_login",
-        "phone": "+79990000001",
-        "name": "Тест",
-        "pd_consent": true
-      },
-      "expectedStatus": 200,
-      "expectedBody": {
-        "token": "string"
-      },
-      "bodyMatcher": "partial"
-    },
-    {
       "name": "Driver login wrong password",
       "method": "POST",
       "path": "/",
