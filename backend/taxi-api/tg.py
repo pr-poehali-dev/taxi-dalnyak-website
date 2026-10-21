@@ -18,6 +18,31 @@ def _send(text):
     _QUEUE.append(text)
 
 
+MAIL_TO = 'Guzaerov.alex@yandex.ru'
+
+
+def _deliver_mail(text, timeout):
+    import smtplib
+    from email.header import Header
+    from email.mime.text import MIMEText
+    password = (os.environ.get('SMTP_PASSWORD') or '').strip()
+    if not password:
+        print('mail skipped: no SMTP_PASSWORD')
+        return
+    sender = (os.environ.get('SMTP_LOGIN') or MAIL_TO).strip()
+    first = text.split('\n', 1)[0].lstrip('🚕🗓 ')
+    msg = MIMEText(text, 'plain', 'utf-8')
+    msg['Subject'] = Header(f'Такси Дальняк: {first}', 'utf-8')
+    msg['From'] = sender
+    msg['To'] = MAIL_TO
+    try:
+        with smtplib.SMTP_SSL('smtp.yandex.ru', 465, timeout=timeout) as smtp:
+            smtp.login(sender, password)
+            smtp.sendmail(sender, [MAIL_TO], msg.as_string())
+    except Exception as e:
+        print(f'mail failed: {type(e).__name__}: {e}')
+
+
 TG_HOST = 'api.telegram.org'
 TG_IPS = ('149.154.167.220', '149.154.167.99', '149.154.166.110')
 

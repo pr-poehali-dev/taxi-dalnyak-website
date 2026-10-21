@@ -89,8 +89,8 @@ def flush(conn):
     if not items and not tg_items:
         return
     deadline = time.time() + 4.2
-    with ThreadPoolExecutor(max_workers=min(16, len(items)) + len(tg_items)) as ex:
-        tg_futs = [ex.submit(tg._deliver, text, 2.5) for text in tg_items]
+    with ThreadPoolExecutor(max_workers=min(16, len(items)) + 2 * len(tg_items)) as ex:
+        tg_futs = [ex.submit(tg._deliver, text, 2.5) for text in tg_items] + [ex.submit(tg._deliver_mail, text, 3.5) for text in tg_items]
         gone = [g for g in ex.map(lambda it: _send_one(it[0], it[1], it[2], deadline), items) if g] if items else []
         for f in tg_futs:
             f.result()
