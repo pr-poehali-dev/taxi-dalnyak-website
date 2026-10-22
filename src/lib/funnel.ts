@@ -1,7 +1,7 @@
 import { appCall } from "./appApi";
 import { getAdSource } from "./adSource";
 import { isStandalone } from "./pushClient";
-import { reachGoal } from "./metrika";
+import { goalsBlocked, reachGoal } from "./metrika";
 
 const GOALS: Partial<Record<FunnelStep, string>> = {
   route: "app_route",
@@ -28,7 +28,14 @@ function visitor(): string {
 
 const sent = new Set<string>();
 
+export function reachHotQuote(params: Record<string, string | number>) {
+  if (sent.has("goal:app_quote_hot")) return;
+  sent.add("goal:app_quote_hot");
+  reachGoal("app_quote_hot", params);
+}
+
 export function trackStep(step: FunnelStep, extra: { details?: string; once?: boolean; token?: string | null } = {}) {
+  if (goalsBlocked()) return;
   const key = step + (extra.details || "");
   if (extra.once !== false && sent.has(key)) return;
   sent.add(key);
@@ -36,7 +43,6 @@ export function trackStep(step: FunnelStep, extra: { details?: string; once?: bo
   if (goal && !sent.has("goal:" + goal)) {
     sent.add("goal:" + goal);
     reachGoal(goal);
-    if (step === "order_click") reachGoal("app_lead", { channel: "order_click" });
   }
   const s = getAdSource();
   appCall("funnel", {

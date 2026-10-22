@@ -23,7 +23,7 @@ import ClientTripCard, { ClientTrip } from "@/components/app/ClientTripCard";
 import Onboarding from "@/components/app/Onboarding";
 import InstallGate, { isMobile } from "@/components/app/InstallGate";
 import InstallOffer from "@/components/app/InstallOffer";
-import { trackStep } from "@/lib/funnel";
+import { reachHotQuote, trackStep } from "@/lib/funnel";
 import { getAdSource } from "@/lib/adSource";
 import QuickDestinations, { FirstScreenHead } from "@/components/app/QuickDestinations";
 import { agoText, tone, waitText } from "@/components/app/KppQueue";
@@ -139,6 +139,13 @@ export default function AppClient() {
   const [kppPick, setKppPick] = useState<string | null>(null);
   const [wish, setWish] = useState("");
   useEffect(() => { setKppPick(null); }, [quoteKey]);
+  const hotQuote = !!quote && (quote.distance_km >= 300 || quote.region === "new");
+  const hotParams = useCallback((why: string) => ({ why, km: quote?.distance_km || 0, region: quote?.region || "", order_price: quote?.prices.standard || 0, currency: "RUB" }), [quote]);
+  useEffect(() => {
+    if (!hotQuote) return;
+    const t = window.setTimeout(() => reachHotQuote(hotParams("time")), 20000);
+    return () => window.clearTimeout(t);
+  }, [hotQuote, quoteKey, hotParams]);
   useEffect(() => {
     if (!quoteKey || !toPlace || !fromPos) { setQuote(null); setQuoting(false); return; }
     let stale = false;
@@ -205,6 +212,7 @@ export default function AppClient() {
   const order = async () => {
     if (!quote || !toPlace || !fromPos) return;
     if (!orderAfterLogin.current) trackStep("order_click", { details: `${toText} · ${price} ₽` });
+    if (hotQuote) reachHotQuote(hotParams("order_click"));
     if (!token) { orderAfterLogin.current = true; requireLogin(); return; }
     setBusy(true);
     setErr("");
@@ -216,6 +224,7 @@ export default function AppClient() {
       }, token);
       reachGoal(scheduled ? "app_preorder" : "app_order", { tariff, order_price: price, currency: "RUB" });
       reachGoal("app_order_any", { order_price: price, currency: "RUB" });
+      reachGoal("app_lead", { channel: "order", order_price: price, currency: "RUB" });
       trackStep("order", { details: `${toText} · ${price} ₽`, once: false });
       setToText(""); setToPlace(null); setQuote(null); setComment(""); setWish(""); setScheduled(false); setWhen(""); setBump(0);
       await refresh();
@@ -369,7 +378,7 @@ export default function AppClient() {
                         const on = a.id === quote.kpp_id;
                         const hours = Math.floor(a.min / 60);
                         return (
-                          <button key={a.id} onClick={() => setKppPick(a.id)} disabled={quoting}
+                          <button key={a.id} onClick={() => { setKppPick(a.id); if (hotQuote) reachHotQuote(hotParams("kpp")); }} disabled={quoting}
                             className={`flex w-full items-center gap-2 rounded-xl border-2 px-3 py-2 text-left ${on ? "border-neutral-900 bg-white" : "border-transparent bg-white/60"}`}>
                             <span className={`h-4 w-4 shrink-0 rounded-full border-2 ${on ? "border-neutral-900 bg-neutral-900 ring-2 ring-inset ring-white" : "border-neutral-300"}`} />
                             <span className="min-w-0 flex-1">
@@ -395,7 +404,7 @@ export default function AppClient() {
                     {quote.kpp_queue && <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold ${tone(quote.kpp_queue.minutes)}`}>{waitText(quote.kpp_queue.minutes)}</span>}
                   </a>
                 )}
-                <TariffPicker prices={quote.prices} value={tariff} onChange={(t) => { setTariff(t); setBump(0); }} />
+                <TariffPicker prices={quote.prices} value={tariff} onChange={(t) => { setTariff(t); setBump(0); if (hotQuote) reachHotQuote(hotParams("tariff")); }} />
                 {tariff === "choice" && <WishPicker value={wish} onChange={setWish} />}
 
                 {bonusOpt && bump === 0 && (

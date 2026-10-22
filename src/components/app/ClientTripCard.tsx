@@ -102,7 +102,7 @@ export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise, t
               <div className="text-xs text-neutral-400">Ваш водитель</div>
             </div>
             {t.driver_phone && (
-              <a href={`tel:${t.driver_phone}`} aria-label="Позвонить водителю" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white"><Icon name="Phone" size={20} /></a>
+              <a data-no-goal href={`tel:${t.driver_phone}`} aria-label="Позвонить водителю" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white"><Icon name="Phone" size={20} /></a>
             )}
             <button onClick={onChat} className="relative flex h-12 items-center gap-2 rounded-2xl bg-[#fcd34d] px-4 font-extrabold text-neutral-900">
               <Icon name="MessageCircle" size={20} /> Чат
