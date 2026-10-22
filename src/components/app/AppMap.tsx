@@ -32,6 +32,7 @@ const FLAG = "map_gl_failed";
 
 function glAvailable() {
   try {
+    if (localStorage.getItem("map_gl") !== "1") return false;
     if (sessionStorage.getItem(FLAG) === "1") return false;
     return !!document.createElement("canvas").getContext("webgl2");
   } catch {
