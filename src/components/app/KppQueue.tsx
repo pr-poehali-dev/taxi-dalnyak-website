@@ -32,7 +32,7 @@ export function useKpp(pollMs = 60000) {
   const load = useCallback(() => appCall<{ items: KppItem[] }>("kpp_status").then((r) => setItems(r.items)).catch(() => undefined), []);
   useEffect(() => {
     load();
-    const id = window.setInterval(load, pollMs);
+    const id = window.setInterval(() => { if (!document.hidden) load(); }, pollMs);
     return () => window.clearInterval(id);
   }, [load, pollMs]);
   return { items, setItems, reload: load };

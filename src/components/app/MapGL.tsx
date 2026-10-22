@@ -101,6 +101,7 @@ export default function MapGL({ center, points, className, pin, fly, onCenterCha
       });
       m.once("load", () => {
         window.clearTimeout(timer);
+        try { m.resize(); } catch { /* ignore */ }
         ready.current = true;
         pending.current.splice(0).forEach((f) => f());
       });

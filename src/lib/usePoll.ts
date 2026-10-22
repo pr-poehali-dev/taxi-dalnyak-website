@@ -10,18 +10,32 @@ export function usePoll(fn: () => Promise<void>, ms: number, active: boolean, on
   useEffect(() => {
     if (!active) return;
     let stop = false;
+    let timer: number | undefined;
+    let fails = 0;
     const tick = async () => {
+      if (stop) return;
+      if (document.hidden) { timer = window.setTimeout(tick, ms); return; }
       try {
         await fnRef.current();
+        fails = 0;
       } catch (e) {
         if (e instanceof AppApiError && e.code === 401) failRef.current();
+        fails += 1;
+      }
+      if (!stop) timer = window.setTimeout(tick, ms * Math.min(8, 2 ** Math.min(fails, 3)));
+    };
+    const onShow = () => {
+      if (!document.hidden && !stop) {
+        window.clearTimeout(timer);
+        tick();
       }
     };
     tick();
-    const id = setInterval(() => !stop && tick(), ms);
+    document.addEventListener("visibilitychange", onShow);
     return () => {
       stop = true;
-      clearInterval(id);
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onShow);
     };
   }, [ms, active]);
 }

@@ -169,7 +169,7 @@ export default function AppClient() {
     setData(r);
   }, [token, seen]);
 
-  usePoll(refresh, 4000, !!token && ready, () => setToken(null));
+  usePoll(refresh, data?.active ? 5000 : 20000, !!token && ready, () => setToken(null));
 
   useEffect(() => {
     const openChat = () => { if (data?.active) setChatId(data.active.id); };
@@ -267,7 +267,7 @@ export default function AppClient() {
   return (
     <Shell title="Дальняк" right={!token ? <button onClick={requireLogin} className="rounded-full bg-neutral-900 px-4 py-2 text-sm font-extrabold text-white">Войти</button> : undefined} left={<button onClick={() => (token ? setMenu(true) : requireLogin())} aria-label="Меню" className="-ml-1 flex h-10 w-10 items-center justify-center rounded-full active:bg-neutral-100"><Icon name="Menu" size={24} /></button>}>
       <div className="relative">
-        <AppMap center={pos || DEFAULT_CENTER} points={points} className={`${!toPlace && !active ? "h-[34vh]" : "h-[50vh]"} w-full`} pin={!active && (!toPlace || mapPick !== null)} fly={fly} onCenterChange={onCenter} />
+        <AppMap center={pos || DEFAULT_CENTER} points={points} className="h-[38vh] w-full" pin={!active && (!toPlace || mapPick !== null)} fly={fly} onCenterChange={onCenter} />
         {token && !active && !toPlace && !mapPick && installed && <BonusBanner km={data?.bonus_km ?? 0} earnPct={bonusCfg.earn} maxPct={bonusCfg.max} refKm={bonusCfg.ref} onMore={() => setPanel("bonus")} />}
         <button onClick={() => { locate(); if (pos) setFly({ lat: pos[0], lng: pos[1], n: Date.now() }); }} aria-label="Моё местоположение" className="absolute right-3 top-3 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg">
           <Icon name="Crosshair" size={20} />
@@ -283,7 +283,15 @@ export default function AppClient() {
           </div>
         )}
         {token && <div className="mb-3"><PushBanner role="client" token={token} /></div>}
-        {err && <p className="mb-3 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-600">{err}</p>}
+        {err && (/недоступен|Нет связи|занят/.test(err) ? (
+          <div className="mb-3 rounded-2xl bg-red-50 p-3">
+            <p className="text-sm font-semibold text-red-700">Не получается связаться с сервером. Закажите по телефону — диспетчер посчитает цену и примет заказ.</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <a href="tel:+79956455125" className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-extrabold text-white"><Icon name="Phone" size={16} /> Позвонить</a>
+              <a href={support.max} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 text-sm font-extrabold text-white"><Icon name="MessageCircle" size={16} /> Написать в MAX</a>
+            </div>
+          </div>
+        ) : <p className="mb-3 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-600">{err}</p>)}
 
         {active ? (
           <ClientTripCard t={active} unread={unread(active)} onChat={() => setChatId(active.id)}

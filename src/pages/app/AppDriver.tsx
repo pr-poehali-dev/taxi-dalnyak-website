@@ -64,7 +64,7 @@ export default function AppDriver() {
     setData(r);
   }, [token, gps, seen]);
 
-  usePoll(refresh, 4000, !!token && ready, () => setToken(null));
+  usePoll(refresh, data?.active || data?.me?.on_line ? 6000 : 30000, !!token && ready, () => setToken(null));
 
   useEffect(() => {
     const openChat = () => { if (data?.active) setChatId(data.active.id); };

@@ -14,7 +14,7 @@ export default function PromosTab({ token, onUnauthorized }: { token: string; on
     const r = await appCall<{ promos: P[] }>("disp_promos", {}, token);
     setList(r.promos);
   }, [token]);
-  usePoll(load, 10000, true, onUnauthorized);
+  usePoll(load, 60000, true, onUnauthorized);
 
   const save = async () => {
     setErr("");

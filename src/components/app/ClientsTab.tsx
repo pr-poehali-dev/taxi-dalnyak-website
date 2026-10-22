@@ -18,7 +18,7 @@ export default function ClientsTab({ token, onUnauthorized }: { token: string; o
     setList(r.clients);
   }, [q, token]);
 
-  usePoll(load, 8000, true, onUnauthorized);
+  usePoll(load, 30000, true, onUnauthorized);
 
   const toggle = async (c: C) => {
     setErr("");

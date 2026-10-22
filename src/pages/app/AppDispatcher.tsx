@@ -271,7 +271,7 @@ export default function AppDispatcher() {
     setData(r);
   }, [token, seen]);
 
-  usePoll(refresh, 4000, !!token && ready, () => setToken(null));
+  usePoll(refresh, 6000, !!token && ready, () => setToken(null));
 
   const act: Act = async (action, body) => {
     setErr("");

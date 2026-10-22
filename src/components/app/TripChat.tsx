@@ -28,7 +28,7 @@ export default function TripChat({ role, tripId, token, onClose, onUnauthorized,
     }
   }, [prefix, tripId, token, onRead]);
 
-  usePoll(load, 1500, true, onUnauthorized);
+  usePoll(load, 3000, true, onUnauthorized);
 
   useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs.length]);
 

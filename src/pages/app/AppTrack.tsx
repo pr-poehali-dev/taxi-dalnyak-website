@@ -22,7 +22,7 @@ export default function AppTrack() {
     try { setD(await appCall<Track>("track", { token })); setBad(false); } catch { setBad(true); }
   }, [token]);
 
-  usePoll(load, 4000, true, () => undefined);
+  usePoll(load, 8000, true, () => undefined);
 
   const points: MapPoint[] = [];
   if (d?.from_lat && d.from_lng) points.push({ lat: d.from_lat, lng: d.from_lng, color: "#2563eb", label: "Подача" });
