@@ -8,8 +8,8 @@ interface Funnel {
   flow: string[];
   steps: Record<string, { n: number; installed: number }>;
   names: Record<string, string>;
-  sources: { source: string; n: number }[];
-  lost: { visitor: string; at: string; details: string | null; installed: boolean; clicked: boolean; name: string | null; phone: string | null }[];
+  sources: { source: string; n: number; quote: number; click: number; order: number }[];
+  lost: { visitor: string; at: string; source: string | null; campaign: string | null; details: string | null; installed: boolean; clicked: boolean; name: string | null; phone: string | null }[];
 }
 
 const PERIODS = [[1, "Сегодня"], [7, "7 дней"], [30, "30 дней"], [0, "Даты"]] as const;
@@ -136,8 +136,12 @@ export default function FunnelTab({ token, onUnauthorized }: { token: string; on
             <div className="rounded-3xl bg-white p-4 shadow-sm">
               <div className="mb-2 text-xs font-bold uppercase text-neutral-400">Откуда пришли</div>
               {f.sources.map((s) => (
-                <div key={s.source} className="flex justify-between border-b border-neutral-100 py-2 text-sm last:border-0">
-                  <span className="font-bold">{s.source}</span><span className="text-neutral-600">{s.n}</span>
+                <div key={s.source} className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-x-3 border-b border-neutral-100 py-2 text-sm last:border-0">
+                  <span className="font-bold">{s.source}</span>
+                  <span className="text-right text-neutral-600">{s.n}<span className="block text-[10px] text-neutral-400">открыли</span></span>
+                  <span className="text-right text-neutral-600">{s.quote}<span className="block text-[10px] text-neutral-400">цена</span></span>
+                  <span className="text-right text-neutral-600">{s.click}<span className="block text-[10px] text-neutral-400">нажали</span></span>
+                  <span className="text-right font-extrabold text-neutral-900">{s.order}<span className="block text-[10px] font-normal text-neutral-400">заказ</span></span>
                 </div>
               ))}
             </div>
@@ -152,6 +156,7 @@ export default function FunnelTab({ token, onUnauthorized }: { token: string; on
                 <div className="font-bold text-neutral-900">{l.details || "маршрут не записан"}</div>
                 <div className="text-xs text-neutral-500">
                   {new Date(l.at).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  {" · "}<b className={l.source === "Сбер" ? "text-emerald-700" : l.source === "Яндекс" ? "text-red-600" : "text-neutral-600"}>{l.source || "без рекламы"}</b>{l.campaign ? ` (${l.campaign})` : ""}
                   {" · "}{l.installed ? "приложение" : "браузер"}{l.clicked ? " · нажал «Заказать»" : ""}
                   {l.phone ? <> · {l.name || "без имени"}, <a href={`tel:${l.phone}`} className="font-bold text-sky-700">{l.phone}</a></> : " · не входил"}
                 </div>

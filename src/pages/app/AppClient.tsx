@@ -24,6 +24,8 @@ import Onboarding from "@/components/app/Onboarding";
 import InstallGate, { isMobile } from "@/components/app/InstallGate";
 import InstallOffer from "@/components/app/InstallOffer";
 import { trackStep } from "@/lib/funnel";
+import { getAdSource } from "@/lib/adSource";
+import QuickDestinations, { FirstScreenHead } from "@/components/app/QuickDestinations";
 import { isStandalone } from "@/lib/pushClient";
 import Tutorial, { CLIENT_SLIDES } from "@/components/app/Tutorial";
 import TripChat from "@/components/app/TripChat";
@@ -206,7 +208,8 @@ export default function AppClient() {
         to_text: toText, to_lat: toPlace.lat, to_lng: toPlace.lng, tariff, price, comment, pay_method: pay, use_bonus: installed && useBonus && !!bonusOpt && bump === 0, installed,
         scheduled_at: scheduled && when ? new Date(when).toISOString() : null,
       }, token);
-      reachGoal(scheduled ? "app_preorder" : "app_order", { tariff });
+      reachGoal(scheduled ? "app_preorder" : "app_order", { tariff, order_price: price, currency: "RUB" });
+      reachGoal("app_order_any", { order_price: price, currency: "RUB" });
       trackStep("order", { details: `${toText} · ${price} ₽`, once: false });
       setToText(""); setToPlace(null); setQuote(null); setComment(""); setScheduled(false); setWhen(""); setBump(0);
       await refresh();
@@ -258,11 +261,12 @@ export default function AppClient() {
   if (active?.driver_lat && active?.driver_lng) points.push({ lat: active.driver_lat, lng: active.driver_lng, color: "#f59e0b", label: "Водитель" });
   const unread = (t: ClientTrip) => !!t.last_msg_id && t.last_msg_role === "driver" && (readMap[t.id] || 0) < t.last_msg_id;
   const fromOk = !!from.city;
+  const fromAd = (() => { const s = getAdSource(); return Boolean(s.yclid || s.utmSource); })();
 
   return (
     <Shell title="Дальняк" right={!token ? <button onClick={requireLogin} className="rounded-full bg-neutral-900 px-4 py-2 text-sm font-extrabold text-white">Войти</button> : undefined} left={<button onClick={() => (token ? setMenu(true) : requireLogin())} aria-label="Меню" className="-ml-1 flex h-10 w-10 items-center justify-center rounded-full active:bg-neutral-100"><Icon name="Menu" size={24} /></button>}>
       <div className="relative">
-        <AppMap center={pos || DEFAULT_CENTER} points={points} className="h-[50vh] w-full" pin={!active && (!toPlace || mapPick !== null)} fly={fly} onCenterChange={onCenter} />
+        <AppMap center={pos || DEFAULT_CENTER} points={points} className={`${!toPlace && !active ? "h-[34vh]" : "h-[50vh]"} w-full`} pin={!active && (!toPlace || mapPick !== null)} fly={fly} onCenterChange={onCenter} />
         {token && !active && !toPlace && !mapPick && installed && <BonusBanner km={data?.bonus_km ?? 0} earnPct={bonusCfg.earn} maxPct={bonusCfg.max} refKm={bonusCfg.ref} onMore={() => setPanel("bonus")} />}
         <button onClick={() => { locate(); if (pos) setFly({ lat: pos[0], lng: pos[1], n: Date.now() }); }} aria-label="Моё местоположение" className="absolute right-3 top-3 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg">
           <Icon name="Crosshair" size={20} />
@@ -271,9 +275,10 @@ export default function AppClient() {
 
       <div className="relative z-[600] -mt-6 min-h-[60vh] rounded-t-[28px] bg-white p-5 pb-24 shadow-[0_-8px_30px_rgba(0,0,0,0.1)]">
         <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-neutral-200" />
-        {gpsErr && (
-          <div className="mb-3 rounded-2xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">
-            {gpsErr} <button onClick={locate} className="ml-1 underline">Повторить</button>
+        {!active && !toPlace && !mapPick && <FirstScreenHead />}
+        {gpsErr && !fromOk && (
+          <div className="mb-3 rounded-2xl bg-neutral-50 p-3 text-xs font-semibold text-neutral-500">
+            Не видим ваше местоположение — укажите «Откуда» вручную. <button onClick={locate} className="ml-1 underline">Определить снова</button>
           </div>
         )}
         {token && <div className="mb-3"><PushBanner role="client" token={token} /></div>}
@@ -322,7 +327,9 @@ export default function AppClient() {
                     {toPlace && <span onClick={(e) => { e.stopPropagation(); setToText(""); setToPlace(null); }} className="p-1"><Icon name="X" size={18} className="text-neutral-400" /></span>}
                   </button>
                 </div>
-                {!toPlace && <p className="text-xs text-neutral-400">Двигайте карту, чтобы поставить точку подачи, или нажмите «Куда» и введите город.</p>}
+                {!toPlace && !quoting && (
+                  <QuickDestinations exclude={from.city} onPick={(p) => { setToPlace(p); setToText(p.label); }} onOther={() => setPicker("to")} />
+                )}
               </>
             )}
 
@@ -395,7 +402,7 @@ export default function AppClient() {
         )}
 
         {!installed && !active && !offerHidden && <div className="mt-4"><InstallOffer onOpen={() => setGate(true)} onClose={hideOffer} /></div>}
-        {!active && <div className="mt-6"><DriverBanner /></div>}
+        {!active && !fromAd && <div className="mt-6"><DriverBanner /></div>}
       </div>
 
       {needLogin && !token && (

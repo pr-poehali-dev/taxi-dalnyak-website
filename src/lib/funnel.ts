@@ -1,6 +1,13 @@
 import { appCall } from "./appApi";
 import { getAdSource } from "./adSource";
 import { isStandalone } from "./pushClient";
+import { reachGoal } from "./metrika";
+
+const GOALS: Partial<Record<FunnelStep, string>> = {
+  route: "app_route",
+  quote: "app_quote",
+  order_click: "app_order_click",
+};
 
 export type FunnelStep = "open" | "login" | "route" | "quote" | "order" | "install_offer" | "install" | "login_prompt" | "order_click";
 
@@ -25,6 +32,12 @@ export function trackStep(step: FunnelStep, extra: { details?: string; once?: bo
   const key = step + (extra.details || "");
   if (extra.once !== false && sent.has(key)) return;
   sent.add(key);
+  const goal = GOALS[step];
+  if (goal && !sent.has("goal:" + goal)) {
+    sent.add("goal:" + goal);
+    reachGoal(goal);
+    if (step === "order_click") reachGoal("app_lead", { channel: "order_click" });
+  }
   const s = getAdSource();
   appCall("funnel", {
     step,

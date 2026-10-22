@@ -38,6 +38,9 @@ FLOW_NAMES = {
 }
 
 
+SRC = "CASE WHEN s.utm_source IN ('yandex', 'ya', 'direct', 'yandex_direct') THEN 'Яндекс' WHEN s.utm_source ILIKE 'sber%' THEN 'Сбер' ELSE s.utm_source END"
+
+
 def _period(body):
     import re
     from datetime import date, timedelta
@@ -83,14 +86,19 @@ def report(cur, user, body):
     row = cur.fetchone()
     steps = {k: {'n': row[k] or 0, 'installed': row['i_' + k] or 0} for k in FLOW}
     vis = f"SELECT visitor FROM ({per_visitor}) vv"
+    src = f"""(SELECT {SRC} FROM {S}.app_funnel s WHERE s.visitor = %VIS% AND s.step = 'open' AND s.utm_source <> '' ORDER BY s.created_at DESC LIMIT 1)"""
     cur.execute(
-        f"""SELECT coalesce(nullif(f.utm_source, ''), 'без метки') AS source, count(DISTINCT f.visitor) AS n
-            FROM {S}.app_funnel f WHERE {base} AND f.step = 'open' AND f.visitor IN ({vis}) GROUP BY 1 ORDER BY 2 DESC LIMIT 10"""
+        f"""WITH v AS (SELECT f.visitor, coalesce({src.replace('%VIS%', 'f.visitor')}, 'без метки') AS source,
+                           bool_or(f.step = 'quote') AS q, bool_or(f.step IN ('order_click', 'order')) AS c, bool_or(f.step = 'order') AS d
+                    FROM {S}.app_funnel f WHERE {base} AND f.visitor IN ({vis}) GROUP BY f.visitor)
+            SELECT source, count(*) AS n, count(*) FILTER (WHERE q) AS quote, count(*) FILTER (WHERE c) AS click, count(*) FILTER (WHERE d) AS "order"
+            FROM v GROUP BY source ORDER BY n DESC LIMIT 10"""
     )
     sources = cur.fetchall()
     cur.execute(
         f"""SELECT q.visitor, max(q.created_at) AS at, (array_agg(q.details ORDER BY q.created_at DESC))[1] AS details,
-                   bool_or(q.installed) AS installed, max(q.user_id) AS user_id, max(u.name) AS name, max(u.phone) AS phone,
+                   bool_or(q.installed) AS installed, {src.replace('%VIS%', 'q.visitor')} AS source,
+                   (SELECT s.utm_campaign FROM {S}.app_funnel s WHERE s.visitor = q.visitor AND s.utm_campaign <> '' ORDER BY s.created_at DESC LIMIT 1) AS campaign, max(q.user_id) AS user_id, max(u.name) AS name, max(u.phone) AS phone,
                    EXISTS (SELECT 1 FROM {S}.app_funnel c WHERE c.visitor = q.visitor AND c.step = 'order_click' AND c.created_at >= min(q.created_at)) AS clicked
             FROM {S}.app_funnel q LEFT JOIN {S}.app_users u ON u.id = q.user_id
             WHERE {base.replace('f.', 'q.')} AND q.step = 'quote' AND q.visitor IN ({vis})
