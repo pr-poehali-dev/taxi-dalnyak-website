@@ -43,7 +43,7 @@ const STATUS_VOICE: Record<string, string> = {
 const DEFAULT_CENTER: [number, number] = [55.751, 37.618];
 
 interface Quote {
-  distance_km: number; new_km?: number; reg_km?: number; rates?: { regular: Record<Tariff, number>; new: Record<Tariff, number> }; region: string; prices: Record<Tariff, number>; approx: boolean; min_price: number;
+  distance_km: number; kpp?: string | null; region: string; prices: Record<Tariff, number>; approx: boolean; min_price: number;
   from_geo: Place; bonus?: Record<string, { rub: number; km: number }>;
 }
 interface Poll {
@@ -335,15 +335,8 @@ export default function AppClient() {
               <>
                 <div className="flex items-center justify-between text-sm text-neutral-500">
                   <span>{quote.distance_km} км{quote.approx ? " (примерно)" : ""}</span>
-                  {quote.region === "new" && <Badge tone="blue">Есть участок по новым территориям</Badge>}
+                  {quote.region === "new" && <Badge tone="blue">{quote.kpp ? `Через КПП ${quote.kpp.split(" (")[0]}` : "Есть участок по новым территориям"}</Badge>}
                 </div>
-                {!!quote.new_km && quote.rates && (
-                  <div className="rounded-2xl bg-blue-50 p-3 text-xs text-blue-900">
-                    <div className="font-extrabold">Как посчитана цена ({TARIFF_LIST.find((x) => x.id === tariff)?.name})</div>
-                    <div className="mt-1">{quote.new_km} км по новым территориям × {quote.rates.new[tariff]} ₽ = {money(quote.new_km * quote.rates.new[tariff])}</div>
-                    {!!quote.reg_km && <div>{quote.reg_km} км по России × {quote.rates.regular[tariff]} ₽ = {money(quote.reg_km * quote.rates.regular[tariff])}</div>}
-                  </div>
-                )}
                 <TariffPicker prices={quote.prices} value={tariff} onChange={(t) => { setTariff(t); setBump(0); }} />
 
                 {bonusOpt && bump === 0 && (

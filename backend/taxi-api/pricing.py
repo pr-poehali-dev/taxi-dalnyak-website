@@ -40,8 +40,21 @@ def _item(p):
     sub = ', '.join(x for x in sub_parts if x and x != title)
     if title == city and not line:
         sub = state if state and state != city else (p.get('country') or '')
+    label = p.get('formatted') or ''
+    st_low = state.lower()
+    if 'крым' in st_low or 'севастопол' in st_low or any(m in st_low for m in ('донецк', 'луганск', 'запорож', 'херсонск')):
+        region = {'донецк': 'ДНР', 'луганск': 'ЛНР', 'запорож': 'Запорожская обл.', 'херсонск': 'Херсонская обл.', 'крым': 'Крым', 'севастопол': 'Севастополь'}
+        rname = next(v for k, v in region.items() if k in st_low)
+        district = p.get('county') or ''
+        import re
+        if 'общин' in district.lower() or re.search(r'[A-Za-zіїєґ]|ький|ського', district):
+            district = ''
+        sub = ', '.join(x for x in [line if title != line else '', city if city != title and 'общин' not in city.lower() else '', district if district and district not in (title, city) else '', rname] if x)
+        label = ', '.join(x for x in [title, sub] if x)
+    else:
+        label = ', '.join(x for x in [title, sub] if x) or label.replace(', Украина', '')
     return {
-        'label': p.get('formatted') or '',
+        'label': label,
         'title': title,
         'subtitle': sub,
         'lat': p.get('lat'),
@@ -162,6 +175,64 @@ def _route_info(a, b):
         return haversine(a, b) * 1.25, True, [a, b]
 
 
+KPPS = [
+    {'id': 'veselo', 'name': 'Весело-Вознесенка (Новоазовск)', 'lat': 47.1617, 'lng': 38.2430},
+    {'id': 'uspenka', 'name': 'Матвеев Курган (Успенка)', 'lat': 47.6976, 'lng': 38.6836},
+    {'id': 'kuibyshevo', 'name': 'Куйбышево (Мариновка)', 'lat': 47.8568, 'lng': 38.8580},
+    {'id': 'novoshakhtinsk', 'name': 'Новошахтинск (Должанский)', 'lat': 47.8470, 'lng': 39.7600},
+    {'id': 'gukovo', 'name': 'Гуково (Червонопартизанск)', 'lat': 48.0622, 'lng': 39.8433},
+    {'id': 'izvarino', 'name': 'Донецк Ростовский (Изварино)', 'lat': 48.2930, 'lng': 39.9135},
+    {'id': 'chertkovo', 'name': 'Чертково (Меловое)', 'lat': 49.3870, 'lng': 40.1240},
+]
+
+
+_LEGS_CACHE = {}
+
+
+def _route_legs(points):
+    key = tuple((round(p[0], 3), round(p[1], 3)) for p in points)
+    if key in _LEGS_CACHE:
+        return _LEGS_CACHE[key]
+    res = _route_legs_raw(points)
+    if len(_LEGS_CACHE) < 1000:
+        _LEGS_CACHE[key] = res
+    return res
+
+
+def _route_legs_raw(points):
+    wp = '|'.join(f'{p[0]},{p[1]}' for p in points)
+    data = _get('https://api.geoapify.com/v1/routing?' + urllib.parse.urlencode({'waypoints': wp, 'mode': 'drive', 'apiKey': _key()}))
+    pr = data['features'][0]['properties']
+    return [l['distance'] / 1000.0 for l in pr['legs']], pr.get('time', 0)
+
+
+def _crimea(p):
+    st = (p or {}).get('state', '').lower()
+    return 'крым' in st or 'севастопол' in st
+
+
+def kpp_routes(a, b, a_new, off=()):
+    """Маршрут через каждый подходящий КПП: км до КПП и после, время в пути"""
+    cands = [k for k in KPPS if k['id'] not in off]
+    if not cands:
+        return []
+    cands.sort(key=lambda k: haversine(a, (k['lat'], k['lng'])) + haversine((k['lat'], k['lng']), b))
+    best = haversine(a, (cands[0]['lat'], cands[0]['lng'])) + haversine((cands[0]['lat'], cands[0]['lng']), b)
+    cands = [k for k in cands if haversine(a, (k['lat'], k['lng'])) + haversine((k['lat'], k['lng']), b) <= best * 1.3 + 15][:3]
+
+    def one(k):
+        try:
+            legs, t = _route_legs([a, (k['lat'], k['lng']), b])
+        except Exception:
+            return None
+        before, after = legs[0], legs[1]
+        return {'kpp': k, 'km': before + after, 'new_km': before if a_new else after, 'time': t}
+
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        res = [r for r in ex.map(one, cands) if r]
+    return res
+
+
 NEW_STATES = ('донецк', 'луганск', 'запорож', 'херсонск')
 UA_HELD = ('херсон', 'берислав', 'запорожье', 'краматорск', 'славянск', 'константиновка', 'дружковка', 'доброполье', 'покровск', 'мирноград', 'орехов')
 BOX = (45.3, 50.5, 32.3, 40.6)
@@ -280,15 +351,28 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng):
     started = time.time()
     a = _valid_ll(from_lat, from_lng)
     b = _valid_ll(to_lat, to_lng)
-    with ThreadPoolExecutor(max_workers=3) as ex:
-        f_route = ex.submit(route_info, a, b)
-        f_from = ex.submit(reverse, a[0], a[1])
-        f_to = ex.submit(reverse, b[0], b[1])
-        km, approx, coords = f_route.result()
-        pa, pb = f_from.result(), f_to.result()
+    ex = ThreadPoolExecutor(max_workers=3)
+    f_route = ex.submit(route_info, a, b)
+    f_from = ex.submit(reverse, a[0], a[1])
+    f_to = ex.submit(reverse, b[0], b[1])
+    pa, pb = f_from.result(), f_to.result()
     za, zb = zone(pa), zone(pb)
     if za == 'ua' or zb == 'ua':
+        ex.shutdown(wait=False)
         raise ApiError(400, UA_MSG)
+
+    via = None
+    alts = []
+    if {za, zb} == {'new', 'ru'} and not _crimea(pa if za == 'ru' else pb):
+        opts = kpp_routes(a, b, za == 'new', cfg.get('kpp_off') or ())
+        if opts:
+            pick = min(opts, key=lambda o: o['time'] or o['km'])
+            km, approx, coords, via = pick['km'], False, [], pick['kpp']['name']
+            new_km = pick['new_km']
+            alts = [{'kpp': o['kpp']['name'], 'km': round(o['km']), 'new_km': round(o['new_km']), 'min': round((o['time'] or 0) / 60)} for o in opts]
+    if via is None:
+        km, approx, coords = f_route.result()
+    ex.shutdown(wait=False)
     if km < 1:
         raise ApiError(400, 'Точки слишком близко. Сервис междугородний')
 
@@ -296,7 +380,8 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng):
         with ThreadPoolExecutor(max_workers=10) as ex:
             return list(ex.map(lambda p: zone(reverse(p[0], p[1])), points))
 
-    new_km = min(km, max(0.0, new_territory_km(coords, km, za, zb, classify, started + 2.4)))
+    if via is None:
+        new_km = min(km, max(0.0, new_territory_km(coords, km, za, zb, classify, started + 2.4)))
     if new_km < 3:
         new_km = 0.0
     total = int(round(km))
@@ -310,7 +395,8 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng):
         'distance_km': total,
         'new_km': new_r,
         'reg_km': reg_r,
-        'rates': cfg['rates'],
+        'kpp': via,
+        'kpp_alts': alts,
         'region': 'new' if new_km > 0 else 'regular',
         'prices': prices,
         'approx': approx,
