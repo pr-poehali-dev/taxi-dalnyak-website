@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 import bonus
 import chat
+import kpp
 import pricing
 import tg
 import trips
@@ -15,7 +16,7 @@ LIVE = ('assigned', 'enroute', 'arrived', 'in_progress')
 TRIP_SELECT = f"""
     SELECT t.id, t.from_text, t.from_city, t.from_street, t.from_house, t.from_lat, t.from_lng, t.to_text,
            t.comment, t.price, t.base_price, t.status, t.tariff, t.region, t.distance_km, t.scheduled_at,
-           t.created_at, t.rating, t.bonus_discount, t.driver_id, t.pay_method, t.eta_at, t.share_token, t.cancelled_by,
+           t.created_at, t.rating, t.bonus_discount, t.driver_id, t.pay_method, t.eta_at, t.share_token, t.cancelled_by, (t.tg_chat_id IS NOT NULL) AS tg_on,
            COALESCE(d.name, t.ext_driver_name) AS driver_name, COALESCE(dr.car_model, t.ext_car_model) AS car_model,
            COALESCE(dr.car_plate, t.ext_car_plate) AS car_plate, COALESCE(dr.car_color, t.ext_car_color) AS car_color,
            t.manual_driver, CASE WHEN t.manual_driver THEN t.ext_driver_phone END AS driver_phone,
@@ -54,8 +55,10 @@ def guest_reverse(cur, body):
 def guest_quote(cur, body):
     rate_limit(cur, f'quote:ip:{body.get("_ip", "")}', 30, 60)
     cfg = get_config(cur)
+    cfg['_queues'] = kpp.queues(cur)
     q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'))
     q['bonus'] = {}
+    q['kpp_queue'] = kpp.for_quote(cur, q.get('kpp'))
     return q
 
 
@@ -67,9 +70,11 @@ def reverse(cur, user, body):
 def quote(cur, user, body):
     rate_limit(cur, f'quote:{user["id"]}', 40, 60)
     cfg = get_config(cur)
+    cfg['_queues'] = kpp.queues(cur)
     q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'))
     cur.execute(f"SELECT bonus_km FROM {S}.app_users WHERE id = %s", (user['id'],))
     q['bonus'] = bonus.options(cfg, cur.fetchone()['bonus_km'], q['prices'])
+    q['kpp_queue'] = kpp.for_quote(cur, q.get('kpp'))
     return q
 
 
@@ -109,6 +114,7 @@ def create_trip(cur, user, body):
     if c['total'] >= 5:
         raise ApiError(409, 'Слишком много незавершённых заказов')
 
+    cfg['_queues'] = kpp.queues(cur)
     q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'))
     base = q['prices'][tariff]
     price = base
@@ -158,6 +164,11 @@ def notify_new_trip(cur, trip_id):
     title = 'Новый предзаказ' if t['scheduled_at'] else 'Новый заказ'
     line = trip_line(t)
     tg.notify_new_trip(cur, t)
+    cur.execute(f"SELECT tg_chat_id FROM {S}.app_users WHERE id = %s", (t['client_id'],))
+    u = cur.fetchone()
+    if u and u['tg_chat_id']:
+        cur.execute(f"UPDATE {S}.app_trips SET tg_chat_id = %s WHERE id = %s", (u['tg_chat_id'], trip_id))
+        tg.notify_client(cur, trip_id, '🔎 Заказ принят, ищем водителя')
     send_push(cur, dispatcher_ids(cur), title, line, '/app/office-k7x2', f'trip-{trip_id}')
     prio = drivers_for_trip(cur, t['tariff'], priority_only=True)
     if prio:
@@ -176,6 +187,10 @@ def poll(cur, user, body):
     active = next((r for r in rows if r['status'] in OPEN and (r['scheduled_at'] is None or r['status'] in ('enroute', 'arrived', 'in_progress'))), None)
     upcoming = [r for r in rows if r['status'] in ('new', 'assigned') and r['scheduled_at'] is not None and r is not active]
     history = [r for r in rows if r['status'] in ('done', 'cancelled')][:10]
+    import tgbot
+    for r in [active] + upcoming:
+        if r and r.get('share_token') and not r.get('tg_on'):
+            r['tg_link'] = f"https://t.me/{tg.BOT_NAME}?start={tgbot.link_code(r['id'], r['share_token'])}"
     cfg = get_config(cur)
     cur.execute(f"SELECT bonus_km, name, phone FROM {S}.app_users WHERE id = %s", (user['id'],))
     me = cur.fetchone()
@@ -211,6 +226,7 @@ def raise_price(cur, user, body):
     cur.execute(f"SELECT * FROM {S}.app_trips WHERE id = %s", (body.get('trip_id'),))
     tr = cur.fetchone()
     send_push(cur, drivers_for_trip(cur, tr['tariff']), 'Цена заказа повышена', f"{trip_line(tr)} · {new_price} ₽", '/app/driver', f"trip-{tr['id']}")
+    tg.disp(f"⬆️ Клиент поднял цену · заказ №{tr['id']}: {new_price} ₽\n{trip_line(tr)}", tr['id'])
     send_push(cur, dispatcher_ids(cur), 'Клиент повысил цену', f"Заказ №{tr['id']}: {new_price} ₽", '/app/office-k7x2', f"trip-{tr['id']}")
     return {'ok': True}
 
@@ -233,6 +249,7 @@ def cancel_trip(cur, user, body):
     )
     if t['driver_id']:
         send_push(cur, [t['driver_id']], 'Заказ отменён пассажиром', f'Заказ №{t["id"]}', '/app/driver', f'trip-{t["id"]}')
+    tg.disp(f"❌ Клиент отменил заказ №{t['id']}", t['id'])
     send_push(cur, dispatcher_ids(cur), 'Клиент отменил заказ', f'Заказ №{t["id"]}', '/app/office-k7x2', f'trip-{t["id"]}')
     return {'ok': True}
 

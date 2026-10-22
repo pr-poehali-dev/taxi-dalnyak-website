@@ -4,6 +4,7 @@ import trips
 from pricing import haversine
 from common import S, ApiError, get_config, charge_commission, refund_commission, log_balance, rate_limit, clean
 from push import send_push, dispatcher_ids, trip_line
+import tg
 from pricing import reverse as geo_reverse
 from common import TRIP_TEXT
 import auth
@@ -172,6 +173,8 @@ def take(cur, user, body):
         cur.execute(f"UPDATE {S}.app_trips SET eta_at = now() + make_interval(mins => %s) WHERE id = %s", (eta, t['id']))
     car = f"{me['name']}, {me['car_color'] or ''} {me['car_model']} {me['car_plate']}".replace('  ', ' ')
     send_push(cur, [t['client_id']], 'Водитель найден', f"{car}. Приедет через {human_minutes(eta)}" if eta else car, '/app/client', f"trip-{t['id']}")
+    tg.disp(f"✅ Водитель {me['name']} взял заказ №{t['id']}", t['id'])
+    tg.notify_client(cur, t['id'])
     send_push(cur, dispatcher_ids(cur), 'Водитель взял заказ', f"№{t['id']}: {me['name']}", '/app/office-k7x2', f"trip-{t['id']}")
     return {'ok': True}
 
@@ -236,6 +239,7 @@ def set_eta(cur, user, body):
     row = cur.fetchone()
     if not row:
         raise ApiError(400, 'Время подачи можно указать, пока водитель едет к клиенту')
+    tg.notify_client(cur, body.get('trip_id'), f'⏱ Водитель приедет через {human_minutes(minutes)}')
     send_push(cur, [row['client_id']], 'Время подачи', f'Водитель приедет через {human_minutes(minutes)}', '/app/client', f"eta-{body.get('trip_id')}")
     return {'ok': True}
 

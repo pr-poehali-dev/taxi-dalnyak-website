@@ -1,5 +1,6 @@
 from common import S, ApiError, get_config, refund_commission
 from push import send_push, dispatcher_ids, drivers_for_trip, trip_line
+import tg
 
 LIVE = ('enroute', 'arrived', 'in_progress')
 OPEN = ('new', 'assigned', 'enroute', 'arrived', 'in_progress')
@@ -39,6 +40,10 @@ def notify_status(cur, trip_id, status):
     if t and status in CLIENT_PUSH:
         title, body = CLIENT_PUSH[status]
         send_push(cur, [t['client_id']], title, body, '/app/client', f'trip-{trip_id}')
+    if status != 'cancelled':
+        tg.notify_client(cur, trip_id)
+    if status in ('arrived', 'done'):
+        tg.disp(f"{'📍 Водитель на месте' if status == 'arrived' else '🏁 Поездка завершена'} · заказ №{trip_id}", trip_id)
 
 
 def driver_cancel(cur, driver_id, trip_id):
@@ -59,6 +64,8 @@ def driver_cancel(cur, driver_id, trip_id):
     cur.execute(f"SELECT * FROM {S}.app_trips WHERE id = %s", (trip_id,))
     tr = cur.fetchone()
     send_push(cur, [tr['client_id']], 'Водитель отказался', 'Мы уже ищем вам другую машину', '/app/client', f'trip-{trip_id}')
+    tg.disp(f"⚠️ Водитель отказался · заказ №{trip_id} снова без водителя\n{trip_line(tr)}", trip_id)
+    tg.notify_client(cur, trip_id, '🔎 Водитель отказался, уже ищем другую машину')
     send_push(cur, dispatcher_ids(cur), 'Водитель отказался от заказа', f'Заказ №{trip_id} снова ищет водителя', '/app/office-k7x2', f'trip-{trip_id}')
     send_push(cur, drivers_for_trip(cur, tr['tariff']), 'Заказ снова свободен', trip_line(tr), '/app/driver', f'trip-{trip_id}')
     return blocked
@@ -93,6 +100,22 @@ def tick(cur):
     )
     for t in cur.fetchall():
         send_push(cur, dispatcher_ids(cur), 'Нужен водитель', f"Заказ №{t['id']} ждёт уже {int(cfg['dispatcher_alert_min'])} мин. {trip_line(t)}", '/app/office-k7x2', f"trip-{t['id']}")
+        tg.disp(f"⏰ НИКТО НЕ ВЗЯЛ ЗАКАЗ №{t['id']} уже {int(cfg['dispatcher_alert_min'])} мин!\n{trip_line(t)} · {int(t['price'])} ₽\nНазначьте водителя: https://taxidalnyack.ru/app/office-k7x2", t['id'])
+
+    cur.execute(
+        f"""SELECT m.trip_id, m.text, m.sender_role FROM {S}.app_messages m
+            WHERE m.sender_role IN ('client', 'driver') AND m.created_at <= now() - make_interval(mins => %s)
+              AND m.created_at > now() - interval '2 hours'
+              AND NOT EXISTS (SELECT 1 FROM {S}.app_messages x WHERE x.trip_id = m.trip_id AND x.id > m.id)
+              AND NOT EXISTS (SELECT 1 FROM {S}.app_rate_log r WHERE r.key = 'chatnag:' || m.id)""",
+        (int(cfg['dispatcher_alert_min']),),
+    )
+    for m in cur.fetchall()[:5]:
+        cur.execute(f"SELECT max(id) AS id FROM {S}.app_messages WHERE trip_id = %s", (m['trip_id'],))
+        mid = cur.fetchone()['id']
+        cur.execute(f"INSERT INTO {S}.app_rate_log (key) VALUES (%s)", (f'chatnag:{mid}',))
+        if m['sender_role'] == 'client':
+            tg.disp(f"🔔 Пассажир ждёт ответа {int(cfg['dispatcher_alert_min'])} мин · заказ №{m['trip_id']}\n\n{m['text']}\n\n↩️ Ответьте на это сообщение", m['trip_id'])
 
     cur.execute(
         f"""UPDATE {S}.app_trips SET reminder_stage = 2

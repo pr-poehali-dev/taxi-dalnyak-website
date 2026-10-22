@@ -26,6 +26,7 @@ import InstallOffer from "@/components/app/InstallOffer";
 import { trackStep } from "@/lib/funnel";
 import { getAdSource } from "@/lib/adSource";
 import QuickDestinations, { FirstScreenHead } from "@/components/app/QuickDestinations";
+import { agoText, tone, waitText } from "@/components/app/KppQueue";
 import { isStandalone } from "@/lib/pushClient";
 import Tutorial, { CLIENT_SLIDES } from "@/components/app/Tutorial";
 import TripChat from "@/components/app/TripChat";
@@ -45,7 +46,7 @@ const STATUS_VOICE: Record<string, string> = {
 const DEFAULT_CENTER: [number, number] = [55.751, 37.618];
 
 interface Quote {
-  distance_km: number; kpp?: string | null; region: string; prices: Record<Tariff, number>; approx: boolean; min_price: number;
+  distance_km: number; kpp?: string | null; kpp_queue?: { minutes: number; ago: number } | null; kpp_alts?: { kpp: string; queue?: number | null }[]; region: string; prices: Record<Tariff, number>; approx: boolean; min_price: number;
   from_geo: Place; bonus?: Record<string, { rub: number; km: number }>;
 }
 interface Poll {
@@ -344,6 +345,18 @@ export default function AppClient() {
                   <span>{quote.distance_km} км{quote.approx ? " (примерно)" : ""}</span>
                   {quote.region === "new" && <Badge tone="blue">{quote.kpp ? `Через КПП ${quote.kpp.split(" (")[0]}` : "Есть участок по новым территориям"}</Badge>}
                 </div>
+                {quote.kpp && (
+                  <a href="/kpp-online" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-2xl bg-neutral-900 p-3 text-white">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10"><Icon name="Timer" size={20} className="text-[#fcd34d]" /></span>
+                    <span className="min-w-0 flex-1 text-sm">
+                      <span className="block font-extrabold">Поедем через КПП {quote.kpp.split(" (")[0]}</span>
+                      <span className="block text-xs text-neutral-300">
+                        {quote.kpp_queue ? `Очередь сейчас ≈ ${waitText(quote.kpp_queue.minutes)} · водители отметили ${agoText(quote.kpp_queue.ago)}` : "Выбрали самый быстрый пункт пропуска. Очереди на всех КПП онлайн →"}
+                      </span>
+                    </span>
+                    {quote.kpp_queue && <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold ${tone(quote.kpp_queue.minutes)}`}>{waitText(quote.kpp_queue.minutes)}</span>}
+                  </a>
+                )}
                 <TariffPicker prices={quote.prices} value={tariff} onChange={(t) => { setTariff(t); setBump(0); }} />
 
                 {bonusOpt && bump === 0 && (

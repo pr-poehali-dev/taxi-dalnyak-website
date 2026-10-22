@@ -2,6 +2,7 @@ import bonus
 import chat
 import trips
 from common import norm_phone, S, ApiError, TARIFFS, ACTIVE, get_config, log_balance, refund_commission, charge_commission, clean, DEFAULT_CONFIG
+import tg
 from push import send_push, dispatcher_ids, drivers_for_trip, trip_line
 
 STATUSES = ('new', 'assigned', 'enroute', 'arrived', 'in_progress', 'done', 'cancelled')
@@ -91,6 +92,7 @@ def assign(cur, user, body):
     tr = cur.fetchone()
     send_push(cur, [d['user_id']], 'Вам назначен заказ', trip_line(tr), '/app/driver', f"trip-{t['id']}")
     send_push(cur, [t['client_id']], 'Водитель назначен', 'Откройте приложение, чтобы увидеть данные машины', '/app/client', f"trip-{t['id']}")
+    tg.notify_client(cur, t['id'])
     if t['driver_id'] and t['driver_id'] != d['user_id']:
         send_push(cur, [t['driver_id']], 'Заказ снят с вас', f"Заказ №{t['id']} переназначен", '/app/driver', f"trip-{t['id']}")
     return {'ok': True}
@@ -131,6 +133,7 @@ def assign_external(cur, user, body):
         cur.execute(f"UPDATE {S}.app_trips SET eta_at = now() + make_interval(mins => %s) WHERE id = %s", (eta, t['id']))
     car = ' '.join(x for x in [color, model, plate] if x)
     send_push(cur, [t['client_id']], 'Водитель назначен', f"{name}, {car}", '/app/client', f"trip-{t['id']}")
+    tg.notify_client(cur, t['id'])
     return {'ok': True}
 
 
@@ -201,6 +204,7 @@ def trip_status(cur, user, body):
         bonus.on_trip_done(cur, t['id'])
     if status == 'cancelled':
         send_push(cur, [t['client_id']], 'Заказ отменён диспетчером', f"Заказ №{t['id']}", '/app/client', f"trip-{t['id']}")
+        tg.notify_client(cur, t['id'], '❌ Заказ отменён диспетчером')
         send_push(cur, [t['driver_id']], 'Заказ отменён диспетчером', f"Заказ №{t['id']}", '/app/driver', f"trip-{t['id']}")
     return {'ok': True}
 

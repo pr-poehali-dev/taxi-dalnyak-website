@@ -2,6 +2,7 @@ import re
 
 from common import S, ApiError, clean, rate_limit
 from push import send_push, dispatcher_ids
+import tg
 
 PHONE_RE = re.compile(r'(?:\+?\d[\s\-()]*){7,}')
 
@@ -69,4 +70,6 @@ def send_message(cur, role, user, body):
         send_push(cur, [t['driver_id']], 'Сообщение от диспетчера', shown, '/app/driver', f'chat-{t["id"]}')
     if role != 'dispatcher':
         send_push(cur, dispatcher_ids(cur), f'Новое сообщение в чате заказа №{t["id"]}', text, '/app/office-k7x2', f'dchat-{t["id"]}')
+        who = 'Пассажир' if role == 'client' else 'Водитель'
+        tg.disp(f"💬 {who} · заказ №{t['id']}\n\n{text}\n\n↩️ Ответьте на это сообщение — ответ уйдёт в чат заказа", t['id'])
     return {'ok': True, 'message': created}

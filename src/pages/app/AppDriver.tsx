@@ -22,6 +22,7 @@ import TripChat from "@/components/app/TripChat";
 import AppMap, { MapPoint } from "@/components/app/AppMap";
 import { Badge, Btn, Shell } from "@/components/app/ui";
 import TakeOrder from "@/components/app/TakeOrder";
+import { DriverKppReport } from "@/components/app/KppQueue";
 import Icon from "@/components/ui/icon";
 
 interface Me {
@@ -153,6 +154,7 @@ export default function AppDriver() {
         {tab === "orders" && (
           <>
             {lineBar}
+            {approved && <DriverKppReport token={token} />}
             {approved && me.on_line && !me.tariffs.length && <p className="rounded-2xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">Тариф вашего автомобиля пока не указан, брать заказы нельзя. Диспетчер скоро назначит.</p>}
             {me.status === "pending" && <p className="rounded-2xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">Диспетчер проверяет документы. Мы пришлём уведомление, когда анкета будет одобрена.</p>}
             {me.status === "blocked" && <p className="rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-700">Аккаунт заблокирован: {me.block_reason}. Свяжитесь с диспетчером.</p>}

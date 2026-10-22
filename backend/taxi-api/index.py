@@ -9,6 +9,9 @@ import dispatcher
 import docs
 import funnel
 import push
+import tg
+import kpp
+import tgbot
 import track
 from common import ApiError, connect, resp
 
@@ -24,6 +27,7 @@ PUBLIC = {
     'guest_suggest': client.guest_suggest,
     'guest_reverse': client.guest_reverse,
     'guest_quote': client.guest_quote,
+    'kpp_status': kpp.public,
 }
 
 PROTECTED = {
@@ -45,6 +49,7 @@ PROTECTED = {
     'driver_pd_consent': ('driver', driver.pd_consent),
     'driver_set_line': ('driver', driver.set_line),
     'driver_take': ('driver', driver.take),
+    'driver_kpp_report': ('driver', kpp.report),
     'driver_trip_status': ('driver', driver.trip_status),
     'driver_cancel': ('driver', driver.cancel),
     'driver_set_eta': ('driver', driver.set_eta),
@@ -100,6 +105,23 @@ def handler(event: dict, context) -> dict:
         }
     if event.get('httpMethod') != 'POST':
         return resp(405, {'error': 'Method not allowed'})
+    if (event.get('queryStringParameters') or {}).get('tg'):
+        if not tgbot.secret_ok(event.get('queryStringParameters')):
+            return resp(403, {'error': 'forbidden'})
+        push.reset()
+        conn = connect()
+        try:
+            cur = conn.cursor()
+            tgbot.handle(cur, json.loads(event.get('body') or '{}'))
+            conn.commit()
+            push.flush(conn)
+        except Exception as e:
+            conn.rollback()
+            push.reset()
+            print('tg update failed', type(e).__name__, str(e)[:200])
+        finally:
+            conn.close()
+        return resp(200, {'ok': True})
     if len(event.get('body') or '') > 12_000_000:
         return resp(413, {'error': 'Слишком большой запрос'})
 

@@ -10,7 +10,7 @@ export interface ClientTrip {
   car_plate: string | null; car_color: string | null; driver_lat: number | null; driver_lng: number | null;
   driver_rating: number | null; rating: number | null; last_msg_id: number | null; last_msg_role?: string | null;
   pay_method?: string; eta_at?: string | null; share_token?: string | null; cancelled_by?: string | null;
-  manual_driver?: boolean; driver_phone?: string | null; created_at?: string | null;
+  manual_driver?: boolean; driver_phone?: string | null; created_at?: string | null; tg_link?: string | null; tg_on?: boolean;
 }
 
 function SearchTimer({ since }: { since: string }) {
@@ -59,6 +59,23 @@ export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise }:
         </div>
         <Badge tone={tripTone(t.status)}>{TARIFF_NAME[t.tariff]}</Badge>
       </div>
+
+      {t.tg_link && !["done", "cancelled"].includes(t.status) && (
+        <a href={t.tg_link} target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-3xl bg-sky-500 p-4 text-white shadow-sm active:bg-sky-600">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/20"><Icon name="Send" size={22} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-extrabold">Статус поездки в Telegram</span>
+            <span className="block text-xs text-sky-50">Напишем, когда водитель найден, выехал и приехал. Можно закрыть сайт</span>
+          </span>
+          <Icon name="ChevronRight" size={20} />
+        </a>
+      )}
+      {t.tg_on && !["done", "cancelled"].includes(t.status) && (
+        <div className="flex items-center gap-2 rounded-2xl bg-sky-50 px-3 py-2 text-xs font-bold text-sky-800">
+          <Icon name="BellRing" size={14} /> Статусы приходят вам в Telegram
+        </div>
+      )}
 
       {t.driver_name && (
         <div className="overflow-hidden rounded-3xl bg-neutral-900 text-white">

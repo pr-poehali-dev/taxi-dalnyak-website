@@ -17,6 +17,7 @@ import Tariffs from "./pages/Tariffs";
 import Reviews from "./pages/Reviews";
 import PageNotFound from "./pages/PageNotFound";
 import KPP from "./pages/KPP";
+import KppOnline from "./pages/KppOnline";
 import Moscow from "./pages/regions/Moscow";
 import Belgorod from "./pages/regions/Belgorod";
 import Boguchar from "./pages/regions/Boguchar";
@@ -74,6 +75,7 @@ const App = () => (
           <Route path="/info" element={<Index />} />
           <Route path="/voennye" element={<Military />} />
           <Route path="/kpp" element={<KPP />} />
+          <Route path="/kpp-online" element={<KppOnline />} />
           <Route path="/zvoni" element={<Quick />} />
           <Route path="/vk" element={<QuickVk />} />
           <Route path="/direct" element={<Direct />} />

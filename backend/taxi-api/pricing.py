@@ -366,10 +366,11 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng):
     if {za, zb} == {'new', 'ru'} and not _crimea(pa if za == 'ru' else pb):
         opts = kpp_routes(a, b, za == 'new', cfg.get('kpp_off') or ())
         if opts:
-            pick = min(opts, key=lambda o: o['time'] or o['km'])
+            queues = cfg.get('_queues') or {}
+            pick = min(opts, key=lambda o: (o['time'] or o['km'] * 60) + queues.get(o['kpp']['id'], 0) * 60)
             km, approx, coords, via = pick['km'], False, [], pick['kpp']['name']
             new_km = pick['new_km']
-            alts = [{'kpp': o['kpp']['name'], 'km': round(o['km']), 'new_km': round(o['new_km']), 'min': round((o['time'] or 0) / 60)} for o in opts]
+            alts = [{'kpp': o['kpp']['name'], 'km': round(o['km']), 'new_km': round(o['new_km']), 'min': round((o['time'] or 0) / 60), 'queue': queues.get(o['kpp']['id'])} for o in opts]
     if via is None:
         km, approx, coords = f_route.result()
     ex.shutdown(wait=False)

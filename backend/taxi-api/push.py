@@ -37,6 +37,7 @@ def reset():
     _QUEUE.clear()
     import tg
     tg.take()
+    tg.take_direct()
 
 
 def _send_one(sub, payload, priv, deadline):
@@ -86,14 +87,27 @@ def flush(conn):
     items = list(_QUEUE)
     _QUEUE.clear()
     tg_items = tg.take()
-    if not items and not tg_items:
+    direct = tg.take_direct()
+    if not items and not tg_items and not direct:
         return
     deadline = time.time() + 4.2
-    with ThreadPoolExecutor(max_workers=min(16, len(items)) + 2 * len(tg_items)) as ex:
-        tg_futs = [ex.submit(tg._deliver, text, 2.5) for text in tg_items] + [ex.submit(tg._deliver_mail, text, 3.5) for text in tg_items]
+    with ThreadPoolExecutor(max_workers=min(16, len(items)) + 2 * len(tg_items) + len(direct) + 1) as ex:
+        links = [(ex.submit(tg._deliver, text, 2.5), tid) for text, tid in tg_items]
+        links += [(ex.submit(tg.deliver_direct, cid, text, 2.5, tid), tid) for cid, text, tid in direct]
+        mails = [ex.submit(tg._deliver_mail, text, 3.5) for text, _ in tg_items]
         gone = [g for g in ex.map(lambda it: _send_one(it[0], it[1], it[2], deadline), items) if g] if items else []
-        for f in tg_futs:
+        pairs = []
+        for f, tid in links:
+            mid = f.result()
+            if tid and isinstance(mid, int):
+                pairs.append((mid, tid))
+        for f in mails:
             f.result()
+    if pairs:
+        cur = conn.cursor()
+        for mid, tid in pairs:
+            cur.execute(f"INSERT INTO {S}.app_tg_links (tg_message_id, trip_id) VALUES (%s, %s) ON CONFLICT DO NOTHING", (mid, tid))
+        conn.commit()
     if gone:
         cur = conn.cursor()
         cur.execute(f"DELETE FROM {S}.app_push_subs WHERE id = ANY(%s::bigint[])", (gone,))
