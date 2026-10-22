@@ -95,6 +95,10 @@ export function initVisitKeyLinks() {
 
       const patched = withVisitKey(href);
       if (patched !== href) link.setAttribute("href", patched);
+      if (openTelegramApp(patched)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     },
     true,
   );
@@ -116,4 +120,28 @@ export function withVisitKey(href: string): string {
   } catch {
     return href;
   }
+}
+function isMobileUa() {
+  return /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+/** На телефоне открывает Telegram напрямую через приложение (t.me часто не грузится), с запасным переходом на t.me. */
+export function openTelegramApp(href: string): boolean {
+  if (!isMobileUa()) return false;
+  let url: URL;
+  try { url = new URL(href); } catch { return false; }
+  if (!/(^|\.)t\.me$|telegram\.me$/.test(url.hostname)) return false;
+  const name = url.pathname.replace(/^\/+/, "").split("/")[0];
+  if (!/^[A-Za-z][A-Za-z0-9_]{3,}$/.test(name)) return false;
+  const text = url.searchParams.get("text");
+  const deep = `tg://resolve?domain=${name}${text ? `&text=${encodeURIComponent(text)}` : ""}`;
+  let left = false;
+  const onHide = () => { if (document.hidden) left = true; };
+  document.addEventListener("visibilitychange", onHide);
+  window.location.href = deep;
+  window.setTimeout(() => {
+    document.removeEventListener("visibilitychange", onHide);
+    if (!left && !document.hidden) window.location.href = url.toString();
+  }, 1500);
+  return true;
 }

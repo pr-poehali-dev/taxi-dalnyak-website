@@ -29,7 +29,8 @@ import Tutorial, { CLIENT_SLIDES } from "@/components/app/Tutorial";
 import TripChat from "@/components/app/TripChat";
 import PhoneLogin from "@/components/app/PhoneLogin";
 import { Badge, Btn, Field, Shell, tripTone } from "@/components/app/ui";
-import { DIRECT_ADS_CONTACTS } from "@/lib/contacts";
+import { DIRECT_ADS_CONTACTS, SUPPORT_MAX, SUPPORT_TG } from "@/lib/contacts";
+import { maxUrl, tgUrl } from "@/components/app/SupportLinks";
 import Icon from "@/components/ui/icon";
 
 const STATUS_VOICE: Record<string, string> = {
@@ -97,6 +98,12 @@ export default function AppClient() {
   const seen = useSeen();
   const statusRef = useRef<string>("");
   const orderAfterLogin = useRef(false);
+  const [support, setSupport] = useState({ tg: SUPPORT_TG, max: SUPPORT_MAX });
+  useEffect(() => {
+    appCall<{ support_telegram?: string; support_max?: string }>("config")
+      .then((c) => setSupport({ tg: tgUrl(c.support_telegram || "") || SUPPORT_TG, max: maxUrl(c.support_max || "") || SUPPORT_MAX }))
+      .catch(() => undefined);
+  }, []);
 
   const applyGeo = useCallback(async (lat: number, lng: number) => {
     try {
@@ -122,16 +129,24 @@ export default function AppClient() {
   useEffect(() => { if (token) trackStep("login"); }, [token]);
   useEffect(() => { if (toPlace) trackStep("route", { details: toPlace.label || "" }); }, [toPlace]);
 
+  const quoteKey = toPlace && fromPos ? `${fromPos[0].toFixed(3)},${fromPos[1].toFixed(3)}>${toPlace.lat.toFixed(3)},${toPlace.lng.toFixed(3)}` : "";
+  const [quoting, setQuoting] = useState(false);
   useEffect(() => {
-    setQuote(null);
-    if (!toPlace || !fromPos) return;
-    appCall<Quote>(token ? "client_quote" : "guest_quote", { from_lat: fromPos[0], from_lng: fromPos[1], to_lat: toPlace.lat, to_lng: toPlace.lng }, token)
-      .then((q) => {
-        setQuote(q); if (!orderAfterLogin.current) setBump(0); setErr("");
-        trackStep("quote", { details: `${from.city || fromText} → ${toPlace.label || ""} · ${q.distance_km} км · Стандарт ${q.prices.standard} ₽`.slice(0, 290) });
-      })
-      .catch((e) => setErr(e.message));
-  }, [toPlace, fromPos, token]);
+    if (!quoteKey || !toPlace || !fromPos) { setQuote(null); setQuoting(false); return; }
+    let stale = false;
+    setQuoting(true);
+    const t = window.setTimeout(() => {
+      appCall<Quote>(token ? "client_quote" : "guest_quote", { from_lat: fromPos[0], from_lng: fromPos[1], to_lat: toPlace.lat, to_lng: toPlace.lng }, token)
+        .then((q) => {
+          if (stale) return;
+          setQuote(q); if (!orderAfterLogin.current) setBump(0); setErr("");
+          trackStep("quote", { details: `${from.city || fromText} → ${toPlace.label || ""} · ${q.distance_km} км · Стандарт ${q.prices.standard} ₽`.slice(0, 290) });
+        })
+        .catch((e) => { if (!stale) { setQuote(null); setErr(e.message); } })
+        .finally(() => { if (!stale) setQuoting(false); });
+    }, 350);
+    return () => { stale = true; window.clearTimeout(t); };
+  }, [quoteKey, token]);
 
   const onCenter = useCallback((lat: number, lng: number) => {
     setFromPos([lat, lng]);
@@ -311,6 +326,11 @@ export default function AppClient() {
               </>
             )}
 
+            {quoting && !quote && !mapPick && (
+              <div className="flex items-center gap-3 rounded-2xl bg-neutral-50 p-4 text-sm font-bold text-neutral-600">
+                <Icon name="Loader2" size={18} className="animate-spin" /> Считаем цену по маршруту...
+              </div>
+            )}
             {quote && (
               <>
                 <div className="flex items-center justify-between text-sm text-neutral-500">
@@ -346,8 +366,8 @@ export default function AppClient() {
                 </div>
                 <WhenPicker enabled={scheduled} value={when} onToggle={setScheduled} onChange={setWhen} />
                 <Field value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Комментарий: багаж, дети, подъезд" maxLength={300} />
-                <Btn onClick={order} disabled={busy || !fromOk || (scheduled && !!whenError(when))} className="w-full text-lg">
-                  {busy ? "Отправляем..." : scheduled ? `Оформить предзаказ на ${whenLabel(when)}` : `Заказать ${TARIFF_LIST.find((x) => x.id === tariff)?.name} за ${money(bump === 0 ? payPrice : price)}`}
+                <Btn onClick={order} disabled={busy || quoting || !fromOk || (scheduled && !!whenError(when))} className="w-full text-lg">
+                  {busy ? "Отправляем..." : quoting ? "Пересчитываем цену..." : scheduled ? `Оформить предзаказ на ${whenLabel(when)}` : `Заказать ${TARIFF_LIST.find((x) => x.id === tariff)?.name} за ${money(bump === 0 ? payPrice : price)}`}
                 </Btn>
               </>
             )}
@@ -394,8 +414,8 @@ export default function AppClient() {
               <div className="mb-2 text-center text-xs font-bold uppercase text-neutral-400">или закажите без регистрации</div>
               <div className="grid grid-cols-3 gap-2">
                 <a href={DIRECT_ADS_CONTACTS.PHONE_HREF} className="flex flex-col items-center gap-1 rounded-2xl bg-emerald-50 py-3 text-xs font-extrabold text-emerald-800"><Icon name="Phone" size={20} />Позвонить</a>
-                <a href={DIRECT_ADS_CONTACTS.MAX_HREF} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 rounded-2xl bg-violet-50 py-3 text-xs font-extrabold text-violet-800"><Icon name="MessageCircle" size={20} />Max</a>
-                <a href={DIRECT_ADS_CONTACTS.TG_HREF} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 rounded-2xl bg-sky-50 py-3 text-xs font-extrabold text-sky-800"><Icon name="Send" size={20} />Telegram</a>
+                <a href={support.max} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 rounded-2xl bg-violet-50 py-3 text-xs font-extrabold text-violet-800"><Icon name="MessageCircle" size={20} />Max</a>
+                <a href={support.tg} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-1 rounded-2xl bg-sky-50 py-3 text-xs font-extrabold text-sky-800"><Icon name="Send" size={20} />Telegram</a>
               </div>
             </div>
           </div>

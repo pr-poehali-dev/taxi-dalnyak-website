@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { appCall } from "@/lib/appApi";
 import { usePoll } from "@/lib/usePoll";
 
@@ -37,6 +37,13 @@ export default function FunnelTab({ token, onUnauthorized }: { token: string; on
     setF(await appCall<Funnel>("disp_funnel", { ...period, only_ad: onlyAd }, token));
   }, [days, d1, d2, onlyAd, token]);
   usePoll(load, 30000, true, onUnauthorized);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    let stop = false;
+    setBusy(true);
+    load().catch(() => undefined).finally(() => { if (!stop) setBusy(false); });
+    return () => { stop = true; };
+  }, [load]);
 
   const n = (k: string) => f?.steps[k]?.n || 0;
   const top = n("open");
@@ -71,7 +78,7 @@ export default function FunnelTab({ token, onUnauthorized }: { token: string; on
         ))}
       </div>
 
-      {!f && <p className="text-neutral-500">Загрузка...</p>}
+      {(!f || busy) && <p className="text-sm text-neutral-500">Обновляем отчёт...</p>}
       {f && (
         <>
           <div className="rounded-3xl bg-white p-4 shadow-sm">

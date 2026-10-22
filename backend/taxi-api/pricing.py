@@ -133,7 +133,20 @@ def haversine(a, b):
     return 2 * r * math.asin(math.sqrt(h))
 
 
+_ROUTE_CACHE = {}
+
+
 def route_info(a, b):
+    key = (round(a[0], 3), round(a[1], 3), round(b[0], 3), round(b[1], 3))
+    if key in _ROUTE_CACHE:
+        return _ROUTE_CACHE[key]
+    res = _route_info(a, b)
+    if not res[1] and len(_ROUTE_CACHE) < 500:
+        _ROUTE_CACHE[key] = res
+    return res
+
+
+def _route_info(a, b):
     q = {'waypoints': f'{a[0]},{a[1]}|{b[0]},{b[1]}', 'mode': 'drive', 'apiKey': _key()}
     try:
         data = _get('https://api.geoapify.com/v1/routing?' + urllib.parse.urlencode(q))

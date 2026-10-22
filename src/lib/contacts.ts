@@ -7,6 +7,9 @@ export interface Contacts {
   MAX_HREF: string;
 }
 
+export const SUPPORT_MAX = "https://max.ru/u/f9LHodD0cOIdPXLl7V9DCE5kMQ2FL1vfqw6MCfELM52z8xxUwdUJxz923vI";
+export const SUPPORT_TG = "https://t.me/Mezhgorod1816";
+
 export const MAX_TRACK_CHAT = "https://max.ru/u/f9LHodD0cOL6nTizIr_Gpc-Jl7ldXX47wo9bapZMQZ1lX1GwxV-5HUzaEvE";
 
 export const DEFAULT_CONTACTS: Contacts = {
