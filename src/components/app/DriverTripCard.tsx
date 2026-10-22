@@ -8,7 +8,7 @@ export interface DTrip {
   id: number; from_city: string | null; from_street: string | null; from_house: string | null; from_text: string | null;
   to_text: string; comment: string | null; price: number; tariff: string; region: string; distance_km: number | null;
   scheduled_at: string | null; status: string; commission: number | null; client_name?: string | null;
-  from_lat: number | null; from_lng: number | null; last_msg_id?: number | null; last_msg_role?: string | null; pay_method?: string; eta_at?: string | null; can_take?: boolean; wish?: string | null; my_offer?: string | null; offers_count?: number; passengers?: number | null; luggage?: string | null;
+  from_lat: number | null; from_lng: number | null; last_msg_id?: number | null; last_msg_role?: string | null; pay_method?: string; eta_at?: string | null; can_take?: boolean; wish?: string | null; my_offer?: string | null; offers_count?: number; passengers?: number | null; luggage?: string | null; skipped?: boolean;
 }
 
 export function PickupBlock({ t }: { t: DTrip }) {
@@ -73,9 +73,9 @@ export default function DriverTripCard({ t, unread, onChat, onStep, onCancel, on
                 ))}
               </div>
               <div className="mt-2 flex gap-2">
-                <input value={custom} onChange={(e) => setCustom(e.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="Своё время, минут"
+                <input value={custom} onChange={(e) => setCustom(e.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="Своё время, от 30 минут"
                   className="min-w-0 flex-1 rounded-xl bg-white px-3 py-2.5 font-bold text-neutral-900 outline-none" />
-                <button disabled={!custom} onClick={() => { onEta(Number(custom)); setCustom(""); setEditEta(false); }} className="rounded-xl bg-neutral-900 px-4 font-bold text-white disabled:opacity-40">OK</button>
+                <button disabled={Number(custom) < 30} onClick={() => { onEta(Number(custom)); setCustom(""); setEditEta(false); }} className="rounded-xl bg-neutral-900 px-4 font-bold text-white disabled:opacity-40">OK</button>
               </div>
             </>
           )}

@@ -69,7 +69,8 @@ export default function AppDriver() {
   usePoll(refresh, data?.active || data?.me?.on_line ? 5000 : 30000, !!token && ready, () => setToken(null), !!data?.me?.on_line);
 
   const [skipped, setSkipped] = useState<number[]>([]);
-  const incomingList = data?.me?.on_line && !data.active ? data.available.filter((t) => t.can_take !== false && t.tariff !== "choice" && !skipped.includes(t.id)) : [];
+  const [listTab, setListTab] = useState<"now" | "pre">("now");
+  const incomingList = data?.me?.on_line && !data.active ? data.available.filter((t) => t.can_take !== false && t.tariff !== "choice" && !t.skipped && !skipped.includes(t.id)) : [];
   const incoming = incomingList[0] || null;
   useEffect(() => {
     if (incoming) { stopRing(); startRing(orderSpeech(incoming)); }
@@ -155,6 +156,8 @@ export default function AppDriver() {
   if (target?.from_lat && target?.from_lng) points.push({ lat: target.from_lat, lng: target.from_lng, color: "#2563eb", label: "Подача" });
   if (gps.current) points.push({ lat: gps.current[0], lng: gps.current[1], color: "#f59e0b", label: "Я" });
 
+  const shownList = available.filter((t) => (listTab === "now" ? !t.scheduled_at : !!t.scheduled_at));
+
   const chatBtnNav = (
     <nav className="fixed inset-x-0 bottom-0 z-[1500] grid grid-cols-3 border-t border-neutral-200 bg-white pb-[env(safe-area-inset-bottom)]">
       {([["orders", "ListChecks", "Заказы", available.length + upcoming.length + (active ? 1 : 0)], ["money", "Wallet", "Деньги", 0], ["profile", "User", "Профиль", 0]] as const).map(([k, ic, l, n]) => (
@@ -227,13 +230,22 @@ export default function AppDriver() {
 
             {!active && me.on_line && (
               <div className="space-y-3">
-                <h2 className="text-sm font-extrabold uppercase text-neutral-400">Свободные заказы ({available.length})</h2>
-                {available.length === 0 && <p className="rounded-3xl bg-white p-5 text-center text-sm text-neutral-500">Пока заказов нет. Вы услышите сигнал и получите уведомление, когда появится новый.</p>}
-                {available.map((t) => (
+                <div className="grid grid-cols-2 gap-1 rounded-2xl bg-white p-1.5 shadow-sm">
+                  {([["now", "Свободные", available.filter((t) => !t.scheduled_at).length], ["pre", "Предварительные", available.filter((t) => t.scheduled_at).length]] as const).map(([k, l, n]) => (
+                    <button key={k} onClick={() => setListTab(k)} className={`rounded-xl py-2.5 text-sm font-extrabold ${listTab === k ? "bg-[#fcd34d] text-neutral-900" : "text-neutral-500"}`}>
+                      {l}{n > 0 && <span className="ml-1 rounded-full bg-neutral-900 px-1.5 text-[11px] text-white">{n}</span>}
+                    </button>
+                  ))}
+                </div>
+                {shownList.length === 0 && <p className="rounded-3xl bg-white p-5 text-center text-sm text-neutral-500">{listTab === "now" ? "Свободных заказов нет. Новый заказ откроется на весь экран со звуком." : "Предварительных заказов нет."}</p>}
+                {shownList.map((t) => (
                   <div key={t.id} className="space-y-3 rounded-3xl bg-white p-4 shadow-sm">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <Badge tone={t.scheduled_at ? "blue" : "yellow"}>{t.scheduled_at ? `Предзаказ · ${whenText(t.scheduled_at)}` : "Сейчас"}</Badge>
-                      <Badge tone="gray">{TARIFF_NAME[t.tariff]}</Badge>
+                      <div className="flex gap-1.5">
+                        {(t.skipped || skipped.includes(t.id)) && <Badge tone="gray">Вы пропустили</Badge>}
+                        <Badge tone="gray">{TARIFF_NAME[t.tariff]}</Badge>
+                      </div>
                     </div>
                     <PickupBlock t={t} />
                     {t.tariff === "choice" && t.wish && <DriverWish wish={t.wish} />}

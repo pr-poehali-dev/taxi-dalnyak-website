@@ -25,9 +25,9 @@ export default function TakeOrder({ preorder, onTake }: { preorder: boolean; onT
         ))}
       </div>
       <div className="mt-2 flex gap-2">
-        <input value={custom} onChange={(e) => setCustom(e.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="Своё время, минут"
+        <input value={custom} onChange={(e) => setCustom(e.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="Своё время, от 30 минут"
           className="min-w-0 flex-1 rounded-xl bg-white px-3 py-2.5 font-bold text-neutral-900 outline-none" />
-        <button disabled={!custom || busy} onClick={() => go(Number(custom))} className="rounded-xl bg-neutral-900 px-4 font-bold text-white disabled:opacity-40">Взять</button>
+        <button disabled={Number(custom) < 30 || busy} onClick={() => go(Number(custom))} className="rounded-xl bg-neutral-900 px-4 font-bold text-white disabled:opacity-40">Взять</button>
       </div>
       <button onClick={() => setOpen(false)} className="mt-2 w-full text-center text-sm font-semibold text-neutral-500">Отмена</button>
     </div>

@@ -75,11 +75,11 @@ def poll(cur, user, body):
     if me['status'] == 'approved' and me['on_line']:
         cur.execute(
             f"""SELECT {TRIP_COLS}, (t.tariff = ANY(%s) OR t.tariff = 'choice') AS can_take,
+                   EXISTS (SELECT 1 FROM {S}.app_trip_skips k WHERE k.trip_id = t.id AND k.driver_id = %s) AS skipped,
                    (SELECT o.status FROM {S}.app_offers o WHERE o.trip_id = t.id AND o.driver_id = %s) AS my_offer,
                    (SELECT count(*) FROM {S}.app_offers o WHERE o.trip_id = t.id AND o.status = 'active') AS offers_count
             FROM {S}.app_trips t
                 WHERE t.status = 'new' AND t.driver_id IS NULL
-                  AND NOT EXISTS (SELECT 1 FROM {S}.app_trip_skips k WHERE k.trip_id = t.id AND k.driver_id = %s)
                   AND (%s OR t.created_at <= now() - make_interval(secs => %s))
                 ORDER BY (t.tariff = ANY(%s) OR t.tariff = 'choice') DESC, t.scheduled_at NULLS FIRST, t.id DESC LIMIT 30""",
             (me['tariffs'], user['id'], user['id'], bool(me['has_priority']), int(cfg['priority_delay_sec']), me['tariffs']),
@@ -176,8 +176,8 @@ def take(cur, user, body):
             eta = int(body.get('eta_minutes'))
         except (TypeError, ValueError):
             raise ApiError(400, 'Укажите, через сколько минут приедете к клиенту')
-        if not 1 <= eta <= 1440:
-            raise ApiError(400, 'Время подачи от 1 минуты до 24 часов')
+        if not 30 <= eta <= 1440:
+            raise ApiError(400, 'Время подачи — от 30 минут')
     charge_commission(cur, user['id'], t['id'])
     cur.execute(
         f"UPDATE {S}.app_trips SET driver_id = %s, status = 'assigned', assigned_by = 'driver', updated_at = now() WHERE id = %s",
@@ -243,8 +243,8 @@ def set_eta(cur, user, body):
         minutes = int(body.get('minutes'))
     except (TypeError, ValueError):
         raise ApiError(400, 'Укажите время подачи')
-    if not 1 <= minutes <= 1440:
-        raise ApiError(400, 'Время подачи от 1 минуты до 24 часов')
+    if not 30 <= minutes <= 1440:
+        raise ApiError(400, 'Время подачи — от 30 минут')
     cur.execute(
         f"""UPDATE {S}.app_trips SET eta_at = now() + make_interval(mins => %s), updated_at = now()
             WHERE id = %s AND driver_id = %s AND status IN ('assigned', 'enroute') RETURNING client_id""",
