@@ -68,8 +68,8 @@ export default function DriverTripCard({ t, unread, onChat, onStep, onCancel, on
             <>
               <div className="mb-2 font-extrabold text-amber-900">Через сколько приедете к клиенту?</div>
               <div className="grid grid-cols-4 gap-2">
-                {[10, 20, 30, 60].map((m) => (
-                  <button key={m} onClick={() => { onEta(m); setEditEta(false); }} className="rounded-xl bg-white py-3 font-extrabold text-neutral-900 active:bg-[#fcd34d]">{m} мин</button>
+                {[30, 60, 90, 120].map((m) => (
+                  <button key={m} onClick={() => { onEta(m); setEditEta(false); }} className="rounded-xl bg-white py-3 font-extrabold text-neutral-900 active:bg-[#fcd34d]">{m < 60 ? `${m} мин` : m % 60 ? `${Math.floor(m / 60)}:30 ч` : `${m / 60} ч`}</button>
                 ))}
               </div>
               <div className="mt-2 flex gap-2">

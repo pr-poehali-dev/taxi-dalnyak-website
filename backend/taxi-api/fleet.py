@@ -55,8 +55,7 @@ def _real(cur, fresh_min=30):
 
 def disp_map(cur, user, body):
     real = _real(cur, 24 * 60)
-    show_virtual = body.get('virtual') is not False
-    return {'cars': real + (_virtual() if show_virtual else [])}
+    return {'cars': real}
 
 
 def public_cars(cur, body):
@@ -70,8 +69,7 @@ def public_cars(cur, body):
             near = (round(lat, 2), round(lng, 2))
     except (TypeError, ValueError):
         pass
-    if len(cars) < 6:
-        cars += [{k: v[k] for k in ('id', 'callsign', 'lat', 'lng', 'status', 'tariff')} for v in _virtual(7 if near else 14, near)]
+    _ = near
     return {'cars': cars}
 
 

@@ -75,8 +75,8 @@ export default function DriverOffer({ tripId, preorder, myOffer, offersCount, to
         <div>
           <div className="mb-1.5 text-sm font-extrabold">Через сколько приедете?</div>
           <div className="grid grid-cols-4 gap-2">
-            {[10, 20, 30, 60].map((m) => (
-              <button key={m} onClick={() => setEta(m)} className={`rounded-xl py-2.5 text-sm font-extrabold ${eta === m ? "bg-neutral-900 text-white" : "bg-white text-neutral-900"}`}>{m} мин</button>
+            {[30, 60, 90, 120].map((m) => (
+              <button key={m} onClick={() => setEta(m)} className={`rounded-xl py-2.5 text-sm font-extrabold ${eta === m ? "bg-neutral-900 text-white" : "bg-white text-neutral-900"}`}>{m < 60 ? `${m} мин` : m % 60 ? `${Math.floor(m / 60)}:30 ч` : `${m / 60} ч`}</button>
             ))}
           </div>
         </div>

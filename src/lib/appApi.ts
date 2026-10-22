@@ -29,8 +29,8 @@ export async function appCall<T = any>(action: string, body: Record<string, unkn
       throw new AppApiError(0, "Нет связи с сервером. Проверьте интернет и повторите");
     }
   }
-  if (res.status === 402) throw new AppApiError(402, "Сервис временно недоступен. Позвоните диспетчеру: +7 (995) 645-51-25");
   const data = await res.json().catch(() => ({}));
+  if (res.status === 402 && !data.error) throw new AppApiError(402, "Сервис временно недоступен. Позвоните диспетчеру: +7 (995) 645-51-25");
   if (!res.ok) {
     const fallback = res.status >= 500 ? "Сервис занят, повторите через несколько секунд" : "Ошибка соединения";
     throw new AppApiError(res.status, data.error || fallback);

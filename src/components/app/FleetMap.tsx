@@ -21,14 +21,13 @@ function ago(s?: number | null) {
 
 export default function FleetMap({ token }: { token: string }) {
   const [cars, setCars] = useState<Car[]>([]);
-  const [virtual, setVirtual] = useState(true);
   const [filter, setFilter] = useState<"all" | "free" | "busy">("all");
   const [fly, setFly] = useState<{ lat: number; lng: number; n: number; zoom?: number } | null>(null);
 
   const load = useCallback(async () => {
-    const r = await appCall<{ cars: Car[] }>("disp_map", { virtual }, token);
+    const r = await appCall<{ cars: Car[] }>("disp_map", {}, token);
     setCars(r.cars);
-  }, [token, virtual]);
+  }, [token]);
   usePoll(load, 8000, true, () => undefined);
 
   const shown = cars.filter((c) => filter === "all" || c.status === filter);
@@ -39,14 +38,11 @@ export default function FleetMap({ token }: { token: string }) {
   return (
     <div className="space-y-3">
       <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
-        <AppMap center={[52.5, 38.5]} points={points} fitKey={`${virtual}-${filter}-${shown.length > 0}`} fitMaxZoom={8} fly={fly} className="h-[60vh] w-full" />
+        <AppMap center={[52.5, 38.5]} points={points} fitKey={`${filter}-${shown.length > 0}`} fitMaxZoom={8} fly={fly} className="h-[60vh] w-full" />
         <div className="flex flex-wrap items-center gap-2 p-3 text-xs font-bold">
           {([["all", `Все (${cars.length})`], ["free", `Свободны (${count("free")})`], ["busy", `На заказе (${count("busy")})`]] as const).map(([k, l]) => (
             <button key={k} onClick={() => setFilter(k)} className={`rounded-full px-3 py-1.5 ${filter === k ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-600"}`}>{l}</button>
           ))}
-          <label className="ml-auto flex items-center gap-1.5 text-neutral-600">
-            <input type="checkbox" checked={virtual} onChange={(e) => setVirtual(e.target.checked)} className="h-4 w-4 accent-neutral-900" />Виртуальные машины
-          </label>
         </div>
       </div>
 
@@ -54,7 +50,6 @@ export default function FleetMap({ token }: { token: string }) {
         <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-[#16a34a]" />свободен</span>
         <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-[#f59e0b]" />на заказе</span>
         <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-[#9ca3af]" />не на линии</span>
-        <span className="flex items-center gap-1"><span className="h-3 w-3 rounded bg-[#86efac]" />виртуальная</span>
       </div>
 
       <div className="rounded-3xl bg-white p-4 shadow-sm">

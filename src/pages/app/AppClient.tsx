@@ -26,7 +26,7 @@ import InstallGate, { isMobile } from "@/components/app/InstallGate";
 import InstallOffer from "@/components/app/InstallOffer";
 import { reachHotQuote, trackStep } from "@/lib/funnel";
 import { getAdSource } from "@/lib/adSource";
-import QuickDestinations, { FirstScreenHead } from "@/components/app/QuickDestinations";
+import { FirstScreenHead } from "@/components/app/QuickDestinations";
 import WishPicker from "@/components/app/WishPicker";
 import OffersList from "@/components/app/OffersList";
 import { isStandalone } from "@/lib/pushClient";
@@ -363,9 +363,6 @@ export default function AppClient() {
                     {toPlace && <span onClick={(e) => { e.stopPropagation(); setToText(""); setToPlace(null); }} className="p-1"><Icon name="X" size={18} className="text-neutral-400" /></span>}
                   </button>
                 </div>
-                {!toPlace && !quoting && (
-                  <QuickDestinations from={fromOk ? fromPos : null} onPick={(p) => { setToPlace(p); setToText(p.label); }} onOther={() => setPicker("to")} />
-                )}
               </>
             )}
 

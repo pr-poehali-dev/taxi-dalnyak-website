@@ -69,7 +69,7 @@ export default function AppDriver() {
   usePoll(refresh, data?.active || data?.me?.on_line ? 5000 : 30000, !!token && ready, () => setToken(null), !!data?.me?.on_line);
 
   const [skipped, setSkipped] = useState<number[]>([]);
-  const incomingList = data?.me?.on_line && !data.active ? data.available.filter((t) => !t.scheduled_at && t.can_take !== false && t.tariff !== "choice" && !skipped.includes(t.id)) : [];
+  const incomingList = data?.me?.on_line && !data.active ? data.available.filter((t) => t.can_take !== false && t.tariff !== "choice" && !skipped.includes(t.id)) : [];
   const incoming = incomingList[0] || null;
   useEffect(() => {
     if (incoming) { stopRing(); startRing(orderSpeech(incoming)); }
@@ -80,10 +80,18 @@ export default function AppDriver() {
     stopRing();
     appCall("driver_skip", { trip_id: id }, token).catch(() => undefined);
   };
-  const acceptOrder = async (id: number, eta: number) => {
+  const acceptOrder = async (id: number, eta: number): Promise<string | null> => {
     stopRing();
-    setSkipped((s) => [...s, id]);
-    await act("driver_take", { trip_id: id, eta_minutes: eta });
+    try {
+      await appCall("driver_take", { trip_id: id, ...(eta ? { eta_minutes: eta } : {}) }, token);
+      setSkipped((s) => [...s, id]);
+      await refresh().catch(() => undefined);
+      return null;
+    } catch (e) {
+      const msg = (e as Error).message;
+      if (/забрал другой|уже/.test(msg)) { setSkipped((s) => [...s, id]); setErr(msg); return null; }
+      return msg;
+    }
   };
   useEffect(() => () => stopRing(), []);
 
