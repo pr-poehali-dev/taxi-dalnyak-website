@@ -127,8 +127,8 @@ def drivers_for_trip(cur, tariff, priority_only=None, exclude_priority=False):
         cond = 'AND (dr.priority_until IS NULL OR dr.priority_until <= now())'
     cur.execute(
         f"""SELECT u.id FROM {S}.app_users u JOIN {S}.app_drivers dr ON dr.user_id = u.id
-            WHERE dr.status = 'approved' AND dr.on_line AND %s = ANY(dr.tariffs) {cond}""",
-        (tariff,),
+            WHERE dr.status = 'approved' AND dr.on_line AND (%s = ANY(dr.tariffs) OR (%s = 'choice' AND cardinality(dr.tariffs) > 0)) {cond}""",
+        (tariff, tariff),
     )
     return [r['id'] for r in cur.fetchall()]
 

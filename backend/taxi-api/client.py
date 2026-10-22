@@ -7,7 +7,7 @@ import kpp
 import pricing
 import tg
 import trips
-from common import S, ApiError, TARIFFS, clean, get_config, rate_limit
+from common import S, ApiError, TARIFFS, ORDER_TARIFFS, clean, get_config, rate_limit
 from push import send_push, dispatcher_ids, drivers_for_trip, trip_line
 
 OPEN = ('new', 'assigned', 'enroute', 'arrived', 'in_progress')
@@ -16,7 +16,7 @@ LIVE = ('assigned', 'enroute', 'arrived', 'in_progress')
 TRIP_SELECT = f"""
     SELECT t.id, t.from_text, t.from_city, t.from_street, t.from_house, t.from_lat, t.from_lng, t.to_text,
            t.comment, t.price, t.base_price, t.status, t.tariff, t.region, t.distance_km, t.scheduled_at,
-           t.created_at, t.rating, t.bonus_discount, t.driver_id, t.pay_method, t.eta_at, t.share_token, t.cancelled_by, (t.tg_chat_id IS NOT NULL) AS tg_on,
+           t.created_at, t.rating, t.bonus_discount, t.driver_id, t.pay_method, t.eta_at, t.share_token, t.cancelled_by, (t.tg_chat_id IS NOT NULL) AS tg_on, t.wish,
            COALESCE(d.name, t.ext_driver_name) AS driver_name, COALESCE(dr.car_model, t.ext_car_model) AS car_model,
            COALESCE(dr.car_plate, t.ext_car_plate) AS car_plate, COALESCE(dr.car_color, t.ext_car_color) AS car_color,
            t.manual_driver, CASE WHEN t.manual_driver THEN t.ext_driver_phone END AS driver_phone,
@@ -56,7 +56,7 @@ def guest_quote(cur, body):
     rate_limit(cur, f'quote:ip:{body.get("_ip", "")}', 30, 60)
     cfg = get_config(cur)
     cfg['_queues'] = kpp.queues(cur)
-    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'))
+    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'))
     q['bonus'] = {}
     q['kpp_queue'] = kpp.for_quote(cur, q.get('kpp'))
     return q
@@ -71,7 +71,7 @@ def quote(cur, user, body):
     rate_limit(cur, f'quote:{user["id"]}', 40, 60)
     cfg = get_config(cur)
     cfg['_queues'] = kpp.queues(cur)
-    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'))
+    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'))
     cur.execute(f"SELECT bonus_km FROM {S}.app_users WHERE id = %s", (user['id'],))
     q['bonus'] = bonus.options(cfg, cur.fetchone()['bonus_km'], q['prices'])
     q['kpp_queue'] = kpp.for_quote(cur, q.get('kpp'))
@@ -99,9 +99,11 @@ def create_trip(cur, user, body):
     rate_limit(cur, f'order:{user["id"]}', 6, 3600)
     cfg = get_config(cur)
     tariff = body.get('tariff')
-    if tariff not in TARIFFS:
+    if tariff not in ORDER_TARIFFS:
         raise ApiError(400, 'Выберите тариф')
     when = _parse_when(body.get('scheduled_at'))
+    if tariff == 'choice' and not clean(body.get('wish'), 200):
+        raise ApiError(400, 'Напишите, какую машину или водителя хотите')
     installed = body.get('installed') is not False
     pay_method = body.get('pay_method') if body.get('pay_method') in ('cash', 'transfer') else 'cash'
     cur.execute(
@@ -115,7 +117,7 @@ def create_trip(cur, user, body):
         raise ApiError(409, 'Слишком много незавершённых заказов')
 
     cfg['_queues'] = kpp.queues(cur)
-    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'))
+    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'))
     base = q['prices'][tariff]
     price = base
     if body.get('price') not in (None, ''):
@@ -145,11 +147,12 @@ def create_trip(cur, user, body):
     cur.execute(
         f"""INSERT INTO {S}.app_trips
             (client_id, from_text, from_lat, from_lng, from_city, from_street, from_house, to_text, to_lat, to_lng,
-             comment, price, base_price, tariff, region, distance_km, scheduled_at, pay_method, share_token, from_installed)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+             comment, price, base_price, tariff, region, distance_km, scheduled_at, pay_method, share_token, from_installed, wish, kpp_id)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
         (user['id'], from_text, float(body['from_lat']), float(body['from_lng']), city, street, house, to_text,
          float(body['to_lat']), float(body['to_lng']), clean(body.get('comment'), 300) or None, price, base,
-         tariff, q['region'], q['distance_km'], when, pay_method, secrets.token_urlsafe(16), installed),
+         tariff, q['region'], q['distance_km'], when, pay_method, secrets.token_urlsafe(16), installed,
+         (clean(body.get('wish'), 200) or None) if tariff == 'choice' else None, q.get('kpp_id')),
     )
     trip_id = cur.fetchone()['id']
     if body.get('use_bonus') and installed:
@@ -187,6 +190,10 @@ def poll(cur, user, body):
     active = next((r for r in rows if r['status'] in OPEN and (r['scheduled_at'] is None or r['status'] in ('enroute', 'arrived', 'in_progress'))), None)
     upcoming = [r for r in rows if r['status'] in ('new', 'assigned') and r['scheduled_at'] is not None and r is not active]
     history = [r for r in rows if r['status'] in ('done', 'cancelled')][:10]
+    import offers
+    for r in [active] + upcoming:
+        if r and r['tariff'] == 'choice' and r['status'] == 'new':
+            r['offers'] = offers.list_for_trip(cur, r['id'])
     import tgbot
     for r in [active] + upcoming:
         if r and r.get('share_token') and not r.get('tg_on'):

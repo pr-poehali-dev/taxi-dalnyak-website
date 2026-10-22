@@ -14,12 +14,12 @@ LIVE = ('enroute', 'arrived', 'in_progress')
 NEXT = {'assigned': 'enroute', 'enroute': 'arrived', 'arrived': 'in_progress', 'in_progress': 'done'}
 
 TRIP_COLS = """t.id, t.from_city, t.from_street, t.from_house, t.from_text, t.from_lat, t.from_lng, t.to_text, t.to_lat, t.to_lng,
-               t.comment, t.price, t.bonus_discount, t.pay_method, t.eta_at, t.tariff, t.region, t.distance_km, t.scheduled_at, t.status, t.commission"""
+               t.comment, t.price, t.bonus_discount, t.pay_method, t.eta_at, t.tariff, t.region, t.distance_km, t.scheduled_at, t.status, t.commission, t.wish"""
 
 
 def _me(cur, uid):
     cur.execute(
-        f"""SELECT u.id, u.name, dr.car_model, dr.car_plate, dr.car_color, dr.status, dr.on_line, dr.balance,
+        f"""SELECT u.id, u.name, dr.car_model, dr.car_plate, dr.car_color, dr.status, dr.on_line, dr.balance, dr.car_features, dr.car_year,
                    dr.tariffs, dr.block_reason, (dr.pd_consent_at IS NOT NULL) AS pd_consent, dr.recheck_fields, dr.recheck_note, dr.priority_until, (dr.priority_until > now()) AS has_priority,
                    (SELECT round(avg(x.rating)::numeric, 2) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.rating IS NOT NULL) AS rating,
                    (SELECT count(*) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.status = 'done') AS done_count
@@ -74,11 +74,14 @@ def poll(cur, user, body):
     available = []
     if me['status'] == 'approved' and me['on_line']:
         cur.execute(
-            f"""SELECT {TRIP_COLS}, (t.tariff = ANY(%s)) AS can_take FROM {S}.app_trips t
+            f"""SELECT {TRIP_COLS}, (t.tariff = ANY(%s) OR t.tariff = 'choice') AS can_take,
+                   (SELECT o.status FROM {S}.app_offers o WHERE o.trip_id = t.id AND o.driver_id = %s) AS my_offer,
+                   (SELECT count(*) FROM {S}.app_offers o WHERE o.trip_id = t.id AND o.status = 'active') AS offers_count
+            FROM {S}.app_trips t
                 WHERE t.status = 'new' AND t.driver_id IS NULL
                   AND (%s OR t.created_at <= now() - make_interval(secs => %s))
-                ORDER BY (t.tariff = ANY(%s)) DESC, t.scheduled_at NULLS FIRST, t.id DESC LIMIT 30""",
-            (me['tariffs'], bool(me['has_priority']), int(cfg['priority_delay_sec']), me['tariffs']),
+                ORDER BY (t.tariff = ANY(%s) OR t.tariff = 'choice') DESC, t.scheduled_at NULLS FIRST, t.id DESC LIMIT 30""",
+            (me['tariffs'], user['id'], bool(me['has_priority']), int(cfg['priority_delay_sec']), me['tariffs']),
         )
         available = cur.fetchall()
     cur.execute(
@@ -131,6 +134,8 @@ def take(cur, user, body):
     t = cur.fetchone()
     if not t or t['status'] != 'new' or t['driver_id'] is not None:
         raise ApiError(409, 'Заказ уже забрал другой водитель')
+    if t['tariff'] == 'choice':
+        raise ApiError(400, 'В этом заказе пассажир сам выбирает водителя. Предложите свою машину')
     if t['tariff'] not in me['tariffs']:
         raise ApiError(403, f"Этот заказ в тарифе «{TRIP_TEXT.get(t['tariff'], '')}». Для него нужен другой автомобиль, обратитесь к диспетчеру")
     cur.execute(f"SELECT phone FROM {S}.app_users WHERE id = %s", (t['client_id'],))

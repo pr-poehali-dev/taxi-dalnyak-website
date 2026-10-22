@@ -218,7 +218,7 @@ def kpp_routes(a, b, a_new, off=()):
         return []
     cands.sort(key=lambda k: haversine(a, (k['lat'], k['lng'])) + haversine((k['lat'], k['lng']), b))
     best = haversine(a, (cands[0]['lat'], cands[0]['lng'])) + haversine((cands[0]['lat'], cands[0]['lng']), b)
-    cands = [k for k in cands if haversine(a, (k['lat'], k['lng'])) + haversine((k['lat'], k['lng']), b) <= best * 1.3 + 15][:3]
+    cands = [k for k in cands if haversine(a, (k['lat'], k['lng'])) + haversine((k['lat'], k['lng']), b) <= best * 1.35 + 20][:4]
 
     def one(k):
         try:
@@ -347,7 +347,34 @@ def _valid_ll(lat, lng):
 UA_MSG = 'Заказы на территорию Украины мы не принимаем. Работаем по России, Крыму и новым территориям'
 
 
-def quote(cfg, from_lat, from_lng, to_lat, to_lng):
+def ru_rates(cfg, total_km):
+    tiers = sorted(cfg.get('ru_tiers') or [], key=lambda x: x['from_km'])
+    rates = dict(cfg['rates']['regular'])
+    for tier in tiers:
+        if total_km > tier['from_km']:
+            rates.update(tier['rates'])
+    return rates
+
+
+def calc_prices(cfg, total, new_r):
+    reg_r = total - new_r
+    out = {}
+    if new_r > 0:
+        rr = ru_rates(cfg, total)
+        for t in TARIFFS:
+            raw = reg_r * rr[t] + new_r * cfg['rates']['new'][t]
+            out[t] = max(cfg['min_price'], int(round(raw / 10.0) * 10))
+    else:
+        rates = ru_rates(cfg, total)
+        mins = cfg.get('ru_min') or {}
+        for t in TARIFFS:
+            raw = total * rates[t]
+            out[t] = max(int(mins.get(t) or cfg['min_price']), int(round(raw / 10.0) * 10))
+    out['choice'] = out['comfort']
+    return out
+
+
+def quote(cfg, from_lat, from_lng, to_lat, to_lng, kpp_id=None):
     started = time.time()
     a = _valid_ll(from_lat, from_lng)
     b = _valid_ll(to_lat, to_lng)
@@ -362,15 +389,23 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng):
         raise ApiError(400, UA_MSG)
 
     via = None
+    via_id = None
     alts = []
     if {za, zb} == {'new', 'ru'} and not _crimea(pa if za == 'ru' else pb):
         opts = kpp_routes(a, b, za == 'new', cfg.get('kpp_off') or ())
         if opts:
             queues = cfg.get('_queues') or {}
-            pick = min(opts, key=lambda o: (o['time'] or o['km'] * 60) + queues.get(o['kpp']['id'], 0) * 60)
+            chosen = [o for o in opts if o['kpp']['id'] == kpp_id]
+            for o in opts:
+                tot = int(round(o['km']))
+                o['prices'] = calc_prices(cfg, tot, min(tot, int(round(o['new_km']))))
+            pick = chosen[0] if chosen else min(opts, key=lambda o: o['prices']['standard'])
             km, approx, coords, via = pick['km'], False, [], pick['kpp']['name']
             new_km = pick['new_km']
-            alts = [{'kpp': o['kpp']['name'], 'km': round(o['km']), 'new_km': round(o['new_km']), 'min': round((o['time'] or 0) / 60), 'queue': queues.get(o['kpp']['id'])} for o in opts]
+            via_id = pick['kpp']['id']
+            alts = sorted([{'id': o['kpp']['id'], 'kpp': o['kpp']['name'], 'km': round(o['km']), 'new_km': round(o['new_km']),
+                            'min': round((o['time'] or 0) / 60), 'queue': queues.get(o['kpp']['id']), 'prices': o['prices']} for o in opts],
+                          key=lambda x: x['prices']['standard'])
     if via is None:
         km, approx, coords = f_route.result()
     ex.shutdown(wait=False)
@@ -388,15 +423,13 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng):
     total = int(round(km))
     new_r = min(total, int(round(new_km)))
     reg_r = total - new_r
-    prices = {}
-    for t in TARIFFS:
-        raw = reg_r * cfg['rates']['regular'][t] + new_r * cfg['rates']['new'][t]
-        prices[t] = max(cfg['min_price'], int(round(raw / 10.0) * 10))
+    prices = calc_prices(cfg, total, new_r)
     return {
         'distance_km': total,
         'new_km': new_r,
         'reg_km': reg_r,
         'kpp': via,
+        'kpp_id': via_id,
         'kpp_alts': alts,
         'region': 'new' if new_km > 0 else 'regular',
         'prices': prices,

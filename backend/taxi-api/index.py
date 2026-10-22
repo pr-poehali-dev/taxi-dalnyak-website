@@ -11,6 +11,7 @@ import funnel
 import push
 import tg
 import kpp
+import offers
 import tgbot
 import track
 from common import ApiError, connect, resp
@@ -50,6 +51,12 @@ PROTECTED = {
     'driver_set_line': ('driver', driver.set_line),
     'driver_take': ('driver', driver.take),
     'driver_kpp_report': ('driver', kpp.report),
+    'driver_offer': ('driver', offers.offer),
+    'driver_offer_withdraw': ('driver', offers.withdraw),
+    'driver_set_car': ('driver', offers.set_car),
+    'client_offers': ('client', offers.client_list),
+    'client_offer_photo': ('client', offers.car_photo),
+    'client_choose_offer': ('client', offers.choose),
     'driver_trip_status': ('driver', driver.trip_status),
     'driver_cancel': ('driver', driver.cancel),
     'driver_set_eta': ('driver', driver.set_eta),

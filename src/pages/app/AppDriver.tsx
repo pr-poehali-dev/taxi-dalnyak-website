@@ -23,10 +23,11 @@ import AppMap, { MapPoint } from "@/components/app/AppMap";
 import { Badge, Btn, Shell } from "@/components/app/ui";
 import TakeOrder from "@/components/app/TakeOrder";
 import { DriverKppReport } from "@/components/app/KppQueue";
+import DriverOffer, { CarFeaturesEditor, DriverWish } from "@/components/app/DriverOffer";
 import Icon from "@/components/ui/icon";
 
 interface Me {
-  id: number; name: string; car_model: string; car_plate: string; status: string; on_line: boolean; balance: number;
+  id: number; name: string; car_model: string; car_plate: string; status: string; on_line: boolean; balance: number; car_features?: string[]; car_year?: number | null;
   tariffs: string[]; pd_consent?: boolean; recheck_fields: string[]; recheck_note: string | null; block_reason: string | null; priority_until: string | null; has_priority: boolean;
   rating: number | null; done_count: number;
 }
@@ -195,11 +196,14 @@ export default function AppDriver() {
                       <Badge tone="gray">{TARIFF_NAME[t.tariff]}</Badge>
                     </div>
                     <PickupBlock t={t} />
+                    {t.tariff === "choice" && t.wish && <DriverWish wish={t.wish} />}
                     <div className="flex justify-between text-sm font-bold">
                       <span>{t.distance_km ? `${t.distance_km} км` : ""}</span>
                       <span>{money(t.price)} · комиссия {money(Math.round(Number(t.price) * commission_pct / 100))}</span>
                     </div>
-                    {t.can_take === false
+                    {t.tariff === "choice"
+                      ? <DriverOffer tripId={t.id} preorder={!!t.scheduled_at} myOffer={t.my_offer} offersCount={t.offers_count} token={token!} onDone={() => { refresh().catch(() => undefined); }} />
+                      : t.can_take === false
                       ? <Btn disabled className="w-full">{`Нужен тариф «${TARIFF_NAME[t.tariff]}»`}</Btn>
                       : <TakeOrder preorder={!!t.scheduled_at} onTake={(eta) => act("driver_take", { trip_id: t.id, ...(eta ? { eta_minutes: eta } : {}) })} />}
                   </div>
@@ -261,6 +265,7 @@ export default function AppDriver() {
                 {me.tariffs.length ? me.tariffs.map((t) => <Badge key={t} tone="gray">{TARIFF_NAME[t]}</Badge>) : <span className="text-sm text-amber-700">назначит диспетчер</span>}
               </div>
             </div>
+            {approved && <CarFeaturesEditor initial={me.car_features || []} year={me.car_year ?? null} token={token!} onSaved={() => { refresh().catch(() => undefined); }} />}
             <Btn kind="ghost" onClick={() => setShowHelp(true)} className="w-full">Как работать в приложении</Btn>
             <SupportLinks telegram={data.support_telegram} max={data.support_max} />
             <a href="/app/client" className="block rounded-2xl bg-neutral-100 py-3.5 text-center text-sm font-bold text-neutral-800">Нужно такси? Приложение для пассажиров</a>

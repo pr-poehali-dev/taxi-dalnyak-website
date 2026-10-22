@@ -27,6 +27,8 @@ import { trackStep } from "@/lib/funnel";
 import { getAdSource } from "@/lib/adSource";
 import QuickDestinations, { FirstScreenHead } from "@/components/app/QuickDestinations";
 import { agoText, tone, waitText } from "@/components/app/KppQueue";
+import WishPicker from "@/components/app/WishPicker";
+import OffersList from "@/components/app/OffersList";
 import { isStandalone } from "@/lib/pushClient";
 import Tutorial, { CLIENT_SLIDES } from "@/components/app/Tutorial";
 import TripChat from "@/components/app/TripChat";
@@ -46,7 +48,7 @@ const STATUS_VOICE: Record<string, string> = {
 const DEFAULT_CENTER: [number, number] = [55.751, 37.618];
 
 interface Quote {
-  distance_km: number; kpp?: string | null; kpp_queue?: { minutes: number; ago: number } | null; kpp_alts?: { kpp: string; queue?: number | null }[]; region: string; prices: Record<Tariff, number>; approx: boolean; min_price: number;
+  distance_km: number; kpp?: string | null; kpp_queue?: { minutes: number; ago: number } | null; kpp_id?: string | null; kpp_alts?: { id: string; kpp: string; km: number; min: number; queue?: number | null; prices: Record<Tariff, number> }[]; region: string; prices: Record<Tariff, number>; approx: boolean; min_price: number;
   from_geo: Place; bonus?: Record<string, { rub: number; km: number }>;
 }
 interface Poll {
@@ -134,12 +136,15 @@ export default function AppClient() {
 
   const quoteKey = toPlace && fromPos ? `${fromPos[0].toFixed(3)},${fromPos[1].toFixed(3)}>${toPlace.lat.toFixed(3)},${toPlace.lng.toFixed(3)}` : "";
   const [quoting, setQuoting] = useState(false);
+  const [kppPick, setKppPick] = useState<string | null>(null);
+  const [wish, setWish] = useState("");
+  useEffect(() => { setKppPick(null); }, [quoteKey]);
   useEffect(() => {
     if (!quoteKey || !toPlace || !fromPos) { setQuote(null); setQuoting(false); return; }
     let stale = false;
     setQuoting(true);
     const t = window.setTimeout(() => {
-      appCall<Quote>(token ? "client_quote" : "guest_quote", { from_lat: fromPos[0], from_lng: fromPos[1], to_lat: toPlace.lat, to_lng: toPlace.lng }, token)
+      appCall<Quote>(token ? "client_quote" : "guest_quote", { from_lat: fromPos[0], from_lng: fromPos[1], to_lat: toPlace.lat, to_lng: toPlace.lng, ...(kppPick ? { kpp_id: kppPick } : {}) }, token)
         .then((q) => {
           if (stale) return;
           setQuote(q); if (!orderAfterLogin.current) setBump(0); setErr("");
@@ -149,7 +154,7 @@ export default function AppClient() {
         .finally(() => { if (!stale) setQuoting(false); });
     }, 350);
     return () => { stale = true; window.clearTimeout(t); };
-  }, [quoteKey, token]);
+  }, [quoteKey, token, kppPick]);
 
   const onCenter = useCallback((lat: number, lng: number) => {
     setFromPos([lat, lng]);
@@ -206,13 +211,13 @@ export default function AppClient() {
     try {
       await appCall("client_create_trip", {
         from_lat: fromPos[0], from_lng: fromPos[1], from_city: from.city, from_street: from.street, from_house: from.house, from_label: fromText,
-        to_text: toText, to_lat: toPlace.lat, to_lng: toPlace.lng, tariff, price, comment, pay_method: pay, use_bonus: installed && useBonus && !!bonusOpt && bump === 0, installed,
+        to_text: toText, to_lat: toPlace.lat, to_lng: toPlace.lng, tariff, price, comment, pay_method: pay, wish: tariff === "choice" ? wish : undefined, kpp_id: quote?.kpp_id || undefined, use_bonus: installed && useBonus && !!bonusOpt && bump === 0, installed,
         scheduled_at: scheduled && when ? new Date(when).toISOString() : null,
       }, token);
       reachGoal(scheduled ? "app_preorder" : "app_order", { tariff, order_price: price, currency: "RUB" });
       reachGoal("app_order_any", { order_price: price, currency: "RUB" });
       trackStep("order", { details: `${toText} · ${price} ₽`, once: false });
-      setToText(""); setToPlace(null); setQuote(null); setComment(""); setScheduled(false); setWhen(""); setBump(0);
+      setToText(""); setToPlace(null); setQuote(null); setComment(""); setWish(""); setScheduled(false); setWhen(""); setBump(0);
       await refresh();
     } catch (e) {
       setErr((e as Error).message);
@@ -296,7 +301,7 @@ export default function AppClient() {
         {active ? (
           <ClientTripCard t={active} unread={unread(active)} onChat={() => setChatId(active.id)}
             onCancel={() => act("client_cancel_trip", { trip_id: active.id })}
-            onRaise={(p) => act("client_raise_price", { trip_id: active.id, price: p })} />
+            onRaise={(p) => act("client_raise_price", { trip_id: active.id, price: p })} token={token} onRefresh={() => { refresh().catch(() => undefined); }} />
         ) : (
           <div className="space-y-3">
             {mapPick ? (
@@ -353,6 +358,31 @@ export default function AppClient() {
                   <span>{quote.distance_km} км{quote.approx ? " (примерно)" : ""}</span>
                   {quote.region === "new" && <Badge tone="blue">{quote.kpp ? `Через КПП ${quote.kpp.split(" (")[0]}` : "Есть участок по новым территориям"}</Badge>}
                 </div>
+                {quote.kpp_alts && quote.kpp_alts.length > 1 && (
+                  <div className="rounded-2xl bg-neutral-50 p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase text-neutral-400">Через какой КПП ехать</span>
+                      <a href="/kpp-online" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-sky-700">Очереди онлайн</a>
+                    </div>
+                    <div className="space-y-1.5">
+                      {quote.kpp_alts.map((a) => {
+                        const on = a.id === quote.kpp_id;
+                        const hours = Math.floor(a.min / 60);
+                        return (
+                          <button key={a.id} onClick={() => setKppPick(a.id)} disabled={quoting}
+                            className={`flex w-full items-center gap-2 rounded-xl border-2 px-3 py-2 text-left ${on ? "border-neutral-900 bg-white" : "border-transparent bg-white/60"}`}>
+                            <span className={`h-4 w-4 shrink-0 rounded-full border-2 ${on ? "border-neutral-900 bg-neutral-900 ring-2 ring-inset ring-white" : "border-neutral-300"}`} />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-extrabold">{a.kpp.split(" (")[0]}</span>
+                              <span className="block text-[11px] text-neutral-500">{a.km} км · ≈ {hours ? `${hours} ч ` : ""}{a.min % 60} мин{a.queue ? ` · очередь ${waitText(a.queue)}` : ""}</span>
+                            </span>
+                            <span className="text-sm font-extrabold">{money(a.prices[tariff] ?? a.prices.standard)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 {quote.kpp && (
                   <a href="/kpp-online" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-2xl bg-neutral-900 p-3 text-white">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10"><Icon name="Timer" size={20} className="text-[#fcd34d]" /></span>
@@ -366,6 +396,7 @@ export default function AppClient() {
                   </a>
                 )}
                 <TariffPicker prices={quote.prices} value={tariff} onChange={(t) => { setTariff(t); setBump(0); }} />
+                {tariff === "choice" && <WishPicker value={wish} onChange={setWish} />}
 
                 {bonusOpt && bump === 0 && (
                   <label className="flex items-center gap-3 rounded-2xl bg-emerald-50 p-3">
@@ -394,8 +425,8 @@ export default function AppClient() {
                 </div>
                 <WhenPicker enabled={scheduled} value={when} onToggle={setScheduled} onChange={setWhen} />
                 <Field value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Комментарий: багаж, дети, подъезд" maxLength={300} />
-                <Btn onClick={order} disabled={busy || quoting || !fromOk || (scheduled && !!whenError(when))} className="w-full text-lg">
-                  {busy ? "Отправляем..." : quoting ? "Пересчитываем цену..." : scheduled ? `Оформить предзаказ на ${whenLabel(when)}` : `Заказать ${TARIFF_LIST.find((x) => x.id === tariff)?.name} за ${money(bump === 0 ? payPrice : price)}`}
+                <Btn onClick={order} disabled={busy || quoting || !fromOk || (tariff === "choice" && wish.trim().length < 3) || (scheduled && !!whenError(when))} className="w-full text-lg">
+                  {busy ? "Отправляем..." : quoting ? "Пересчитываем цену..." : scheduled ? `Оформить предзаказ на ${whenLabel(when)}` : tariff === "choice" ? (wish.trim().length < 3 ? "Напишите, какую машину хотите" : `Найти водителей за ${money(bump === 0 ? payPrice : price)}`) : `Заказать ${TARIFF_LIST.find((x) => x.id === tariff)?.name} за ${money(bump === 0 ? payPrice : price)}`}
                 </Btn>
               </>
             )}
@@ -412,6 +443,9 @@ export default function AppClient() {
                     <b>{whenText(u.scheduled_at)}</b><Badge tone={tripTone(u.status)}>{TRIP_STATUS[u.status]}</Badge>
                   </div>
                   <div className="mt-1 text-neutral-600">{u.to_text} · {TARIFF_NAME[u.tariff]} · {money(u.price)}</div>
+                  {u.tariff === "choice" && u.status === "new" && token && (
+                    <div className="mt-3"><OffersList tripId={u.id} wish={u.wish} offers={u.offers || []} token={token} onChosen={() => { refresh().catch(() => undefined); }} /></div>
+                  )}
                   <div className="mt-2 flex gap-2">
                     {u.driver_name && <Btn kind="dark" onClick={() => setChatId(u.id)} className="!px-3 !py-2 !text-sm">Чат с водителем</Btn>}
                     <Btn kind="danger" onClick={() => act("client_cancel_trip", { trip_id: u.id })} className="!px-3 !py-2 !text-sm">Отменить</Btn>

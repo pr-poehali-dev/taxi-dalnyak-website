@@ -60,6 +60,8 @@ def driver_cancel(cur, driver_id, trip_id):
         (trip_id,),
     )
     cur.execute(f"INSERT INTO {S}.app_driver_events (driver_id, kind, trip_id) VALUES (%s, 'cancel', %s)", (driver_id, trip_id))
+    cur.execute(f"UPDATE {S}.app_offers SET status = 'withdrawn' WHERE trip_id = %s AND driver_id = %s", (trip_id, driver_id))
+    cur.execute(f"UPDATE {S}.app_offers SET status = 'active' WHERE trip_id = %s AND status = 'lost'", (trip_id,))
     blocked = check_blocking(cur, driver_id)
     cur.execute(f"SELECT * FROM {S}.app_trips WHERE id = %s", (trip_id,))
     tr = cur.fetchone()

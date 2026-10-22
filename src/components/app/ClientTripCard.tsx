@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
+import OffersList, { type Offer } from "./OffersList";
 import { Badge, Btn, tripTone } from "./ui";
 import { humanMinutes, etaMinutes, useNow } from "./Countdown";
 import { TRIP_STATUS, TARIFF_NAME, money, whenText } from "@/lib/appApi";
@@ -10,7 +11,7 @@ export interface ClientTrip {
   car_plate: string | null; car_color: string | null; driver_lat: number | null; driver_lng: number | null;
   driver_rating: number | null; rating: number | null; last_msg_id: number | null; last_msg_role?: string | null;
   pay_method?: string; eta_at?: string | null; share_token?: string | null; cancelled_by?: string | null;
-  manual_driver?: boolean; driver_phone?: string | null; created_at?: string | null; tg_link?: string | null; tg_on?: boolean;
+  manual_driver?: boolean; driver_phone?: string | null; created_at?: string | null; tg_link?: string | null; tg_on?: boolean; wish?: string | null; offers?: Offer[];
 }
 
 function SearchTimer({ since }: { since: string }) {
@@ -38,8 +39,8 @@ export async function shareTrip(t: ClientTrip) {
   try { await navigator.clipboard.writeText(`${text} ${url}`); window.alert("Ссылка скопирована. Отправьте её близким."); } catch { window.prompt("Скопируйте ссылку", url); }
 }
 
-export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise }: {
-  t: ClientTrip; unread: boolean; onChat: () => void; onCancel: () => void; onRaise: (p: number) => void;
+export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise, token, onRefresh }: {
+  t: ClientTrip; unread: boolean; onChat: () => void; onCancel: () => void; onRaise: (p: number) => void; token?: string | null; onRefresh?: () => void;
 }) {
   const [newPrice, setNewPrice] = useState<number>(t.price);
   const now = useNow();
@@ -150,7 +151,10 @@ export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise }:
         </button>
       )}
 
-      {t.status === "new" && (
+      {t.status === "new" && t.tariff === "choice" && token && (
+        <OffersList tripId={t.id} wish={t.wish} offers={t.offers || []} token={token} onChosen={() => onRefresh?.()} />
+      )}
+      {t.status === "new" && t.tariff !== "choice" && (
         <>
           <div className="rounded-2xl bg-neutral-900 p-4 text-white">
             <div className="flex items-center justify-between gap-3">

@@ -15,9 +15,10 @@ S = os.environ.get('MAIN_DB_SCHEMA', 'public')
 CORS = {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'}
 
 TARIFFS = ('standard', 'comfort', 'minivan')
+ORDER_TARIFFS = TARIFFS + ('choice',)
 ACTIVE = ('assigned', 'enroute', 'arrived', 'in_progress')
 TRIP_TEXT = {
-    'standard': 'Стандарт', 'comfort': 'Комфорт', 'minivan': 'Минивэн',
+    'standard': 'Стандарт', 'comfort': 'Комфорт', 'minivan': 'Минивэн', 'choice': 'Выбор водителя',
 }
 
 DEFAULT_CONFIG = {
@@ -26,6 +27,13 @@ DEFAULT_CONFIG = {
         'new': {'standard': 85, 'comfort': 90, 'minivan': 110},
     },
     'min_price': 2000,
+    'ru_min': {'standard': 4000, 'comfort': 5000, 'minivan': 7200},
+    'ru_min_km': 100,
+    'ru_tiers': [
+        {'from_km': 100, 'rates': {'standard': 35, 'comfort': 40, 'minivan': 60}},
+        {'from_km': 200, 'rates': {'standard': 32, 'comfort': 40, 'minivan': 60}},
+        {'from_km': 500, 'rates': {'standard': 32, 'comfort': 38, 'minivan': 57}},
+    ],
     'commission_pct': 20,
     'priority_price': 1000,
     'priority_days': 30,

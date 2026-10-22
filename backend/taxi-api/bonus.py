@@ -56,8 +56,10 @@ def options(cfg, bonus_km, prices):
     out = {}
     if bonus_km <= 0:
         return out
-    for t in TARIFFS:
-        rate = cfg['rates']['regular'][t]
+    for t in TARIFFS + ('choice',):
+        rate = cfg['rates']['regular']['comfort' if t == 'choice' else t]
+        if t not in prices:
+            continue
         cap = math.floor(prices[t] * cfg['bonus_max_pct'] / 100.0)
         rub = min(math.floor(bonus_km * rate), cap)
         if rub >= 1:
@@ -68,7 +70,7 @@ def options(cfg, bonus_km, prices):
 def spend(cur, user_id, trip_id, tariff, base_price, cfg):
     cur.execute(f"SELECT bonus_km FROM {S}.app_users WHERE id = %s FOR UPDATE", (user_id,))
     have = cur.fetchone()['bonus_km']
-    opt = options(cfg, have, {t: base_price for t in TARIFFS}).get(tariff)
+    opt = options(cfg, have, {t: base_price for t in TARIFFS + ('choice',)}).get(tariff)
     if not opt:
         return 0
     cur.execute(f"UPDATE {S}.app_users SET bonus_km = bonus_km - %s WHERE id = %s", (opt['km'], user_id))
