@@ -9,7 +9,7 @@ const GOALS: Partial<Record<FunnelStep, string>> = {
   order_click: "app_order_click",
 };
 
-export type FunnelStep = "open" | "login" | "route" | "quote" | "order" | "install_offer" | "install" | "login_prompt" | "order_click";
+export type FunnelStep = "open" | "login" | "route" | "quote" | "order" | "install_offer" | "install" | "login_prompt" | "order_click" | "contact";
 
 const VKEY = "app_visitor_id";
 

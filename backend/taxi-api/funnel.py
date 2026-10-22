@@ -1,6 +1,6 @@
 from common import S, ApiError, clean, sha
 
-STEPS = ('open', 'order_click', 'login_prompt', 'login', 'route', 'quote', 'order', 'install_offer', 'install')
+STEPS = ('open', 'order_click', 'login_prompt', 'login', 'route', 'quote', 'order', 'install_offer', 'install', 'contact')
 STEP_NAMES = {
     'open': 'Открыли приложение', 'login_prompt': 'Нажали «Заказать», увидели вход', 'login': 'Вошли по телефону', 'route': 'Ввели маршрут',
     'quote': 'Увидели цену', 'order': 'Оформили заказ',
@@ -69,7 +69,7 @@ def report(cur, user, body):
         SELECT f.visitor,
                bool_or(f.step = 'route') AS r, bool_or(f.step = 'quote') AS q,
                bool_or(f.step IN ('order_click', 'order')) AS c, bool_or(f.step = 'login') AS l,
-               bool_or(f.step = 'order') AS d, bool_or(f.installed) AS inst
+               bool_or(f.step = 'order') AS d, bool_or(f.step = 'contact') AS ct, bool_or(f.installed) AS inst
         FROM {S}.app_funnel f WHERE {base}
         GROUP BY f.visitor HAVING bool_or(f.step = 'open'){ad}"""
     cur.execute(
@@ -80,7 +80,8 @@ def report(cur, user, body):
                    count(*) FILTER (WHERE inst) AS i_open, count(*) FILTER (WHERE inst AND r) AS i_route,
                    count(*) FILTER (WHERE inst AND r AND q) AS i_quote, count(*) FILTER (WHERE inst AND r AND q AND c) AS i_order_click,
                    count(*) FILTER (WHERE inst AND r AND q AND c AND l) AS i_login,
-                   count(*) FILTER (WHERE inst AND r AND q AND c AND l AND d) AS i_order
+                   count(*) FILTER (WHERE inst AND r AND q AND c AND l AND d) AS i_order,
+                   count(*) FILTER (WHERE ct) AS contact
             FROM v"""
     )
     row = cur.fetchone()
@@ -108,4 +109,4 @@ def report(cur, user, body):
     lost = cur.fetchall()
     cur.execute(f"SELECT to_char({d1}, 'YYYY-MM-DD') AS a, to_char({d2}, 'YYYY-MM-DD') AS b")
     p = cur.fetchone()
-    return {'date_from': p['a'], 'date_to': p['b'], 'flow': list(FLOW), 'steps': steps, 'names': FLOW_NAMES, 'sources': sources, 'lost': lost}
+    return {'date_from': p['a'], 'date_to': p['b'], 'contact': row['contact'] or 0, 'flow': list(FLOW), 'steps': steps, 'names': FLOW_NAMES, 'sources': sources, 'lost': lost}

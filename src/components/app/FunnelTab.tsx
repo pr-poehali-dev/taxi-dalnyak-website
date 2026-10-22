@@ -5,6 +5,7 @@ import { usePoll } from "@/lib/usePoll";
 interface Funnel {
   date_from: string;
   date_to: string;
+  contact?: number;
   flow: string[];
   steps: Record<string, { n: number; installed: number }>;
   names: Record<string, string>;
@@ -118,6 +119,12 @@ export default function FunnelTab({ token, onUnauthorized }: { token: string; on
               <div className="mt-4 flex justify-between rounded-2xl bg-neutral-50 p-3 text-sm">
                 <span className="font-bold text-neutral-700">Итог: из открывших заказали</span>
                 <span className="font-extrabold text-neutral-900">{Math.round((n("order") / top) * 1000) / 10}%</span>
+              </div>
+            )}
+            {top > 0 && (
+              <div className="mt-2 flex justify-between rounded-2xl bg-emerald-50 p-3 text-sm">
+                <span className="font-bold text-emerald-800">Связались с диспетчером (звонок, MAX, Telegram)</span>
+                <span className="font-extrabold text-emerald-900">{f.contact || 0}</span>
               </div>
             )}
           </div>

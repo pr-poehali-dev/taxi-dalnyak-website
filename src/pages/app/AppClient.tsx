@@ -8,6 +8,7 @@ import { useChatAlert } from "@/lib/useChatAlert";
 import { useReadMap } from "@/lib/useReadMap";
 import { reachGoal } from "@/lib/metrika";
 import TariffPicker from "@/components/app/TariffPicker";
+import QuoteContacts from "@/components/app/QuoteContacts";
 import DriverBanner from "@/components/app/DriverBanner";
 import PushBanner from "@/components/app/PushBanner";
 import { useSeen } from "@/lib/useSeen";
@@ -405,6 +406,9 @@ export default function AppClient() {
                   </a>
                 )}
                 <TariffPicker prices={quote.prices} value={tariff} onChange={(t) => { setTariff(t); setBump(0); if (hotQuote) reachHotQuote(hotParams("tariff")); }} />
+                <QuoteContacts tg={support.tg} max={support.max}
+                  message={`Здравствуйте! Хочу поехать: ${from.city || fromText} → ${toText}, ${quote.distance_km} км, ${TARIFF_LIST.find((x) => x.id === tariff)?.name || ""} ${money(price)}. Подскажите, пожалуйста.`}
+                  onContact={(ch) => { trackStep("contact", { details: `${ch} · ${toText} · ${price} ₽` }); if (hotQuote) reachHotQuote(hotParams("contact")); }} />
                 {tariff === "choice" && <WishPicker value={wish} onChange={setWish} />}
 
                 {bonusOpt && bump === 0 && (
