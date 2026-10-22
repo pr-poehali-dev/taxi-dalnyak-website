@@ -33,11 +33,19 @@ function applyUrlFlag() {
   if (p === "/app/driver" || p === "/app/office-k7x2") markStaffDevice();
 }
 
+const KEY_GOAL_FROM = new Set(["app_quote", "app_order_click", "app_lead", "app_order_any", "lead", "app_contact"]);
+let keySent = false;
+
 export function reachGoal(goal: string, params?: Record<string, string | number>) {
   if (goalsBlocked()) return;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ym = (window as any).ym;
-  if (typeof ym === "function") ym(YM_ID, "reachGoal", goal, params);
+  if (typeof ym !== "function") return;
+  ym(YM_ID, "reachGoal", goal, params);
+  if (KEY_GOAL_FROM.has(goal) && !keySent) {
+    keySent = true;
+    ym(YM_ID, "reachGoal", "app_key", { from: goal });
+  }
 }
 
 export function initGlobalGoals() {

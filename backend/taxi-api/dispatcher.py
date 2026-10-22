@@ -154,7 +154,21 @@ def clients(cur, user, body):
             LIMIT 60""",
         (q, like, like),
     )
-    return {'clients': cur.fetchall()}
+    rows = cur.fetchall()
+    days = max(1, min(int(body.get('days') or 14), 90))
+    cur.execute(
+        f"""SELECT to_char(d, 'YYYY-MM-DD') AS day,
+                   (SELECT count(*) FROM {S}.app_users u WHERE u.role = 'client' AND (u.created_at AT TIME ZONE 'Europe/Moscow')::date = d) AS n,
+                   (SELECT count(*) FROM {S}.app_users u WHERE u.role = 'client' AND (u.created_at AT TIME ZONE 'Europe/Moscow')::date = d
+                      AND EXISTS (SELECT 1 FROM {S}.app_trips t WHERE t.client_id = u.id AND t.created_by = 'dispatcher')) AS by_disp,
+                   (SELECT count(*) FROM {S}.app_users u WHERE u.role = 'driver' AND (u.created_at AT TIME ZONE 'Europe/Moscow')::date = d) AS drivers
+            FROM generate_series((now() AT TIME ZONE 'Europe/Moscow')::date - %s, (now() AT TIME ZONE 'Europe/Moscow')::date, interval '1 day') AS g(d)
+            ORDER BY d DESC""",
+        (days - 1,),
+    )
+    daily = cur.fetchall()
+    cur.execute(f"SELECT count(*) FILTER (WHERE role = 'client') AS clients, count(*) FILTER (WHERE role = 'driver') AS drivers FROM {S}.app_users")
+    return {'clients': rows, 'daily': daily, 'total': cur.fetchone()}
 
 
 def client_block(cur, user, body):
@@ -334,6 +348,15 @@ def create_driver(cur, user, body):
         (uid, car_model, car_plate, car_color, tariffs or ['standard'], cs),
     )
     return {'id': uid, 'phone': phone, 'password': password}
+
+
+def driver_callsign(cur, user, body):
+    cs = ''.join(c for c in clean(body.get('callsign'), 8) if c.isdigit()).lstrip('0')
+    if not cs:
+        raise ApiError(400, 'Позывной — число от 1')
+    cs = _callsign(cur, {'callsign': cs}, body.get('driver_id'))
+    cur.execute(f"UPDATE {S}.app_drivers SET callsign = %s WHERE user_id = %s", (cs, body.get('driver_id')))
+    return {'ok': True}
 
 
 def update_driver(cur, user, body):

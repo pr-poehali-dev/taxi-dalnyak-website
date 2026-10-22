@@ -7,6 +7,7 @@ const GOALS: Partial<Record<FunnelStep, string>> = {
   route: "app_route",
   quote: "app_quote",
   order_click: "app_order_click",
+  contact: "app_contact",
 };
 
 export type FunnelStep = "open" | "login" | "route" | "quote" | "order" | "install_offer" | "install" | "login_prompt" | "order_click" | "contact";

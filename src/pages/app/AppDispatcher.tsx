@@ -45,6 +45,25 @@ interface Poll {
   topups: Topup[]; config: any;
 }
 
+type DrvFilter = "all" | "online" | "free" | "busy" | "offline" | "pending" | "blocked";
+const DRV_FILTERS: [DrvFilter, string][] = [["all", "Все"], ["online", "На линии"], ["free", "Свободны"], ["busy", "На заказе"], ["offline", "Не на линии"], ["pending", "На проверке"], ["blocked", "Блок"]];
+function drvMatch(d: Driver, f: DrvFilter) {
+  if (f === "all") return true;
+  if (f === "online") return d.status === "approved" && d.online;
+  if (f === "free") return d.status === "approved" && d.online && !d.busy;
+  if (f === "busy") return d.busy;
+  if (f === "offline") return d.status === "approved" && !d.online;
+  if (f === "pending") return d.status === "pending";
+  return d.status === "blocked" || d.status === "rejected";
+}
+function drvSearch(d: Driver, q: string) {
+  const s = q.trim().toLowerCase();
+  if (!s) return true;
+  const digits = s.replace(/\D/g, "");
+  return [d.name, d.car_plate, d.car_model].some((x) => (x || "").toLowerCase().includes(s))
+    || (!!digits && (d.callsign === digits || d.phone.replace(/\D/g, "").includes(digits)));
+}
+
 const TABS = ["Заказы", "Карта", "Водители", "Клиенты", "Промокоды", "Парк", "Отчёты", "Воронка", "Эфир", "Настройки"] as const;
 type Tab = (typeof TABS)[number];
 type Act = (a: string, b: Record<string, unknown>) => void;
@@ -89,7 +108,11 @@ function DriverCard({ d, onAct, onCreds, token }: { d: Driver; onAct: Act; onCre
     <div className="rounded-3xl bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="font-extrabold">{d.callsign && <span className="mr-1.5 rounded-lg bg-neutral-900 px-1.5 py-0.5 text-xs text-[#fcd34d]">№{d.callsign}</span>}{d.name}</div>
+          <div className="flex items-center gap-1.5 font-extrabold">
+            <button onClick={() => { const v = window.prompt(`Новый позывной для ${d.name} (число)`, d.callsign || ""); if (v && v.replace(/\D/g, "")) onAct("disp_driver_callsign", { driver_id: d.id, callsign: v.replace(/\D/g, "") }); }}
+              className="flex items-center gap-1 rounded-lg bg-neutral-900 px-1.5 py-0.5 text-xs text-[#fcd34d]" title="Изменить позывной">№{d.callsign || "—"}<Icon name="Pencil" size={11} /></button>
+            {d.name}
+          </div>
           <div className="text-sm text-neutral-500">{d.car_color} {d.car_model} · {d.car_plate}</div>
           <a href={`tel:${d.phone}`} className="text-sm font-semibold text-sky-700">{d.phone}</a>
           <div className="mt-1 text-sm font-bold text-amber-600">★ {d.rating ? Number(d.rating).toFixed(1) : "—"} <span className="font-normal text-neutral-400">· отказов за неделю: {d.cancels_7d}</span></div>
@@ -286,6 +309,8 @@ export default function AppDispatcher() {
   const [chatId, setChatId] = useState<number | null>(null);
   const [addDriver, setAddDriver] = useState(false);
   const [newOrder, setNewOrder] = useState(false);
+  const [dq, setDq] = useState("");
+  const [df, setDf] = useState<DrvFilter>("all");
   const [creds, setCreds] = useState<{ phone: string; password: string } | null>(null);
   const seen = useSeen();
 
@@ -388,7 +413,17 @@ export default function AppDispatcher() {
               </div>
             ))}
             {data.drivers.length === 0 && <p className="rounded-3xl bg-white p-6 text-center text-neutral-500">Водителей пока нет.</p>}
-            {data.drivers.map((d) => <DriverCard key={d.id} d={d} onAct={act} onCreds={setCreds} token={token} />)}
+            <div className="space-y-2 rounded-3xl bg-white p-3 shadow-sm">
+              <Field value={dq} onChange={(e) => setDq(e.target.value)} placeholder="Поиск: позывной, имя, телефон, госномер" />
+              <div className="flex flex-wrap gap-1.5">
+                {DRV_FILTERS.map(([k, l]) => (
+                  <button key={k} onClick={() => setDf(k)} className={`rounded-full px-3 py-1.5 text-xs font-extrabold ${df === k ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-600"}`}>
+                    {l} ({data.drivers.filter((d) => drvMatch(d, k)).length})
+                  </button>
+                ))}
+              </div>
+            </div>
+            {data.drivers.filter((d) => drvMatch(d, df) && drvSearch(d, dq)).sort((a, b) => Number(a.callsign || 1e9) - Number(b.callsign || 1e9)).map((d) => <DriverCard key={d.id} d={d} onAct={act} onCreds={setCreds} token={token} />)}
           </div>
         )}
 

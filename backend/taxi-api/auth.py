@@ -183,6 +183,9 @@ def client_login(cur, body):
         )
         uid = cur.fetchone()['id']
         ref = clean(body.get('ref'), 12).upper()
+        if ref.startswith('D') and ref[1:].isdigit():
+            cur.execute(f"UPDATE {S}.app_users SET ref_driver_id = (SELECT user_id FROM {S}.app_drivers WHERE callsign = %s) WHERE id = %s", (ref[1:], uid))
+            ref = ''
         if ref:
             cur.execute(f"SELECT id FROM {S}.app_users WHERE ref_code = %s AND role = 'client'", (ref,))
             fr = cur.fetchone()

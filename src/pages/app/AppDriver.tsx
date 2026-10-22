@@ -22,6 +22,7 @@ import TripChat from "@/components/app/TripChat";
 import AppMap, { MapPoint } from "@/components/app/AppMap";
 import { Badge, Btn, Shell } from "@/components/app/ui";
 import TakeOrder from "@/components/app/TakeOrder";
+import DriverInvite from "@/components/app/DriverInvite";
 import IncomingOrder, { orderSpeech } from "@/components/app/IncomingOrder";
 import { DriverKppReport } from "@/components/app/KppQueue";
 import DriverOffer, { CarFeaturesEditor, DriverWish } from "@/components/app/DriverOffer";
@@ -30,7 +31,7 @@ import Icon from "@/components/ui/icon";
 interface Me {
   id: number; name: string; callsign?: string | null; car_model: string; car_plate: string; status: string; on_line: boolean; balance: number; car_features?: string[]; car_year?: number | null;
   tariffs: string[]; pd_consent?: boolean; recheck_fields: string[]; recheck_note: string | null; block_reason: string | null; priority_until: string | null; has_priority: boolean;
-  rating: number | null; done_count: number;
+  rating: number | null; done_count: number; invited?: number; invited_trips?: number;
 }
 interface Poll {
   me: Me; active: DTrip | null; upcoming: DTrip[]; available: DTrip[]; broadcasts: { id: number; text: string }[];
@@ -320,7 +321,7 @@ export default function AppDriver() {
             {approved && <CarFeaturesEditor initial={me.car_features || []} year={me.car_year ?? null} token={token!} onSaved={() => { refresh().catch(() => undefined); }} />}
             <Btn kind="ghost" onClick={() => setShowHelp(true)} className="w-full">Как работать в приложении</Btn>
             <SupportLinks telegram={data.support_telegram} max={data.support_max} />
-            <a href="/app/client" className="block rounded-2xl bg-neutral-100 py-3.5 text-center text-sm font-bold text-neutral-800">Нужно такси? Приложение для пассажиров</a>
+            {me.callsign && <DriverInvite callsign={me.callsign} invited={me.invited || 0} trips={me.invited_trips || 0} />}
             <Btn kind="danger" onClick={logout} className="w-full">Выйти из аккаунта</Btn>
           </>
         )}

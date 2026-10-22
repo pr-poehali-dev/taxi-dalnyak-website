@@ -94,6 +94,7 @@ PROTECTED = {
     'disp_chat_send': ('dispatcher', dispatcher.trip_chat_send),
     'disp_create_driver': ('dispatcher', dispatcher.create_driver),
     'disp_update_driver': ('dispatcher', dispatcher.update_driver),
+    'disp_driver_callsign': ('dispatcher', dispatcher.driver_callsign),
     'disp_reset_password': ('dispatcher', dispatcher.reset_password),
     'disp_request_recheck': ('dispatcher', dispatcher.request_recheck),
     'disp_report': ('dispatcher', dispatcher.report),

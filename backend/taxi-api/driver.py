@@ -22,7 +22,9 @@ def _me(cur, uid):
         f"""SELECT u.id, u.name, dr.callsign, dr.car_model, dr.car_plate, dr.car_color, dr.status, dr.on_line, dr.balance, dr.car_features, dr.car_year,
                    dr.tariffs, dr.block_reason, (dr.pd_consent_at IS NOT NULL) AS pd_consent, dr.recheck_fields, dr.recheck_note, dr.priority_until, (dr.priority_until > now()) AS has_priority,
                    (SELECT round(avg(x.rating)::numeric, 2) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.rating IS NOT NULL) AS rating,
-                   (SELECT count(*) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.status = 'done') AS done_count
+                   (SELECT count(*) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.status = 'done') AS done_count,
+                   (SELECT count(*) FROM {S}.app_users c WHERE c.ref_driver_id = u.id) AS invited,
+                   (SELECT count(*) FROM {S}.app_trips x JOIN {S}.app_users c ON c.id = x.client_id WHERE c.ref_driver_id = u.id AND x.status = 'done') AS invited_trips
             FROM {S}.app_users u JOIN {S}.app_drivers dr ON dr.user_id = u.id WHERE u.id = %s""",
         (uid,),
     )

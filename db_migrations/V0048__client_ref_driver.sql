@@ -1,0 +1,1 @@
+ALTER TABLE t_p85334902_taxi_dalnyak_website.app_users ADD COLUMN IF NOT EXISTS ref_driver_id bigint NULL;
