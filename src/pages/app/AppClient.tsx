@@ -280,16 +280,16 @@ export default function AppClient() {
 
   return (
     <Shell title="Дальняк" right={!token ? <button onClick={requireLogin} className="rounded-full bg-neutral-900 px-4 py-2 text-sm font-extrabold text-white">Войти</button> : undefined} left={<button onClick={() => (token ? setMenu(true) : requireLogin())} aria-label="Меню" className="-ml-1 flex h-10 w-10 items-center justify-center rounded-full active:bg-neutral-100"><Icon name="Menu" size={24} /></button>}>
-      <div className="relative">
-        <AppMap center={pos || DEFAULT_CENTER} points={points} className="h-[38vh] w-full" pin={!active && (!toPlace || mapPick !== null)} fly={fly} onCenterChange={onCenter} />
+      <div className="relative lg:fixed lg:bottom-0 lg:left-[480px] lg:right-0 lg:top-16">
+        <AppMap center={pos || DEFAULT_CENTER} points={points} className="h-[38vh] w-full lg:h-[calc(100vh-64px)]" pin={!active && (!toPlace || mapPick !== null)} fly={fly} onCenterChange={onCenter} />
         {token && !active && !toPlace && !mapPick && installed && <BonusBanner km={data?.bonus_km ?? 0} earnPct={bonusCfg.earn} maxPct={bonusCfg.max} refKm={bonusCfg.ref} onMore={() => setPanel("bonus")} />}
         <button onClick={() => { locate(); if (pos) setFly({ lat: pos[0], lng: pos[1], n: Date.now() }); }} aria-label="Моё местоположение" className="absolute right-3 top-3 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg">
           <Icon name="Crosshair" size={20} />
         </button>
       </div>
 
-      <div className="relative z-[600] -mt-6 min-h-[60vh] rounded-t-[28px] bg-white p-5 pb-24 shadow-[0_-8px_30px_rgba(0,0,0,0.1)]">
-        <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-neutral-200" />
+      <div className="relative z-[600] -mt-6 min-h-[60vh] rounded-t-[28px] bg-white p-5 pb-24 shadow-[0_-8px_30px_rgba(0,0,0,0.1)] lg:mt-0 lg:min-h-[calc(100vh-64px)] lg:w-[480px] lg:rounded-none lg:px-8 lg:pt-8 lg:shadow-[8px_0_30px_rgba(0,0,0,0.08)]">
+        <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-neutral-200 lg:hidden" />
         {!active && !toPlace && !mapPick && <FirstScreenHead />}
         {gpsErr && !fromOk && (
           <div className="mb-3 rounded-2xl bg-neutral-50 p-3 text-xs font-semibold text-neutral-500">
@@ -470,8 +470,8 @@ export default function AppClient() {
       </div>
 
       {needLogin && !token && (
-        <div className="fixed inset-0 z-[3000] flex items-end bg-black/50" onClick={() => { orderAfterLogin.current = false; setNeedLogin(false); }}>
-          <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] bg-white pb-8" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[3000] flex items-end bg-black/50 lg:items-center lg:justify-center" onClick={() => { orderAfterLogin.current = false; setNeedLogin(false); }}>
+          <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] bg-white pb-8 lg:max-w-md lg:rounded-[28px]" onClick={(e) => e.stopPropagation()}>
             <div className="mx-auto mt-3 h-1.5 w-10 rounded-full bg-neutral-200" />
             <div className="flex items-start justify-between px-5 pt-3">
               <div>
@@ -497,8 +497,8 @@ export default function AppClient() {
         onRead={(id) => markRead(chatId, id)} />}
 
       {toRate && (
-        <div className="fixed inset-0 z-[2800] flex items-end bg-black/50">
-          <div className="w-full rounded-t-[28px] bg-white p-6 pb-10">
+        <div className="fixed inset-0 z-[2800] flex items-end bg-black/50 lg:items-center lg:justify-center">
+          <div className="w-full rounded-t-[28px] bg-white p-6 pb-10 lg:max-w-md lg:rounded-[28px]">
             <h2 className="text-xl font-extrabold">Как прошла поездка?</h2>
             <p className="text-sm text-neutral-500">Оцените водителя {toRate.driver_name}</p>
             <div className="my-5 flex justify-center gap-2">
