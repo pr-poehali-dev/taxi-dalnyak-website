@@ -5,8 +5,7 @@ import type { MapPoint, MapProps } from "./AppMap";
 
 const TILE_SOURCES: { url: string; opts: L.TileLayerOptions }[] = [
   { url: "https://tile{s}.maps.2gis.com/tiles?x={x}&y={y}&z={z}&v=1", opts: { subdomains: "0123", maxNativeZoom: 18 } },
-  { url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png", opts: { subdomains: "abcd", maxNativeZoom: 19 } },
-  { url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", opts: { maxNativeZoom: 19 } },
+  { url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", opts: { maxNativeZoom: 19 } },
 ];
 
 function carHtml(p: MapPoint) {

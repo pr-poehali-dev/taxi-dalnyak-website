@@ -90,7 +90,7 @@ export default function DispatcherOrderForm({ token, drivers, onDone, onCancel }
 
       <div>
         <span className="mb-1 block text-xs font-semibold text-neutral-500">Тариф</span>
-        <div className="grid grid-cols-4 gap-1.5">
+        <div className="grid grid-cols-3 gap-1.5">
           {TARIFF_LIST.map((t) => (
             <button key={t.id} type="button" onClick={() => setTariff(t.id)}
               className={`rounded-xl py-2.5 text-xs font-extrabold ${tariff === t.id ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-500"}`}>{t.name}</button>

@@ -56,12 +56,13 @@ export const DRIVER_STATUS: Record<string, string> = {
 };
 
 export type Tariff = "standard" | "comfort" | "minivan" | "choice";
-export const TARIFF_LIST: { id: Tariff; name: string; cars: string; seats: string; img: string; icon: string; badge?: string }[] = [
+export const TARIFF_LIST_ALL: { id: Tariff; name: string; cars: string; seats: string; img: string; icon: string; badge?: string }[] = [
   { id: "choice", name: "Выбор водителя", cars: "Напишите, какую машину хотите — водители откликнутся, вы выберете", seats: "Вы сами выбираете машину и водителя", img: "/app/car-choice.webp?v=2", icon: "Users", badge: "Только у нас" },
   { id: "standard", name: "Стандарт", cars: "Kia Rio, Hyundai Solaris, VW Polo, Skoda Rapid", seats: "Седан, до 4 пассажиров", img: "/app/car-standard.webp?v=2", icon: "Car" },
   { id: "comfort", name: "Комфорт", cars: "Toyota Camry, Kia K5, Skoda Octavia, Hyundai Sonata", seats: "Просторный салон, до 4 пассажиров", img: "/app/car-comfort.webp?v=2", icon: "Car" },
   { id: "minivan", name: "Минивэн", cars: "Kia Carnival, Hyundai Staria, Hyundai Starex, Toyota Alphard", seats: "До 7 пассажиров, много багажа", img: "/app/car-minivan.webp?v=2", icon: "Bus" },
 ];
+export const TARIFF_LIST = TARIFF_LIST_ALL.filter((t) => t.id !== "choice");
 export const TARIFF_NAME: Record<string, string> = { standard: "Стандарт", comfort: "Комфорт", minivan: "Минивэн", choice: "Выбор водителя" };
 
 export function whenText(iso: string | null | undefined) {
