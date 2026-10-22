@@ -328,7 +328,7 @@ export default function AppClient() {
                   </button>
                 </div>
                 {!toPlace && !quoting && (
-                  <QuickDestinations exclude={from.city} onPick={(p) => { setToPlace(p); setToText(p.label); }} onOther={() => setPicker("to")} />
+                  <QuickDestinations from={fromOk ? fromPos : null} onPick={(p) => { setToPlace(p); setToText(p.label); }} onOther={() => setPicker("to")} />
                 )}
               </>
             )}
