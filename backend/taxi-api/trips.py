@@ -69,7 +69,7 @@ def driver_cancel(cur, driver_id, trip_id):
     tg.disp(f"⚠️ Водитель отказался · заказ №{trip_id} снова без водителя\n{trip_line(tr)}", trip_id)
     tg.notify_client(cur, trip_id, '🔎 Водитель отказался, уже ищем другую машину')
     send_push(cur, dispatcher_ids(cur), 'Водитель отказался от заказа', f'Заказ №{trip_id} снова ищет водителя', '/app/office-k7x2', f'trip-{trip_id}')
-    send_push(cur, drivers_for_trip(cur, tr['tariff']), 'Заказ снова свободен', trip_line(tr), '/app/driver', f'trip-{trip_id}')
+    send_push(cur, drivers_for_trip(cur, tr['tariff'], trip_id=trip_id), 'Заказ снова свободен', trip_line(tr), '/app/driver', f'trip-{trip_id}')
     return blocked
 
 
@@ -93,7 +93,7 @@ def tick(cur):
         (delay,),
     )
     for t in cur.fetchall():
-        rest = drivers_for_trip(cur, t['tariff'], exclude_priority=True)
+        rest = drivers_for_trip(cur, t['tariff'], exclude_priority=True, trip_id=t['id'])
         send_push(cur, rest, 'Новый заказ', f"{trip_line(t)} · {int(t['price'])} ₽", '/app/driver', f"trip-{t['id']}")
 
     cur.execute(
@@ -146,4 +146,4 @@ def tick(cur):
     )
     for t in cur.fetchall():
         send_push(cur, dispatcher_ids(cur), 'Предзаказ без водителя', f"№{t['id']}: {trip_line(t)}", '/app/office-k7x2', f"pre-{t['id']}")
-        send_push(cur, drivers_for_trip(cur, t['tariff']), 'Предзаказ ждёт водителя', trip_line(t), '/app/driver', f"pre-{t['id']}")
+        send_push(cur, drivers_for_trip(cur, t['tariff'], trip_id=t['id']), 'Предзаказ ждёт водителя', trip_line(t), '/app/driver', f"pre-{t['id']}")

@@ -82,7 +82,7 @@ export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise, t
               <div className="flex items-center gap-1.5 font-extrabold text-white">{t.driver_name}
                 {t.driver_rating ? <span className="flex items-center text-sm text-amber-400"><Icon name="Star" size={13} />{Number(t.driver_rating).toFixed(1)}</span> : null}
               </div>
-              <div className="text-xs text-neutral-400">Ваш водитель{t.driver_callsign ? <> · позывной <b className="text-[#fcd34d]">{t.driver_callsign}</b></> : ""}</div>
+              <div className="text-xs text-neutral-400">Ваш водитель{t.driver_callsign ? <> · позывной <b className="text-[#fcd34d]">№{t.driver_callsign}</b></> : ""}</div>
             </div>
             {t.driver_phone && (
               <a data-no-goal href={`tel:${t.driver_phone}`} aria-label="Позвонить водителю" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white"><Icon name="Phone" size={20} /></a>

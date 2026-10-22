@@ -19,7 +19,7 @@ export default function DriverForm({ initial, editing, onSave, onCancel }: {
       <h3 className="font-extrabold">{editing ? "Данные водителя" : "Новый водитель"}</h3>
       <div className="grid grid-cols-[1fr_120px] gap-2">
         <Field label="Имя водителя" value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} />
-        <Field label="Позывной" value={v.callsign} maxLength={12} onChange={(e) => setV({ ...v, callsign: e.target.value.toUpperCase() })} placeholder="ЯСТРЕБ" />
+        <Field label="Позывной №" inputMode="numeric" value={v.callsign} maxLength={6} onChange={(e) => setV({ ...v, callsign: e.target.value.replace(/\D/g, "") })} placeholder="авто" />
       </div>
       {!editing && <Field label="Телефон" type="tel" inputMode="tel" value={v.phone} onFocus={() => !v.phone && setV({ ...v, phone: "+7" })}
         onChange={(e) => setV({ ...v, phone: formatPhone(e.target.value) })} placeholder="+7 (___) ___-__-__" />}

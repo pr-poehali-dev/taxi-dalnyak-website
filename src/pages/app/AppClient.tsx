@@ -17,7 +17,7 @@ import AppMap, { MapPoint } from "@/components/app/AppMap";
 import { Place } from "@/components/app/AddressSearch";
 import RoutePicker from "@/components/app/RoutePicker";
 import ClientMenu, { MenuAction } from "@/components/app/ClientMenu";
-import { HistoryPanel, PromoPanel, BonusPanel } from "@/components/app/ClientPanels";
+import { HistoryPanel, PromoPanel, BonusPanel, ProfilePanel } from "@/components/app/ClientPanels";
 import BonusBanner from "@/components/app/BonusBanner";
 import WhenPicker, { whenError, whenLabel } from "@/components/app/WhenPicker";
 import ClientTripCard, { ClientTrip } from "@/components/app/ClientTripCard";
@@ -88,7 +88,7 @@ export default function AppClient() {
   const [startPos, setStartPos] = useState<[number, number] | null>(null);
   const [startText, setStartText] = useState("");
   const [startFrom, setStartFrom] = useState({ city: "", street: "", house: "" });
-  const [panel, setPanel] = useState<null | "history" | "promo" | "bonus">(null);
+  const [panel, setPanel] = useState<null | "profile" | "history" | "promo" | "bonus">(null);
   const [picker, setPicker] = useState<null | "from" | "to">(null);
   const [mapPick, setMapPick] = useState<null | "from" | "to">(null);
   const [useBonus, setUseBonus] = useState(true);
@@ -283,10 +283,10 @@ export default function AppClient() {
   const active = data?.active || null;
   const points: MapPoint[] = [];
   const mapPin = !active && (!toPlace || mapPick !== null);
-  if (mapPin) cars.forEach((c) => points.push({ lat: c.lat, lng: c.lng, color: c.status === "free" ? "#16a34a" : "#f59e0b", label: c.callsign, car: true }));
+  if (mapPin) cars.forEach((c) => points.push({ lat: c.lat, lng: c.lng, color: c.status === "free" ? "#16a34a" : "#f59e0b", label: c.callsign ? `№${c.callsign}` : undefined, car: true }));
   if (fromPos && (active || toPlace)) points.push({ lat: fromPos[0], lng: fromPos[1], color: "#2563eb", label: "Подача" });
   if (toPlace && !active) points.push({ lat: toPlace.lat, lng: toPlace.lng, color: "#171717", label: "Куда" });
-  if (active?.driver_lat && active?.driver_lng) points.push({ lat: active.driver_lat, lng: active.driver_lng, color: "#f59e0b", label: active.driver_callsign || "Водитель", car: true });
+  if (active?.driver_lat && active?.driver_lng) points.push({ lat: active.driver_lat, lng: active.driver_lng, color: "#f59e0b", label: active.driver_callsign ? `№${active.driver_callsign}` : "Водитель", car: true });
   const unread = (t: ClientTrip) => !!t.last_msg_id && t.last_msg_role === "driver" && (readMap[t.id] || 0) < t.last_msg_id;
   const fromOk = !!from.city;
   const fromAd = (() => { const s = getAdSource(); return Boolean(s.yclid || s.utmSource); })();
@@ -522,6 +522,7 @@ export default function AppClient() {
           onClose={() => setMenu(false)} onLogout={() => { setMenu(false); logout(); }}
           onPick={(k: MenuAction) => { setMenu(false); if (k === "help") setShowHelp(true); else setPanel(k); }} />
       )}
+      {token && panel === "profile" && <ProfilePanel token={token} name={data?.me?.name || ""} phone={data?.me?.phone || ""} onClose={() => setPanel(null)} onDone={() => { refresh().catch(() => undefined); }} />}
       {token && panel === "history" && <HistoryPanel token={token} onClose={() => setPanel(null)} />}
       {token && panel === "promo" && <PromoPanel token={token} onClose={() => setPanel(null)} onDone={refresh} />}
       {token && panel === "bonus" && <BonusPanel token={token} onClose={() => setPanel(null)} />}

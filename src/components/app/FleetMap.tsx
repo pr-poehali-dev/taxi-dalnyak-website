@@ -32,7 +32,7 @@ export default function FleetMap({ token }: { token: string }) {
   usePoll(load, 8000, true, () => undefined);
 
   const shown = cars.filter((c) => filter === "all" || c.status === filter);
-  const points: MapPoint[] = shown.map((c) => ({ lat: c.lat, lng: c.lng, color: c.virtual ? (c.status === "free" ? "#86efac" : "#fcd34d") : CAR_COLOR[c.status], label: c.callsign || c.name || `#${c.id}`, car: true }));
+  const points: MapPoint[] = shown.map((c) => ({ lat: c.lat, lng: c.lng, color: c.virtual ? (c.status === "free" ? "#86efac" : "#fcd34d") : CAR_COLOR[c.status], label: c.callsign ? `№${c.callsign}` : c.name || "", car: true }));
   const real = cars.filter((c) => !c.virtual);
   const count = (s: string) => cars.filter((c) => c.status === s).length;
 
@@ -64,7 +64,7 @@ export default function FleetMap({ token }: { token: string }) {
           <button key={c.id} onClick={() => setFly({ lat: c.lat, lng: c.lng, n: Date.now(), zoom: 13 })} className="flex w-full items-center gap-3 border-b border-neutral-100 py-2.5 text-left last:border-0">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white" style={{ background: CAR_COLOR[c.status] }}><Icon name="Car" size={18} /></span>
             <span className="min-w-0 flex-1 text-sm">
-              <span className="block font-extrabold">{c.callsign && <span className="mr-1.5 rounded bg-neutral-900 px-1 text-[#fcd34d]">{c.callsign}</span>}{c.name}</span>
+              <span className="block font-extrabold">{c.callsign && <span className="mr-1.5 rounded bg-neutral-900 px-1 text-[#fcd34d]">№{c.callsign}</span>}{c.name}</span>
               <span className="block truncate text-xs text-neutral-500">{c.car_model} {c.car_plate} · {TARIFF_NAME[c.tariff]} · {c.city || "город не определён"} · {ago(c.loc_ago)}</span>
             </span>
             <span className="text-xs font-extrabold" style={{ color: CAR_COLOR[c.status] }}>{CAR_STATUS[c.status]}</span>

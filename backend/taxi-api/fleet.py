@@ -30,7 +30,7 @@ def _virtual(count=14, near=None):
         ang = rnd.random() * 6.28 + t * speed
         busy = rnd.random() < 0.35
         out.append({
-            'id': -(i + 1), 'callsign': f"{NAMES[i % len(NAMES)]}-{10 + i}", 'virtual': True,
+            'id': -(i + 1), 'callsign': str(100 + i * 7), 'virtual': True,
             'lat': round(lat + r * math.sin(ang), 5), 'lng': round(lng + r * math.cos(ang) * 1.6, 5),
             'status': 'busy' if busy else 'free', 'city': city, 'tariff': rnd.choice(['standard', 'standard', 'comfort', 'minivan']),
         })
@@ -62,7 +62,7 @@ def disp_map(cur, user, body):
 def public_cars(cur, body):
     """Машины для пассажира: без имён и телефонов, только позывной, статус и точка."""
     real = [c for c in _real(cur, 10) if c['status'] != 'offline']
-    cars = [{'id': c['id'], 'callsign': c['callsign'] or f"#{c['id']}", 'lat': c['lat'], 'lng': c['lng'], 'status': c['status'], 'tariff': c['tariff']} for c in real]
+    cars = [{'id': c['id'], 'callsign': c['callsign'] or '', 'lat': c['lat'], 'lng': c['lng'], 'status': c['status'], 'tariff': c['tariff']} for c in real]
     near = None
     try:
         lat, lng = float(body.get('lat')), float(body.get('lng'))
@@ -170,5 +170,5 @@ def ring_tick(cur):
               AND created_at > now() - interval '30 minutes' RETURNING *"""
     )
     for t in cur.fetchall()[:5]:
-        ids = drivers_for_trip(cur, t['tariff'])
+        ids = drivers_for_trip(cur, t['tariff'], trip_id=t['id'])
         send_push(cur, ids, '🚨 Заказ ждёт водителя', f"{trip_line(t)} · {int(t['price'])} ₽", '/app/driver', f"trip-{t['id']}")

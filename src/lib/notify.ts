@@ -44,7 +44,7 @@ function beep() {
   }
 }
 
-function speak(text: string) {
+export function speak(text: string) {
   try {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
@@ -109,4 +109,5 @@ export function stopRing() {
   if (ringTimer) window.clearInterval(ringTimer);
   ringTimer = undefined;
   if (navigator.vibrate) navigator.vibrate(0);
+  try { window.speechSynthesis?.cancel(); } catch { /* ignore */ }
 }

@@ -29,7 +29,7 @@ interface Trip {
   from_text: string | null; to_text: string; comment: string | null; price: number | null; status: string;
   created_at: string; driver_id: number | null; assigned_by: string | null;
   client_phone: string; client_name: string | null; driver_name: string | null; driver_phone: string | null;
-  driver_callsign?: string | null; passengers?: number | null; luggage?: string | null; created_by?: string | null;
+  driver_callsign?: string | null; passengers?: number | null; luggage?: string | null; created_by?: string | null; share_token?: string | null;
   client_blocked?: boolean; client_id?: number; manual_driver?: boolean; last_msg_role?: string | null; eta_at?: string | null; car_model: string | null; car_plate: string | null; pay_method: string; from_city: string | null; from_street: string | null; from_house: string | null;
 }
 interface Driver {
@@ -89,7 +89,7 @@ function DriverCard({ d, onAct, onCreds, token }: { d: Driver; onAct: Act; onCre
     <div className="rounded-3xl bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="font-extrabold">{d.callsign && <span className="mr-1.5 rounded-lg bg-neutral-900 px-1.5 py-0.5 text-xs text-[#fcd34d]">{d.callsign}</span>}{d.name}</div>
+          <div className="font-extrabold">{d.callsign && <span className="mr-1.5 rounded-lg bg-neutral-900 px-1.5 py-0.5 text-xs text-[#fcd34d]">№{d.callsign}</span>}{d.name}</div>
           <div className="text-sm text-neutral-500">{d.car_color} {d.car_model} · {d.car_plate}</div>
           <a href={`tel:${d.phone}`} className="text-sm font-semibold text-sky-700">{d.phone}</a>
           <div className="mt-1 text-sm font-bold text-amber-600">★ {d.rating ? Number(d.rating).toFixed(1) : "—"} <span className="font-normal text-neutral-400">· отказов за неделю: {d.cancels_7d}</span></div>
@@ -173,6 +173,25 @@ function DriverCard({ d, onAct, onCreds, token }: { d: Driver; onAct: Act; onCre
   );
 }
 
+function TrackLinkBtn({ token, phone }: { token: string; phone: string }) {
+  const [done, setDone] = useState(false);
+  const url = `${window.location.origin}/track/${token}`;
+  const text = `Ваше такси «Дальняк». Следите за машиной онлайн: ${url}\nВ следующий раз можно заказать самому в приложении, вход по номеру ${phone}`;
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(text); } catch { window.prompt("Скопируйте ссылку", text); }
+    setDone(true);
+    window.setTimeout(() => setDone(false), 3000);
+  };
+  const wa = phone.replace(/\D/g, "");
+  return (
+    <>
+      <Btn kind="ghost" onClick={copy} className="!py-2.5 !text-sm"><Icon name="Link" size={14} className="mr-1 inline" />{done ? "Скопировано" : "Ссылка клиенту"}</Btn>
+      <a href={`sms:${phone}?body=${encodeURIComponent(text)}`} className="rounded-2xl bg-neutral-100 px-3 py-2.5 text-sm font-extrabold">SMS</a>
+      <a href={`https://wa.me/${wa}?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer" className="rounded-2xl bg-emerald-50 px-3 py-2.5 text-sm font-extrabold text-emerald-700">WhatsApp</a>
+    </>
+  );
+}
+
 const NEXT_STEP: Record<string, { to: string; label: string }> = {
   assigned: { to: "enroute", label: "Выехал к клиенту" },
   enroute: { to: "arrived", label: "Подъехал, на месте" },
@@ -214,7 +233,7 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
         <a href={`tel:${t.client_phone}`} className="font-semibold text-sky-700">{t.client_name || "Клиент"} · {t.client_phone}</a>
         {t.client_blocked && <div className="font-bold text-red-600">Клиент заблокирован</div>}
         {t.eta_at && ["assigned", "enroute"].includes(t.status) && <div className="font-bold text-amber-700">Водитель обещал приехать к {new Date(t.eta_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}</div>}
-        {t.driver_name && <div className="mt-1 rounded-xl bg-neutral-100 p-2">Водитель: {t.driver_callsign && <b className="mr-1 rounded bg-neutral-900 px-1 text-[#fcd34d]">{t.driver_callsign}</b>}<b>{t.driver_name}</b>, {t.car_model} {t.car_plate}{t.driver_phone ? ` · ${t.driver_phone}` : ""} {t.manual_driver ? "(не из системы, вы вписали вручную)" : t.assigned_by === "dispatcher" ? "(назначен вами)" : "(взял сам)"}</div>}
+        {t.driver_name && <div className="mt-1 rounded-xl bg-neutral-100 p-2">Водитель: {t.driver_callsign && <b className="mr-1 rounded bg-neutral-900 px-1 text-[#fcd34d]">№{t.driver_callsign}</b>}<b>{t.driver_name}</b>, {t.car_model} {t.car_plate}{t.driver_phone ? ` · ${t.driver_phone}` : ""} {t.manual_driver ? "(не из системы, вы вписали вручную)" : t.assigned_by === "dispatcher" ? "(назначен вами)" : "(взял сам)"}</div>}
         {t.rating && <div className="mt-1 font-bold text-amber-600">Оценка пассажира: {"★".repeat(t.rating)}{t.rating_comment ? ` · ${t.rating_comment}` : ""}</div>}
         {t.cancelled_by && <div className="text-red-600">Отменил: {{ client: "пассажир", dispatcher: "диспетчер" }[t.cancelled_by] || t.cancelled_by}</div>}
       </div>
@@ -227,6 +246,7 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
         {!finished && (t.driver_id || t.manual_driver) && t.status !== "in_progress" && (
           <Btn kind="ghost" onClick={() => window.confirm("Завершить заказ?") && onAct("disp_trip_status", { trip_id: t.id, status: "done" })} className="!py-2.5 !text-sm">Завершить</Btn>
         )}
+        {!finished && t.share_token && <TrackLinkBtn token={t.share_token} phone={t.client_phone} />}
         {!finished && <Btn kind="danger" onClick={() => window.confirm("Отменить заказ?") && onAct("disp_trip_status", { trip_id: t.id, status: "cancelled" })} className="!py-2.5 !text-sm">Отменить</Btn>}
       </div>
       {pick && !ext && (
@@ -237,7 +257,7 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
           {free.map((d) => (
             <button key={d.id} onClick={() => { onAct("disp_assign", { trip_id: t.id, driver_id: d.id, charge }); setPick(false); }}
               className="flex w-full items-center justify-between rounded-2xl bg-neutral-100 p-3 text-left text-sm active:bg-[#fcd34d]">
-              <span>{d.callsign && <b className="mr-1 rounded bg-neutral-900 px-1 text-[#fcd34d]">{d.callsign}</b>}<b>{d.name}</b> · {d.car_model} {d.car_plate}{d.tariffs.includes(t.tariff) ? "" : " · добавит тариф"}</span>
+              <span>{d.callsign && <b className="mr-1 rounded bg-neutral-900 px-1 text-[#fcd34d]">№{d.callsign}</b>}<b>{d.name}</b> · {d.car_model} {d.car_plate}{d.tariffs.includes(t.tariff) ? "" : " · добавит тариф"}</span>
               <span className={d.online ? "font-bold text-emerald-600" : "text-neutral-400"}>{d.busy ? "на заказе" : d.online ? "на линии" : "не на линии"}</span>
             </button>
           ))}

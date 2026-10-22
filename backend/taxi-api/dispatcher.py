@@ -18,7 +18,7 @@ def poll(cur, user, body):
                    t.client_id, c.phone AS client_phone, c.name AS client_name, c.is_blocked AS client_blocked,
                    COALESCE(d.name, t.ext_driver_name) AS driver_name, COALESCE(d.phone, t.ext_driver_phone) AS driver_phone,
                    COALESCE(dr.car_model, t.ext_car_model) AS car_model, COALESCE(dr.car_plate, t.ext_car_plate) AS car_plate, t.manual_driver,
-                   dr.callsign AS driver_callsign, t.passengers, t.luggage, t.created_by, t.from_lat, t.from_lng, t.to_lat, t.to_lng,
+                   dr.callsign AS driver_callsign, t.passengers, t.luggage, t.created_by, t.share_token, t.from_lat, t.from_lng, t.to_lat, t.to_lng,
                    (SELECT max(m.id) FROM {S}.app_messages m WHERE m.trip_id = t.id) AS last_msg_id,
                    (SELECT m.sender_role FROM {S}.app_messages m WHERE m.trip_id = t.id ORDER BY m.id DESC LIMIT 1) AS last_msg_role
             FROM {S}.app_trips t
@@ -296,7 +296,14 @@ def _driver_fields(body):
 
 
 def _callsign(cur, body, driver_id=None):
-    cs = clean(body.get('callsign'), 12).upper() or None
+    cs = ''.join(c for c in clean(body.get('callsign'), 8) if c.isdigit()).lstrip('0') or None
+    if not cs:
+        cur.execute(f"""SELECT callsign FROM {S}.app_drivers WHERE user_id = %s""", (driver_id or 0,))
+        row = cur.fetchone()
+        if row and row['callsign']:
+            return row['callsign']
+        cur.execute(f"""SELECT (SELECT coalesce(max(CASE WHEN callsign ~ '^[0-9]{{1,8}}$' THEN callsign::int END), 0) + 1 FROM {S}.app_drivers) AS n""")
+        return str(cur.fetchone()['n'])
     if cs:
         cur.execute(f"SELECT 1 FROM {S}.app_drivers WHERE upper(callsign) = %s AND user_id <> %s", (cs, driver_id or 0))
         if cur.fetchone():

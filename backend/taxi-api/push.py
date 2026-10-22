@@ -119,12 +119,14 @@ def dispatcher_ids(cur):
     return [r['id'] for r in cur.fetchall()]
 
 
-def drivers_for_trip(cur, tariff, priority_only=None, exclude_priority=False):
+def drivers_for_trip(cur, tariff, priority_only=None, exclude_priority=False, trip_id=None):
     cond = ''
     if priority_only:
         cond = 'AND dr.priority_until > now()'
     if exclude_priority:
         cond = 'AND (dr.priority_until IS NULL OR dr.priority_until <= now())'
+    if trip_id:
+        cond += f' AND NOT EXISTS (SELECT 1 FROM {S}.app_trip_skips k WHERE k.driver_id = u.id AND k.trip_id = {int(trip_id)})'
     cur.execute(
         f"""SELECT u.id FROM {S}.app_users u JOIN {S}.app_drivers dr ON dr.user_id = u.id
             WHERE dr.status = 'approved' AND dr.on_line AND (%s = ANY(dr.tariffs) OR (%s = 'choice' AND cardinality(dr.tariffs) > 0)) {cond}""",

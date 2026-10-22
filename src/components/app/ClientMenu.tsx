@@ -2,7 +2,7 @@ import Icon from "@/components/ui/icon";
 import { useBackClose } from "@/lib/useBackClose";
 import SupportLinks from "./SupportLinks";
 
-export type MenuAction = "history" | "promo" | "bonus" | "help";
+export type MenuAction = "profile" | "history" | "promo" | "bonus" | "help";
 
 export default function ClientMenu({ name, phone, bonusKm, telegram, max, onPick, onLogout, onClose }: {
   name: string; phone: string; bonusKm: number; telegram?: string; max?: string;
@@ -10,6 +10,7 @@ export default function ClientMenu({ name, phone, bonusKm, telegram, max, onPick
 }) {
   useBackClose(onClose);
   const items: { k: MenuAction; icon: string; label: string; hint?: string }[] = [
+    { k: "profile", icon: "UserRound", label: "Мой профиль" },
     { k: "history", icon: "History", label: "История заказов" },
     { k: "promo", icon: "Ticket", label: "Промокоды" },
     { k: "bonus", icon: "Gift", label: "Копи-км и друзья", hint: `${bonusKm} км` },

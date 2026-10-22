@@ -216,6 +216,14 @@ def poll(cur, user, body):
     }
 
 
+def update_profile(cur, user, body):
+    name = clean(body.get('name'), 80)
+    if not name:
+        raise ApiError(400, 'Укажите имя')
+    cur.execute(f"UPDATE {S}.app_users SET name = %s WHERE id = %s", (name, user['id']))
+    return {'ok': True}
+
+
 def history_all(cur, user, body):
     cur.execute(TRIP_SELECT + " WHERE t.client_id = %s AND t.status IN ('done', 'cancelled') ORDER BY t.id DESC LIMIT 100", (user['id'],))
     return {'trips': cur.fetchall()}
@@ -240,7 +248,7 @@ def raise_price(cur, user, body):
     cur.execute(f"UPDATE {S}.app_trips SET price = %s, updated_at = now() WHERE id = %s", (new_price, body.get('trip_id')))
     cur.execute(f"SELECT * FROM {S}.app_trips WHERE id = %s", (body.get('trip_id'),))
     tr = cur.fetchone()
-    send_push(cur, drivers_for_trip(cur, tr['tariff']), 'Цена заказа повышена', f"{trip_line(tr)} · {new_price} ₽", '/app/driver', f"trip-{tr['id']}")
+    send_push(cur, drivers_for_trip(cur, tr['tariff'], trip_id=tr['id']), 'Цена заказа повышена', f"{trip_line(tr)} · {new_price} ₽", '/app/driver', f"trip-{tr['id']}")
     tg.disp(f"⬆️ Клиент поднял цену · заказ №{tr['id']}: {new_price} ₽\n{trip_line(tr)}", tr['id'])
     send_push(cur, dispatcher_ids(cur), 'Клиент повысил цену', f"Заказ №{tr['id']}: {new_price} ₽", '/app/office-k7x2', f"trip-{tr['id']}")
     return {'ok': True}

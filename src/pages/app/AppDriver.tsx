@@ -22,6 +22,7 @@ import TripChat from "@/components/app/TripChat";
 import AppMap, { MapPoint } from "@/components/app/AppMap";
 import { Badge, Btn, Shell } from "@/components/app/ui";
 import TakeOrder from "@/components/app/TakeOrder";
+import IncomingOrder, { orderSpeech } from "@/components/app/IncomingOrder";
 import { DriverKppReport } from "@/components/app/KppQueue";
 import DriverOffer, { CarFeaturesEditor, DriverWish } from "@/components/app/DriverOffer";
 import Icon from "@/components/ui/icon";
@@ -67,13 +68,23 @@ export default function AppDriver() {
 
   usePoll(refresh, data?.active || data?.me?.on_line ? 5000 : 30000, !!token && ready, () => setToken(null), !!data?.me?.on_line);
 
-  const [acked, setAcked] = useState<number[]>([]);
-  const ringIds = (data?.me?.on_line && !data.active ? data.available.filter((t) => !t.scheduled_at && t.can_take !== false).map((t) => t.id) : []).filter((id) => !acked.includes(id));
-  const ringing = ringIds.length > 0;
+  const [skipped, setSkipped] = useState<number[]>([]);
+  const incomingList = data?.me?.on_line && !data.active ? data.available.filter((t) => !t.scheduled_at && t.can_take !== false && t.tariff !== "choice" && !skipped.includes(t.id)) : [];
+  const incoming = incomingList[0] || null;
   useEffect(() => {
-    if (ringing) startRing("Новый заказ");
+    if (incoming) { stopRing(); startRing(orderSpeech(incoming)); }
     else stopRing();
-  }, [ringing, ringIds.join(",")]);
+  }, [incoming?.id]);
+  const skipOrder = (id: number) => {
+    setSkipped((s) => [...s, id]);
+    stopRing();
+    appCall("driver_skip", { trip_id: id }, token).catch(() => undefined);
+  };
+  const acceptOrder = async (id: number, eta: number) => {
+    stopRing();
+    setSkipped((s) => [...s, id]);
+    await act("driver_take", { trip_id: id, eta_minutes: eta });
+  };
   useEffect(() => () => stopRing(), []);
 
   const wake = useRef<{ release: () => Promise<void> } | null>(null);
@@ -151,7 +162,7 @@ export default function AppDriver() {
   const lineBar = (
     <div className="flex items-center justify-between rounded-3xl bg-white p-4 shadow-sm">
       <div>
-        <div className="text-lg font-extrabold">{me.on_line ? "Вы на линии" : "Вы не на линии"}{me.callsign && <span className="ml-2 rounded-lg bg-neutral-900 px-2 py-0.5 text-sm text-[#fcd34d]">{me.callsign}</span>}</div>
+        <div className="text-lg font-extrabold">{me.on_line ? "Вы на линии" : "Вы не на линии"}{me.callsign && <span className="ml-2 rounded-lg bg-neutral-900 px-2 py-0.5 text-sm text-[#fcd34d]">№{me.callsign}</span>}</div>
         <div className="text-sm text-neutral-500">{me.on_line ? "Заказ будет звенеть, пока не откроете. Держите приложение открытым" : approved ? "Включите, чтобы видеть заказы" : "Ждём одобрения диспетчера"}</div>
       </div>
       <button onClick={() => { unlockAudio(); act("driver_set_line", { on: !me.on_line }); }} disabled={!approved} aria-label="Линия"
@@ -167,6 +178,7 @@ export default function AppDriver() {
     <Shell title={tab === "orders" ? "Заказы" : tab === "money" ? "Деньги" : "Профиль"} onLogout={tab === "profile" ? logout : undefined}
       right={<><span className="rounded-full bg-neutral-100 px-3 py-1 text-sm font-extrabold">{money(me.balance)}</span><button onClick={() => setShowHelp(true)} aria-label="Помощь"><Icon name="CircleHelp" size={22} /></button></>}>
       <div className="mx-auto max-w-md space-y-4 p-4 pb-28">
+        {incoming && <IncomingOrder t={incoming} more={incomingList.length - 1} onSkip={() => skipOrder(incoming.id)} onAccept={(m) => acceptOrder(incoming.id, m)} />}
         {errBox}
         <PushBanner role="driver" token={token} />
         {me.pd_consent === false && <DriverConsentGate onAgree={async () => { await appCall("driver_pd_consent", { agree: true }, token); await refresh(); }} />}
@@ -174,13 +186,6 @@ export default function AppDriver() {
 
         {tab === "orders" && (
           <>
-            {ringing && (
-              <button onClick={() => { unlockAudio(); setAcked([...acked, ...ringIds]); stopRing(); }}
-                className="fixed inset-x-3 top-3 z-[2500] flex animate-pulse items-center gap-3 rounded-3xl bg-red-600 p-4 text-left text-white shadow-2xl">
-                <Icon name="BellRing" size={28} />
-                <span className="flex-1"><span className="block text-lg font-extrabold">Новый заказ{ringIds.length > 1 ? ` (${ringIds.length})` : ""}!</span><span className="block text-sm text-red-100">Нажмите, чтобы выключить звук и посмотреть</span></span>
-              </button>
-            )}
             {lineBar}
             {approved && <DriverKppReport token={token} />}
             {approved && me.on_line && !me.tariffs.length && <p className="rounded-2xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">Тариф вашего автомобиля пока не указан, брать заказы нельзя. Диспетчер скоро назначит.</p>}

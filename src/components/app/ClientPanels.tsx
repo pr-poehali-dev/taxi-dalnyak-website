@@ -127,3 +127,27 @@ export function BonusPanel({ token, onClose }: { token: string; onClose: () => v
     </Sheet>
   );
 }
+
+export function ProfilePanel({ token, name, phone, onClose, onDone }: { token: string; name: string; phone: string; onClose: () => void; onDone: () => void }) {
+  const [v, setV] = useState(name);
+  const [err, setErr] = useState("");
+  const [ok, setOk] = useState(false);
+  const save = async () => {
+    setErr("");
+    try { await appCall("client_update_profile", { name: v }, token); setOk(true); onDone(); } catch (e) { setErr((e as Error).message); }
+  };
+  return (
+    <Sheet title="Мой профиль" onClose={onClose}>
+      <div className="space-y-3 rounded-3xl bg-white p-4 shadow-sm">
+        <Field label="Как к вам обращаться" value={v} onChange={(e) => { setV(e.target.value); setOk(false); }} maxLength={80} placeholder="Имя" />
+        <div>
+          <span className="mb-1 block text-xs font-semibold text-neutral-500">Телефон для входа</span>
+          <div className="rounded-2xl bg-neutral-100 px-4 py-3.5 text-[15px] font-semibold text-neutral-500">{phone}</div>
+          <p className="mt-1 text-xs text-neutral-400">Чтобы сменить номер, напишите в поддержку.</p>
+        </div>
+        {err && <p className="text-sm font-semibold text-red-600">{err}</p>}
+        <Btn onClick={save} disabled={!v.trim() || v.trim() === name} className="w-full">{ok ? "Сохранено" : "Сохранить"}</Btn>
+      </div>
+    </Sheet>
+  );
+}

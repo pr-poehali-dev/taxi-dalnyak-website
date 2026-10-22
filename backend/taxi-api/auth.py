@@ -290,6 +290,7 @@ def driver_register(cur, body):
         (uid, car_model, car_plate, car_color, urls['license'], urls['license_back'], urls['sts'], urls['sts_back'],
          urls['car_front'], urls['car_back'], urls['car_left'], urls['car_right'], PD_VERSION, ip[:60]),
     )
+    cur.execute(f"""UPDATE {S}.app_drivers SET callsign = (SELECT coalesce(max(CASE WHEN callsign ~ '^[0-9]{{1,8}}$' THEN callsign::int END), 0) + 1 FROM {S}.app_drivers) WHERE user_id = %s""", (uid,))
     send_push(cur, dispatcher_ids(cur), 'Новый водитель', f'{name} · {car_model} ждёт проверки', '/app/office-k7x2', 'driver-new')
     return {'token': create_session(cur, uid)}
 

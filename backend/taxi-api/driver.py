@@ -79,9 +79,10 @@ def poll(cur, user, body):
                    (SELECT count(*) FROM {S}.app_offers o WHERE o.trip_id = t.id AND o.status = 'active') AS offers_count
             FROM {S}.app_trips t
                 WHERE t.status = 'new' AND t.driver_id IS NULL
+                  AND NOT EXISTS (SELECT 1 FROM {S}.app_trip_skips k WHERE k.trip_id = t.id AND k.driver_id = %s)
                   AND (%s OR t.created_at <= now() - make_interval(secs => %s))
                 ORDER BY (t.tariff = ANY(%s) OR t.tariff = 'choice') DESC, t.scheduled_at NULLS FIRST, t.id DESC LIMIT 30""",
-            (me['tariffs'], user['id'], bool(me['has_priority']), int(cfg['priority_delay_sec']), me['tariffs']),
+            (me['tariffs'], user['id'], user['id'], bool(me['has_priority']), int(cfg['priority_delay_sec']), me['tariffs']),
         )
         available = cur.fetchall()
     cur.execute(
@@ -104,6 +105,14 @@ def poll(cur, user, body):
         'priority_days': cfg['priority_days'], 'payment_info': cfg['payment_info'],
         'topups': topups, 'support_telegram': cfg['support_telegram'], 'support_max': cfg['support_max'],
     }
+
+
+def skip(cur, user, body):
+    cur.execute(
+        f"INSERT INTO {S}.app_trip_skips (driver_id, trip_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+        (user['id'], int(body.get('trip_id') or 0)),
+    )
+    return {'ok': True}
 
 
 def set_line(cur, user, body):
