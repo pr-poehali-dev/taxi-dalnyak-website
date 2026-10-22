@@ -79,10 +79,13 @@ export default function RoutePicker({ token, fromText, toText, near, start, onPi
   const row = (w: Which, value: string, set: (v: string) => void, ref: React.RefObject<HTMLInputElement>, dot: string, ph: string) => (
     <div className={`flex items-center gap-3 rounded-2xl px-3 ${which === w ? "bg-white ring-2 ring-[#fcd34d]" : "bg-neutral-100"}`}>
       <span className={`h-3 w-3 shrink-0 rounded-full ${dot}`} />
-      <input ref={ref} value={value} placeholder={ph}
-        onFocus={() => { setWhich(w); setDirty(false); setItems([]); }}
-        onChange={(e) => { set(e.target.value); setWhich(w); setDirty(true); }}
-        className="min-w-0 flex-1 bg-transparent py-3.5 text-[15px] font-bold text-neutral-900 outline-none placeholder:font-semibold placeholder:text-neutral-400" />
+      <label className="min-w-0 flex-1 py-2">
+        <span className="block text-xs font-bold text-neutral-500">{w === "from" ? "Откуда" : "Куда"}</span>
+        <input ref={ref} value={value} placeholder={ph}
+          onFocus={() => { setWhich(w); setDirty(false); setItems([]); }}
+          onChange={(e) => { set(e.target.value); setWhich(w); setDirty(true); }}
+          className="block w-full bg-transparent text-[15px] font-bold text-neutral-900 outline-none placeholder:font-semibold placeholder:text-neutral-400" />
+      </label>
       {value && which === w && <button onClick={() => { set(""); setDirty(false); setItems([]); ref.current?.focus(); }} aria-label="Очистить"><Icon name="X" size={18} className="text-neutral-400" /></button>}
     </div>
   );
@@ -94,8 +97,8 @@ export default function RoutePicker({ token, fromText, toText, near, start, onPi
         <div className="text-lg font-extrabold">Маршрут</div>
       </div>
       <div className="space-y-2 px-4 pb-3">
-        {row("from", a, setA, refA, "bg-blue-600", "Откуда")}
-        {row("to", b, setB, refB, "bg-neutral-900", "Куда едем?")}
+        {row("from", a, setA, refA, "bg-blue-600", "Город, улица, дом")}
+        {row("to", b, setB, refB, "bg-neutral-900", "Город или адрес")}
       </div>
       <div className="flex-1 overflow-y-auto border-t border-neutral-100">
         {which === "from" && (

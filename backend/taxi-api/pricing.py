@@ -299,17 +299,22 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng):
     new_km = min(km, max(0.0, new_territory_km(coords, km, za, zb, classify, started + 2.4)))
     if new_km < 3:
         new_km = 0.0
-    reg_km = km - new_km
+    total = int(round(km))
+    new_r = min(total, int(round(new_km)))
+    reg_r = total - new_r
     prices = {}
     for t in TARIFFS:
-        raw = reg_km * cfg['rates']['regular'][t] + new_km * cfg['rates']['new'][t]
+        raw = reg_r * cfg['rates']['regular'][t] + new_r * cfg['rates']['new'][t]
         prices[t] = max(cfg['min_price'], int(round(raw / 10.0) * 10))
     return {
-        'distance_km': round(km),
-        'new_km': round(new_km),
+        'distance_km': total,
+        'new_km': new_r,
+        'reg_km': reg_r,
+        'rates': cfg['rates'],
         'region': 'new' if new_km > 0 else 'regular',
         'prices': prices,
         'approx': approx,
         'from_geo': pa,
         'min_price': cfg['min_price'],
     }
+
