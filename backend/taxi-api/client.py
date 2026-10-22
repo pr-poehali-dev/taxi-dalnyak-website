@@ -19,6 +19,7 @@ TRIP_SELECT = f"""
            t.created_at, t.rating, t.bonus_discount, t.driver_id, t.pay_method, t.eta_at, t.share_token, t.cancelled_by, (t.tg_chat_id IS NOT NULL) AS tg_on, t.wish,
            COALESCE(d.name, t.ext_driver_name) AS driver_name, COALESCE(dr.car_model, t.ext_car_model) AS car_model,
            COALESCE(dr.car_plate, t.ext_car_plate) AS car_plate, COALESCE(dr.car_color, t.ext_car_color) AS car_color,
+           dr.callsign AS driver_callsign, t.passengers, t.luggage,
            t.manual_driver, CASE WHEN t.manual_driver THEN t.ext_driver_phone END AS driver_phone,
            CASE WHEN t.status IN ('enroute', 'arrived', 'in_progress') THEN dr.lat END AS driver_lat,
            CASE WHEN t.status IN ('enroute', 'arrived', 'in_progress') THEN dr.lng END AS driver_lng,
@@ -60,6 +61,12 @@ def guest_quote(cur, body):
     q['bonus'] = {}
     q['kpp_queue'] = kpp.for_quote(cur, q.get('kpp'))
     return q
+
+
+def guest_quote_user(cur, user, body):
+    cfg = get_config(cur)
+    cfg['_queues'] = kpp.queues(cur)
+    return pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'))
 
 
 def reverse(cur, user, body):
@@ -158,6 +165,7 @@ def create_trip(cur, user, body):
     if body.get('use_bonus') and installed:
         bonus.spend(cur, user['id'], trip_id, tariff, base, cfg)
     notify_new_trip(cur, trip_id)
+    cur.execute(f"UPDATE {S}.app_trips SET ring_at = now(), ring_count = 1 WHERE id = %s", (trip_id,))
     return {'id': trip_id}
 
 

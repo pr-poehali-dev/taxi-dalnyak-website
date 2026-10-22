@@ -82,6 +82,8 @@ def tick(cur):
     if now - _LAST_TICK[0] < 6:
         return
     _LAST_TICK[0] = now
+    import fleet
+    fleet.ring_tick(cur)
     cfg = get_config(cur)
     delay = int(cfg['priority_delay_sec'])
     cur.execute(

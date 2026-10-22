@@ -8,7 +8,7 @@ export interface DTrip {
   id: number; from_city: string | null; from_street: string | null; from_house: string | null; from_text: string | null;
   to_text: string; comment: string | null; price: number; tariff: string; region: string; distance_km: number | null;
   scheduled_at: string | null; status: string; commission: number | null; client_name?: string | null;
-  from_lat: number | null; from_lng: number | null; last_msg_id?: number | null; last_msg_role?: string | null; pay_method?: string; eta_at?: string | null; can_take?: boolean; wish?: string | null; my_offer?: string | null; offers_count?: number;
+  from_lat: number | null; from_lng: number | null; last_msg_id?: number | null; last_msg_role?: string | null; pay_method?: string; eta_at?: string | null; can_take?: boolean; wish?: string | null; my_offer?: string | null; offers_count?: number; passengers?: number | null; luggage?: string | null;
 }
 
 export function PickupBlock({ t }: { t: DTrip }) {
@@ -19,6 +19,7 @@ export function PickupBlock({ t }: { t: DTrip }) {
       <div className="font-bold">{[t.from_street, t.from_house && `д. ${t.from_house}`].filter(Boolean).join(", ") || t.from_text}</div>
       <div className="pt-1 text-xs font-bold uppercase text-neutral-400">Куда</div>
       <div className="font-bold">{t.to_text}</div>
+      {(t.passengers || t.luggage) && <div className="pt-1 font-bold">{t.passengers ? `Пассажиров: ${t.passengers}` : ""}{t.passengers && t.luggage ? " · " : ""}{t.luggage ? `Багаж: ${t.luggage}` : ""}</div>}
       {t.comment && <div className="pt-1 text-neutral-600">Комментарий: {t.comment}</div>}
       <div className="pt-1 text-neutral-600">Оплата водителю: <b>{t.pay_method === "transfer" ? "переводом" : "наличными"}</b>. Платные дороги отдельно.</div>
     </div>

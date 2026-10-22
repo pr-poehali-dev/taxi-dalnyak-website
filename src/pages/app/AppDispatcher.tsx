@@ -18,6 +18,8 @@ import FunnelTab from "@/components/app/FunnelTab";
 import ClientsTab from "@/components/app/ClientsTab";
 import PromosTab from "@/components/app/PromosTab";
 import ExternalDriverForm from "@/components/app/ExternalDriverForm";
+import DispatcherOrderForm from "@/components/app/DispatcherOrderForm";
+import FleetMap from "@/components/app/FleetMap";
 import { Badge, Btn, Field, Shell, tripTone } from "@/components/app/ui";
 import Icon from "@/components/ui/icon";
 
@@ -27,10 +29,11 @@ interface Trip {
   from_text: string | null; to_text: string; comment: string | null; price: number | null; status: string;
   created_at: string; driver_id: number | null; assigned_by: string | null;
   client_phone: string; client_name: string | null; driver_name: string | null; driver_phone: string | null;
+  driver_callsign?: string | null; passengers?: number | null; luggage?: string | null; created_by?: string | null;
   client_blocked?: boolean; client_id?: number; manual_driver?: boolean; last_msg_role?: string | null; eta_at?: string | null; car_model: string | null; car_plate: string | null; pay_method: string; from_city: string | null; from_street: string | null; from_house: string | null;
 }
 interface Driver {
-  id: number; name: string; phone: string; car_model: string; car_plate: string; car_color: string; status: string;
+  id: number; name: string; callsign: string | null; phone: string; car_model: string; car_plate: string; car_color: string; status: string;
   balance: number; online: boolean; busy: boolean; tariffs: string[]; block_reason: string | null; has_priority: boolean;
   priority_until: string | null; rating: number | null; cancels_7d: number;
   docs: string[]; pd_consent_at: string | null; recheck_fields: string[]; recheck_note: string | null;
@@ -42,7 +45,7 @@ interface Poll {
   topups: Topup[]; config: any;
 }
 
-const TABS = ["Заказы", "Водители", "Клиенты", "Промокоды", "Парк", "Отчёты", "Воронка", "Эфир", "Настройки"] as const;
+const TABS = ["Заказы", "Карта", "Водители", "Клиенты", "Промокоды", "Парк", "Отчёты", "Воронка", "Эфир", "Настройки"] as const;
 type Tab = (typeof TABS)[number];
 type Act = (a: string, b: Record<string, unknown>) => void;
 
@@ -86,7 +89,7 @@ function DriverCard({ d, onAct, onCreds, token }: { d: Driver; onAct: Act; onCre
     <div className="rounded-3xl bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="font-extrabold">{d.name}</div>
+          <div className="font-extrabold">{d.callsign && <span className="mr-1.5 rounded-lg bg-neutral-900 px-1.5 py-0.5 text-xs text-[#fcd34d]">{d.callsign}</span>}{d.name}</div>
           <div className="text-sm text-neutral-500">{d.car_color} {d.car_model} · {d.car_plate}</div>
           <a href={`tel:${d.phone}`} className="text-sm font-semibold text-sky-700">{d.phone}</a>
           <div className="mt-1 text-sm font-bold text-amber-600">★ {d.rating ? Number(d.rating).toFixed(1) : "—"} <span className="font-normal text-neutral-400">· отказов за неделю: {d.cancels_7d}</span></div>
@@ -140,7 +143,7 @@ function DriverCard({ d, onAct, onCreds, token }: { d: Driver; onAct: Act; onCre
       </div>
       {edit && (
         <div className="mt-3">
-          <DriverForm editing initial={{ name: d.name, car_model: d.car_model, car_plate: d.car_plate, car_color: d.car_color }}
+          <DriverForm editing initial={{ name: d.name, callsign: d.callsign || "", car_model: d.car_model, car_plate: d.car_plate, car_color: d.car_color }}
             onCancel={() => setEdit(false)} onSave={(v) => { onAct("disp_update_driver", { driver_id: d.id, ...v }); setEdit(false); }} />
         </div>
       )}
@@ -193,6 +196,9 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
         <Badge tone="gray">{TARIFF_NAME[t.tariff]}</Badge>
         {t.region === "new" && <Badge tone="blue">Новые территории</Badge>}
         {t.scheduled_at && <Badge tone="yellow">Предзаказ: {whenText(t.scheduled_at)}</Badge>}
+        {t.created_by === "dispatcher" && <Badge tone="gray">Создан диспетчером</Badge>}
+        {t.passengers ? <Badge tone="gray">{t.passengers} пасс.</Badge> : null}
+        {t.luggage && <Badge tone="gray">Багаж: {t.luggage}</Badge>}
       </div>
       <div className="mt-2 text-sm">
         <div className="rounded-xl bg-neutral-100 p-2">
@@ -208,7 +214,7 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
         <a href={`tel:${t.client_phone}`} className="font-semibold text-sky-700">{t.client_name || "Клиент"} · {t.client_phone}</a>
         {t.client_blocked && <div className="font-bold text-red-600">Клиент заблокирован</div>}
         {t.eta_at && ["assigned", "enroute"].includes(t.status) && <div className="font-bold text-amber-700">Водитель обещал приехать к {new Date(t.eta_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}</div>}
-        {t.driver_name && <div className="mt-1 rounded-xl bg-neutral-100 p-2">Водитель: <b>{t.driver_name}</b>, {t.car_model} {t.car_plate}{t.driver_phone ? ` · ${t.driver_phone}` : ""} {t.manual_driver ? "(не из системы, вы вписали вручную)" : t.assigned_by === "dispatcher" ? "(назначен вами)" : "(взял сам)"}</div>}
+        {t.driver_name && <div className="mt-1 rounded-xl bg-neutral-100 p-2">Водитель: {t.driver_callsign && <b className="mr-1 rounded bg-neutral-900 px-1 text-[#fcd34d]">{t.driver_callsign}</b>}<b>{t.driver_name}</b>, {t.car_model} {t.car_plate}{t.driver_phone ? ` · ${t.driver_phone}` : ""} {t.manual_driver ? "(не из системы, вы вписали вручную)" : t.assigned_by === "dispatcher" ? "(назначен вами)" : "(взял сам)"}</div>}
         {t.rating && <div className="mt-1 font-bold text-amber-600">Оценка пассажира: {"★".repeat(t.rating)}{t.rating_comment ? ` · ${t.rating_comment}` : ""}</div>}
         {t.cancelled_by && <div className="text-red-600">Отменил: {{ client: "пассажир", dispatcher: "диспетчер" }[t.cancelled_by] || t.cancelled_by}</div>}
       </div>
@@ -231,7 +237,7 @@ function TripCard({ t, drivers, onAct, onChat }: { t: Trip; drivers: Driver[]; o
           {free.map((d) => (
             <button key={d.id} onClick={() => { onAct("disp_assign", { trip_id: t.id, driver_id: d.id, charge }); setPick(false); }}
               className="flex w-full items-center justify-between rounded-2xl bg-neutral-100 p-3 text-left text-sm active:bg-[#fcd34d]">
-              <span><b>{d.name}</b> · {d.car_model} {d.car_plate}{d.tariffs.includes(t.tariff) ? "" : " · добавит тариф"}</span>
+              <span>{d.callsign && <b className="mr-1 rounded bg-neutral-900 px-1 text-[#fcd34d]">{d.callsign}</b>}<b>{d.name}</b> · {d.car_model} {d.car_plate}{d.tariffs.includes(t.tariff) ? "" : " · добавит тариф"}</span>
               <span className={d.online ? "font-bold text-emerald-600" : "text-neutral-400"}>{d.busy ? "на заказе" : d.online ? "на линии" : "не на линии"}</span>
             </button>
           ))}
@@ -259,6 +265,7 @@ export default function AppDispatcher() {
   const [err, setErr] = useState("");
   const [chatId, setChatId] = useState<number | null>(null);
   const [addDriver, setAddDriver] = useState(false);
+  const [newOrder, setNewOrder] = useState(false);
   const [creds, setCreds] = useState<{ phone: string; password: string } | null>(null);
   const seen = useSeen();
 
@@ -310,7 +317,7 @@ export default function AppDispatcher() {
   return (
     <Shell title="Диспетчер" onLogout={logout} right={<span className="text-xs font-bold text-neutral-500">на линии: {onlineCount}</span>}>
       <div className="mx-auto max-w-2xl p-4 pb-20">
-        <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-white p-1.5 shadow-sm sm:grid-cols-9">
+        <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-white p-1.5 shadow-sm sm:grid-cols-10">
           {TABS.map((t) => (
             <button key={t} onClick={() => setTab(t)} className={`rounded-xl py-2.5 text-[13px] font-extrabold ${tab === t ? "bg-[#fcd34d]" : "text-neutral-500"}`}>
               {t}
@@ -326,10 +333,17 @@ export default function AppDispatcher() {
 
         {data && tab === "Заказы" && (
           <div className="space-y-3">
+            {newOrder ? (
+              <DispatcherOrderForm token={token} drivers={data.drivers} onCancel={() => setNewOrder(false)} onDone={() => { setNewOrder(false); refresh().catch(() => undefined); }} />
+            ) : (
+              <Btn onClick={() => setNewOrder(true)} className="w-full text-lg"><Icon name="Plus" size={18} className="mr-1 inline" />Создать заказ</Btn>
+            )}
             {data.trips.length === 0 && <p className="rounded-3xl bg-white p-6 text-center text-neutral-500">Заказов пока нет.</p>}
             {data.trips.map((t) => <TripCard key={t.id} t={t} drivers={data.drivers} onAct={act} onChat={() => setChatId(t.id)} />)}
           </div>
         )}
+
+        {tab === "Карта" && <FleetMap token={token} />}
 
         {data && tab === "Водители" && (
           <div className="space-y-3">

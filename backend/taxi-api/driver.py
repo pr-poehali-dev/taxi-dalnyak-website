@@ -14,12 +14,12 @@ LIVE = ('enroute', 'arrived', 'in_progress')
 NEXT = {'assigned': 'enroute', 'enroute': 'arrived', 'arrived': 'in_progress', 'in_progress': 'done'}
 
 TRIP_COLS = """t.id, t.from_city, t.from_street, t.from_house, t.from_text, t.from_lat, t.from_lng, t.to_text, t.to_lat, t.to_lng,
-               t.comment, t.price, t.bonus_discount, t.pay_method, t.eta_at, t.tariff, t.region, t.distance_km, t.scheduled_at, t.status, t.commission, t.wish"""
+               t.comment, t.price, t.bonus_discount, t.pay_method, t.eta_at, t.tariff, t.region, t.distance_km, t.scheduled_at, t.status, t.commission, t.wish, t.passengers, t.luggage"""
 
 
 def _me(cur, uid):
     cur.execute(
-        f"""SELECT u.id, u.name, dr.car_model, dr.car_plate, dr.car_color, dr.status, dr.on_line, dr.balance, dr.car_features, dr.car_year,
+        f"""SELECT u.id, u.name, dr.callsign, dr.car_model, dr.car_plate, dr.car_color, dr.status, dr.on_line, dr.balance, dr.car_features, dr.car_year,
                    dr.tariffs, dr.block_reason, (dr.pd_consent_at IS NOT NULL) AS pd_consent, dr.recheck_fields, dr.recheck_note, dr.priority_until, (dr.priority_until > now()) AS has_priority,
                    (SELECT round(avg(x.rating)::numeric, 2) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.rating IS NOT NULL) AS rating,
                    (SELECT count(*) FROM {S}.app_trips x WHERE x.driver_id = u.id AND x.status = 'done') AS done_count

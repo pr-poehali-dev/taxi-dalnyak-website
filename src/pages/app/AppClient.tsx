@@ -27,7 +27,6 @@ import InstallOffer from "@/components/app/InstallOffer";
 import { reachHotQuote, trackStep } from "@/lib/funnel";
 import { getAdSource } from "@/lib/adSource";
 import QuickDestinations, { FirstScreenHead } from "@/components/app/QuickDestinations";
-import { agoText, tone, waitText } from "@/components/app/KppQueue";
 import WishPicker from "@/components/app/WishPicker";
 import OffersList from "@/components/app/OffersList";
 import { isStandalone } from "@/lib/pushClient";
@@ -105,6 +104,17 @@ export default function AppClient() {
   const statusRef = useRef<string>("");
   const orderAfterLogin = useRef(false);
   const [support, setSupport] = useState({ tg: SUPPORT_TG, max: SUPPORT_MAX });
+  const carNear = useRef<[number, number] | null>(null);
+  carNear.current = fromPos || pos || DEFAULT_CENTER;
+  const nearKey = carNear.current ? `${carNear.current[0].toFixed(2)},${carNear.current[1].toFixed(2)}` : "";
+  const [cars, setCars] = useState<{ id: number; callsign: string; lat: number; lng: number; status: string }[]>([]);
+  useEffect(() => {
+    let stop = false;
+    const load = () => { if (!document.hidden) appCall<{ cars: typeof cars }>("public_cars", carNear.current ? { lat: carNear.current[0], lng: carNear.current[1] } : {}).then((r) => { if (!stop) setCars(r.cars); }).catch(() => undefined); };
+    load();
+    const id = window.setInterval(load, 15000);
+    return () => { stop = true; window.clearInterval(id); };
+  }, [nearKey]);
   useEffect(() => {
     appCall<{ support_telegram?: string; support_max?: string }>("config")
       .then((c) => setSupport({ tg: tgUrl(c.support_telegram || "") || SUPPORT_TG, max: maxUrl(c.support_max || "") || SUPPORT_MAX }))
@@ -272,9 +282,11 @@ export default function AppClient() {
 
   const active = data?.active || null;
   const points: MapPoint[] = [];
+  const mapPin = !active && (!toPlace || mapPick !== null);
+  if (mapPin) cars.forEach((c) => points.push({ lat: c.lat, lng: c.lng, color: c.status === "free" ? "#16a34a" : "#f59e0b", label: c.callsign, car: true }));
   if (fromPos && (active || toPlace)) points.push({ lat: fromPos[0], lng: fromPos[1], color: "#2563eb", label: "Подача" });
   if (toPlace && !active) points.push({ lat: toPlace.lat, lng: toPlace.lng, color: "#171717", label: "Куда" });
-  if (active?.driver_lat && active?.driver_lng) points.push({ lat: active.driver_lat, lng: active.driver_lng, color: "#f59e0b", label: "Водитель" });
+  if (active?.driver_lat && active?.driver_lng) points.push({ lat: active.driver_lat, lng: active.driver_lng, color: "#f59e0b", label: active.driver_callsign || "Водитель", car: true });
   const unread = (t: ClientTrip) => !!t.last_msg_id && t.last_msg_role === "driver" && (readMap[t.id] || 0) < t.last_msg_id;
   const fromOk = !!from.city;
   const fromAd = (() => { const s = getAdSource(); return Boolean(s.yclid || s.utmSource); })();
@@ -282,7 +294,7 @@ export default function AppClient() {
   return (
     <Shell title="Дальняк" right={!token ? <button onClick={requireLogin} className="rounded-full bg-neutral-900 px-4 py-2 text-sm font-extrabold text-white">Войти</button> : undefined} left={<button onClick={() => (token ? setMenu(true) : requireLogin())} aria-label="Меню" className="-ml-1 flex h-10 w-10 items-center justify-center rounded-full active:bg-neutral-100"><Icon name="Menu" size={24} /></button>}>
       <div className="relative lg:fixed lg:bottom-0 lg:left-[480px] lg:right-0 lg:top-16">
-        <AppMap center={pos || DEFAULT_CENTER} points={points} className="h-[38vh] w-full lg:h-[calc(100vh-64px)]" pin={!active && (!toPlace || mapPick !== null)} fly={fly} onCenterChange={onCenter} />
+        <AppMap center={pos || DEFAULT_CENTER} points={points} className="h-[38vh] w-full lg:h-[calc(100vh-64px)]" pin={mapPin} fly={fly} onCenterChange={onCenter} />
         {token && !active && !toPlace && !mapPick && installed && <BonusBanner km={data?.bonus_km ?? 0} earnPct={bonusCfg.earn} maxPct={bonusCfg.max} refKm={bonusCfg.ref} onMore={() => setPanel("bonus")} />}
         <button onClick={() => { locate(); if (pos) setFly({ lat: pos[0], lng: pos[1], n: Date.now() }); }} aria-label="Моё местоположение" className="absolute right-3 top-3 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg">
           <Icon name="Crosshair" size={20} />
@@ -372,7 +384,6 @@ export default function AppClient() {
                   <div className="rounded-2xl bg-neutral-50 p-3">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-xs font-bold uppercase text-neutral-400">Через какой КПП ехать</span>
-                      <a href="/kpp-online" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-sky-700">Очереди онлайн</a>
                     </div>
                     <div className="space-y-1.5">
                       {quote.kpp_alts.map((a) => {
@@ -384,7 +395,7 @@ export default function AppClient() {
                             <span className={`h-4 w-4 shrink-0 rounded-full border-2 ${on ? "border-neutral-900 bg-neutral-900 ring-2 ring-inset ring-white" : "border-neutral-300"}`} />
                             <span className="min-w-0 flex-1">
                               <span className="block truncate text-sm font-extrabold">{a.kpp.split(" (")[0]}</span>
-                              <span className="block text-[11px] text-neutral-500">{a.km} км · ≈ {hours ? `${hours} ч ` : ""}{a.min % 60} мин{a.queue ? ` · очередь ${waitText(a.queue)}` : ""}</span>
+                              <span className="block text-[11px] text-neutral-500">{a.km} км · ≈ {hours ? `${hours} ч ` : ""}{a.min % 60} мин</span>
                             </span>
                             <span className="text-sm font-extrabold">{money(a.prices[tariff] ?? a.prices.standard)}</span>
                           </button>
@@ -392,18 +403,6 @@ export default function AppClient() {
                       })}
                     </div>
                   </div>
-                )}
-                {quote.kpp && (
-                  <a href="/kpp-online" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-2xl bg-neutral-900 p-3 text-white">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10"><Icon name="Timer" size={20} className="text-[#fcd34d]" /></span>
-                    <span className="min-w-0 flex-1 text-sm">
-                      <span className="block font-extrabold">Поедем через КПП {quote.kpp.split(" (")[0]}</span>
-                      <span className="block text-xs text-neutral-300">
-                        {quote.kpp_queue ? `Очередь сейчас ≈ ${waitText(quote.kpp_queue.minutes)} · водители отметили ${agoText(quote.kpp_queue.ago)}` : "Выбрали самый быстрый пункт пропуска. Очереди на всех КПП онлайн →"}
-                      </span>
-                    </span>
-                    {quote.kpp_queue && <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold ${tone(quote.kpp_queue.minutes)}`}>{waitText(quote.kpp_queue.minutes)}</span>}
-                  </a>
                 )}
                 <TariffPicker prices={quote.prices} value={tariff} onChange={(t) => { setTariff(t); setBump(0); if (hotQuote) reachHotQuote(hotParams("tariff")); }} />
                 <QuoteContacts tg={support.tg} max={support.max}

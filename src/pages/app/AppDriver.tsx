@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { appCall, DRIVER_STATUS, TARIFF_NAME, money, whenText } from "@/lib/appApi";
-import { pushNotify } from "@/lib/notify";
+import { pushNotify, startRing, stopRing, unlockAudio } from "@/lib/notify";
 import { useAppSession } from "@/lib/useAppSession";
 import { usePoll } from "@/lib/usePoll";
 import { useGeo } from "@/lib/useGeo";
@@ -27,7 +27,7 @@ import DriverOffer, { CarFeaturesEditor, DriverWish } from "@/components/app/Dri
 import Icon from "@/components/ui/icon";
 
 interface Me {
-  id: number; name: string; car_model: string; car_plate: string; status: string; on_line: boolean; balance: number; car_features?: string[]; car_year?: number | null;
+  id: number; name: string; callsign?: string | null; car_model: string; car_plate: string; status: string; on_line: boolean; balance: number; car_features?: string[]; car_year?: number | null;
   tariffs: string[]; pd_consent?: boolean; recheck_fields: string[]; recheck_note: string | null; block_reason: string | null; priority_until: string | null; has_priority: boolean;
   rating: number | null; done_count: number;
 }
@@ -65,7 +65,27 @@ export default function AppDriver() {
     setData(r);
   }, [token, gps, seen]);
 
-  usePoll(refresh, data?.active || data?.me?.on_line ? 6000 : 30000, !!token && ready, () => setToken(null));
+  usePoll(refresh, data?.active || data?.me?.on_line ? 5000 : 30000, !!token && ready, () => setToken(null), !!data?.me?.on_line);
+
+  const [acked, setAcked] = useState<number[]>([]);
+  const ringIds = (data?.me?.on_line && !data.active ? data.available.filter((t) => !t.scheduled_at && t.can_take !== false).map((t) => t.id) : []).filter((id) => !acked.includes(id));
+  const ringing = ringIds.length > 0;
+  useEffect(() => {
+    if (ringing) startRing("Новый заказ");
+    else stopRing();
+  }, [ringing, ringIds.join(",")]);
+  useEffect(() => () => stopRing(), []);
+
+  const wake = useRef<{ release: () => Promise<void> } | null>(null);
+  useEffect(() => {
+    const nav = navigator as Navigator & { wakeLock?: { request: (t: "screen") => Promise<{ release: () => Promise<void> }> } };
+    if (!data?.me?.on_line || !nav.wakeLock) { wake.current?.release().catch(() => undefined); wake.current = null; return; }
+    const lock = () => { if (!document.hidden && !wake.current) nav.wakeLock!.request("screen").then((l) => { wake.current = l; }).catch(() => undefined); };
+    lock();
+    const onVis = () => { if (document.hidden) wake.current = null; else lock(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [data?.me?.on_line]);
 
   useEffect(() => {
     const openChat = () => { if (data?.active) setChatId(data.active.id); };
@@ -131,10 +151,10 @@ export default function AppDriver() {
   const lineBar = (
     <div className="flex items-center justify-between rounded-3xl bg-white p-4 shadow-sm">
       <div>
-        <div className="text-lg font-extrabold">{me.on_line ? "Вы на линии" : "Вы не на линии"}</div>
-        <div className="text-sm text-neutral-500">{me.on_line ? "Новые заказы придут сюда" : approved ? "Включите, чтобы видеть заказы" : "Ждём одобрения диспетчера"}</div>
+        <div className="text-lg font-extrabold">{me.on_line ? "Вы на линии" : "Вы не на линии"}{me.callsign && <span className="ml-2 rounded-lg bg-neutral-900 px-2 py-0.5 text-sm text-[#fcd34d]">{me.callsign}</span>}</div>
+        <div className="text-sm text-neutral-500">{me.on_line ? "Заказ будет звенеть, пока не откроете. Держите приложение открытым" : approved ? "Включите, чтобы видеть заказы" : "Ждём одобрения диспетчера"}</div>
       </div>
-      <button onClick={() => act("driver_set_line", { on: !me.on_line })} disabled={!approved} aria-label="Линия"
+      <button onClick={() => { unlockAudio(); act("driver_set_line", { on: !me.on_line }); }} disabled={!approved} aria-label="Линия"
         className={`relative h-9 w-16 rounded-full transition disabled:opacity-40 ${me.on_line ? "bg-emerald-500" : "bg-neutral-300"}`}>
         <span className={`absolute top-1 h-7 w-7 rounded-full bg-white shadow transition-all ${me.on_line ? "left-8" : "left-1"}`} />
       </button>
@@ -154,6 +174,13 @@ export default function AppDriver() {
 
         {tab === "orders" && (
           <>
+            {ringing && (
+              <button onClick={() => { unlockAudio(); setAcked([...acked, ...ringIds]); stopRing(); }}
+                className="fixed inset-x-3 top-3 z-[2500] flex animate-pulse items-center gap-3 rounded-3xl bg-red-600 p-4 text-left text-white shadow-2xl">
+                <Icon name="BellRing" size={28} />
+                <span className="flex-1"><span className="block text-lg font-extrabold">Новый заказ{ringIds.length > 1 ? ` (${ringIds.length})` : ""}!</span><span className="block text-sm text-red-100">Нажмите, чтобы выключить звук и посмотреть</span></span>
+              </button>
+            )}
             {lineBar}
             {approved && <DriverKppReport token={token} />}
             {approved && me.on_line && !me.tariffs.length && <p className="rounded-2xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">Тариф вашего автомобиля пока не указан, брать заказы нельзя. Диспетчер скоро назначит.</p>}

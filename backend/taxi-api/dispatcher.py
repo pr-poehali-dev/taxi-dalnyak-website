@@ -18,6 +18,7 @@ def poll(cur, user, body):
                    t.client_id, c.phone AS client_phone, c.name AS client_name, c.is_blocked AS client_blocked,
                    COALESCE(d.name, t.ext_driver_name) AS driver_name, COALESCE(d.phone, t.ext_driver_phone) AS driver_phone,
                    COALESCE(dr.car_model, t.ext_car_model) AS car_model, COALESCE(dr.car_plate, t.ext_car_plate) AS car_plate, t.manual_driver,
+                   dr.callsign AS driver_callsign, t.passengers, t.luggage, t.created_by, t.from_lat, t.from_lng, t.to_lat, t.to_lng,
                    (SELECT max(m.id) FROM {S}.app_messages m WHERE m.trip_id = t.id) AS last_msg_id,
                    (SELECT m.sender_role FROM {S}.app_messages m WHERE m.trip_id = t.id ORDER BY m.id DESC LIMIT 1) AS last_msg_role
             FROM {S}.app_trips t
@@ -28,7 +29,7 @@ def poll(cur, user, body):
     )
     trip_rows = cur.fetchall()
     cur.execute(
-        f"""SELECT u.id, u.name, u.phone, dr.car_model, dr.car_plate, dr.car_color, dr.status, dr.balance, dr.tariffs,
+        f"""SELECT u.id, u.name, u.phone, dr.callsign, dr.car_model, dr.car_plate, dr.car_color, dr.status, dr.balance, dr.tariffs,
                    dr.block_reason, dr.priority_until, (dr.priority_until > now()) AS has_priority,
                    {ONLINE} AS online,
                    EXISTS (SELECT 1 FROM {S}.app_trips t WHERE t.driver_id = u.id AND t.status IN ('assigned', 'enroute', 'arrived', 'in_progress') AND t.scheduled_at IS NULL) AS busy,
@@ -294,10 +295,20 @@ def _driver_fields(body):
     return name, car_model, car_plate, car_color, tariffs
 
 
+def _callsign(cur, body, driver_id=None):
+    cs = clean(body.get('callsign'), 12).upper() or None
+    if cs:
+        cur.execute(f"SELECT 1 FROM {S}.app_drivers WHERE upper(callsign) = %s AND user_id <> %s", (cs, driver_id or 0))
+        if cur.fetchone():
+            raise ApiError(409, f'Позывной {cs} уже занят')
+    return cs
+
+
 def create_driver(cur, user, body):
     import secrets
     from common import norm_phone, hash_password, placeholder_token
     name, car_model, car_plate, car_color, tariffs = _driver_fields(body)
+    cs = _callsign(cur, body)
     phone = norm_phone(body.get('phone'))
     cur.execute(f"SELECT id FROM {S}.app_users WHERE phone = %s AND role = 'driver'", (phone,))
     if cur.fetchone():
@@ -311,9 +322,9 @@ def create_driver(cur, user, body):
     )
     uid = cur.fetchone()['id']
     cur.execute(
-        f"""INSERT INTO {S}.app_drivers (user_id, car_model, car_plate, car_color, status, tariffs)
-            VALUES (%s, %s, %s, %s, 'approved', %s)""",
-        (uid, car_model, car_plate, car_color, tariffs or ['standard']),
+        f"""INSERT INTO {S}.app_drivers (user_id, car_model, car_plate, car_color, status, tariffs, callsign)
+            VALUES (%s, %s, %s, %s, 'approved', %s, %s)""",
+        (uid, car_model, car_plate, car_color, tariffs or ['standard'], cs),
     )
     return {'id': uid, 'phone': phone, 'password': password}
 
@@ -322,8 +333,8 @@ def update_driver(cur, user, body):
     name, car_model, car_plate, car_color, _ = _driver_fields(body)
     cur.execute(f"UPDATE {S}.app_users SET name = %s WHERE id = %s AND role = 'driver'", (name, body.get('driver_id')))
     cur.execute(
-        f"UPDATE {S}.app_drivers SET car_model = %s, car_plate = %s, car_color = %s WHERE user_id = %s",
-        (car_model, car_plate, car_color, body.get('driver_id')),
+        f"UPDATE {S}.app_drivers SET car_model = %s, car_plate = %s, car_color = %s, callsign = %s WHERE user_id = %s",
+        (car_model, car_plate, car_color, _callsign(cur, body, body.get('driver_id')), body.get('driver_id')),
     )
     return {'ok': True}
 

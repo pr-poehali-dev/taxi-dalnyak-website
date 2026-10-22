@@ -1,4 +1,4 @@
-const CACHE = "dalnyak-v5";
+const CACHE = "dalnyak-v6";
 const ASSETS = ["/", "/index.html"];
 
 self.addEventListener("install", e => {
@@ -56,7 +56,8 @@ self.addEventListener("push", e => {
       tag: d.tag || "taxi",
       renotify: true,
       requireInteraction: true,
-      vibrate: [300, 150, 300, 150, 300],
+      vibrate: (d.url || "").indexOf("/app/driver") === 0 ? [800, 300, 800, 300, 800, 300, 800, 300, 800] : [300, 150, 300, 150, 300],
+      silent: false,
       data: { url: (d.tag || "").indexOf("chat-") === 0 ? (d.url || "/app/client") + "?chat=1" : (d.url || "/app/client") },
     })
   ]));

@@ -7,6 +7,7 @@ import client
 import driver
 import dispatcher
 import docs
+import fleet
 import funnel
 import push
 import tg
@@ -28,6 +29,7 @@ PUBLIC = {
     'guest_suggest': client.guest_suggest,
     'guest_reverse': client.guest_reverse,
     'guest_quote': client.guest_quote,
+    'public_cars': fleet.public_cars,
     'kpp_status': kpp.public,
 }
 
@@ -67,6 +69,10 @@ PROTECTED = {
     'driver_chat_send': ('driver', driver.chat_send),
     'driver_push_subscribe': ('driver', auth.push_subscribe),
     'disp_poll': ('dispatcher', dispatcher.poll),
+    'disp_map': ('dispatcher', fleet.disp_map),
+    'disp_create_order': ('dispatcher', fleet.create_order),
+    'disp_suggest': ('dispatcher', client.suggest),
+    'disp_quote': ('dispatcher', client.guest_quote_user),
     'disp_clients': ('dispatcher', dispatcher.clients),
     'disp_client_block': ('dispatcher', dispatcher.client_block),
     'disp_promos': ('dispatcher', bonus.promos),

@@ -6,8 +6,8 @@ export interface Place {
   label: string; lat: number; lng: number; city: string; street: string; house: string; state?: string; title?: string; subtitle?: string;
 }
 
-export default function AddressSearch({ token, value, onChange, onPick, placeholder, near }: {
-  token: string; value: string; onChange: (v: string) => void; onPick: (p: Place) => void; placeholder: string;
+export default function AddressSearch({ token, value, onChange, onPick, placeholder, near, action = "client_suggest" }: {
+  token: string; action?: string; value: string; onChange: (v: string) => void; onPick: (p: Place) => void; placeholder: string;
   near?: [number, number] | null;
 }) {
   const [items, setItems] = useState<Place[]>([]);
@@ -21,7 +21,7 @@ export default function AddressSearch({ token, value, onChange, onPick, placehol
     if (value.trim().length < 3) { setItems([]); return; }
     timer.current = setTimeout(async () => {
       try {
-        const r = await appCall<{ items: Place[] }>("client_suggest", { text: value, lat: near?.[0], lng: near?.[1] }, token);
+        const r = await appCall<{ items: Place[] }>(action, { text: value, lat: near?.[0], lng: near?.[1] }, token);
         setItems(r.items);
         setOpen(true);
       } catch {
@@ -29,7 +29,7 @@ export default function AddressSearch({ token, value, onChange, onPick, placehol
       }
     }, 350);
     return () => clearTimeout(timer.current);
-  }, [value, token, near]);
+  }, [value, token, near, action]);
 
   return (
     <div className="relative">

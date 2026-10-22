@@ -8,7 +8,7 @@ import { TRIP_STATUS, TARIFF_NAME, money, whenText } from "@/lib/appApi";
 export interface ClientTrip {
   id: number; from_text: string; to_text: string; status: string; price: number; base_price: number; tariff: string;
   scheduled_at: string | null; distance_km: number | null; driver_name: string | null; car_model: string | null;
-  car_plate: string | null; car_color: string | null; driver_lat: number | null; driver_lng: number | null;
+  car_plate: string | null; car_color: string | null; driver_callsign?: string | null; driver_lat: number | null; driver_lng: number | null;
   driver_rating: number | null; rating: number | null; last_msg_id: number | null; last_msg_role?: string | null;
   pay_method?: string; eta_at?: string | null; share_token?: string | null; cancelled_by?: string | null;
   manual_driver?: boolean; driver_phone?: string | null; created_at?: string | null; tg_link?: string | null; tg_on?: boolean; wish?: string | null; offers?: Offer[];
@@ -61,23 +61,6 @@ export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise, t
         <Badge tone={tripTone(t.status)}>{TARIFF_NAME[t.tariff]}</Badge>
       </div>
 
-      {t.tg_link && !["done", "cancelled"].includes(t.status) && (
-        <a href={t.tg_link} target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-3 rounded-3xl bg-sky-500 p-4 text-white shadow-sm active:bg-sky-600">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/20"><Icon name="Send" size={22} /></span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-extrabold">Статус поездки в Telegram</span>
-            <span className="block text-xs text-sky-50">Напишем, когда водитель найден, выехал и приехал. Можно закрыть сайт</span>
-          </span>
-          <Icon name="ChevronRight" size={20} />
-        </a>
-      )}
-      {t.tg_on && !["done", "cancelled"].includes(t.status) && (
-        <div className="flex items-center gap-2 rounded-2xl bg-sky-50 px-3 py-2 text-xs font-bold text-sky-800">
-          <Icon name="BellRing" size={14} /> Статусы приходят вам в Telegram
-        </div>
-      )}
-
       {t.driver_name && (
         <div className="overflow-hidden rounded-3xl bg-neutral-900 text-white">
           <div className="p-4">
@@ -99,7 +82,7 @@ export default function ClientTripCard({ t, unread, onChat, onCancel, onRaise, t
               <div className="flex items-center gap-1.5 font-extrabold text-white">{t.driver_name}
                 {t.driver_rating ? <span className="flex items-center text-sm text-amber-400"><Icon name="Star" size={13} />{Number(t.driver_rating).toFixed(1)}</span> : null}
               </div>
-              <div className="text-xs text-neutral-400">Ваш водитель</div>
+              <div className="text-xs text-neutral-400">Ваш водитель{t.driver_callsign ? <> · позывной <b className="text-[#fcd34d]">{t.driver_callsign}</b></> : ""}</div>
             </div>
             {t.driver_phone && (
               <a data-no-goal href={`tel:${t.driver_phone}`} aria-label="Позвонить водителю" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white"><Icon name="Phone" size={20} /></a>

@@ -6,6 +6,7 @@ export interface MapPoint {
   lng: number;
   color: string;
   label?: string;
+  car?: boolean;
 }
 
 export interface MapProps {

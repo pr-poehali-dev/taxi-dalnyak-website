@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { AppApiError } from "./appApi";
 
-export function usePoll(fn: () => Promise<void>, ms: number, active: boolean, onAuthFail: () => void) {
+export function usePoll(fn: () => Promise<void>, ms: number, active: boolean, onAuthFail: () => void, pollHidden = false) {
   const fnRef = useRef(fn);
   const failRef = useRef(onAuthFail);
   fnRef.current = fn;
@@ -14,7 +14,7 @@ export function usePoll(fn: () => Promise<void>, ms: number, active: boolean, on
     let fails = 0;
     const tick = async () => {
       if (stop) return;
-      if (document.hidden) { timer = window.setTimeout(tick, ms); return; }
+      if (document.hidden && !pollHidden) { timer = window.setTimeout(tick, ms); return; }
       try {
         await fnRef.current();
         fails = 0;
@@ -37,5 +37,5 @@ export function usePoll(fn: () => Promise<void>, ms: number, active: boolean, on
       window.clearTimeout(timer);
       document.removeEventListener("visibilitychange", onShow);
     };
-  }, [ms, active]);
+  }, [ms, active, pollHidden]);
 }

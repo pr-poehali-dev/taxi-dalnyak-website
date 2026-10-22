@@ -1,3 +1,4 @@
+import { goalsBlocked } from "./metrika";
 import { captureAdSource, getAdSource, getYmClientId, getYmClientIdSync, type AdSource } from "./adSource";
 import func2url from "../../backend/func2url.json";
 
@@ -92,6 +93,10 @@ export function initVisitKeyLinks() {
       const href = link.getAttribute("href") || "";
       if (!href.includes("t.me/") && !href.includes("max.ru/")) return;
       if (href.includes("?text=") || href.includes("?start=")) return;
+      if (goalsBlocked() || link.closest("[data-no-visit-key]")) {
+        if (openTelegramApp(href)) { e.preventDefault(); e.stopPropagation(); }
+        return;
+      }
 
       const patched = withVisitKey(href);
       if (patched !== href) link.setAttribute("href", patched);

@@ -67,3 +67,46 @@ export function pushNotify(text?: string) {
   if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
   if (text) setTimeout(() => speak(text), 750);
 }
+
+let ringTimer: number | undefined;
+
+function ringOnce() {
+  try {
+    const c = ctx();
+    if (c.state === "suspended") c.resume();
+    [0, 0.18, 0.36, 0.7, 0.88, 1.06].forEach((t, i) => {
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.type = "square";
+      o.frequency.value = i % 3 === 2 ? 1568 : i % 3 === 1 ? 1319 : 1047;
+      g.gain.setValueAtTime(0.0001, c.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.5, c.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + t + 0.16);
+      o.connect(g);
+      g.connect(c.destination);
+      o.start(c.currentTime + t);
+      o.stop(c.currentTime + t + 0.17);
+    });
+  } catch {
+    return;
+  }
+  if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
+}
+
+export function startRing(text?: string) {
+  if (ringTimer) return;
+  ringOnce();
+  if (text) setTimeout(() => speak(text), 1300);
+  let n = 0;
+  ringTimer = window.setInterval(() => {
+    n += 1;
+    ringOnce();
+    if (text && n % 3 === 0) setTimeout(() => speak(text), 1300);
+  }, 2500);
+}
+
+export function stopRing() {
+  if (ringTimer) window.clearInterval(ringTimer);
+  ringTimer = undefined;
+  if (navigator.vibrate) navigator.vibrate(0);
+}

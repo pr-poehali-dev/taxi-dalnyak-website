@@ -34,7 +34,9 @@ function markerEl(p: MapPoint) {
     wrap.appendChild(t);
   }
   const d = document.createElement("div");
-  d.style.cssText = `width:24px;height:24px;border-radius:50%;background:${p.color};border:4px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)`;
+  d.style.cssText = p.car
+    ? `width:28px;height:28px;border-radius:9px;background:${p.color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)`
+    : `width:24px;height:24px;border-radius:50%;background:${p.color};border:4px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)`;
   wrap.appendChild(d);
   return wrap;
 }
