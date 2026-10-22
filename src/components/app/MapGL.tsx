@@ -58,6 +58,7 @@ export default function MapGL({ center, points, className, pin, fly, onCenterCha
   useEffect(() => {
     let dead = false;
     let timer: number | undefined;
+    let ro: ResizeObserver | null = null;
     if (!el.current) return;
     const fail = () => {
       if (dead || ready.current) return;
@@ -85,6 +86,10 @@ export default function MapGL({ center, points, className, pin, fly, onCenterCha
       }
       m.touchZoomRotate.disableRotation();
       map.current = m;
+      if (typeof ResizeObserver !== "undefined" && el.current) {
+        ro = new ResizeObserver(() => { try { m.resize(); } catch { /* ignore */ } });
+        ro.observe(el.current);
+      }
       timer = window.setTimeout(fail, 9000);
       m.on("error", () => { if (!ready.current) fail(); });
       m.on("moveend", (e: any) => {
@@ -103,6 +108,7 @@ export default function MapGL({ center, points, className, pin, fly, onCenterCha
     return () => {
       dead = true;
       window.clearTimeout(timer);
+      ro?.disconnect();
       ready.current = false;
       markers.current.forEach((x) => x.remove());
       markers.current = [];

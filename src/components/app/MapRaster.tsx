@@ -32,6 +32,8 @@ export default function MapRaster({ center, points, className, pin, fly, onCente
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, className: "soft-tiles" }).addTo(m);
 
     layer.current = L.layerGroup().addTo(m);
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => m.invalidateSize()) : null;
+    ro?.observe(el.current);
     m.on("moveend", () => {
       if (programmatic.current > 0) {
         programmatic.current -= 1;
@@ -43,6 +45,7 @@ export default function MapRaster({ center, points, className, pin, fly, onCente
       }
     });
     return () => {
+      ro?.disconnect();
       m.remove();
       map.current = null;
     };
