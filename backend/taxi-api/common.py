@@ -27,6 +27,7 @@ DEFAULT_CONFIG = {
         'new': {'standard': 85, 'comfort': 90, 'minivan': 110},
     },
     'min_price': 2000,
+    'stop_price': 400,
     'ru_min': {'standard': 4000, 'comfort': 5000, 'minivan': 7200},
     'ru_min_km': 100,
     'ru_tiers': [

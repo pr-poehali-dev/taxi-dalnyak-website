@@ -8,6 +8,8 @@ import { useChatAlert } from "@/lib/useChatAlert";
 import { useReadMap } from "@/lib/useReadMap";
 import { reachGoal } from "@/lib/metrika";
 import { adForOrder } from "@/lib/adSource";
+import StopsEditor from "@/components/app/StopsEditor";
+import DispatcherOrder from "@/components/app/DispatcherOrder";
 import TariffPicker from "@/components/app/TariffPicker";
 import QuoteContacts from "@/components/app/QuoteContacts";
 import DriverBanner from "@/components/app/DriverBanner";
@@ -50,7 +52,7 @@ const STATUS_VOICE: Record<string, string> = {
 const DEFAULT_CENTER: [number, number] = [55.751, 37.618];
 
 interface Quote {
-  distance_km: number; duration_min?: number; toll?: { km: number; rub: number; roads: string[] } | null; toll_known?: boolean; kpp?: string | null; kpp_queue?: { minutes: number; ago: number } | null; kpp_id?: string | null; kpp_alts?: { id: string; kpp: string; km: number; min: number; queue?: number | null; prices: Record<Tariff, number> }[]; region: string; prices: Record<Tariff, number>; approx: boolean; min_price: number;
+  distance_km: number; duration_min?: number; toll?: { km: number; rub: number; roads: string[] } | null; toll_known?: boolean; kpp?: string | null; kpp_queue?: { minutes: number; ago: number } | null; kpp_id?: string | null; kpp_alts?: { id: string; kpp: string; km: number; min: number; queue?: number | null; prices: Record<Tariff, number> }[]; region: string; prices: Record<Tariff, number>; approx: boolean; min_price: number; stop_price?: number; stops?: { label: string }[];
   from_geo: Place; bonus?: Record<string, { rub: number; km: number }>;
 }
 interface Poll {
@@ -68,6 +70,7 @@ export default function AppClient() {
   const [from, setFrom] = useState({ city: "", street: "", house: "" });
   const [toText, setToText] = useState("");
   const [toPlace, setToPlace] = useState<Place | null>(null);
+  const [stops, setStops] = useState<Place[]>([]);
   const [fromPos, setFromPos] = useState<[number, number] | null>(null);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [tariff, setTariff] = useState<Tariff>("standard");
@@ -147,7 +150,9 @@ export default function AppClient() {
   useEffect(() => { if (token) trackStep("login"); }, [token]);
   useEffect(() => { if (toPlace) trackStep("route", { details: toPlace.label || "" }); }, [toPlace]);
 
-  const quoteKey = toPlace && fromPos ? `${fromPos[0].toFixed(3)},${fromPos[1].toFixed(3)}>${toPlace.lat.toFixed(3)},${toPlace.lng.toFixed(3)}` : "";
+  const stopsKey = stops.map((p) => `${p.lat.toFixed(3)},${p.lng.toFixed(3)}`).join(">");
+  const quoteKey = toPlace && fromPos ? `${fromPos[0].toFixed(3)},${fromPos[1].toFixed(3)}>${stopsKey ? stopsKey + ">" : ""}${toPlace.lat.toFixed(3)},${toPlace.lng.toFixed(3)}` : "";
+  const stopsPayload = stops.map((p) => ({ lat: p.lat, lng: p.lng, label: p.label }));
   const [quoting, setQuoting] = useState(false);
   const [kppPick, setKppPick] = useState<string | null>(null);
   const [wish, setWish] = useState("");
@@ -164,7 +169,7 @@ export default function AppClient() {
     let stale = false;
     setQuoting(true);
     const t = window.setTimeout(() => {
-      appCall<Quote>(token ? "client_quote" : "guest_quote", { from_lat: fromPos[0], from_lng: fromPos[1], to_lat: toPlace.lat, to_lng: toPlace.lng, ...(kppPick ? { kpp_id: kppPick } : {}) }, token)
+      appCall<Quote>(token ? "client_quote" : "guest_quote", { from_lat: fromPos[0], from_lng: fromPos[1], to_lat: toPlace.lat, to_lng: toPlace.lng, ...(kppPick ? { kpp_id: kppPick } : {}), ...(stopsPayload.length ? { stops: stopsPayload } : {}) }, token)
         .then((q) => {
           if (stale) return;
           setQuote(q); if (!orderAfterLogin.current) setBump(0); setErr("");
@@ -235,12 +240,13 @@ export default function AppClient() {
         to_text: toText, to_lat: toPlace.lat, to_lng: toPlace.lng, tariff, price, comment, pay_method: pay, wish: tariff === "choice" ? wish : undefined, kpp_id: quote?.kpp_id || undefined, use_bonus: installed && useBonus && !!bonusOpt && bump === 0, installed,
         scheduled_at: scheduled && when ? new Date(when).toISOString() : null,
         ad: await adForOrder(),
+        stops: stopsPayload,
       }, token);
       reachGoal(scheduled ? "app_preorder" : "app_order", { tariff, order_price: price, currency: "RUB" });
       reachGoal("app_order_any", { order_price: price, currency: "RUB" });
       reachGoal("app_lead", { channel: "order", order_price: price, currency: "RUB" });
       trackStep("order", { details: `${toText} · ${price} ₽`, once: false });
-      setToText(""); setToPlace(null); setQuote(null); setComment(""); setWish(""); setScheduled(false); setWhen(""); setBump(0);
+      setToText(""); setToPlace(null); setStops([]); setQuote(null); setComment(""); setWish(""); setScheduled(false); setWhen(""); setBump(0);
       await refresh();
     } catch (e) {
       setErr((e as Error).message);
@@ -307,6 +313,12 @@ export default function AppClient() {
       <div className="relative z-[600] -mt-6 min-h-[60vh] rounded-t-[28px] bg-white p-5 pb-24 shadow-[0_-8px_30px_rgba(0,0,0,0.1)] lg:mt-0 lg:min-h-[calc(100vh-64px)] lg:w-[480px] lg:rounded-none lg:px-8 lg:pt-8 lg:shadow-[8px_0_30px_rgba(0,0,0,0.08)]">
         <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-neutral-200 lg:hidden" />
         {!active && !toPlace && !mapPick && <FirstScreenHead />}
+        {!active && !mapPick && !quote && (
+          <div className="mb-4">
+            <DispatcherOrder compact tg={support.tg} max={support.max}
+              onContact={(ch) => trackStep("contact", { details: `${ch} · первый экран` })} />
+          </div>
+        )}
         {gpsErr && !fromOk && (
           <div className="mb-3 rounded-2xl bg-neutral-50 p-3 text-xs font-semibold text-neutral-500">
             Не видим ваше местоположение — укажите «Откуда» вручную. <button onClick={locate} className="ml-1 underline">Определить снова</button>
@@ -356,6 +368,7 @@ export default function AppClient() {
                       <span className="block truncate text-[15px] font-extrabold">{fromText || (from.city ? `${from.city}${from.street ? ", " + from.street : ""}` : "Определяем точку...")}</span>
                     </span>
                   </button>
+                  <StopsEditor mode="list" stops={stops} onChange={setStops} token={token} near={fromPos} stopPrice={quote?.stop_price ?? 400} />
                   <div className="mx-4 border-t border-neutral-200" />
                   <button onClick={() => setPicker("to")} className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-neutral-200">
                     <span className="h-3 w-3 shrink-0 rounded-full bg-neutral-900" />
@@ -363,8 +376,9 @@ export default function AppClient() {
                       <span className="block text-xs font-bold text-neutral-400">Куда</span>
                       <span className={`block truncate text-[15px] font-extrabold ${toText ? "" : "text-neutral-400"}`}>{toText || "Куда едем?"}</span>
                     </span>
-                    {toPlace && <span onClick={(e) => { e.stopPropagation(); setToText(""); setToPlace(null); }} className="p-1"><Icon name="X" size={18} className="text-neutral-400" /></span>}
+                    {toPlace && <span onClick={(e) => { e.stopPropagation(); setToText(""); setToPlace(null); setStops([]); }} className="p-1"><Icon name="X" size={18} className="text-neutral-400" /></span>}
                   </button>
+                  {toPlace && <StopsEditor mode="add" stops={stops} onChange={setStops} token={token} near={fromPos} stopPrice={quote?.stop_price ?? 400} />}
                 </div>
               </>
             )}
@@ -377,6 +391,11 @@ export default function AppClient() {
             {quote && (
               <>
                 <RouteSummary km={quote.distance_km} min={quote.duration_min} approx={quote.approx} toll={quote.toll} tollKnown={!!quote.toll_known} />
+                {!!quote.stops?.length && (
+                  <div className="rounded-2xl bg-neutral-50 px-3 py-2 text-xs font-semibold text-neutral-600">
+                    В цене: {quote.stops.length} {quote.stops.length === 1 ? "остановка" : "остановки"} × {quote.stop_price} ₽ и километры заезда
+                  </div>
+                )}
                 {quote.region === "new" && (
                   <div><Badge tone="blue">{quote.kpp ? `Через КПП ${quote.kpp.split(" (")[0]}` : "Есть участок по новым территориям"}</Badge></div>
                 )}
@@ -406,7 +425,7 @@ export default function AppClient() {
                 )}
                 <TariffPicker prices={quote.prices} value={tariff} onChange={(t) => { setTariff(t); setBump(0); if (hotQuote) reachHotQuote(hotParams("tariff")); }} />
                 <QuoteContacts tg={support.tg} max={support.max}
-                  message={`Здравствуйте! Хочу поехать: ${from.city || fromText} → ${toText}, ${quote.distance_km} км, ${TARIFF_LIST.find((x) => x.id === tariff)?.name || ""} ${money(price)}. Подскажите, пожалуйста.`}
+                  message={`Здравствуйте! Хочу поехать: ${from.city || fromText}${stops.length ? " → " + stops.map((x) => x.label).join(" → ") : ""} → ${toText}, ${quote.distance_km} км, ${TARIFF_LIST.find((x) => x.id === tariff)?.name || ""} ${money(price)}. Подскажите, пожалуйста.`}
                   onContact={(ch) => { trackStep("contact", { details: `${ch} · ${toText} · ${price} ₽` }); if (hotQuote) reachHotQuote(hotParams("contact")); }} />
                 {tariff === "choice" && <WishPicker value={wish} onChange={setWish} />}
 

@@ -203,6 +203,47 @@ def _geoapify_route(a, b):
     return km, coords, (f['properties'].get('time') or 0) / 60.0
 
 
+def _geoapify_multi(points):
+    wp = '|'.join(f'{p[0]},{p[1]}' for p in points)
+    data = _get('https://api.geoapify.com/v1/routing?' + urllib.parse.urlencode({'waypoints': wp, 'mode': 'drive', 'apiKey': _key()}), 3.2)
+    f = data['features'][0]
+    g = f.get('geometry') or {}
+    lines = g.get('coordinates') or []
+    if g.get('type') == 'LineString':
+        lines = [lines]
+    coords = [(pt[1], pt[0]) for ln in lines for pt in ln]
+    return f['properties']['distance'] / 1000.0, coords, (f['properties'].get('time') or 0) / 60.0
+
+
+def route_multi(points):
+    """Маршрут через промежуточные остановки"""
+    key = tuple((round(p[0], 3), round(p[1], 3)) for p in points)
+    if key in _ROUTE_CACHE:
+        return _ROUTE_CACHE[key]
+    try:
+        km, coords, mins = _geoapify_multi(points)
+        res = (km, False, coords, {'min': round(mins)})
+        if len(_ROUTE_CACHE) < 500:
+            _ROUTE_CACHE[key] = res
+        return res
+    except Exception:
+        km = sum(haversine(points[i], points[i + 1]) for i in range(len(points) - 1)) * 1.25
+        return km, True, list(points), {'min': round(km / 75 * 60)}
+
+
+MAX_STOPS = 3
+
+
+def parse_stops(raw):
+    out = []
+    for s in (raw or [])[:MAX_STOPS]:
+        if not isinstance(s, dict):
+            continue
+        lat, lng = _valid_ll(s.get('lat'), s.get('lng'))
+        out.append({'lat': lat, 'lng': lng, 'label': str(s.get('label') or '')[:200]})
+    return out
+
+
 def _route_info(a, b):
     """Маршрут по двум сервисам, берём большее расстояние"""
     ex = ThreadPoolExecutor(max_workers=2)
@@ -446,13 +487,15 @@ def calc_prices(cfg, total, new_r):
     return out
 
 
-def quote(cfg, from_lat, from_lng, to_lat, to_lng, kpp_id=None):
+def quote(cfg, from_lat, from_lng, to_lat, to_lng, kpp_id=None, stops=None):
     started = time.time()
     a = _valid_ll(from_lat, from_lng)
     b = _valid_ll(to_lat, to_lng)
+    stops = parse_stops(stops)
+    mids = [(s['lat'], s['lng']) for s in stops]
     ex = ThreadPoolExecutor(max_workers=4)
-    f_route = ex.submit(route_info, a, b)
-    f_toll = ex.submit(toll_info, [a, b])
+    f_route = ex.submit(route_multi, [a] + mids + [b]) if mids else ex.submit(route_info, a, b)
+    f_toll = ex.submit(toll_info, [a] + mids + [b])
     f_from = ex.submit(reverse, a[0], a[1])
     f_to = ex.submit(reverse, b[0], b[1])
     pa, pb = f_from.result(), f_to.result()
@@ -464,7 +507,7 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng, kpp_id=None):
     via = None
     via_id = None
     alts = []
-    if {za, zb} == {'new', 'ru'} and not _crimea(pa if za == 'ru' else pb):
+    if not mids and {za, zb} == {'new', 'ru'} and not _crimea(pa if za == 'ru' else pb):
         opts = kpp_routes(a, b, za == 'new', cfg.get('kpp_off') or ())
         if opts:
             queues = cfg.get('_queues') or {}
@@ -504,7 +547,13 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng, kpp_id=None):
     new_r = min(total, int(round(new_km)))
     reg_r = total - new_r
     prices = calc_prices(cfg, total, new_r)
+    stop_price = int(cfg.get('stop_price', 400) or 0)
+    if stops:
+        for t in prices:
+            prices[t] += stop_price * len(stops)
     return {
+        'stops': stops,
+        'stop_price': stop_price,
         'distance_km': total,
         'new_km': new_r,
         'reg_km': reg_r,

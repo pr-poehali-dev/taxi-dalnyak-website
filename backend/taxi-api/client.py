@@ -1,3 +1,4 @@
+import json
 import secrets
 from datetime import datetime, timedelta, timezone
 
@@ -57,7 +58,7 @@ def guest_quote(cur, body):
     rate_limit(cur, f'quote:ip:{body.get("_ip", "")}', 30, 60)
     cfg = get_config(cur)
     cfg['_queues'] = kpp.queues(cur)
-    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'))
+    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'), body.get('stops'))
     q['bonus'] = {}
     q['kpp_queue'] = kpp.for_quote(cur, q.get('kpp'))
     return q
@@ -66,7 +67,7 @@ def guest_quote(cur, body):
 def guest_quote_user(cur, user, body):
     cfg = get_config(cur)
     cfg['_queues'] = kpp.queues(cur)
-    return pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'))
+    return pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'), body.get('stops'))
 
 
 def reverse(cur, user, body):
@@ -78,7 +79,7 @@ def quote(cur, user, body):
     rate_limit(cur, f'quote:{user["id"]}', 40, 60)
     cfg = get_config(cur)
     cfg['_queues'] = kpp.queues(cur)
-    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'))
+    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'), body.get('stops'))
     cur.execute(f"SELECT bonus_km FROM {S}.app_users WHERE id = %s", (user['id'],))
     q['bonus'] = bonus.options(cfg, cur.fetchone()['bonus_km'], q['prices'])
     q['kpp_queue'] = kpp.for_quote(cur, q.get('kpp'))
@@ -124,7 +125,7 @@ def create_trip(cur, user, body):
         raise ApiError(409, 'Слишком много незавершённых заказов')
 
     cfg['_queues'] = kpp.queues(cur)
-    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'))
+    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'), body.get('stops'))
     base = q['prices'][tariff]
     price = base
     if body.get('price') not in (None, ''):
@@ -149,17 +150,23 @@ def create_trip(cur, user, body):
     to_text = clean(body.get('to_text'), 200)
     if not to_text:
         raise ApiError(400, 'Укажите, куда едем')
+    stops = q.get('stops') or []
+    stops_text = ' → '.join(s['label'] or f"{s['lat']:.4f},{s['lng']:.4f}" for s in stops)
+    comment_text = clean(body.get('comment'), 300)
+    if stops:
+        comment_text = (f"Остановки ({len(stops)}): {stops_text}" + (f". {comment_text}" if comment_text else ''))[:600]
     from_text = ', '.join(x for x in [city, street, house] if x) or label
 
     cur.execute(
         f"""INSERT INTO {S}.app_trips
             (client_id, from_text, from_lat, from_lng, from_city, from_street, from_house, to_text, to_lat, to_lng,
-             comment, price, base_price, tariff, region, distance_km, scheduled_at, pay_method, share_token, from_installed, wish, kpp_id)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+             comment, price, base_price, tariff, region, distance_km, scheduled_at, pay_method, share_token, from_installed, wish, kpp_id, stops)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
         (user['id'], from_text, float(body['from_lat']), float(body['from_lng']), city, street, house, to_text,
-         float(body['to_lat']), float(body['to_lng']), clean(body.get('comment'), 300) or None, price, base,
+         float(body['to_lat']), float(body['to_lng']), comment_text or None, price, base,
          tariff, q['region'], q['distance_km'], when, pay_method, secrets.token_urlsafe(16), installed,
-         (clean(body.get('wish'), 200) or None) if tariff == 'choice' else None, q.get('kpp_id')),
+         (clean(body.get('wish'), 200) or None) if tariff == 'choice' else None, q.get('kpp_id'),
+         json.dumps(stops, ensure_ascii=False) if stops else None),
     )
     trip_id = cur.fetchone()['id']
     save_ad_source(cur, trip_id, user['id'], body.get('ad') or {})
