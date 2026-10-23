@@ -14,7 +14,23 @@ STATUS_MAP = {
     'done': 'PAID', 'cancelled': 'CANCELLED',
 }
 STATUS_RU = {'IN_PROGRESS': 'Создан / в работе', 'PAID': 'Оплачен', 'CANCELLED': 'Отменён'}
-MAPPED = "CASE WHEN t.status = 'done' THEN 'PAID' WHEN t.status = 'cancelled' THEN 'CANCELLED' ELSE 'IN_PROGRESS' END"
+MAPPED = ("CASE WHEN t.is_test THEN 'SPAM' WHEN t.status = 'done' THEN 'PAID' "
+          "WHEN t.status = 'cancelled' THEN 'CANCELLED' ELSE 'IN_PROGRESS' END")
+STATUS_RU['SPAM'] = 'Тест (не учитывается)'
+DRIVER_PCT = 80
+
+
+def cost_pct(cur, schema):
+    cur.execute(f"SELECT value FROM {schema}.app_state WHERE key = 'crm_cost_pct'")
+    r = cur.fetchone()
+    try:
+        return max(0, min(100, int(float(r[0])))) if r else DRIVER_PCT
+    except (TypeError, ValueError):
+        return DRIVER_PCT
+
+
+def cost_sql(pct=DRIVER_PCT):
+    return f"COALESCE(t.crm_cost, ROUND(COALESCE(t.price, 0) * {int(pct)} / 100))"
 
 
 def _token():
@@ -31,7 +47,7 @@ def _phone(p):
 def _upload(rows):
     buf = io.StringIO()
     w = csv.writer(buf)
-    w.writerow(['id', 'create_date_time', 'client_uniq_id', 'client_ids', 'phones_md5', 'order_status', 'revenue', 'currency'])
+    w.writerow(['id', 'create_date_time', 'client_uniq_id', 'client_ids', 'phones_md5', 'order_status', 'revenue', 'cost', 'currency'])
     for r in rows:
         w.writerow(r)
     payload = buf.getvalue().encode('utf-8')
@@ -59,10 +75,10 @@ def sync_orders(cur, schema, only_ids=None):
     if not _token():
         return {'ok': False, 'sent': 0, 'info': 'Добавьте токен Метрики в настройках проекта'}
     where = f"t.id IN ({','.join(str(int(i)) for i in only_ids)})" if only_ids else \
-        f"t.created_at > NOW() - INTERVAL '90 days' AND t.crm_status IS DISTINCT FROM ({MAPPED})"
+        f"t.created_at > NOW() - INTERVAL '90 days' AND (t.crm_status IS DISTINCT FROM ({MAPPED}) OR t.crm_sent_at IS NULL)"
     cur.execute(
         f"""SELECT t.id, EXTRACT(EPOCH FROM t.created_at),
-                   t.client_id, t.ym_client_id, u.phone, {MAPPED}, COALESCE(t.price, 0)
+                   t.client_id, t.ym_client_id, u.phone, {MAPPED}, COALESCE(t.price, 0), {cost_sql(cost_pct(cur, schema))}
             FROM {schema}.app_trips t LEFT JOIN {schema}.app_users u ON u.id = t.client_id
             WHERE {where} ORDER BY t.id LIMIT 2000"""
     )
@@ -73,8 +89,9 @@ def sync_orders(cur, schema, only_ids=None):
             continue
         status = r[5]
         revenue = int(r[6] or 0) if status == 'PAID' else 0
+        cost = int(r[7] or 0) if status == 'PAID' else 0
         created = datetime.fromtimestamp(float(r[1]), timezone(timedelta(hours=3))).strftime('%d.%m.%Y %H:%M:%S')
-        rows.append(['trip_%d' % r[0], created, 'user_%d' % r[2], r[3] or '', hashlib.md5(phone.encode()).hexdigest() if phone else '', status, revenue, 'RUB'])
+        rows.append(['trip_%d' % r[0], created, 'user_%d' % r[2], r[3] or '', hashlib.md5(phone.encode()).hexdigest() if phone else '', status, revenue, cost, 'RUB'])
         ids.append((r[0], status))
     if not rows:
         return {'ok': True, 'sent': 0, 'info': 'Новых изменений по заказам нет'}
@@ -114,10 +131,12 @@ def save_state(cur, schema, result):
 
 def list_orders(cur, schema):
     """Заказы приложения с источником рекламы и статусом передачи в Метрику"""
+    pct = cost_pct(cur, schema)
     cur.execute(
         f"""SELECT t.id, t.created_at, t.status, {MAPPED}, t.crm_status, t.crm_sent_at, t.crm_response,
                    COALESCE(t.price, 0), t.from_text, t.to_text, t.distance_km, u.phone, u.name,
-                   t.ym_client_id, t.yclid, t.utm_source, t.utm_campaign, t.utm_term, t.created_by
+                   t.ym_client_id, t.yclid, t.utm_source, t.utm_campaign, t.utm_term, t.created_by,
+                   {cost_sql(pct)}, t.crm_cost IS NOT NULL, t.is_test
             FROM {schema}.app_trips t LEFT JOIN {schema}.app_users u ON u.id = t.client_id
             WHERE t.created_at > NOW() - INTERVAL '60 days' ORDER BY t.id DESC LIMIT 300"""
     )
@@ -130,7 +149,7 @@ def list_orders(cur, schema):
             'price': float(r[7] or 0), 'from': r[8], 'to': r[9], 'km': float(r[10] or 0),
             'phone': r[11], 'name': r[12], 'ymClientId': r[13], 'fromAd': bool(r[14] or r[15]),
             'utmSource': r[15] or ('yandex' if r[14] else None), 'utmCampaign': r[16], 'utmTerm': r[17],
-            'createdBy': r[18],
+            'createdBy': r[18], 'cost': float(r[19] or 0), 'costManual': bool(r[20]), 'isTest': bool(r[21]),
         })
     cur.execute(f"SELECT value, updated_at FROM {schema}.app_state WHERE key = 'last_crm_sync'")
     st = cur.fetchone()
@@ -140,4 +159,31 @@ def list_orders(cur, schema):
         'lastRun': st[1].isoformat() if st and st[1] else None,
         'lastResult': json.loads(st[0]) if st and st[0] else None,
         'pending': sum(1 for o in orders if o['sentStatus'] != o['crmStatus']),
+        'driverPct': pct,
     }
+
+
+def set_cost_pct(cur, schema, body):
+    """Меняет процент расхода по умолчанию и переотправляет оплаченные заказы"""
+    pct = max(0, min(100, int(float(body.get('pct') or 0))))
+    cur.execute(
+        f"""INSERT INTO {schema}.app_state (key, value, updated_at) VALUES ('crm_cost_pct', '{pct}', NOW())
+            ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"""
+    )
+    cur.execute(f"UPDATE {schema}.app_trips SET crm_sent_at = NULL WHERE status = 'done' AND NOT is_test AND crm_cost IS NULL")
+    return sync_orders(cur, schema)
+
+
+def update_order(cur, schema, body):
+    """Правка заказа для CRM: расход и отметка «тест»"""
+    tid = int(body.get('id') or 0)
+    sets = []
+    if 'cost' in body:
+        c = body.get('cost')
+        sets.append('crm_cost = NULL' if c in (None, '') else 'crm_cost = %d' % max(0, int(float(c))))
+    if 'isTest' in body:
+        sets.append('is_test = %s' % ('TRUE' if body.get('isTest') else 'FALSE'))
+    if not tid or not sets:
+        return {'ok': False, 'info': 'Нечего менять'}
+    cur.execute(f"UPDATE {schema}.app_trips SET {', '.join(sets)}, crm_sent_at = NULL WHERE id = {tid}")
+    return sync_orders(cur, schema, [tid])

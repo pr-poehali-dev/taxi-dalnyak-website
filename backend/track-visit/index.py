@@ -809,6 +809,12 @@ def handler(event: dict, context) -> dict:
                 crm.save_state(cur, schema, result)
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(result, ensure_ascii=False)}
 
+        if method == 'POST' and action == 'crm_cost_pct':
+            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(crm.set_cost_pct(cur, schema, body), ensure_ascii=False)}
+
+        if method == 'POST' and action == 'crm_order':
+            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(crm.update_order(cur, schema, body), ensure_ascii=False)}
+
         if method == 'GET' and action == 'max_leads':
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(max_leads())}
 

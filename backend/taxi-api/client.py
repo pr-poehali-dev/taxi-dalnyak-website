@@ -188,7 +188,8 @@ def save_ad_source(cur, trip_id, client_id, ad):
                     'utmMedium': prev['utm_medium'], 'utmCampaign': prev['utm_campaign'], 'utmTerm': prev['utm_term']}
     cur.execute(
         f"""UPDATE {S}.app_trips SET ym_client_id = %s, yclid = %s, visit_key = %s, utm_source = %s,
-            utm_medium = %s, utm_campaign = %s, utm_term = %s WHERE id = %s""",
+            utm_medium = %s, utm_campaign = %s, utm_term = %s,
+            is_test = COALESCE((SELECT is_tester FROM {S}.app_users WHERE id = client_id), false) WHERE id = %s""",
         (cid, vals['yclid'], vals['visitKey'], vals['utmSource'], vals['utmMedium'], vals['utmCampaign'], vals['utmTerm'], trip_id))
 
 
