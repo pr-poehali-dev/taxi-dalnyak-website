@@ -11,9 +11,9 @@ from common import ApiError, TARIFFS
 NEW_MARKERS = ('донец', 'луганск', 'херсон', 'запорож', 'donetsk', 'luhansk', 'lugansk', 'kherson', 'zaporiz')
 
 
-def _get(url):
+def _get(url, timeout=2.8):
     req = urllib.request.Request(url, headers={'User-Agent': 'taxi-dalnyak'})
-    with urllib.request.urlopen(req, timeout=2.8) as r:
+    with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode())
 
 
@@ -159,6 +159,31 @@ def route_info(a, b):
     return res
 
 
+TOLL_RATES = (('М-11', 5.5), ('M-11', 5.5), ('М-12', 3.5), ('M-12', 3.5), ('ЦКАД', 4.0), ('М-4', 4.5), ('M-4', 4.5))
+TOLL_DEFAULT = 4.5
+
+
+def _toll(props):
+    km = 0.0
+    rub = 0.0
+    roads = []
+    for leg in props.get('legs') or []:
+        for st in leg.get('steps') or []:
+            if not st.get('toll'):
+                continue
+            d = (st.get('distance') or 0) / 1000.0
+            label = ' '.join(str(st.get(k) or '') for k in ('ref', 'name'))
+            rate = next((r for k, r in TOLL_RATES if k in label), TOLL_DEFAULT)
+            km += d
+            rub += d * rate
+            ref = (st.get('ref') or '').split(';')[0].strip()
+            if ref and ref not in roads:
+                roads.append(ref)
+    if km < 3:
+        return None
+    return {'km': int(round(km)), 'rub': int(round(rub / 50.0) * 50) or 50, 'roads': roads[:3]}
+
+
 def _route_info(a, b):
     q = {'waypoints': f'{a[0]},{a[1]}|{b[0]},{b[1]}', 'mode': 'drive', 'apiKey': _key()}
     try:
@@ -170,9 +195,28 @@ def _route_info(a, b):
         if g.get('type') == 'LineString':
             lines = [lines]
         coords = [(pt[1], pt[0]) for ln in lines for pt in ln]
-        return km, False, coords
+        extra = {'min': round((f['properties'].get('time') or 0) / 60)}
+        return km, False, coords, extra
     except Exception:
-        return haversine(a, b) * 1.25, True, [a, b]
+        km = haversine(a, b) * 1.25
+        return km, True, [a, b], {'min': round(km / 75 * 60)}
+
+
+_TOLL_CACHE = {}
+
+
+def toll_info(points, timeout=3.4):
+    """Платные участки маршрута и примерная стоимость проезда"""
+    key = tuple((round(p[0], 2), round(p[1], 2)) for p in points)
+    if key in _TOLL_CACHE:
+        return _TOLL_CACHE[key]
+    wp = '|'.join(f'{p[0]},{p[1]}' for p in points)
+    q = {'waypoints': wp, 'mode': 'drive', 'details': 'route_details', 'apiKey': _key()}
+    data = _get('https://api.geoapify.com/v1/routing?' + urllib.parse.urlencode(q), timeout)
+    res = _toll(data['features'][0]['properties'])
+    if len(_TOLL_CACHE) < 1000:
+        _TOLL_CACHE[key] = res
+    return res
 
 
 KPPS = [
@@ -378,8 +422,9 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng, kpp_id=None):
     started = time.time()
     a = _valid_ll(from_lat, from_lng)
     b = _valid_ll(to_lat, to_lng)
-    ex = ThreadPoolExecutor(max_workers=3)
+    ex = ThreadPoolExecutor(max_workers=4)
     f_route = ex.submit(route_info, a, b)
+    f_toll = ex.submit(toll_info, [a, b])
     f_from = ex.submit(reverse, a[0], a[1])
     f_to = ex.submit(reverse, b[0], b[1])
     pa, pb = f_from.result(), f_to.result()
@@ -401,13 +446,14 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng, kpp_id=None):
                 o['prices'] = calc_prices(cfg, tot, min(tot, int(round(o['new_km']))))
             pick = chosen[0] if chosen else min(opts, key=lambda o: o['prices']['standard'])
             km, approx, coords, via = pick['km'], False, [], pick['kpp']['name']
+            extra = {'min': round((pick['time'] or 0) / 60)}
             new_km = pick['new_km']
             via_id = pick['kpp']['id']
             alts = sorted([{'id': o['kpp']['id'], 'kpp': o['kpp']['name'], 'km': round(o['km']), 'new_km': round(o['new_km']),
                             'min': round((o['time'] or 0) / 60), 'queue': queues.get(o['kpp']['id']), 'prices': o['prices']} for o in opts],
                           key=lambda x: x['prices']['standard'])
     if via is None:
-        km, approx, coords = f_route.result()
+        km, approx, coords, extra = f_route.result()
     ex.shutdown(wait=False)
     if km < 1:
         raise ApiError(400, 'Точки слишком близко. Сервис междугородний')
@@ -420,6 +466,12 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng, kpp_id=None):
         new_km = min(km, max(0.0, new_territory_km(coords, km, za, zb, classify, started + 2.4)))
     if new_km < 3:
         new_km = 0.0
+    toll, toll_known = None, False
+    try:
+        toll = f_toll.result(timeout=max(0.2, started + 3.6 - time.time()))
+        toll_known = True
+    except Exception:
+        pass
     total = int(round(km))
     new_r = min(total, int(round(new_km)))
     reg_r = total - new_r
@@ -434,6 +486,9 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng, kpp_id=None):
         'region': 'new' if new_km > 0 else 'regular',
         'prices': prices,
         'approx': approx,
+        'duration_min': extra.get('min') or 0,
+        'toll': toll,
+        'toll_known': toll_known,
         'from_geo': pa,
         'min_price': cfg['min_price'],
     }

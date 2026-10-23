@@ -37,6 +37,7 @@ import { Badge, Btn, Field, Shell, tripTone } from "@/components/app/ui";
 import { DIRECT_ADS_CONTACTS, SUPPORT_MAX, SUPPORT_TG } from "@/lib/contacts";
 import { maxUrl, tgUrl } from "@/components/app/SupportLinks";
 import Icon from "@/components/ui/icon";
+import RouteSummary from "@/components/app/RouteSummary";
 
 const STATUS_VOICE: Record<string, string> = {
   assigned: "Водитель найден. Откройте приложение, чтобы увидеть машину",
@@ -48,7 +49,7 @@ const STATUS_VOICE: Record<string, string> = {
 const DEFAULT_CENTER: [number, number] = [55.751, 37.618];
 
 interface Quote {
-  distance_km: number; kpp?: string | null; kpp_queue?: { minutes: number; ago: number } | null; kpp_id?: string | null; kpp_alts?: { id: string; kpp: string; km: number; min: number; queue?: number | null; prices: Record<Tariff, number> }[]; region: string; prices: Record<Tariff, number>; approx: boolean; min_price: number;
+  distance_km: number; duration_min?: number; toll?: { km: number; rub: number; roads: string[] } | null; toll_known?: boolean; kpp?: string | null; kpp_queue?: { minutes: number; ago: number } | null; kpp_id?: string | null; kpp_alts?: { id: string; kpp: string; km: number; min: number; queue?: number | null; prices: Record<Tariff, number> }[]; region: string; prices: Record<Tariff, number>; approx: boolean; min_price: number;
   from_geo: Place; bonus?: Record<string, { rub: number; km: number }>;
 }
 interface Poll {
@@ -373,10 +374,10 @@ export default function AppClient() {
             )}
             {quote && (
               <>
-                <div className="flex items-center justify-between text-sm text-neutral-500">
-                  <span>{quote.distance_km} км{quote.approx ? " (примерно)" : ""}</span>
-                  {quote.region === "new" && <Badge tone="blue">{quote.kpp ? `Через КПП ${quote.kpp.split(" (")[0]}` : "Есть участок по новым территориям"}</Badge>}
-                </div>
+                <RouteSummary km={quote.distance_km} min={quote.duration_min} approx={quote.approx} toll={quote.toll} tollKnown={!!quote.toll_known} />
+                {quote.region === "new" && (
+                  <div><Badge tone="blue">{quote.kpp ? `Через КПП ${quote.kpp.split(" (")[0]}` : "Есть участок по новым территориям"}</Badge></div>
+                )}
                 {quote.kpp_alts && quote.kpp_alts.length > 1 && (
                   <div className="rounded-2xl bg-neutral-50 p-3">
                     <div className="mb-2 flex items-center justify-between">
