@@ -184,22 +184,50 @@ def _toll(props):
     return {'km': int(round(km)), 'rub': int(round(rub / 50.0) * 50) or 50, 'roads': roads[:3]}
 
 
-def _route_info(a, b):
+def _osrm_km(a, b):
+    url = f'https://router.project-osrm.org/route/v1/driving/{a[1]},{a[0]};{b[1]},{b[0]}?overview=false'
+    r = _get(url, 2.2)['routes'][0]
+    return r['distance'] / 1000.0, r['duration'] / 60.0
+
+
+def _geoapify_route(a, b):
     q = {'waypoints': f'{a[0]},{a[1]}|{b[0]},{b[1]}', 'mode': 'drive', 'apiKey': _key()}
+    data = _get('https://api.geoapify.com/v1/routing?' + urllib.parse.urlencode(q))
+    f = data['features'][0]
+    km = f['properties']['distance'] / 1000.0
+    g = f.get('geometry') or {}
+    lines = g.get('coordinates') or []
+    if g.get('type') == 'LineString':
+        lines = [lines]
+    coords = [(pt[1], pt[0]) for ln in lines for pt in ln]
+    return km, coords, (f['properties'].get('time') or 0) / 60.0
+
+
+def _route_info(a, b):
+    """Маршрут по двум сервисам, берём большее расстояние"""
+    ex = ThreadPoolExecutor(max_workers=2)
+    f_geo = ex.submit(_geoapify_route, a, b)
+    f_osrm = ex.submit(_osrm_km, a, b)
+    ex.shutdown(wait=False)
+    geo = osrm = None
     try:
-        data = _get('https://api.geoapify.com/v1/routing?' + urllib.parse.urlencode(q))
-        f = data['features'][0]
-        km = f['properties']['distance'] / 1000.0
-        g = f.get('geometry') or {}
-        lines = g.get('coordinates') or []
-        if g.get('type') == 'LineString':
-            lines = [lines]
-        coords = [(pt[1], pt[0]) for ln in lines for pt in ln]
-        extra = {'min': round((f['properties'].get('time') or 0) / 60)}
-        return km, False, coords, extra
+        geo = f_geo.result()
     except Exception:
-        km = haversine(a, b) * 1.25
-        return km, True, [a, b], {'min': round(km / 75 * 60)}
+        pass
+    try:
+        osrm = f_osrm.result(timeout=2.3)
+    except Exception:
+        pass
+    if geo and osrm and osrm[0] < geo[0] * 1.3:
+        km = max(geo[0], osrm[0])
+        mins = geo[2] * km / geo[0] if geo[0] else osrm[1]
+        return km, False, geo[1], {'min': round(mins)}
+    if geo:
+        return geo[0], False, geo[1], {'min': round(geo[2])}
+    if osrm:
+        return osrm[0], False, [a, b], {'min': round(osrm[1])}
+    km = haversine(a, b) * 1.25
+    return km, True, [a, b], {'min': round(km / 75 * 60)}
 
 
 _TOLL_CACHE = {}
@@ -468,7 +496,7 @@ def quote(cfg, from_lat, from_lng, to_lat, to_lng, kpp_id=None):
         new_km = 0.0
     toll, toll_known = None, False
     try:
-        toll = f_toll.result(timeout=max(0.2, started + 3.6 - time.time()))
+        toll = f_toll.result(timeout=max(0.2, started + 3.2 - time.time()))
         toll_known = True
     except Exception:
         pass
