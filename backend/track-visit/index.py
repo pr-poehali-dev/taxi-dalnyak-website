@@ -7,6 +7,8 @@ import urllib.parse
 import urllib.error
 import psycopg2
 
+import crm
+
 CORS = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -797,6 +799,16 @@ def handler(event: dict, context) -> dict:
             cur.execute(f"UPDATE {schema}.gudok_calls SET is_spam = {flag} WHERE id = {cid}")
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps({'ok': True})}
 
+        if method == 'GET' and action == 'crm_orders':
+            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(crm.list_orders(cur, schema))}
+
+        if method == 'POST' and action == 'crm_sync':
+            ids = [int(i) for i in (body.get('ids') or []) if str(i).isdigit()][:500]
+            result = crm.sync_orders(cur, schema, ids or None)
+            if not ids:
+                crm.save_state(cur, schema, result)
+            return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(result, ensure_ascii=False)}
+
         if method == 'GET' and action == 'max_leads':
             return {'statusCode': 200, 'headers': CORS, 'body': json.dumps(max_leads())}
 
@@ -810,6 +822,10 @@ def handler(event: dict, context) -> dict:
             result = save_visit(event, body, cur, schema)
             try:
                 auto_sync_if_due(cur, schema)
+            except Exception:
+                pass
+            try:
+                crm.sync_if_due(cur, schema)
             except Exception:
                 pass
             return result

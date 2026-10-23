@@ -7,6 +7,7 @@ import { useAppShell } from "@/lib/useAppShell";
 import { useChatAlert } from "@/lib/useChatAlert";
 import { useReadMap } from "@/lib/useReadMap";
 import { reachGoal } from "@/lib/metrika";
+import { adForOrder } from "@/lib/adSource";
 import TariffPicker from "@/components/app/TariffPicker";
 import QuoteContacts from "@/components/app/QuoteContacts";
 import DriverBanner from "@/components/app/DriverBanner";
@@ -233,6 +234,7 @@ export default function AppClient() {
         from_lat: fromPos[0], from_lng: fromPos[1], from_city: from.city, from_street: from.street, from_house: from.house, from_label: fromText,
         to_text: toText, to_lat: toPlace.lat, to_lng: toPlace.lng, tariff, price, comment, pay_method: pay, wish: tariff === "choice" ? wish : undefined, kpp_id: quote?.kpp_id || undefined, use_bonus: installed && useBonus && !!bonusOpt && bump === 0, installed,
         scheduled_at: scheduled && when ? new Date(when).toISOString() : null,
+        ad: await adForOrder(),
       }, token);
       reachGoal(scheduled ? "app_preorder" : "app_order", { tariff, order_price: price, currency: "RUB" });
       reachGoal("app_order_any", { order_price: price, currency: "RUB" });

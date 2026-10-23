@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
 import LeadsFeed from "@/components/deals/LeadsFeed";
+import AppOrdersCrm from "@/components/deals/AppOrdersCrm";
 import MaxLeadPicker, { type MaxLead } from "@/components/deals/MaxLeadPicker";
 import func2url from "../../backend/func2url.json";
 
@@ -213,6 +214,8 @@ export default function Deals() {
             </div>
           ))}
         </div>
+
+        <AppOrdersCrm api={API} />
 
         <LeadsFeed api={API} onChanged={load} />
 

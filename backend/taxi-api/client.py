@@ -162,11 +162,34 @@ def create_trip(cur, user, body):
          (clean(body.get('wish'), 200) or None) if tariff == 'choice' else None, q.get('kpp_id')),
     )
     trip_id = cur.fetchone()['id']
+    save_ad_source(cur, trip_id, user['id'], body.get('ad') or {})
     if body.get('use_bonus') and installed:
         bonus.spend(cur, user['id'], trip_id, tariff, base, cfg)
     notify_new_trip(cur, trip_id)
     cur.execute(f"UPDATE {S}.app_trips SET ring_at = now(), ring_count = 1 WHERE id = %s", (trip_id,))
     return {'id': trip_id}
+
+
+def save_ad_source(cur, trip_id, client_id, ad):
+    """Запоминает, из какой рекламы пришёл клиент: для передачи заказа в CRM Метрики"""
+    if not isinstance(ad, dict):
+        ad = {}
+    cid = ''.join(ch for ch in str(ad.get('ymClientId') or '') if ch.isdigit())[:30] or None
+    vals = {k: (clean(ad.get(k), 120) or None) for k in ('yclid', 'visitKey', 'utmSource', 'utmMedium', 'utmCampaign', 'utmTerm')}
+    if not cid and not vals['yclid'] and not vals['utmSource']:
+        cur.execute(
+            f"""SELECT ym_client_id, yclid, visit_key, utm_source, utm_medium, utm_campaign, utm_term FROM {S}.app_trips
+                WHERE client_id = %s AND id <> %s AND (ym_client_id IS NOT NULL OR utm_source IS NOT NULL)
+                ORDER BY id DESC LIMIT 1""", (client_id, trip_id))
+        prev = cur.fetchone()
+        if prev:
+            cid = prev['ym_client_id']
+            vals = {'yclid': prev['yclid'], 'visitKey': prev['visit_key'], 'utmSource': prev['utm_source'],
+                    'utmMedium': prev['utm_medium'], 'utmCampaign': prev['utm_campaign'], 'utmTerm': prev['utm_term']}
+    cur.execute(
+        f"""UPDATE {S}.app_trips SET ym_client_id = %s, yclid = %s, visit_key = %s, utm_source = %s,
+            utm_medium = %s, utm_campaign = %s, utm_term = %s WHERE id = %s""",
+        (cid, vals['yclid'], vals['visitKey'], vals['utmSource'], vals['utmMedium'], vals['utmCampaign'], vals['utmTerm'], trip_id))
 
 
 def notify_new_trip(cur, trip_id):

@@ -79,6 +79,12 @@
       "method": "GET",
       "path": "/?action=max_leads",
       "expectedStatus": 200
+    },
+    {
+      "name": "CRM orders list",
+      "method": "GET",
+      "path": "/?action=crm_orders",
+      "expectedStatus": 200
     }
   ]
 }

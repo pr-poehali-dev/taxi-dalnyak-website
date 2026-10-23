@@ -106,3 +106,19 @@ export function getAdSource(): AdSource {
 export function getVisitKey(): string {
   return getAdSource().visitKey;
 }
+
+/** Метки рекламы для заказа из приложения — по ним заказ попадает в сквозную аналитику. */
+export async function adForOrder(): Promise<Record<string, string>> {
+  const s = getAdSource();
+  const cid = getYmClientIdSync() || (await Promise.race([getYmClientId(), new Promise<undefined>((r) => setTimeout(() => r(undefined), 1500))]));
+  const out: Record<string, string> = {};
+  const put = (k: string, v?: string) => { if (v) out[k] = v; };
+  put("ymClientId", cid);
+  put("yclid", s.yclid);
+  put("visitKey", s.visitKey);
+  put("utmSource", s.utmSource || (s.yclid ? "yandex" : undefined));
+  put("utmMedium", s.utmMedium);
+  put("utmCampaign", s.utmCampaign);
+  put("utmTerm", s.utmTerm);
+  return out;
+}
