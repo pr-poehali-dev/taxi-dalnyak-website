@@ -93,6 +93,20 @@ export default function DispatcherCalc() {
     return () => { stale = true; };
   }, [key, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [tollTry, setTollTry] = useState(0);
+  useEffect(() => { setTollTry(0); }, [key]);
+  useEffect(() => {
+    if (!q || q.toll_known || !from || !to || !token || tollTry >= 3) return;
+    let stale = false;
+    appCall<{ toll: Quote["toll"]; toll_known: boolean }>("disp_toll", {
+      from_lat: from.lat, from_lng: from.lng, to_lat: to.lat, to_lng: to.lng,
+      ...(stops.length ? { stops: stops.map((s) => ({ lat: s.lat, lng: s.lng })) } : {}),
+    }, token)
+      .then((r) => { if (stale) return; if (r.toll_known) setQ((p) => (p ? { ...p, toll: r.toll, toll_known: true } : p)); else setTollTry((n) => n + 1); })
+      .catch(() => { if (!stale) setTollTry((n) => n + 1); });
+    return () => { stale = true; };
+  }, [q, tollTry]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!q) return;
     setPrice(String(q.prices[tariff] ?? ""));
@@ -170,12 +184,12 @@ export default function DispatcherCalc() {
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-2xl bg-amber-400 p-3"><div className="text-[11px] font-bold uppercase opacity-70">Расстояние</div><div className="text-xl font-black">{q.approx ? "≈" : ""}{q.distance_km} км</div></div>
               <div className="rounded-2xl bg-amber-400 p-3"><div className="text-[11px] font-bold uppercase opacity-70">В пути</div><div className="text-xl font-black">≈ {hm(q.duration_min)}</div></div>
-              <div className="rounded-2xl bg-amber-400 p-3"><div className="text-[11px] font-bold uppercase opacity-70">Платные дороги</div><div className="text-xl font-black">{q.toll ? `≈ ${money(q.toll.rub)}` : q.toll_known ? "нет" : "—"}</div></div>
+              <div className="rounded-2xl bg-amber-400 p-3"><div className="text-[11px] font-bold uppercase opacity-70">Платные дороги</div><div className="text-xl font-black">{q.toll ? `≈ ${money(q.toll.rub)}` : q.toll_known ? "нет" : tollTry >= 3 ? "—" : <Icon name="Loader2" size={20} className="mt-1 animate-spin" />}</div></div>
             </div>
             {(q.region === "new" || q.toll) && (
               <div className="rounded-2xl bg-white px-4 py-2 text-xs font-semibold text-neutral-600">
                 {q.region === "new" && <>Новые территории: {q.new_km} км, по России: {q.reg_km} км{q.kpp ? ` · через КПП ${q.kpp.split(" (")[0]}` : ""}. </>}
-                {q.toll && <>Платные: {q.toll.roads.join(", ") || "участки"} ({q.toll.km} км), оплачиваются отдельно.</>}
+                {q.toll && <>Платные участки{q.toll.roads.length ? ` (${q.toll.roads.join(", ")})` : ""}: {q.toll.km} км, оплачиваются отдельно.</>}
               </div>
             )}
             {q.kpp_alts && q.kpp_alts.length > 1 && (

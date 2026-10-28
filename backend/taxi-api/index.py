@@ -75,6 +75,7 @@ PROTECTED = {
     'disp_create_order': ('dispatcher', fleet.create_order),
     'disp_suggest': ('dispatcher', client.suggest),
     'disp_quote': ('dispatcher', client.guest_quote_user),
+    'disp_toll': ('dispatcher', client.disp_toll),
     'disp_clients': ('dispatcher', dispatcher.clients),
     'disp_client_block': ('dispatcher', dispatcher.client_block),
     'disp_promos': ('dispatcher', bonus.promos),

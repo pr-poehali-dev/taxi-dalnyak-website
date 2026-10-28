@@ -64,6 +64,17 @@ def guest_quote(cur, body):
     return q
 
 
+def disp_toll(cur, user, body):
+    """Отдельный дозапрос платных дорог для калькулятора диспетчера"""
+    a = pricing._valid_ll(body.get('from_lat'), body.get('from_lng'))
+    b = pricing._valid_ll(body.get('to_lat'), body.get('to_lng'))
+    mids = [(s['lat'], s['lng']) for s in pricing.parse_stops(body.get('stops'))]
+    try:
+        return {'toll': pricing.toll_info([a] + mids + [b], 4.5), 'toll_known': True}
+    except Exception:
+        return {'toll': None, 'toll_known': False}
+
+
 def guest_quote_user(cur, user, body):
     cfg = get_config(cur)
     cfg['_queues'] = kpp.queues(cur)
