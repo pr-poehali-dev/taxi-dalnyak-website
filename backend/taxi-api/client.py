@@ -67,7 +67,11 @@ def guest_quote(cur, body):
 def guest_quote_user(cur, user, body):
     cfg = get_config(cur)
     cfg['_queues'] = kpp.queues(cur)
-    return pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'), body.get('stops'))
+    q = pricing.quote(cfg, body.get('from_lat'), body.get('from_lng'), body.get('to_lat'), body.get('to_lng'), body.get('kpp_id'), body.get('stops'))
+    q['driver_pay'] = pricing.driver_pay(cfg, q['reg_km'], q['new_km'], len(q.get('stops') or []))
+    for a in q.get('kpp_alts') or []:
+        a['driver_pay'] = pricing.driver_pay(cfg, a['km'] - a['new_km'], a['new_km'], 0)
+    return q
 
 
 def reverse(cur, user, body):

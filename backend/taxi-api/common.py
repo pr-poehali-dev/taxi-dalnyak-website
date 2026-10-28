@@ -28,6 +28,10 @@ DEFAULT_CONFIG = {
     },
     'min_price': 2000,
     'stop_price': 400,
+    'driver_rates': {
+        'regular': {'standard': 27, 'comfort': 33, 'minivan': 50},
+        'new': {'standard': 80, 'comfort': 90, 'minivan': 100},
+    },
     'ru_min': {'standard': 4000, 'comfort': 5000, 'minivan': 7200},
     'ru_min_km': 100,
     'ru_tiers': [
@@ -157,10 +161,15 @@ def log_balance(cur, driver_id, amount, reason):
 
 
 def charge_commission(cur, driver_id, trip_id):
-    cur.execute(f"SELECT price FROM {S}.app_trips WHERE id = %s", (trip_id,))
-    price = float(cur.fetchone()['price'] or 0)
+    cur.execute(f"SELECT price, driver_pay FROM {S}.app_trips WHERE id = %s", (trip_id,))
+    row = cur.fetchone()
+    price = float(row['price'] or 0)
     pct = get_config(cur)['commission_pct']
-    commission = round(price * pct / 100)
+    if row.get('driver_pay'):
+        commission = max(0, round(price - float(row['driver_pay'])))
+        pct = round(commission * 100 / price) if price else 0
+    else:
+        commission = round(price * pct / 100)
     cur.execute(
         f"UPDATE {S}.app_drivers SET balance = balance - %s WHERE user_id = %s AND balance >= %s RETURNING balance",
         (commission, driver_id, commission),

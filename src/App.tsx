@@ -57,6 +57,7 @@ import AppClient from "./pages/app/AppClient";
 import AppTrack from "./pages/app/AppTrack";
 import AppDriver from "./pages/app/AppDriver";
 import AppDispatcher from "./pages/app/AppDispatcher";
+import DispatcherCalc from "./pages/app/DispatcherCalc";
 
 const queryClient = new QueryClient();
 
@@ -125,6 +126,7 @@ const App = () => (
           <Route path="/privacy-drivers" element={<DriverPrivacy />} />
           <Route path="/privacy" element={<ClientPrivacy />} />
           <Route path="/app/office-k7x2" element={<AppDispatcher />} />
+          <Route path="/app/calc-k7x2" element={<DispatcherCalc />} />
 
           <Route path="/:slug" element={<TownPage />} />
           <Route path="*" element={<PageNotFound />} />

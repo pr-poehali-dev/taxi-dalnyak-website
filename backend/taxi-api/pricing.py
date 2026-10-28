@@ -469,6 +469,16 @@ def ru_rates(cfg, total_km):
     return rates
 
 
+def driver_pay(cfg, reg_km, new_km, stops=0):
+    """Сколько водитель получает на руки по каждому тарифу"""
+    dr = cfg.get('driver_rates') or {}
+    out = {}
+    for t in TARIFFS:
+        raw = reg_km * dr.get('regular', {}).get(t, 0) + new_km * dr.get('new', {}).get(t, 0)
+        out[t] = int(round(raw / 10.0) * 10) + int(cfg.get('stop_price', 400) or 0) * stops
+    return out
+
+
 def calc_prices(cfg, total, new_r):
     reg_r = total - new_r
     out = {}

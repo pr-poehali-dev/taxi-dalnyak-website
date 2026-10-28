@@ -7,7 +7,7 @@ import { useState } from "react";
 export interface DTrip {
   id: number; from_city: string | null; from_street: string | null; from_house: string | null; from_text: string | null;
   to_text: string; comment: string | null; price: number; tariff: string; region: string; distance_km: number | null;
-  scheduled_at: string | null; status: string; commission: number | null; client_name?: string | null;
+  scheduled_at: string | null; status: string; commission: number | null; driver_pay?: number | null; client_name?: string | null;
   from_lat: number | null; from_lng: number | null; last_msg_id?: number | null; last_msg_role?: string | null; pay_method?: string; eta_at?: string | null; can_take?: boolean; wish?: string | null; my_offer?: string | null; offers_count?: number; passengers?: number | null; luggage?: string | null; skipped?: boolean;
 }
 
@@ -42,7 +42,7 @@ export default function DriverTripCard({ t, unread, onChat, onStep, onCancel, on
   const left = etaMinutes(t.eta_at, now);
   const needEta = ["assigned", "enroute"].includes(t.status) && (!t.eta_at || editEta);
   const step = FLOW[t.status];
-  const net = t.commission != null ? Number(t.price) - Number(t.commission) : null;
+  const net = t.driver_pay ? Number(t.driver_pay) : t.commission != null ? Number(t.price) - Number(t.commission) : null;
   return (
     <div className="space-y-3 rounded-3xl bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">

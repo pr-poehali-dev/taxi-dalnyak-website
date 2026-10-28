@@ -136,16 +136,19 @@ def create_order(cur, user, body):
             km = None
     city = clean(body.get('from_city'), 80) or from_text.split(',')[0]
     region = 'new' if body.get('region') == 'new' else 'regular'
+    dpay = _num(body.get('driver_pay'), 0, 2_000_000, 'Сумма водителю числом')
+    if dpay and dpay > price:
+        raise ApiError(400, 'Сумма водителю больше цены для клиента')
 
     uid = _client_by_phone(cur, phone, name)
     import secrets
     cur.execute(
         f"""INSERT INTO {S}.app_trips
             (client_id, from_text, from_lat, from_lng, from_city, to_text, to_lat, to_lng, comment, price, base_price, tariff,
-             region, distance_km, scheduled_at, pay_method, share_token, from_installed, passengers, luggage, created_by, deferred_pushed)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,false,%s,%s,'dispatcher',true) RETURNING *""",
+             region, distance_km, scheduled_at, pay_method, share_token, from_installed, passengers, luggage, created_by, deferred_pushed, driver_pay)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,false,%s,%s,'dispatcher',true,%s) RETURNING *""",
         (uid, from_text, flat, flng, city, to_text, tlat, tlng, comment, price, price, tariff, region, km, when, pay,
-         secrets.token_urlsafe(16), passengers, luggage),
+         secrets.token_urlsafe(16), passengers, luggage, dpay or None),
     )
     t = cur.fetchone()
     driver_id = body.get('driver_id')
@@ -154,7 +157,7 @@ def create_order(cur, user, body):
         dispatcher.assign(cur, user, {'driver_id': driver_id, 'trip_id': t['id'], 'charge': body.get('charge')})
     else:
         ids = drivers_for_trip(cur, tariff)
-        send_push(cur, ids, 'Новый заказ', f"{trip_line(t)} · {int(price)} ₽", '/app/driver', f"trip-{t['id']}")
+        send_push(cur, ids, 'Новый заказ', f"{trip_line(t)} · {int(price)} ₽" + (f" · вам на руки {int(dpay)} ₽" if dpay else ''), '/app/driver', f"trip-{t['id']}")
         cur.execute(f"UPDATE {S}.app_trips SET ring_at = now(), ring_count = 1 WHERE id = %s", (t['id'],))
     return {'id': t['id']}
 

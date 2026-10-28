@@ -49,6 +49,7 @@ export default function IncomingOrder({ t, more, onAccept, onSkip }: {
       <div className="flex-1 overflow-y-auto px-5 pt-4">
         {t.scheduled_at && <div className="mb-2 inline-block rounded-xl bg-sky-500 px-3 py-1.5 text-lg font-extrabold">{whenText(t.scheduled_at)}</div>}
         <div className="text-5xl font-extrabold">{money(t.price)}</div>
+        {!!(t as { driver_pay?: number | null }).driver_pay && <div className="mt-1 text-2xl font-extrabold text-emerald-400">Вам на руки {money((t as { driver_pay?: number | null }).driver_pay)}</div>}
         <div className="mt-1 flex flex-wrap gap-2 text-sm text-neutral-400">
           <span>{TARIFF_NAME[t.tariff]}</span>
           {t.distance_km && <span>· {Math.round(Number(t.distance_km))} км</span>}

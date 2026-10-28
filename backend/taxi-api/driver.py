@@ -14,7 +14,7 @@ LIVE = ('enroute', 'arrived', 'in_progress')
 NEXT = {'assigned': 'enroute', 'enroute': 'arrived', 'arrived': 'in_progress', 'in_progress': 'done'}
 
 TRIP_COLS = """t.id, t.from_city, t.from_street, t.from_house, t.from_text, t.from_lat, t.from_lng, t.to_text, t.to_lat, t.to_lng,
-               t.comment, t.price, t.bonus_discount, t.pay_method, t.eta_at, t.tariff, t.region, t.distance_km, t.scheduled_at, t.status, t.commission, t.wish, t.passengers, t.luggage"""
+               t.comment, t.price, t.bonus_discount, t.pay_method, t.eta_at, t.tariff, t.region, t.distance_km, t.scheduled_at, t.status, t.commission, t.wish, t.passengers, t.luggage, t.driver_pay"""
 
 
 def _me(cur, uid):

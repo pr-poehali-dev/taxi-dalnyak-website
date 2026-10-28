@@ -362,6 +362,7 @@ export default function AppDispatcher() {
   return (
     <Shell title="Диспетчер" onLogout={logout} right={<span className="text-xs font-bold text-neutral-500">на линии: {onlineCount}</span>}>
       <div className="mx-auto max-w-2xl p-4 pb-20">
+        <a href="/app/calc-k7x2" className="mb-3 flex items-center justify-center gap-2 rounded-2xl bg-neutral-900 py-3 font-extrabold text-white"><Icon name="Calculator" size={18} />Калькулятор стоимости</a>
         <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-white p-1.5 shadow-sm sm:grid-cols-10">
           {TABS.map((t) => (
             <button key={t} onClick={() => setTab(t)} className={`rounded-xl py-2.5 text-[13px] font-extrabold ${tab === t ? "bg-[#fcd34d]" : "text-neutral-500"}`}>
