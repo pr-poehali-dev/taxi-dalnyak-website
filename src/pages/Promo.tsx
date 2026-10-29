@@ -131,7 +131,7 @@ export default function Promo({
 
       {/* HERO — ФОТО ФОНОМ, ТЕКСТ ПОВЕРХ */}
       <section className="relative overflow-hidden">
-        <img src={HERO_WIDE} alt="Межгородное такси от адреса до адреса" {...{ fetchpriority: "high" }}
+        <img src={HERO_WIDE} alt="Межгородное такси от адреса до адреса" fetchPriority="high"
           className="absolute inset-0 w-full h-full object-cover"
           style={{ objectPosition: "58% 42%" }} />
         {/* затемнение: плотное только под текстом слева, машина справа остаётся светлой */}

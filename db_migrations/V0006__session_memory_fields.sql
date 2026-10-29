@@ -1,4 +1,0 @@
-ALTER TABLE t_p85334902_taxi_dalnyak_website.chat_sessions
-  ADD COLUMN IF NOT EXISTS pax_count INTEGER,
-  ADD COLUMN IF NOT EXISTS has_toll BOOLEAN,
-  ADD COLUMN IF NOT EXISTS extras TEXT;

@@ -1,2 +1,0 @@
-ALTER TABLE t_p85334902_taxi_dalnyak_website.app_trips ADD COLUMN IF NOT EXISTS ring_at timestamp with time zone NULL;
-ALTER TABLE t_p85334902_taxi_dalnyak_website.app_trips ADD COLUMN IF NOT EXISTS ring_count integer NOT NULL DEFAULT 0;

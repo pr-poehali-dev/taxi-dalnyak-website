@@ -106,7 +106,8 @@ const PulseDot = memo(function PulseDot() {
 
 export default function Quick({ contacts = DEFAULT_CONTACTS, source }: { contacts?: Contacts; source?: string } = {}) {
   const { PHONE, PHONE_HREF, VK_HREF, TG_HREF, REVIEWS_TG_HREF, MAX_HREF } = contacts;
-  const [count, setCount]       = useState(getStartCount());
+  // Счётчик зависит от местного времени — считаем его в браузере после гидрации.
+  const [count, setCount]       = useState(11);
   const [mins, setMins]         = useState(7);
   const [scrolled, setScrolled] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -116,6 +117,7 @@ export default function Quick({ contacts = DEFAULT_CONTACTS, source }: { contact
   const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setCount(getStartCount());
     document.title = "Заказать такси из города в город от 200 км — Такси Дальняк";
     const c = setInterval(() => { setCount(n => n + 1); setMins(Math.floor(Math.random() * 9) + 2); }, (Math.random() * 30 + 60) * 60000);
     const m = setInterval(() => setMins(v => v >= 40 ? 4 : v + 1), 60000);

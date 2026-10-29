@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation } from "@/lib/router-compat";
 import RouteLanding from "@/components/route-landing/RouteLanding";
 import { findRouteLanding } from "@/lib/routeLandings";
 import PageNotFound from "@/pages/PageNotFound";

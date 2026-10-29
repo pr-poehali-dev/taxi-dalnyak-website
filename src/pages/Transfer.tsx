@@ -3,7 +3,7 @@ import YandexRating from "@/components/YandexRating";
 import Icon from "@/components/ui/icon";
 import { parseRoute, toGenitive, type RouteResult } from "@/lib/cityRoute";
 
-declare global { interface Window { ym?: (id: number, action: string, goal: string) => void; } }
+declare global { interface Window { ym?: (id: number, action: string, goal: string, params?: Record<string, unknown>) => void; } }
 
 const LOGO     = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/3a499542-747a-49d2-808e-4c137548c76e.jpg";
 const MAX_LOGO = "https://cdn.poehali.dev/projects/9a191476-ae87-4212-b94d-a888af0fbed6/bucket/cf5e3e58-7d83-4d19-8c48-f91922395adf.png";

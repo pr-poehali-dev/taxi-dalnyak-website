@@ -243,7 +243,7 @@ export default function RegionalHero({
 
           {/* ФОТО */}
           <div className="relative rounded-3xl overflow-hidden" style={{ maxHeight: 460 }}>
-            <img src={HERO_IMG} alt={config.heroAlt ?? `Комфортная поездка из ${config.cityRod}`} {...{ fetchpriority: "high" }}
+            <img src={HERO_IMG} alt={config.heroAlt ?? `Комфортная поездка из ${config.cityRod}`} fetchPriority="high"
               className="w-full object-cover" style={{ maxHeight: 460, objectPosition: "center 15%" }} />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to right,rgba(7,11,20,0.6) 0%,transparent 45%,rgba(7,11,20,0.15) 100%)" }} />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to top,rgba(7,11,20,0.95) 0%,transparent 45%)" }} />

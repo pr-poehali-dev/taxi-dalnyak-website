@@ -36,7 +36,7 @@ export default function RoutePicker({ token, fromText, toText, near, start, onPi
   const [loading, setLoading] = useState(false);
   const refA = useRef<HTMLInputElement>(null);
   const refB = useRef<HTMLInputElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     const el = start === "to" ? refB.current : refA.current;
@@ -76,7 +76,7 @@ export default function RoutePicker({ token, fromText, toText, near, start, onPi
     }
   };
 
-  const row = (w: Which, value: string, set: (v: string) => void, ref: React.RefObject<HTMLInputElement>, dot: string, ph: string) => (
+  const row = (w: Which, value: string, set: (v: string) => void, ref: React.RefObject<HTMLInputElement | null>, dot: string, ph: string) => (
     <div className={`flex items-center gap-3 rounded-2xl px-3 ${which === w ? "bg-white ring-2 ring-[#fcd34d]" : "bg-neutral-100"}`}>
       <span className={`h-3 w-3 shrink-0 rounded-full ${dot}`} />
       <label className="min-w-0 flex-1 py-2">

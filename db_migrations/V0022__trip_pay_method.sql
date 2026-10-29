@@ -1,1 +1,0 @@
-ALTER TABLE app_trips ADD COLUMN IF NOT EXISTS pay_method TEXT NOT NULL DEFAULT 'cash';

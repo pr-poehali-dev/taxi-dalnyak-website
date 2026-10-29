@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "@/lib/router-compat";
 import { appCall } from "@/lib/appApi";
 import { usePoll } from "@/lib/usePoll";
 import AppMap, { MapPoint } from "@/components/app/AppMap";

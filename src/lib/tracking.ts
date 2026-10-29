@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from "react";
 import { goalsBlocked } from "./metrika";
 import { captureAdSource, getAdSource, getYmClientId, getYmClientIdSync, type AdSource } from "./adSource";
 import func2url from "../../backend/func2url.json";
@@ -107,6 +108,16 @@ export function initVisitKeyLinks() {
     },
     true,
   );
+}
+
+/**
+ * withVisitKey для разметки: на сервере и при гидрации — исходная ссылка,
+ * после монтирования — ссылка с кодом визита (код живёт в localStorage браузера).
+ */
+export function useVisitKey(): (href: string) => string {
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
+  return useCallback((href: string) => (ready ? withVisitKey(href) : href), [ready]);
 }
 
 /** Добавляет код визита в ссылку на мессенджер, чтобы связать обращение с рекламой. */

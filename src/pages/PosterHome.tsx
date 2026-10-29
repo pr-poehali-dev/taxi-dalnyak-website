@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { useSeo } from "@/hooks/use-seo";
 import { DEFAULT_CONTACTS } from "@/lib/contacts";
-import { withVisitKey, trackLeadClick } from "@/lib/tracking";
+import { useVisitKey, trackLeadClick } from "@/lib/tracking";
 
 const POSTER_WEBP = "/poster-home.webp";
 const POSTER_JPG = "/poster-home.jpg";
@@ -62,13 +62,14 @@ export default function PosterHome() {
     keywords: "такси межгород, заказать такси из города в город, междугороднее такси",
   });
 
+  const withVisitKey = useVisitKey();
   const links = useMemo(
     () => ({
       phone: PHONE_HREF,
       telegram: withVisitKey(TG_HREF),
       max: withVisitKey(MAX_HREF),
     }),
-    [PHONE_HREF, TG_HREF, MAX_HREF],
+    [PHONE_HREF, TG_HREF, MAX_HREF, withVisitKey],
   );
 
   const lead = (channel: string) => {

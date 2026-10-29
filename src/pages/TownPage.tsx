@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams } from "@/lib/router-compat";
 import RegionalPage from "@/pages/RegionalPage";
 import PageNotFound from "@/pages/PageNotFound";
 import { findTown } from "@/data/towns";

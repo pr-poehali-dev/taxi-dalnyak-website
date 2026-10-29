@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { DEFAULT_CONTACTS } from "@/lib/contacts";
 import { ymGoal, ymLead } from "@/components/regional/shared";
-import { withVisitKey } from "@/lib/tracking";
+import { useVisitKey } from "@/lib/tracking";
 
 const NAVY = "#0d1b2e";
 const NAVY_DEEP = "#081321";
@@ -69,6 +69,7 @@ type Btn = { kind: "tg" | "max" | "phone"; href: string; label: string; icon: st
 export default function RouteLanding({ config }: { config: RouteLandingConfig }) {
   const { PHONE, PHONE_HREF, TG_HREF, MAX_HREF } = DEFAULT_CONTACTS;
   const [utm, setUtm] = useState({ source: "direct", medium: "none", campaign: "none", term: "", content: "none" });
+  const withVisitKey = useVisitKey();
 
   const routeName = `${config.from} — ${config.to}`;
 

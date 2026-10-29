@@ -12,7 +12,7 @@ export default function AddressSearch({ token, value, onChange, onPick, placehol
 }) {
   const [items, setItems] = useState<Place[]>([]);
   const [open, setOpen] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const skip = useRef(false);
 
   useEffect(() => {

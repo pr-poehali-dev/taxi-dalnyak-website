@@ -1,1 +1,0 @@
-UPDATE app_drivers SET status = 'approved', tariffs = '{comfort}', on_line = true, last_seen = now() WHERE user_id IN (SELECT id FROM app_users WHERE phone = '+79990001122' AND role = 'driver');

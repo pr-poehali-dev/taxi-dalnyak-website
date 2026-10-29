@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import YandexRating from "@/components/YandexRating";
 import Icon from "@/components/ui/icon";
 import { useSeo } from "@/hooks/use-seo";

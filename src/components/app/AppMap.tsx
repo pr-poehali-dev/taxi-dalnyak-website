@@ -22,12 +22,12 @@ export interface MapProps {
 
 export type GLProps = MapProps & { onFail: () => void };
 
-function FailNow({ onFail }: GLProps): JSX.Element | null {
+function FailNow({ onFail }: GLProps): React.JSX.Element | null {
   useEffect(() => { onFail(); }, []);
   return null;
 }
 
-const MapGL = lazy<(p: GLProps) => JSX.Element | null>(() => import("./MapGL").catch(() => ({ default: FailNow })));
+const MapGL = lazy<(p: GLProps) => React.JSX.Element | null>(() => import("./MapGL").catch(() => ({ default: FailNow })));
 
 const FLAG = "map_gl_failed";
 

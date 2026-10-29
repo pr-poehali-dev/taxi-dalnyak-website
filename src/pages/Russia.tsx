@@ -42,7 +42,7 @@ export default function Russia() {
   }, [from, to]);
 
   const links: LpLinks = useMemo(() => {
-    const tg = new window.URL(TG_HREF);
+    const tg = new globalThis.URL(TG_HREF);
     tg.searchParams.set("utm_source", utm.source);
     tg.searchParams.set("utm_medium", utm.medium);
     tg.searchParams.set("utm_campaign", utm.campaign);

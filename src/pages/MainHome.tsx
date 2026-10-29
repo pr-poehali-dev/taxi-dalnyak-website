@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useSeo } from "@/hooks/use-seo";
 import { DEFAULT_CONTACTS } from "@/lib/contacts";
-import { withVisitKey, trackLeadClick } from "@/lib/tracking";
+import { useVisitKey, trackLeadClick } from "@/lib/tracking";
 import MainHero from "@/components/main/MainHero";
 import ContactButtons from "@/components/main/ContactButtons";
 import TariffSlider from "@/components/main/TariffSlider";
@@ -35,9 +35,10 @@ export default function MainHome() {
   });
 
 
+  const withVisitKey = useVisitKey();
   const links = useMemo(
     () => ({ phone: PHONE_HREF, telegram: withVisitKey(TG_HREF), max: withVisitKey(MAX_HREF) }),
-    [PHONE_HREF, TG_HREF, MAX_HREF],
+    [PHONE_HREF, TG_HREF, MAX_HREF, withVisitKey],
   );
 
   const onLead = (channel: string) => {

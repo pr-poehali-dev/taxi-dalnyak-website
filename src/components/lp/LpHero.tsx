@@ -28,7 +28,7 @@ interface Props {
 export default function LpHero({ links, onLead, badge, title, sub, phone = "+7 995 645-51-25", alt, menu, facts = DEFAULT_FACTS, ctaLabel, note, form }: Props) {
   return (
     <section className="relative overflow-hidden">
-      <img src={HERO} alt={alt ?? "Междугороднее такси Дальняк"} className="absolute inset-0 w-full h-full object-cover object-[22%_center]" {...({ fetchpriority: "high" } as Record<string, string>)} />
+      <img src={HERO} alt={alt ?? "Междугороднее такси Дальняк"} className="absolute inset-0 w-full h-full object-cover object-[22%_center]" fetchPriority="high" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black" />
 
       <div className="relative z-10 px-5 pt-6 pb-10 max-w-xl mx-auto">

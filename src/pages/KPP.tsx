@@ -3,7 +3,7 @@ import YandexRating from "@/components/YandexRating";
 import Icon from "@/components/ui/icon";
 import { useSeo } from "@/hooks/use-seo";
 
-declare global { interface Window { ym?: (id: number, action: string, goal: string, params?: Record<string, string>) => void; } }
+declare global { interface Window { ym?: (id: number, action: string, goal: string, params?: Record<string, unknown>) => void; } }
 
 function ymGoal(goal: string) {
   if (typeof window.ym === "function") window.ym(111028538, "reachGoal", goal);

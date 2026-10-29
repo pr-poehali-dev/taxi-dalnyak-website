@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useSeo } from "@/hooks/use-seo";
 import { DEFAULT_CONTACTS } from "@/lib/contacts";
-import { withVisitKey, trackLeadClick } from "@/lib/tracking";
+import { useVisitKey, trackLeadClick } from "@/lib/tracking";
 import LpHero from "@/components/lp/LpHero";
 import LpRoutes from "@/components/lp/LpRoutes";
 import LpSteps from "@/components/lp/LpSteps";
@@ -34,9 +34,10 @@ export default function NewHome() {
       "такси военнослужащему домой, такси для военных межгород, такси из отпуска в часть, такси на новые территории, такси донецк луганск херсон запорожье, такси мариуполь, такси мелитополь, такси бердянск, вахтовые перевозки, корпоративное такси по договору, такси межгород, междугороднее такси, такси дальняк",
   });
 
+  const withVisitKey = useVisitKey();
   const links = useMemo(
     () => ({ phone: PHONE_HREF, telegram: withVisitKey(TG_HREF), max: withVisitKey(MAX_HREF) }),
-    [PHONE_HREF, TG_HREF, MAX_HREF],
+    [PHONE_HREF, TG_HREF, MAX_HREF, withVisitKey],
   );
 
   const onLead = (channel: string) => {
