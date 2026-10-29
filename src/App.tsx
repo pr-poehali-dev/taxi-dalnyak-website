@@ -1,63 +1,65 @@
-import DriverPrivacy from "./pages/DriverPrivacy";
-import ClientPrivacy from "./pages/ClientPrivacy";
+import { lazy, Suspense } from "react";
+const DriverPrivacy = lazy(() => import("./pages/DriverPrivacy"));
+const ClientPrivacy = lazy(() => import("./pages/ClientPrivacy"));
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Index from "./pages/Index";
-import Military from "./pages/Military";
-import Quick from "./pages/Quick";
-import Home from "./pages/Home";
-import QuickVk from "./pages/QuickVk";
-import Direct from "./pages/Direct";
-import Keywords from "./pages/Keywords";
-import Promo from "./pages/Promo";
-import Tariffs from "./pages/Tariffs";
-import Reviews from "./pages/Reviews";
-import PageNotFound from "./pages/PageNotFound";
-import KPP from "./pages/KPP";
-import KppOnline from "./pages/KppOnline";
-import Moscow from "./pages/regions/Moscow";
-import Belgorod from "./pages/regions/Belgorod";
-import Boguchar from "./pages/regions/Boguchar";
-import Voronezh from "./pages/regions/Voronezh";
-import Kursk from "./pages/regions/Kursk";
-import Ryazan from "./pages/regions/Ryazan";
-import SPb from "./pages/regions/SPb";
-import Nizhny from "./pages/regions/Nizhny";
-import Izhevsk from "./pages/regions/Izhevsk";
-import Krasnodar from "./pages/regions/Krasnodar";
-import Rostov from "./pages/regions/Rostov";
-import Samara from "./pages/regions/Samara";
-import Stavropol from "./pages/regions/Stavropol";
-import Novosibirsk from "./pages/regions/Novosibirsk";
-import Tyumen from "./pages/regions/Tyumen";
-import Chelyabinsk from "./pages/regions/Chelyabinsk";
-import Ekaterinburg from "./pages/regions/Ekaterinburg";
-import Donetsk from "./pages/regions/Donetsk";
-import Lugansk from "./pages/regions/Lugansk";
-import Kherson from "./pages/regions/Kherson";
-import Rovenki from "./pages/regions/Rovenki";
-import TownPage from "./pages/TownPage";
-import Lite from "./pages/Lite";
-import Max from "./pages/Max";
-import Call from "./pages/Call";
-import RouteLandingPage from "./pages/RouteLandingPage";
-import Pages from "./pages/Pages";
-import Deals from "./pages/Deals";
-import Clicks from "./pages/Clicks";
-import PosterHome from "./pages/PosterHome";
-import MainHome from "./pages/MainHome";
-import NewHome from "./pages/NewHome";
+const Index = lazy(() => import("./pages/Index"));
+const Military = lazy(() => import("./pages/Military"));
+const Quick = lazy(() => import("./pages/Quick"));
+const Home = lazy(() => import("./pages/Home"));
+const QuickVk = lazy(() => import("./pages/QuickVk"));
+const Direct = lazy(() => import("./pages/Direct"));
+const Keywords = lazy(() => import("./pages/Keywords"));
+const Promo = lazy(() => import("./pages/Promo"));
+const Tariffs = lazy(() => import("./pages/Tariffs"));
+const Reviews = lazy(() => import("./pages/Reviews"));
+const PageNotFound = lazy(() => import("./pages/PageNotFound"));
+const KPP = lazy(() => import("./pages/KPP"));
+const KppOnline = lazy(() => import("./pages/KppOnline"));
+const Moscow = lazy(() => import("./pages/regions/Moscow"));
+const Belgorod = lazy(() => import("./pages/regions/Belgorod"));
+const Boguchar = lazy(() => import("./pages/regions/Boguchar"));
+const Voronezh = lazy(() => import("./pages/regions/Voronezh"));
+const Kursk = lazy(() => import("./pages/regions/Kursk"));
+const Ryazan = lazy(() => import("./pages/regions/Ryazan"));
+const SPb = lazy(() => import("./pages/regions/SPb"));
+const Nizhny = lazy(() => import("./pages/regions/Nizhny"));
+const Izhevsk = lazy(() => import("./pages/regions/Izhevsk"));
+const Krasnodar = lazy(() => import("./pages/regions/Krasnodar"));
+const Rostov = lazy(() => import("./pages/regions/Rostov"));
+const Samara = lazy(() => import("./pages/regions/Samara"));
+const Stavropol = lazy(() => import("./pages/regions/Stavropol"));
+const Novosibirsk = lazy(() => import("./pages/regions/Novosibirsk"));
+const Tyumen = lazy(() => import("./pages/regions/Tyumen"));
+const Chelyabinsk = lazy(() => import("./pages/regions/Chelyabinsk"));
+const Ekaterinburg = lazy(() => import("./pages/regions/Ekaterinburg"));
+const Donetsk = lazy(() => import("./pages/regions/Donetsk"));
+const Lugansk = lazy(() => import("./pages/regions/Lugansk"));
+const Kherson = lazy(() => import("./pages/regions/Kherson"));
+const Rovenki = lazy(() => import("./pages/regions/Rovenki"));
+const TownPage = lazy(() => import("./pages/TownPage"));
+const Lite = lazy(() => import("./pages/Lite"));
+const Max = lazy(() => import("./pages/Max"));
+const Call = lazy(() => import("./pages/Call"));
+const RouteLandingPage = lazy(() => import("./pages/RouteLandingPage"));
+const Pages = lazy(() => import("./pages/Pages"));
+const Deals = lazy(() => import("./pages/Deals"));
+const Clicks = lazy(() => import("./pages/Clicks"));
+const Russia = lazy(() => import("./pages/Russia"));
+const PosterHome = lazy(() => import("./pages/PosterHome"));
+const MainHome = lazy(() => import("./pages/MainHome"));
+const NewHome = lazy(() => import("./pages/NewHome"));
 import { ROUTE_LANDINGS } from "./lib/routeLandings";
-import MoscowBusiness from "./pages/MoscowBusiness";
-import Otzyv from "./pages/Otzyv";
-import AppClient from "./pages/app/AppClient";
-import AppTrack from "./pages/app/AppTrack";
-import AppDriver from "./pages/app/AppDriver";
-import AppDispatcher from "./pages/app/AppDispatcher";
-import DispatcherCalc from "./pages/app/DispatcherCalc";
+const MoscowBusiness = lazy(() => import("./pages/MoscowBusiness"));
+const Otzyv = lazy(() => import("./pages/Otzyv"));
+const AppClient = lazy(() => import("./pages/app/AppClient"));
+const AppTrack = lazy(() => import("./pages/app/AppTrack"));
+const AppDriver = lazy(() => import("./pages/app/AppDriver"));
+const AppDispatcher = lazy(() => import("./pages/app/AppDispatcher"));
+const DispatcherCalc = lazy(() => import("./pages/app/DispatcherCalc"));
 
 const queryClient = new QueryClient();
 
@@ -67,6 +69,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <Suspense fallback={<div style={{ minHeight: "100vh", background: "#0b0b0f" }} />}>
         <Routes>
           <Route path="/" element={<AppClient />} />
           <Route path="/old-main" element={<MainHome />} />
@@ -85,6 +88,7 @@ const App = () => (
           <Route path="/tariffs" element={<Tariffs />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/otzyv" element={<Otzyv />} />
+          <Route path="/rossiya" element={<Russia />} />
 
           {/* Региональные посадочные страницы */}
           <Route path="/moscow-business" element={<MoscowBusiness />} />
@@ -131,6 +135,7 @@ const App = () => (
           <Route path="/:slug" element={<TownPage />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
